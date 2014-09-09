@@ -24,8 +24,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;

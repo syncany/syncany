@@ -23,8 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which

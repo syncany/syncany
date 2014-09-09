@@ -22,10 +22,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageFileNotFoundException;
-import org.syncany.plugins.StorageMoveException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**

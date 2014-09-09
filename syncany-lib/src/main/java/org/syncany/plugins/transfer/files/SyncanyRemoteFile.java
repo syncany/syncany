@@ -17,7 +17,7 @@
  */
 package org.syncany.plugins.transfer.files;
 
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The repo file represents the repository-defining file. It is used to

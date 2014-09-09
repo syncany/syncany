@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 

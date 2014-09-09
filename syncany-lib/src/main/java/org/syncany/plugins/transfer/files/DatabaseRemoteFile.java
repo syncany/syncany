@@ -20,7 +20,7 @@ package org.syncany.plugins.transfer.files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The database file represents a delta database.

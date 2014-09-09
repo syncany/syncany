@@ -56,8 +56,8 @@ import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResul
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RemoteTransaction;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;

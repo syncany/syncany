@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins;
+package org.syncany.plugins.transfer;
 
 /**
  * The storage move exception is thrown if moving a file on 
@@ -28,14 +28,14 @@ public class StorageMoveException extends StorageException {
 	private static final long serialVersionUID = 8929643336708862710L;
 
 	public StorageMoveException(Throwable cause) {
-        super(cause);
-    }
+		super(cause);
+	}
 
-    public StorageMoveException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public StorageMoveException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public StorageMoveException(String message) {
-        super(message);
-    }
+	public StorageMoveException(String message) {
+		super(message);
+	}
 }

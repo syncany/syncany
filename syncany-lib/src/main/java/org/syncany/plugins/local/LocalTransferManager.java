@@ -26,10 +26,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageFileNotFoundException;
-import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.AbstractTransferManager;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageFileNotFoundException;
+import org.syncany.plugins.transfer.StorageMoveException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;

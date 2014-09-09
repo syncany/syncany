@@ -22,8 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageMoveException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -92,20 +90,57 @@ public class RemoteTransaction {
 	}
 
 	/**
-	 * Moves all files to the temporary remote location. If
-	 * no errors occur, all files are moved to their final location.
+	 * Commits this transaction by performing the required upload and
+	 * delete operations. The method first moves all files to the temporary
+	 * remote location. If no errors occur, all files are moved to their
+	 * final location.
+	 * 
+	 * <p>The method first writes a {@link TransactionRemoteFile} containing
+	 * all actions to be performed and then uploads this file. Then it uploads
+	 * new files (added by {@link #upload(File, RemoteFile) upload()} and moves
+	 * deleted files to a temporary location (deleted by {@link #delete(RemoteFile) delete()}.
+	 * 
+	 * <p>If this was successful, the transaction file is deleted and the 
+	 * temporary files. After deleting the transaction file, the transaction
+	 * is successfully committed.
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
 
 		File localTransactionFile = writeLocalTransactionFile();
-		RemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
+		TransactionRemoteFile remoteTransactionFile = uploadTransactionFile(localTransactionFile);
+				
+		uploadAndMoveToTempLocation();
+		moveToFinalLocation();		
+
+		deleteTransactionFile(localTransactionFile, remoteTransactionFile);
+		deleteTempRemoteFiles();
+	}		
+
+	private File writeLocalTransactionFile() throws StorageException {
+		try {
+			File localTransactionFile = config.getCache().createTempFile("transaction");
+
+			transactionTO.save(config.getTransformer(), localTransactionFile);
+			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
+
+			return localTransactionFile;
+		}
+		catch (Exception e) {
+			throw new StorageException("Could not create temporary file for transaction", e);
+		}
+	}
+	
+	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
+		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
+		
+		return remoteTransactionFile;
+	}
 
-		// 1. First, move all files to a temporary location
-
+	private void uploadAndMoveToTempLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
@@ -127,9 +162,9 @@ public class RemoteTransaction {
 				}
 			}
 		}
-
-		// 2. Second, move uploaded files to final location
-
+	}
+	
+	private void moveToFinalLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
@@ -139,13 +174,19 @@ public class RemoteTransaction {
 				transferManager.move(tempRemoteFile, finalRemoteFile);
 			}
 		}
-
+	}
+	
+	private void deleteTransactionFile(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
 		// After this deletion, the transaction is final!
 		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
+		
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
+		
 		logger.log(Level.INFO, "Succesfully committed transaction.");
-
+	}
+	
+	private void deleteTempRemoteFiles() throws StorageException {
 		// Actually deleting remote files is done after finishing the transaction, because
 		// it cannot be rolled back! If this fails, the temporary files will eventually
 		// be cleaned up by CleanUp and download will not download these, because
@@ -161,21 +202,5 @@ public class RemoteTransaction {
 		}
 
 		logger.log(Level.INFO, "Sucessfully deleted final files.");
-
-	}
-
-	private File writeLocalTransactionFile() throws StorageException {
-		try {
-			File localTransactionFile = config.getCache().createTempFile("transaction");
-
-			transactionTO.save(config.getTransformer(), localTransactionFile);
-
-			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
-
-			return localTransactionFile;
-		}
-		catch (Exception e) {
-			throw new StorageException("Could not create temporary file for transaction", e);
-		}
 	}
 }

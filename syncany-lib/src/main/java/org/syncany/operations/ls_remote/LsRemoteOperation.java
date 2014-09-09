@@ -29,7 +29,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 

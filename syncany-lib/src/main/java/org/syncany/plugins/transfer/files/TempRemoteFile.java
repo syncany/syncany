@@ -21,13 +21,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.crypto.CipherUtil;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The temp file represents a temporary file on the remote storage. 
  * 
  * <p><b>Name pattern:</b> The name pattern of a temp file is
- * <b>temp-&lt;filehexhashcode&gt;</b>.
+ * <b>temp-&lt;randomidentifier&gt;</b>.
  * 
  * @author Pim Otte
  */

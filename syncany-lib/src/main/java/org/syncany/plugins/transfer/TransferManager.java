@@ -20,8 +20,6 @@ package org.syncany.plugins.transfer;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;

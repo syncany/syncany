@@ -30,10 +30,6 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageFileNotFoundException;
-import org.syncany.plugins.StorageMoveException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;

@@ -15,28 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins;
-
-import org.syncany.plugins.transfer.TransferManager;
+package org.syncany.plugins.transfer;
 
 /**
- * Exception thrown when any of the methods of the {@link TransferManager}
- * fail. Usually caused by broken sockets or a not available Internet connection.
+ * The StorageFileNotFoundException is thrown if a TransferManager cannot
+ * find a file. If relevant, then a TransactionAwareTransferManager can catch
+ * this and handle it accordingly.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte
  */
-public class StorageException extends Exception {
-	private static final long serialVersionUID = -311986990752074527L;
+public class StorageFileNotFoundException extends StorageException {
+	private static final long serialVersionUID = 4634353042367553250L;
 
-	public StorageException(Throwable cause) {
-        super(cause);
-    }
+	public StorageFileNotFoundException(Throwable cause) {
+		super(cause);
+	}
 
-    public StorageException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public StorageFileNotFoundException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public StorageException(String message) {
-        super(message);
-    }
+	public StorageFileNotFoundException(String message) {
+		super(message);
+	}
 }
