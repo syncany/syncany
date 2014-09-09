@@ -70,13 +70,16 @@ var
 function InitializeSetup(): Boolean;
 var 
   RegRootKey: Integer;
+  RegRootPath: String;
   JavaVersion: String;
 begin
   if IsWin64 then begin
     RegRootKey := HKLM64;
+    RegRootPath := 'SOFTWARE\\Wow6432Node\\JavaSoft';
   end
   else begin
     RegRootKey := HKLM;
+    RegRootPath := 'SOFTWARE\\JavaSoft';    
   end;
   
   JavaHome := GetEnv('JAVA_HOME')   
@@ -88,11 +91,11 @@ begin
   else begin
     JavaHomeSet := False;
 
-    if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion') then begin
-      RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion', JavaVersion);
+    if RegValueExists(RegRootKey, RegRootPath + '\\Java Development Kit', 'CurrentVersion') then begin
+      RegQueryStringValue(RegRootKey, RegRootPath + '\\Java Development Kit', 'CurrentVersion', JavaVersion);
       
-      if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + JavaVersion, 'JavaHome') then begin
-        RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + JavaVersion, 'JavaHome', JavaHome);
+      if RegValueExists(RegRootKey, RegRootPath + '\\Java Development Kit\\' + JavaVersion, 'JavaHome') then begin
+        RegQueryStringValue(RegRootKey, RegRootPath + '\\Java Development Kit\\' + JavaVersion, 'JavaHome', JavaHome);
         Result := True;
       end
       else begin
@@ -100,11 +103,11 @@ begin
         Result := False;
       end
     end
-    else if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion') then begin
-      RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion', JavaVersion);
+    else if RegValueExists(RegRootKey, RegRootPath + '\\Java Runtime Environment', 'CurrentVersion') then begin
+      RegQueryStringValue(RegRootKey, RegRootPath + '\\Java Runtime Environment', 'CurrentVersion', JavaVersion);
     
-      if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + JavaVersion, 'JavaHome') then begin
-        RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + JavaVersion, 'JavaHome', JavaHome);
+      if RegValueExists(RegRootKey, RegRootPath + '\\Java Runtime Environment\\' + JavaVersion, 'JavaHome') then begin
+        RegQueryStringValue(RegRootKey, RegRootPath + '\\Java Runtime Environment\\' + JavaVersion, 'JavaHome', JavaHome);
         Result := True;
       end
       else begin
