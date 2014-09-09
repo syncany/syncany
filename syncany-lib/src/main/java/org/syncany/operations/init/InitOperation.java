@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
@@ -34,9 +33,9 @@ import org.syncany.plugins.Plugins;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RepoRemoteFile;
 
@@ -58,8 +57,6 @@ import org.syncany.plugins.transfer.files.RepoRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
-    private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());  
-    
     private InitOperationOptions options;
     private InitOperationResult result;
     
@@ -70,7 +67,7 @@ public class InitOperation extends AbstractInitOperation {
 		super(null, listener);
         
         this.options = options;
-        this.result = null;
+        this.result = new InitOperationResult();
     }        
             
     @Override
@@ -143,12 +140,21 @@ public class InitOperation extends AbstractInitOperation {
 		// Shutdown plugin 
 		transferManager.disconnect();
 		
+		// Add to daemon (if requested)
+		if (options.isDaemon()) {
+			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
+			result.setAddedToDaemon(addedToDaemonConfig);
+		}
+		
 		// Make link		
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
 					
-		return new InitOperationResult(InitResultCode.OK, genlinkOperationResult);
-    }          
-    
+		result.setResultCode(InitResultCode.OK);
+		result.setGenLinkResult(genlinkOperationResult);
+		
+		return result;
+    }             	
+
 	private boolean performRepoTest() {
 		boolean testCreateTarget = options.isCreateTarget();
 		StorageTestResult testResult = transferManager.test(testCreateTarget);
@@ -165,7 +171,10 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-			result = new InitOperationResult(InitResultCode.NOK_TEST_FAILED, testResult);			
+			
+			result.setResultCode(InitResultCode.NOK_TEST_FAILED);
+			result.setTestResult(testResult);
+			
 			return false;
 		}
 	}
@@ -188,7 +197,7 @@ public class InitOperation extends AbstractInitOperation {
 			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
 		}
 		
-		// TODO [medium] This throws construction is odd and the error message doesn't tell me anything. 
+		// TODO [low] This throws construction is odd and the error message doesn't tell me anything. 
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 

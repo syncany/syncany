@@ -14,9 +14,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.command.GUIClient;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
-import org.syncany.operations.daemon.messages.ListWatchesRequest;
-import org.syncany.operations.daemon.messages.ListWatchesResponse;
-import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.api.Request;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -64,9 +64,9 @@ public class MainGUI {
 		logger.info("Restoring watched folders");
 
 		GUIClient gc = new GUIClient();
-		Request req = new ListWatchesRequest();
+		Request req = new ListWatchesManagementRequest();
 		req.setId(Math.abs(new Random().nextInt()));
-		ListWatchesResponse response = (ListWatchesResponse) gc.runCommand(req);
+		ListWatchesManagementResponse response = (ListWatchesManagementResponse) gc.runCommand(req);
 		
 		Map<String, Map<String, String>> folders = new HashMap<>();
 		

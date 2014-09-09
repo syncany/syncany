@@ -37,9 +37,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.syncany.Client;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.Response;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.Response;
 
 
 /**

@@ -24,6 +24,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.CliUtil;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.status.StatusOperationOptions;
@@ -114,20 +115,22 @@ public class CleanupCommand extends Command {
 		return operationOptions;
 	}
 	
-	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
 		return statusCommand.parseOptions(operationArgs);
 	}
 
-	private void printResults(CleanupOperationResult operationResult) {	
-		switch (operationResult.getResultCode()) {
+	public void printResults(OperationResult operationResult) {	
+		CleanupOperationResult concreteOperationResult = (CleanupOperationResult)operationResult;
+		switch (concreteOperationResult.getResultCode()) {
 		case NOK_DIRTY_LOCAL:
 			out.println("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
 			break;
 			
 		case NOK_RECENTLY_CLEANED:
 			out.println("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
-
+			break;
+			
 		case NOK_LOCAL_CHANGES:
 			out.println("Local changes detected. Please call 'up' first'.");
 			break;
@@ -141,23 +144,23 @@ public class CleanupCommand extends Command {
 			break;
 
 		case OK:
-			if (operationResult.getMergedDatabaseFilesCount() > 0) {
-				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged.");
+			if (concreteOperationResult.getMergedDatabaseFilesCount() > 0) {
+				out.println(concreteOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
 			}
 			
-			if (operationResult.getRemovedMultiChunks().size() > 0) {
+			if (concreteOperationResult.getRemovedMultiChunks().size() > 0) {
 				long totalRemovedMultiChunkSize = 0;
 				
-				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks().values()) {
+				for (MultiChunkEntry removedMultiChunk : concreteOperationResult.getRemovedMultiChunks().values()) {
 					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
 				}
 				
 				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
-					operationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
+						concreteOperationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
 			}
 
-			if (operationResult.getRemovedOldVersionsCount() > 0) {
-				out.println(operationResult.getRemovedOldVersionsCount() + " file histories shortened.");
+			if (concreteOperationResult.getRemovedOldVersionsCount() > 0) {
+				out.println(concreteOperationResult.getRemovedOldVersionsCount() + " file histories shortened.");
 				// TODO [low] This counts only the file histories, not file versions; not very helpful!
 			}
 
@@ -169,9 +172,12 @@ public class CleanupCommand extends Command {
 			break;
 
 		default:
-			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode().toString());
+			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
 		}	
 	}
 	
-
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
 }

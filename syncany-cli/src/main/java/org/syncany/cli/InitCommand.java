@@ -44,6 +44,7 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
@@ -52,6 +53,8 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand {
+	private InitOperationOptions operationOptions;
+	
 	public static final int REPO_ID_LENGTH = 32;
 	
 	@Override
@@ -64,11 +67,11 @@ public class InitCommand extends AbstractInitCommand {
 		boolean retryNeeded = true;
 		boolean performOperation = true;
 		
-		InitOperationOptions operationOptions = parseInitOptions(operationArgs);
+		operationOptions = parseOptions(operationArgs);
 
 		while (retryNeeded && performOperation) {
 			InitOperationResult operationResult = client.init(operationOptions, this);			
-			printResults(operationOptions, operationResult);
+			printResults(operationResult);
 			
 			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
@@ -84,7 +87,7 @@ public class InitCommand extends AbstractInitCommand {
 		return 0;		
 	}
 
-	private InitOperationOptions parseInitOptions(String[] operationArguments) throws Exception {
+	public InitOperationOptions parseOptions(String[] operationArguments) throws Exception {
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -95,6 +98,7 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
+		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 						
@@ -130,20 +134,27 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(null); // set by callback in operation 
+		operationOptions.setDaemon(!options.has(optionNoDaemon));
 		
 		return operationOptions;
 	}		
 
-	private void printResults(InitOperationOptions operationOptions, InitOperationResult operationResult) {
-		if (operationResult.getResultCode() == InitResultCode.OK) {
+	public void printResults(OperationResult operationResult) {
+		InitOperationResult concreteOperationResult = (InitOperationResult)operationResult;
+		if (concreteOperationResult.getResultCode() == InitResultCode.OK) {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
 			out.println("with others, you can share this link:");
 
-			printLink(operationResult.getGenLinkResult(), false);
+			printLink(concreteOperationResult.getGenLinkResult(), false);
+			
+			if (concreteOperationResult.isAddedToDaemon()) {
+				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
+				out.println();
+			}
 		}
-		else if (operationResult.getResultCode() == InitResultCode.NOK_TEST_FAILED) {
-			StorageTestResult testResult = operationResult.getTestResult();
+		else if (concreteOperationResult.getResultCode() == InitResultCode.NOK_TEST_FAILED) {
+			StorageTestResult testResult = concreteOperationResult.getTestResult();
 			out.println();			
 			
 			if (testResult.isRepoFileExists()) {
@@ -180,7 +191,7 @@ public class InitCommand extends AbstractInitCommand {
 		}
 		else {
 			out.println();
-			out.println("ERROR: Cannot connect to repository. Unknown error code: "+operationResult.getResultCode());
+			out.println("ERROR: Cannot connect to repository. Unknown error code: "+concreteOperationResult.getResultCode());
 			out.println();
 		}		
 	}
@@ -354,5 +365,10 @@ public class InitCommand extends AbstractInitCommand {
 		cipherTransformerTO.setSettings(cipherTransformerSettings);
 
 		return cipherTransformerTO;
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

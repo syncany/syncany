@@ -24,22 +24,58 @@ startScripts {
 		winPurgeFileDeletionCommands += ")\r\n\r\n";
 		
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
+		
+		def winTextTmp = ""
+		def winText = winFile.text
+		def windowsDaemonScript = new File('gradle/daemon/syncanyd.bat.skel').text		
+		
+		winText.readLines().each {
+			line ->
+				if (line.startsWith("\"%JAVA_EXE%\"")) {
+					winTextTmp += "if \"%1\" == \"daemon\" goto daemon" + "\r\n"
+					winTextTmp += line + "\r\n"
+					winTextTmp += "goto afterdaemon" + "\r\n"
+					
+					winTextTmp += "\r\n"
+					winTextTmp += ":daemon" + "\r\n"
+					winTextTmp += windowsDaemonScript + "\r\n"
+					
+					winTextTmp += "\r\n"
+					winTextTmp += ":afterdaemon" + "\r\n"
+				}
+				else {
+					winTextTmp += line + '\n'
+				}
+		}
+		
+		winFile.text = winTextTmp
+		
+		// Update unix text
+		def unixTextTmp = ""
+		def unixText = unixFile.text
+		def unixDaemonScript = new File('gradle/daemon/syncanyd.skel').text		
+		
+		unixText.readLines().each {
+			line ->
+				if (line.startsWith("exec")) {
+					unixTextTmp += unixDaemonScript.replace("#JAVA_EXEC_REPLACEMENT_MARKER#", line);
+				}
+				else {
+					unixTextTmp += line + '\n'
+				}
+		}
+		
+		unixFile.text = unixTextTmp
 	}
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
-	
-	// Copy daemon script
-	from("gradle/daemon/") {
-		include "syncanyd", "syncanyd.bat"
-		into "bin"
-	}
 
-	// Copy syncany/syncanyd to sy/syd
-	from(files("gradle/daemon/", "${startScripts.outputDir}/")) {
+	// Copy syncany(.bat) to sy(.bat)
+	from("${startScripts.outputDir}/") {
 		include "syncany*"
-		rename(/syncany(.*)/, 'sy$1')
+		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
 }

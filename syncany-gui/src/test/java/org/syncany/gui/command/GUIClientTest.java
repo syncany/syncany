@@ -18,18 +18,14 @@ package org.syncany.gui.command;
  */
 
 
-import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.operations.daemon.messages.ListWatchesRequest;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.Response;
-import org.syncany.tests.util.TestCliUtil;
-import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.Response;
 
 public class GUIClientTest {	
 	private static final Logger logger = Logger.getLogger(GUIClientTest.class.getSimpleName());
@@ -37,7 +33,7 @@ public class GUIClientTest {
 	@Test
 	public void testGuiClient() throws Exception {
 		GUIClient gc = new GUIClient();
-		Request req = new ListWatchesRequest();
+		Request req = new ListWatchesManagementRequest();
 		req.setId(Math.abs(new Random().nextInt()));
 		Response response = gc.runCommand(req);
 		logger.log(Level.FINE, response.toString());

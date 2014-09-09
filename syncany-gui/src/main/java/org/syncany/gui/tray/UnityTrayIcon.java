@@ -21,22 +21,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.net.InetSocketAddress;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Shell;
-import org.java_websocket.WebSocket;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
 import org.syncany.gui.messaging.webserver.StaticResourcesWebServer;
 import org.syncany.gui.messaging.webserver.StaticResourcesWebServer.ServerStartedListener;
-import org.syncany.gui.messaging.websocket.WebsocketClient;
-
-import com.google.common.reflect.TypeToken;
 
 /**
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -44,10 +35,9 @@ import com.google.common.reflect.TypeToken;
  *
  */
 public class UnityTrayIcon extends TrayIcon {
-	private static final Logger logger = Logger.getLogger(WebsocketClient.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(UnityTrayIcon.class.getSimpleName());
 	private static int WEBSOCKET_SERVER_PORT = 51600;
 
-	private WebSocketServer webSocketClient;
 	private StaticResourcesWebServer staticWebServer;
 	private static Process unityProcess;
 
@@ -59,37 +49,7 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	private void startWebSocketServer() {
-		try {
-			this.webSocketClient = new WebSocketServer(new InetSocketAddress(WEBSOCKET_SERVER_PORT)) {
-				@Override
-				public void onOpen(WebSocket conn, ClientHandshake handshake) {
-					String id = handshake.getFieldValue("client_id");
-					logger.fine("Client with id '" + id + "' connected");
-				}
 
-				@Override
-				public void onMessage(WebSocket conn, String message) {
-					logger.fine("Unity Received from " + conn.getRemoteSocketAddress().toString() + ": " + message);
-					Type type = new TypeToken<Map<String, Object>>() {}.getType();
-					//handleCommand((Map<String, Object>)e));
-				}
-
-				@Override
-				public void onError(WebSocket conn, Exception ex) {
-					logger.fine("Server error : " + ex.toString());
-				}
-
-				@Override
-				public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-					logger.fine(conn.getRemoteSocketAddress().toString() + " disconnected");
-				}
-			};
-
-			webSocketClient.start();
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Cannot instantiate Unity tray icon.", e);
-		}
 	}
 
 	private void startWebServer() {
@@ -115,7 +75,7 @@ public class UnityTrayIcon extends TrayIcon {
 	protected void quit() {
 		try {
 			staticWebServer.stopService();
-			webSocketClient.stop();
+			//webSocketClient.stop();
 		}
 		catch (Exception e) {
 			logger.warning("Exception while quitting application " + e);
@@ -150,22 +110,7 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	public void sendToAll(String message) {		
-		Collection<WebSocket> webSocketConnections = webSocketClient.connections();
-		
-		synchronized (webSocketConnections) {
-			for (WebSocket webSocket : webSocketConnections) {
-				sendTo(webSocket, message);
-			}
-		}
-	}
 
-	public void sendTo(WebSocket webSocket, String message) {
-		try {
-			webSocket.send(message);
-		}
-		catch (Exception e) {
-			logger.warning("Exception " + e);
-		}
 	}
 
 	private void launchLoggerThread(final BufferedReader stdinReader, final String prefix) {

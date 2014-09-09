@@ -24,6 +24,7 @@ DESCRIPTION
     restore    Restore the given file paths from the remote repository. 
     genlink    Create a syncany:// link from an existing local folder. 
     plugin     List, install and remove storage backend plugins.
+    daemon     Start and stop the background process (daemon).
 
   Short command descriptions and options can be found below. Detailed 
   explanations can be queried with `sy <command> --help`. 

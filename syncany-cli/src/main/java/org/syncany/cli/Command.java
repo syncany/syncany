@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.PrintStream;
 
 import org.syncany.Client;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 
 /**
  * Commands are the central part of Syncany's command line client. Each implementation 
@@ -75,6 +77,11 @@ public abstract class Command {
 	 */
 	public abstract CommandScope getRequiredCommandScope();
 
+	public abstract OperationOptions parseOptions(String[] operationArgs) throws Exception;
+	public abstract void printResults(OperationResult result);
+	
+	public abstract boolean canExecuteInDaemonScope();
+	
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
 	}

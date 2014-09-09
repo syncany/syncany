@@ -19,6 +19,8 @@ package org.syncany.cli;
 
 import java.util.List;
 
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -43,5 +45,20 @@ public class LsRemoteCommand extends Command {
 		}
 		
 		return 0;
+	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {		
+		return null;
+	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// Nothing.
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

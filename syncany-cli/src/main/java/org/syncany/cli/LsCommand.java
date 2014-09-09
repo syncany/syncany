@@ -33,6 +33,7 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
 
@@ -44,6 +45,7 @@ public class LsCommand extends AbstractHistoryCommand {
 	
 	private int checksumLength;
 	private boolean groupedVersions;
+	private LsOperationOptions operationOptions;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
@@ -52,15 +54,15 @@ public class LsCommand extends AbstractHistoryCommand {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		LsOperationOptions operationOptions = parseOptions(operationArgs);
+		operationOptions = parseOptions(operationArgs);
 		LsOperationResult operationResult = client.ls(operationOptions);
 
-		printResults(operationOptions, operationResult);
+		printResults(operationResult);
 
 		return 0;
 	}	
 
-	private LsOperationOptions parseOptions(String[] operationArgs) throws Exception {
+	public LsOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		LsOperationOptions operationOptions = new LsOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -121,16 +123,18 @@ public class LsCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 
-	private void printResults(LsOperationOptions operationOptions, LsOperationResult operationResult) {		
-		int longestSize = calculateLongestSize(operationResult.getFileTree());
-		int longestVersion = calculateLongestVersion(operationResult.getFileTree());
+	public void printResults(OperationResult operationResult) {
+		LsOperationResult concreteOperationResult = (LsOperationResult) operationResult;
+		
+		int longestSize = calculateLongestSize(concreteOperationResult.getFileTree());
+		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileTree());
 
 		if (operationOptions.isFetchHistories()) {
-			printHistories(operationOptions, operationResult, longestSize, longestVersion);
+			printHistories(operationOptions, concreteOperationResult, longestSize, longestVersion);
 				
 		}
 		else {
-			printTree(operationOptions, operationResult, longestSize, longestVersion);			
+			printTree(operationOptions, concreteOperationResult, longestSize, longestVersion);			
 		}
 	}
 	
@@ -230,5 +234,10 @@ public class LsCommand extends AbstractHistoryCommand {
 		}
 		
 		return result;	
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

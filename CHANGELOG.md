@@ -1,11 +1,22 @@
 Change Log
 ==========
 
-### Syncany 0.1.9-alpha (Date: tbd.)
+### Syncany 0.1.10-alpha (Date: Tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Combined `sy` and `syd` script into one #210
+  + Add folder to daemon config in `sy init` #215/#153
+- Bugfixes and other things:
+  + Fix daemon tests #185
+  + Rewrite bash completion, fixes --localdir issue #209
+  + Fix issue with `sy daemon force-stop` #212
+
+### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + HTTPS-only for WebSocket/REST-like API and web interface #185/#196
   + Add bash-completion functionality (Debian/Ubuntu) #201
+  + New and awesome end user guide at https://syncany.org/r/userguide
 - Bugfixes and other things:
   + Implement full cleanup to fix (big!) #187/#193 
   + Fixed database integrity issue (solved by #187)

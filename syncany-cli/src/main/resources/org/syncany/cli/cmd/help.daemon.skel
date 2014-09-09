@@ -1,0 +1,39 @@
+NAME
+  sy-daemon - starts and stops the background process (daemon)
+   
+SYNOPSIS
+  sy daemon (start|stop|reload|restart|status|force-stop)
+  
+DESCRIPTION 
+  This command manages the Syncany background process (aka the daemon). It can
+  start and stop the daemon, display the status and reload the daemon
+  configuration.
+  
+  This daemon can be started with `sy daemon start`. Once it is running, all
+  registered folders are monitored for changes and remote changes are
+  automatically applied to the local folder(s). All of these actions happen
+  in the background, without the need for any intervention.
+  
+  The daemon is configured using the `daemon.xml` file  at 
+  ~/.config/syncany/daemon.xml.
+  
+OPTIONS
+  start
+    Starts the background process (if it is not already running).
+    
+  stop
+    Stops the background process (if it is running).
+    
+  reload
+    Reloads the daemon configuration without restarting the proces.
+    
+  restart
+    Stops, then starts the daemon again. 
+    
+  status
+    Displays the status and the process ID (PID) of the daemon.
+    
+  force-stop
+    Forces the process to stop. Do not use this unless absolutely necessary!
+    
+%RESOURCE:incl/footer.skel%

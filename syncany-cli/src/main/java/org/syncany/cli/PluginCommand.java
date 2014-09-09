@@ -26,6 +26,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
@@ -51,7 +52,7 @@ public class PluginCommand extends Command {
 		return 0;
 	}
 
-	private PluginOperationOptions parseOptions(String[] operationArgs) throws Exception {
+	public PluginOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		PluginOperationOptions operationOptions = new PluginOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -276,5 +277,15 @@ public class PluginCommand extends Command {
 		}
 
 		return tableColumnWidths;
+	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// TODO [medium] Move output here.
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

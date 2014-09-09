@@ -22,9 +22,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.genlink.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
+	private GenlinkOperationOptions commandOptions;
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -32,15 +35,15 @@ public class GenlinkCommand extends AbstractInitCommand {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		GenlinkCommandOptions commandOptions = parseGenlinkOptions(operationArgs);
+		commandOptions = parseOptions(operationArgs);
 		GenlinkOperationResult operationResult = client.genlink();		
-		printResults(operationResult, commandOptions);
+		printResults(operationResult);
 		
 		return 0;		
 	}
 	
-	private GenlinkCommandOptions parseGenlinkOptions(String[] operationArgs) {
-		GenlinkCommandOptions commandOptions = new GenlinkCommandOptions();
+	public GenlinkOperationOptions parseOptions(String[] operationArgs) {
+		GenlinkOperationOptions commandOptions = new GenlinkOperationOptions();
 
 		OptionParser parser = new OptionParser();			
 		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));
@@ -53,24 +56,19 @@ public class GenlinkCommand extends AbstractInitCommand {
 		return commandOptions;
 	}
 	
-	private void printResults(GenlinkOperationResult operationResult, GenlinkCommandOptions commandOptions) {
+	public void printResults(OperationResult operationResult) {
+		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
+		
 		if (!commandOptions.isShortOutput()) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(operationResult, commandOptions.isShortOutput());			
+		printLink(concreteOperationResult, commandOptions.isShortOutput());			
 	}
 	
-	private class GenlinkCommandOptions {
-		private boolean shortOutput = false;
-
-		public boolean isShortOutput() {
-			return shortOutput;
-		}
-
-		public void setShortOutput(boolean shortOutput) {
-			this.shortOutput = shortOutput;
-		}				
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 }

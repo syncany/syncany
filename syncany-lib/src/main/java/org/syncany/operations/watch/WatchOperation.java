@@ -235,7 +235,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			syncRequested.set(false);
 
 			logger.log(Level.INFO, "RUNNING SYNC ...");
-
 			
 			try {
 				boolean notifyChanges = false;
