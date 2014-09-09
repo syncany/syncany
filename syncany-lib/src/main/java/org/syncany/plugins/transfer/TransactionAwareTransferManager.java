@@ -139,21 +139,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 			if (isCancelledOwnTransaction) {
 				// If this transaction is from our machine, delete all permanent or temporary files in this transaction.
-				TransactionTO cancelledOwnTransaction = potentiallyCancelledTransaction;
-				addRollbackActionsToTransaction(rollbackTransaction, cancelledOwnTransaction.getActions());
-
-				// Get corresponding remote file of transaction and delete it.
-				TransactionRemoteFile cancelledOwnTransactionFile = transactions.get(cancelledOwnTransaction);
-				rollbackTransaction.delete(cancelledOwnTransactionFile);
-
-				// Nicer debug output
-				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "Unfinished transaction " + cancelledOwnTransactionFile + ". Rollback necessary!");
-
-					for (ActionTO action : cancelledOwnTransaction.getActions()) {
-						logger.log(Level.INFO, "- Needs to be rolled back: " + action);
-					}
-				}
+				rollbackSingleTransaction(rollbackTransaction, potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
 			}
 		}
 
@@ -164,6 +150,33 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 		else {
 			logger.log(Level.INFO, "Clean TX: No stale transactions found. No cleansing necessary.");
+		}
+	}
+
+	/**
+	 * This method is called when the machine wants to rollback one of their own transactions.
+	 * rollbackTransaction is the transaction that composes the rollback.
+	 * cancelledTransaction is the transaction that is cancelled
+	 * remoteCancelledTransaction is the remote file location of the cancelled transaction. This file
+	 * will be deleted as part of the rollback. 
+	 */
+	private void rollbackSingleTransaction(RemoteTransaction rollbackTransaction, TransactionTO cancelledTransaction,
+			TransactionRemoteFile remoteCancelledTransaction) throws StorageException {
+
+		TransactionTO cancelledOwnTransaction = cancelledTransaction;
+		addRollbackActionsToTransaction(rollbackTransaction, cancelledOwnTransaction.getActions());
+
+		// Get corresponding remote file of transaction and delete it.
+		TransactionRemoteFile cancelledOwnTransactionFile = remoteCancelledTransaction;
+		rollbackTransaction.delete(cancelledOwnTransactionFile);
+
+		// Nicer debug output
+		if (logger.isLoggable(Level.INFO)) {
+			logger.log(Level.INFO, "Unfinished transaction " + cancelledOwnTransactionFile + ". Rollback necessary!");
+
+			for (ActionTO action : cancelledOwnTransaction.getActions()) {
+				logger.log(Level.INFO, "- Needs to be rolled back: " + action);
+			}
 		}
 	}
 
