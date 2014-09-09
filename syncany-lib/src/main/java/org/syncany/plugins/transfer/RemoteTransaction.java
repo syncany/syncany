@@ -107,15 +107,20 @@ public class RemoteTransaction {
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
 
+		if (isEmpty()) {
+			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
+			return;
+		}
+
 		File localTransactionFile = writeLocalTransactionFile();
 		TransactionRemoteFile remoteTransactionFile = uploadTransactionFile(localTransactionFile);
-				
+
 		uploadAndMoveToTempLocation();
-		moveToFinalLocation();		
+		moveToFinalLocation();
 
 		deleteTransactionFile(localTransactionFile, remoteTransactionFile);
 		deleteTempRemoteFiles();
-	}		
+	}
 
 	private File writeLocalTransactionFile() throws StorageException {
 		try {
@@ -130,13 +135,13 @@ public class RemoteTransaction {
 			throw new StorageException("Could not create temporary file for transaction", e);
 		}
 	}
-	
+
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
-		
+
 		return remoteTransactionFile;
 	}
 
@@ -163,7 +168,7 @@ public class RemoteTransaction {
 			}
 		}
 	}
-	
+
 	private void moveToFinalLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
@@ -175,17 +180,17 @@ public class RemoteTransaction {
 			}
 		}
 	}
-	
+
 	private void deleteTransactionFile(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
 		// After this deletion, the transaction is final!
 		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
-		
+
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
-		
+
 		logger.log(Level.INFO, "Succesfully committed transaction.");
 	}
-	
+
 	private void deleteTempRemoteFiles() throws StorageException {
 		// Actually deleting remote files is done after finishing the transaction, because
 		// it cannot be rolled back! If this fails, the temporary files will eventually

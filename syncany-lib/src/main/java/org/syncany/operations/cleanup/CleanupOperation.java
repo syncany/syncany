@@ -104,6 +104,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		this.localDatabase = new SqlDatabase(config);
 	}
 
+	/**
+	 * High level strategy:
+	 * 1. Lock repo and start thread that renews the lock every X seconds
+	 * 2. Find old versions / contents / ... from database
+	 * 3. Write and upload old versions to PRUNE file
+	 * 4. Remotely delete unused multichunks 
+	 * 5. Stop lock renewal thread and unlock repo
+	 * 
+	 * Important issues:
+	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
+	 *  
+	 * @throws Exception 
+	 */
 	@Override
 	public CleanupOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
@@ -137,6 +150,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
+		}
+
+		if (options.isRemoveUnreferencedTemporaryFiles()) {
+			transferManager.removeUnreferencedTemporaryFiles();
 		}
 
 		// Committing in two steps because a) at this point it is atomic b) such that
@@ -194,21 +211,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return statusOperationResult.getChangeSet().hasChanges();
 	}
 
-	/**
-	 * High level strategy:
-	 * 1. Lock repo and start thread that renews the lock every X seconds
-	 * 2. Find old versions / contents / ... from database
-	 * 3. Write and upload old versions to PRUNE file
-	 * 4. Remotely delete unused multichunks 
-	 * 5. Stop lock renewal thread and unlock repo
-	 * 
-	 * Important issues:
-	 *  - TODO [high] Issue #64: All remote operations MUST be performed atomically. How to achieve this? 
-	 *    How to react if one operation works and the other one fails?
-	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
-	 *  
-	 * @throws Exception 
-	 */
 	private void removeOldVersions() throws Exception {
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 

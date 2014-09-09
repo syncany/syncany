@@ -19,6 +19,7 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
@@ -150,6 +152,36 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 		else {
 			logger.log(Level.INFO, "Clean TX: No stale transactions found. No cleansing necessary.");
+		}
+	}
+
+	public void removeUnreferencedTemporaryFiles() throws StorageException {
+		Objects.requireNonNull(config, "Cannot remove unused files if config is null.");
+		// Intialize transaction for deletion
+		RemoteTransaction deleteTransaction = new RemoteTransaction(config, this);
+
+		// Retrieve all transactions
+		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
+		Collection<TempRemoteFile> tempRemoteFiles = list(TempRemoteFile.class).values();
+
+		// Find all remoteFiles that are referenced in a transaction
+		Set<TempRemoteFile> tempRemoteFilesInTransaction = new HashSet<TempRemoteFile>();
+
+		for (TransactionTO transaction : transactions.keySet()) {
+			for (ActionTO action : transaction.getActions()) {
+				tempRemoteFilesInTransaction.add(action.getTempRemoteFile());
+			}
+		}
+
+		// Consider just those files that are not referenced and delete them.
+		tempRemoteFiles.removeAll(tempRemoteFilesInTransaction);
+
+		for (TempRemoteFile unreferencedTempRemoteFile : tempRemoteFiles) {
+			deleteTransaction.delete(unreferencedTempRemoteFile);
+		}
+		if (tempRemoteFiles.size() > 0) {
+			logger.log(Level.INFO, "Unreferenced temporary files found, deleting these.");
+			deleteTransaction.commit();
 		}
 	}
 
