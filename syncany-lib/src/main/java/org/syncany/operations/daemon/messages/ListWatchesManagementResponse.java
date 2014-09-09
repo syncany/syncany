@@ -28,6 +28,10 @@ public class ListWatchesManagementResponse extends ManagementResponse {
 	@ElementList(required = true, entry="watch")
 	private ArrayList<File> watches;	
 	
+	public ListWatchesManagementResponse() {
+		// No arg constructor
+	}
+	
 	public ListWatchesManagementResponse(int requestId, List<File> watches) {
 		super(200, requestId, null);
 		this.watches = new ArrayList<File>(watches);

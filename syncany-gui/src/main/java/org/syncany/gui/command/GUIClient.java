@@ -50,7 +50,7 @@ public class GUIClient extends Client {
 	private static final Logger logger = Logger.getLogger(GUIClient.class.getSimpleName());
 	
 	private static final String userName = "admin";
-	private static final String password = "admin";
+	private static final String password = "vvhflnxpxqZP";
 	
 	private static final String SERVER_SCHEMA = "https://";
 	private static final String SERVER_HOSTNAME = "localhost";
