@@ -181,11 +181,6 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 * <p>Temporary files might be left over from unfinished transactions.
 	 */
 	public void removeUnreferencedTemporaryFiles() throws StorageException {
-		Objects.requireNonNull(config, "Cannot remove unused files if config is null.");
-
-		// Initialize transaction for deletion
-		RemoteTransaction deleteTransaction = new RemoteTransaction(config, this);
-
 		// Retrieve all transactions
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		Collection<TempRemoteFile> tempRemoteFiles = list(TempRemoteFile.class).values();
@@ -203,13 +198,10 @@ public class TransactionAwareTransferManager implements TransferManager {
 		tempRemoteFiles.removeAll(tempRemoteFilesInTransactions);
 
 		for (TempRemoteFile unreferencedTempRemoteFile : tempRemoteFiles) {
-			deleteTransaction.delete(unreferencedTempRemoteFile);
+			logger.log(Level.INFO, "Unreferenced temporary file found. Deleting {0}", unreferencedTempRemoteFile);
+			underlyingTransferManager.delete(unreferencedTempRemoteFile);
 		}
 
-		if (tempRemoteFiles.size() > 0) {
-			logger.log(Level.INFO, "Unreferenced temporary files found, deleting these.");
-			deleteTransaction.commit();
-		}
 	}
 
 	/**
@@ -401,7 +393,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 */
 	protected File createTempFile(String name) throws IOException {
 		// TODO [low] duplicate code with AbstractTransferManager
-		
+
 		if (config == null) {
 			return File.createTempFile(String.format("temp-%s-", name), ".tmp");
 		}
