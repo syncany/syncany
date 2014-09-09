@@ -36,6 +36,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
@@ -66,6 +67,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	private File databasesPath;
 	private File actionsPath;
 	private File transactionsPath;
+	private File temporaryPath;
 
 	public LocalTransferManager(LocalTransferSettings connection, Config config) {
 		super(connection, config);
@@ -75,6 +77,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		this.databasesPath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
 		this.actionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "actions");
 		this.transactionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transactions");
+		this.temporaryPath = new File(connection.getRepositoryPath().getAbsolutePath(), "temporary");
 	}
 
 	@Override
@@ -113,6 +116,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 		if (!transactionsPath.mkdir()) {
 			throw new StorageException("Cannot create transactions directory: " + transactionsPath);
+		}
+
+		if (!temporaryPath.mkdir()) {
+			throw new StorageException("Cannot create temporary directory: " + temporaryPath);
 		}
 	}
 
@@ -245,6 +252,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		else if (remoteFile.equals(TransactionRemoteFile.class)) {
 			return transactionsPath;
+		}
+		else if (remoteFile.equals(TempRemoteFile.class)) {
+			return temporaryPath;
 		}
 		else {
 			return repoPath;

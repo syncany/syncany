@@ -557,6 +557,7 @@ public class CleanupOperationTest {
 		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
 		File repoDatabasesDir = new File(testConnection.getRepositoryPath() + "/databases");
 		File repoTransactionsDir = new File(testConnection.getRepositoryPath() + "/transactions");
+		File repoTemporaryDir = new File(testConnection.getRepositoryPath() + "/temporary");
 
 		// Run
 
@@ -583,16 +584,8 @@ public class CleanupOperationTest {
 		}
 
 		assertTrue(operationFailed);
-		assertEquals(1, repoTransactionsDir.list(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.startsWith("transaction-");
-			}
-		}).length);
-		assertEquals(1, repoDir.list(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.startsWith("temp-");
-			}
-		}).length);
+		assertEquals(1, repoTransactionsDir.list().length);
+		assertEquals(1, repoTemporaryDir.list().length);
 
 		// Retry
 		clientA.cleanup(options);

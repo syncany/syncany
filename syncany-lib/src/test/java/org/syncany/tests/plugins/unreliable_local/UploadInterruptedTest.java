@@ -183,11 +183,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		assertEquals(1, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		}).length);
+		assertEquals(1, new File(testConnection.getRepositoryPath() + "/temporary/").listFiles().length);
 
 		File transactionFile = new File(testConnection.getRepositoryPath() + "/transactions/").listFiles()[0];
 		TransactionTO transactionTO = new Persister().read(TransactionTO.class, transactionFile);
@@ -204,11 +200,7 @@ public class UploadInterruptedTest {
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		assertEquals(0, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		}).length);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/temporary/").listFiles().length);
 
 		// Tear down
 		clientA.deleteTestData();
@@ -258,11 +250,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		});
+		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/temporary/").listFiles();
 
 		assertEquals(1, tempFiles.length);
 		assertTrue(tempFiles[0].length() > 500 * 1024); // 1 MC with 1 MB, 1 with 4 MB; must be larger than 500 KB
@@ -283,11 +271,7 @@ public class UploadInterruptedTest {
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		assertEquals(0, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		}).length);
+		assertEquals(0, new File(testConnection.getRepositoryPath() + "/temporary/").listFiles().length);
 
 		// Tear down
 		clientA.deleteTestData();
@@ -345,11 +329,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		});
+		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/temporary/").listFiles();
 
 		assertEquals(2, tempFiles.length);
 		assertTrue(tempFiles[0].length() > 500 * 1024 || tempFiles[1].length() > 500 * 1024); // The second multichunk should be >500 KB
@@ -456,11 +436,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length);
 		assertEquals(1, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
 
-		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		});
+		File[] tempFiles = new File(testConnection.getRepositoryPath() + "/temporary").listFiles();
 
 		assertEquals(2, tempFiles.length);
 		assertTrue(tempFiles[0].length() > 500 * 1024 || tempFiles[1].length() > 500 * 1024); // The second multichunk should be >500 KB
@@ -496,12 +472,7 @@ public class UploadInterruptedTest {
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
 		assertEquals(2, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); // left over, 2 failed ops
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
-
-		assertEquals(4, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		}).length);
+		assertEquals(4, new File(testConnection.getRepositoryPath() + "/temporary/").listFiles().length);
 
 		// 4. Third try; this should finally succeed
 		clientA.up();
@@ -510,16 +481,10 @@ public class UploadInterruptedTest {
 		assertEquals(2, new File(testConnection.getRepositoryPath() + "/multichunks/").listFiles().length);
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/actions/").listFiles().length); // cleaned
 		assertEquals(0, new File(testConnection.getRepositoryPath() + "/transactions/").listFiles().length);
-
-		assertEquals(4, new File(testConnection.getRepositoryPath() + "/").listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.contains("temp-");
-			}
-		}).length);
+		assertEquals(4, new File(testConnection.getRepositoryPath() + "/temporary/").listFiles().length); // cleaned
 
 		// Tear down
 		clientA.deleteTestData();
 	}
 
-	// [high] Add test for breaking TX.commit in 'removeOldFiles' in CleanupOperation
 }
