@@ -75,25 +75,44 @@ public class TransactionAwareTransferManager implements TransferManager {
 			underlyingTransferManager.download(remoteFile, localFile);
 		}
 		catch (StorageFileNotFoundException e) {
-			// This only occurs if a file is not exists, but is expensive
-			logger.log(Level.INFO, "File {0} not found, checking if it is being deleted.", remoteFile.getName());
-			Set<TransactionTO> transactions = retrieveRemoteTransactions().keySet();
+			downloadDeletedTempFileInTransaction(remoteFile, localFile);
+		}
+	}
 
-			for (TransactionTO transaction : transactions) {
-				for (ActionTO action : transaction.getActions()) {
-					// If the file is being deleted and the name matches, download temporary file instead.
-					if (action.getType().equals(ActionTO.TYPE_DELETE) && action.getRemoteFile().equals(remoteFile)) {
-						logger.log(Level.INFO, "File {0} in process of being deleted.",
-								remoteFile.getName());
-						logger.log(Level.INFO, "Donwloading corresponding file: {0}", action.getTempRemoteFile().getName());
-						underlyingTransferManager.download(action.getTempRemoteFile(), localFile);
-						return;
-					}
+	/**
+	 * Downloads all transaction files and looks for the corresponding temporary file 
+	 * for the given remote file. If there is a temporary file, the file is downloaded 
+	 * instead of the original file. 
+	 * 
+	 * <p>This method is <b>expensive</b>, but it is only called by {@link #download(RemoteFile, File) download()}
+	 * if a file does not exist.
+	 */
+	private void downloadDeletedTempFileInTransaction(RemoteFile remoteFile, File localFile) throws StorageException {
+		logger.log(Level.INFO, "File {0} not found, checking if it is being deleted ...", remoteFile.getName());
+
+		Set<TransactionTO> transactions = retrieveRemoteTransactions().keySet();
+		TempRemoteFile tempRemoteFile = null;
+
+		// Find file: If the file is being deleted and the name matches, download temporary file instead.
+		for (TransactionTO transaction : transactions) {
+			for (ActionTO action : transaction.getActions()) {
+				if (action.getType().equals(ActionTO.TYPE_DELETE) && action.getRemoteFile().equals(remoteFile)) {
+					tempRemoteFile = action.getTempRemoteFile();
+					break;
 				}
 			}
+		}
 
-			logger.log(Level.WARNING, "File {0} was requested, but does not exist and is not intransaction", remoteFile.getName());
-			throw e;
+		// Download file, or throw exception
+		if (tempRemoteFile != null) {
+			logger.log(Level.INFO, "-> File {0} in process of being deleted; downloading corresponding temp. file {1} ...",
+					new Object[] { remoteFile.getName(), tempRemoteFile.getName() });
+
+			underlyingTransferManager.download(tempRemoteFile, localFile);
+		}
+		else {
+			logger.log(Level.WARNING, "-> File {0} does not exist and is not in any transaction. Throwing exception.", remoteFile.getName());
+			throw new StorageFileNotFoundException("File " + remoteFile.getName() + " does not exist and is not in any transaction");
 		}
 	}
 
@@ -139,8 +158,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
+			// If this transaction is from our machine, delete all permanent or temporary files in this transaction.
 			if (isCancelledOwnTransaction) {
-				// If this transaction is from our machine, delete all permanent or temporary files in this transaction.
 				rollbackSingleTransaction(rollbackTransaction, potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
 			}
 		}
@@ -155,9 +174,16 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 	}
 
+	/**
+	 * Removes temporary files on the offsite storage that are not listed in any
+	 * of the {@link TransactionRemoteFile}s available remotely. 
+	 * 
+	 * <p>Temporary files might be left over from unfinished transactions.
+	 */
 	public void removeUnreferencedTemporaryFiles() throws StorageException {
 		Objects.requireNonNull(config, "Cannot remove unused files if config is null.");
-		// Intialize transaction for deletion
+
+		// Initialize transaction for deletion
 		RemoteTransaction deleteTransaction = new RemoteTransaction(config, this);
 
 		// Retrieve all transactions
@@ -165,20 +191,21 @@ public class TransactionAwareTransferManager implements TransferManager {
 		Collection<TempRemoteFile> tempRemoteFiles = list(TempRemoteFile.class).values();
 
 		// Find all remoteFiles that are referenced in a transaction
-		Set<TempRemoteFile> tempRemoteFilesInTransaction = new HashSet<TempRemoteFile>();
+		Set<TempRemoteFile> tempRemoteFilesInTransactions = new HashSet<TempRemoteFile>();
 
 		for (TransactionTO transaction : transactions.keySet()) {
 			for (ActionTO action : transaction.getActions()) {
-				tempRemoteFilesInTransaction.add(action.getTempRemoteFile());
+				tempRemoteFilesInTransactions.add(action.getTempRemoteFile());
 			}
 		}
 
 		// Consider just those files that are not referenced and delete them.
-		tempRemoteFiles.removeAll(tempRemoteFilesInTransaction);
+		tempRemoteFiles.removeAll(tempRemoteFilesInTransactions);
 
 		for (TempRemoteFile unreferencedTempRemoteFile : tempRemoteFiles) {
 			deleteTransaction.delete(unreferencedTempRemoteFile);
 		}
+
 		if (tempRemoteFiles.size() > 0) {
 			logger.log(Level.INFO, "Unreferenced temporary files found, deleting these.");
 			deleteTransaction.commit();
@@ -187,10 +214,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 	/**
 	 * This method is called when the machine wants to rollback one of their own transactions.
-	 * rollbackTransaction is the transaction that composes the rollback.
-	 * cancelledTransaction is the transaction that is cancelled
-	 * remoteCancelledTransaction is the remote file location of the cancelled transaction. This file
-	 * will be deleted as part of the rollback. 
+	 * 
+	 * @param rollbackTransaction is the transaction that composes the rollback.
+	 * @param cancelledTransaction is the transaction that is cancelled.
+	 * @param remoteCancelledTransaction is the remote file location of the cancelled transaction. 
+	 *        This file will be deleted as part of the rollback. 
 	 */
 	private void rollbackSingleTransaction(RemoteTransaction rollbackTransaction, TransactionTO cancelledTransaction,
 			TransactionRemoteFile remoteCancelledTransaction) throws StorageException {
@@ -232,9 +260,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 					move(action.getTempRemoteFile(), action.getRemoteFile());
 				}
 				catch (StorageMoveException e) {
-					logger.log(Level.WARNING,
-							"Restoring deleted file failed. This might be a problem if the original: " + action.getRemoteFile()
-									+ " also does not exist.");
+					logger.log(Level.WARNING, "Restoring deleted file failed. This might be a problem if the original: " + action.getRemoteFile()
+							+ " also does not exist.");
 				}
 
 				break;
@@ -283,8 +310,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 		Set<RemoteFile> dummyDeletedFiles = new HashSet<RemoteFile>();
 		Set<RemoteFile> filesToIgnore = new HashSet<RemoteFile>();
 
-		// Ignore files currently listed in a transaction, 
-		// unless we are listing transaction files 
+		// Ignore files currently listed in a transaction,
+		// unless we are listing transaction files
 
 		boolean ignoreFilesInTransactions = !remoteFileClass.equals(TransactionRemoteFile.class);
 
@@ -373,7 +400,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 * using the global temporary directory.
 	 */
 	protected File createTempFile(String name) throws IOException {
-		// TODO: duplicate code with AbstractTransferManager
+		// TODO [low] duplicate code with AbstractTransferManager
+		
 		if (config == null) {
 			return File.createTempFile(String.format("temp-%s-", name), ".tmp");
 		}

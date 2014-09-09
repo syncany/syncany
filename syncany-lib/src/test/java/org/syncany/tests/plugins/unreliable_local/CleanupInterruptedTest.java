@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,8 +42,6 @@ import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
 public class CleanupInterruptedTest {
-	private static final Logger logger = Logger.getLogger(CleanupInterruptedTest.class.getSimpleName());
-
 	@BeforeClass
 	public static void setUp() {
 		RetriableTransferManager.RETRY_SLEEP_MILLIS = 50;

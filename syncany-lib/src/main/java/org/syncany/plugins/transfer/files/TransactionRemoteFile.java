@@ -35,7 +35,6 @@ public class TransactionRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("transaction-([a-f0-9]+)");
 	private static final String NAME_FORMAT = "transaction-%s";
 
-
 	/**
 	 * Initializes a new transaction file, given a name. 
 	 * 
