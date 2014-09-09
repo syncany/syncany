@@ -27,7 +27,6 @@ import org.syncany.config.Config;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
-import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
 /**
@@ -52,7 +51,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	 */
 	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
 
-	protected TransferManager transferManager;
+	protected TransactionAwareTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
 	public AbstractTransferOperation(Config config, String operationName) {
@@ -64,7 +63,7 @@ public abstract class AbstractTransferOperation extends Operation {
 		this.transferManager = createReliableTransferManager(config);
 	}
 
-	private TransferManager createReliableTransferManager(Config config) {
+	private TransactionAwareTransferManager createReliableTransferManager(Config config) {
 		return new TransactionAwareTransferManager(new RetriableTransferManager(config.getTransferPlugin().createTransferManager(
 				config.getConnection(), config)), config);
 	}

@@ -141,17 +141,6 @@ public class RetriableTransferManager implements TransferManager {
 	}
 
 	@Override
-	public void cleanTransactions() throws StorageException {
-		retryMethod(new RetriableMethod() {
-			@Override
-			public Object execute() throws StorageException {
-				underlyingTransferManager.cleanTransactions();
-				return null;
-			}
-		});
-	}
-
-	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
 		return underlyingTransferManager.test(testCreateTarget);
 	}

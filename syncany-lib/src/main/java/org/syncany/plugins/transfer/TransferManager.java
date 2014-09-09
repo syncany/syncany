@@ -156,16 +156,6 @@ public interface TransferManager {
 	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException;
 
 	/**
-	 * Deletes all files that are related to transactions by the given machineName.
-	 *  
-	 * @param machineName Name filter: this function only operations on transactions
-	 *         by this client.
-	 * @throws StorageException If the connection fails due to no Internet connection,
-	 *         authentication errors, etc
-	 */
-	public void cleanTransactions() throws StorageException;
-
-	/**
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
 	 * It furthermore tests whether a repository at the target already exists by checking if the

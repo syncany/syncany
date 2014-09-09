@@ -128,7 +128,6 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
 	 */
-	@Override
 	public void cleanTransactions() throws StorageException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 

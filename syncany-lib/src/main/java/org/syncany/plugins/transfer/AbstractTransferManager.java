@@ -58,11 +58,6 @@ public abstract class AbstractTransferManager implements TransferManager {
 		}
 	}
 
-	@Override
-	public void cleanTransactions() throws StorageException {
-		throw new StorageException("Functionality not implemented. Wrap this in a TransactionAwareTM");
-	}
-
 	/**
 	 * Checks whether the settings given to this transfer manager can be
 	 * used to create or connect to a remote repository. 
