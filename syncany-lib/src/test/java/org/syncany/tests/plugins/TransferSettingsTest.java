@@ -30,7 +30,7 @@ import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.annotations.Encrypted;
 import org.syncany.plugins.annotations.PluginManager;
 import org.syncany.plugins.annotations.PluginSettings;
-import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -122,9 +122,13 @@ public class TransferSettingsTest {
 
 	}
 
-	public static class DummyTransferManager implements TransferManager {
+	public static class DummyTransferManager extends AbstractTransferManager {
 
-		@Override
+    public DummyTransferManager(DummyTransferSettings settings) {
+      super(settings);
+    }
+
+    @Override
 		public void connect() throws StorageException {
 
 		}
