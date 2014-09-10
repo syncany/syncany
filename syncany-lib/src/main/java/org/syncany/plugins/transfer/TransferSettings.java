@@ -33,7 +33,7 @@ import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.annotations.Encrypted;
-import org.syncany.plugins.annotations.TransferPluginDefinition;
+import org.syncany.plugins.annotations.PluginSettings;
 import org.syncany.util.StringUtil;
 
 /**
@@ -50,7 +50,7 @@ import org.syncany.util.StringUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferSettings implements ConnectionTO {
-  private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
+	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 	protected UserInteractionListener userInteractionListener;
 
 	@Attribute
@@ -59,8 +59,8 @@ public abstract class TransferSettings implements ConnectionTO {
 	{
 		Reflections reflections = new Reflections("org.syncany");
 		try {
-			for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(TransferPluginDefinition.class)) {
-				if (annotatedClass.getAnnotationsByType(TransferPluginDefinition.class)[0].settings().getName().equals(this.getClass().getName())) {
+			for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(PluginSettings.class)) {
+				if (annotatedClass.getAnnotationsByType(PluginSettings.class)[0].value().getName().equals(this.getClass().getName())) {
 					type = ((TransferPlugin) annotatedClass.newInstance()).getId();
 				}
 			}
@@ -91,13 +91,13 @@ public abstract class TransferSettings implements ConnectionTO {
 			if (f.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-      // TODO dummy encprytion
+			// TODO dummy encprytion
 			f.set(this, StringUtil.toHex(((String) f.get(this)).getBytes()));
 		}
 
-    if (logger.isLoggable(Level.FINE)) {
-      logger.log(Level.FINE, "Encrypted transfer setting values");
-    }
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "Encrypted transfer setting values");
+		}
 
 	}
 
@@ -108,13 +108,13 @@ public abstract class TransferSettings implements ConnectionTO {
 			if (f.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-      // TODO dummy decryption
+			// TODO dummy decryption
 			f.set(this, new String(StringUtil.fromHex((String) f.get(this))));
 		}
 
-    if (logger.isLoggable(Level.FINE)) {
-      logger.log(Level.FINE, "Decrypted transfer setting values");
-    }
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "Decrypted transfer setting values");
+		}
 
 	}
 }

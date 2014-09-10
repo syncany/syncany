@@ -26,7 +26,7 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.annotations.Encrypted;
-import org.syncany.plugins.annotations.TransferPluginDefinition;
+import org.syncany.plugins.annotations.PluginSettings;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
@@ -85,7 +85,7 @@ public class TransferSettingsTest {
 
 	}
 
-	@TransferPluginDefinition(settings = DummyTransferSettings.class)
+	@PluginSettings(DummyTransferSettings.class)
 	public static class DummyTransferPlugin extends TransferPlugin {
 
 		public DummyTransferPlugin() {

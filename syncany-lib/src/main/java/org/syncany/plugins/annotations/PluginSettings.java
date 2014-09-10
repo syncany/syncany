@@ -31,9 +31,8 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface TransferPluginDefinition {
+public @interface PluginSettings {
 
-  //String name();
-  Class<? extends TransferSettings> settings();
+  Class<? extends TransferSettings> value();
 
 }
