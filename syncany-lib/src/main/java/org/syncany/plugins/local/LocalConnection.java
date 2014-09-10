@@ -35,7 +35,7 @@ import java.io.File;
  */
 public class LocalConnection extends TransferSettings {
 
-  @Element(required=true)
+	@Element(required = true)
 	protected File repositoryPath;
 
 	public File getRepositoryPath() {
@@ -48,8 +48,6 @@ public class LocalConnection extends TransferSettings {
 
 	@Override
 	public PluginOptionSpecs getOptionSpecs() {
-		return new PluginOptionSpecs(
-			new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null)
-		);
+		return new PluginOptionSpecs(new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null));
 	}
 }

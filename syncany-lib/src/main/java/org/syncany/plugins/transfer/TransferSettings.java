@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.syncany.config.to.ConnectionTO;
@@ -50,7 +51,7 @@ import org.syncany.util.StringUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferSettings implements ConnectionTO {
-	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
+  private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 	protected UserInteractionListener userInteractionListener;
 
 	@Attribute
@@ -83,6 +84,24 @@ public abstract class TransferSettings implements ConnectionTO {
 	public final String getType() {
 		return type;
 	}
+
+  public final boolean isValid() {
+    try {
+      for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+        if (f.getAnnotationsByType(Element.class)[0].required() && f.get(this) == null) {
+          if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, "Missing mandatory field {0}#{1}", new Object[]{this.getClass().getSimpleName(), f.getName()});
+          }
+          return false;
+        }
+      }
+    }
+    catch(IllegalAccessException e) {
+      return false;
+    }
+
+    return true;
+  }
 
 	@Persist
 	private void encrypt() throws Exception {
