@@ -91,7 +91,7 @@ public class TransferSettingsTest {
 	}
 
 	@PluginSettings(DummyTransferSettings.class)
-  @PluginManager(DummyTransferManager.class)
+	@PluginManager(DummyTransferManager.class)
 	public static class DummyTransferPlugin extends TransferPlugin {
 
 		public DummyTransferPlugin() {
@@ -122,67 +122,67 @@ public class TransferSettingsTest {
 
 	}
 
-  public static class DummyTransferManager implements TransferManager {
+	public static class DummyTransferManager implements TransferManager {
 
-    @Override
-    public void connect() throws StorageException {
+		@Override
+		public void connect() throws StorageException {
 
-    }
+		}
 
-    @Override
-    public void disconnect() throws StorageException {
+		@Override
+		public void disconnect() throws StorageException {
 
-    }
+		}
 
-    @Override
-    public void init(boolean createIfRequired) throws StorageException {
+		@Override
+		public void init(boolean createIfRequired) throws StorageException {
 
-    }
+		}
 
-    @Override
-    public void download(RemoteFile remoteFile, File localFile) throws StorageException {
+		@Override
+		public void download(RemoteFile remoteFile, File localFile) throws StorageException {
 
-    }
+		}
 
-    @Override
-    public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
+		@Override
+		public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 
-    }
+		}
 
-    @Override
-    public boolean delete(RemoteFile remoteFile) throws StorageException {
-      return false;
-    }
+		@Override
+		public boolean delete(RemoteFile remoteFile) throws StorageException {
+			return false;
+		}
 
-    @Override
-    public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
-      return null;
-    }
+		@Override
+		public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+			return null;
+		}
 
-    @Override
-    public StorageTestResult test(boolean testCreateTarget) {
-      return null;
-    }
+		@Override
+		public StorageTestResult test(boolean testCreateTarget) {
+			return null;
+		}
 
-    @Override
-    public boolean testTargetExists() throws StorageException {
-      return false;
-    }
+		@Override
+		public boolean testTargetExists() throws StorageException {
+			return false;
+		}
 
-    @Override
-    public boolean testTargetCanWrite() throws StorageException {
-      return false;
-    }
+		@Override
+		public boolean testTargetCanWrite() throws StorageException {
+			return false;
+		}
 
-    @Override
-    public boolean testTargetCanCreate() throws StorageException {
-      return false;
-    }
+		@Override
+		public boolean testTargetCanCreate() throws StorageException {
+			return false;
+		}
 
-    @Override
-    public boolean testRepoFileExists() throws StorageException {
-      return false;
-    }
-  }
+		@Override
+		public boolean testRepoFileExists() throws StorageException {
+			return false;
+		}
+	}
 
 }
