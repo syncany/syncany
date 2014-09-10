@@ -43,8 +43,4 @@ public class LocalPlugin extends TransferPlugin {
 		super("local");
 	}
 
-	protected LocalPlugin(String pluginId) {
-		super(pluginId);
-	}
-
 }

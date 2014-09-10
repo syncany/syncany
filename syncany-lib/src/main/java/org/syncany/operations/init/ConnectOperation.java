@@ -23,7 +23,6 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
@@ -45,6 +44,8 @@ import org.syncany.plugins.transfer.files.RepoRemoteFile;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -69,11 +70,14 @@ import java.util.regex.Pattern;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());
 
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)-(.+)))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED = 4;
+	private static final int LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED = 5;
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED = 3;
+	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED = 4;
 
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
@@ -83,7 +87,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	private UserInteractionListener listener;
 
 	private TransferPlugin plugin;
-    private TransferManager transferManager;
+	private TransferManager transferManager;
 
 	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
 		super(null, null);
@@ -237,7 +241,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			return createConfigTOFromLink(configTO, options.getConnectLink());
 		}
 		else {
-			throw new RuntimeException("Unhandled connect strategy: "+options.getStrategy());
+			throw new RuntimeException("Unhandled connect strategy: " + options.getStrategy());
 		}
 	}
 
@@ -250,15 +254,20 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
 
-		String plaintext = null;
 		boolean isEncryptedLink = notEncryptedFlag == null;
+		String pluginId = null;
+		byte[] pluginSettings = null;
 
 		if (isEncryptedLink) {
 			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
+			String cipherPlugin = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
+			String cipherSettings = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED);
+
+			logger.log(Level.INFO, "Encrypted plugin settings: " + cipherSettings);
 
 			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
-			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
+			byte[] cipherpluginBytes = Base64.decodeBase64(cipherPlugin);
+			byte[] ciphersettingsBytes = Base64.decodeBase64(cipherSettings);
 
 			boolean retryPassword = true;
 
@@ -272,8 +281,10 @@ public class ConnectOperation extends AbstractInitOperation {
 
 				// Decrypt config
 				try {
-					ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
-					plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));
+					ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherpluginBytes);
+					pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
+					ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(ciphersettingsBytes);
+					pluginSettings = CipherUtil.decrypt(encryptedSettings, masterKey);
 
 					retryPassword = false;
 				}
@@ -282,26 +293,33 @@ public class ConnectOperation extends AbstractInitOperation {
 				}
 			}
 
-			if (plaintext == null) {
+			if (pluginId == null || pluginSettings == null) {
 				throw new CipherException("Unable to decrypt link.");
 			}
 		}
 		else {
-			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
-			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
+			String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
+			String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
+			pluginId = new String(Base64.decodeBase64(encodedPlugin));
+			pluginSettings = Base64.decodeBase64(encodedSettings);
 		}
 
-		try {
-			Serializer serializer = new Persister();
-			ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);
+		logger.log(Level.INFO, "Decrypted link contains: " + pluginId + " -- " + pluginSettings);
 
-			TransferPlugin plugin = Plugins.get(connectionTO.getType(), TransferPlugin.class);
+		try {
+
+			TransferPlugin plugin = Plugins.get(pluginId, TransferPlugin.class);
 
 			if (plugin == null) {
-				throw new StorageException("Link contains unknown connection type '"+connectionTO.getType()+"'. Corresponding plugin not found.");
+				throw new StorageException("Link contains unknown connection type '" + pluginId + "'. Corresponding plugin not found.");
 			}
 
-			configTO.setConnectionTO(connectionTO);
+			TransferSettings settings = plugin.createEmptySettings();
+
+			ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(pluginSettings);
+			ObjectInputStream objectInputStream = new ObjectInputStream(plaintextInputStream);
+
+			configTO.setConnectionTO(settings.parseKeyValueMap((Map<String, String>) objectInputStream.readObject()));
 		}
 		catch (Exception e) {
 			throw new StorageException(e);
@@ -413,4 +431,5 @@ public class ConnectOperation extends AbstractInitOperation {
 			throw new StorageException("Master file corrupt.", e);
 		}
 	}
+
 }

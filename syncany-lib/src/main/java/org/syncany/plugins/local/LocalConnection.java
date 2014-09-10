@@ -36,18 +36,19 @@ import java.io.File;
 public class LocalConnection extends TransferSettings {
 
 	@Element(required = true)
-	protected File repositoryPath;
+	public File path;
 
 	public File getRepositoryPath() {
-		return repositoryPath;
+		return path;
 	}
 
 	public void setRepositoryPath(File repositoryPath) {
-		this.repositoryPath = repositoryPath;
+		this.path = path;
 	}
 
 	@Override
 	public PluginOptionSpecs getOptionSpecs() {
 		return new PluginOptionSpecs(new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null));
 	}
+
 }

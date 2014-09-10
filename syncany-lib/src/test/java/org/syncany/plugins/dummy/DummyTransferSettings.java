@@ -33,7 +33,7 @@ public class DummyTransferSettings extends TransferSettings {
 	@Encrypted
 	public String foo;
 
-	@Element(name = "baz")
+	@Element(name = "baz", required = false)
 	public String baz;
 
 	@Element(name = "number")

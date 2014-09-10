@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,45 +17,36 @@
  */
 package org.syncany.plugins.local;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.apache.commons.io.FileUtils;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.AbstractTransferManager;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.*;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.AbstractTransferManager;
-import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.ActionRemoteFile;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
-import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
-
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
- * {@link LocalPlugin}. 
- * 
- * <p>Using a {@link LocalConnection}, the transfer manager is configured and uses 
+ * {@link LocalPlugin}.
+ *
+ * <p>Using a {@link LocalConnection}, the transfer manager is configured and uses
  * any local folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
  * in special sub-folders:
- * 
+ *
  * <ul>
  *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
  *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultiChunkRemoteFile}s</li>
  * </ul>
- * 
+ *
  * <p>This plugin can be used for testing or to point to a repository
- * on a mounted remote device or network storage such as an NFS or a 
+ * on a mounted remote device or network storage such as an NFS or a
  * Samba/NetBIOS share.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalTransferManager extends AbstractTransferManager {
@@ -104,7 +95,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		if (!databasesPath.mkdir()) {
 			throw new StorageException("Cannot create databases directory: " + databasesPath);
 		}
-		
+
 		if (!actionsPath.mkdir()) {
 			throw new StorageException("Cannot create actions directory: " + databasesPath);
 		}
@@ -279,7 +270,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public boolean testRepoFileExists() {
 		try {
 			File repoFile = getRemoteFile(new RepoRemoteFile());
-			
+
 			if (repoFile.exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
 				return true;
@@ -291,7 +282,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist. Exception occurred.", e);
-			return false;			
+			return false;
 		}
 	}
 

@@ -20,7 +20,6 @@ package org.syncany.plugins.dummy;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.AbstractTransferManager;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 import java.io.File;
@@ -33,7 +32,7 @@ import java.util.Map;
 
 public class DummyTransferManager extends AbstractTransferManager {
 
-	public DummyTransferManager(TransferSettings settings) {
+	public DummyTransferManager(DummyTransferSettings settings) {
 		super(settings);
 	}
 

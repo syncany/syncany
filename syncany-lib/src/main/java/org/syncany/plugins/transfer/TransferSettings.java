@@ -17,7 +17,9 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,18 +87,55 @@ public abstract class TransferSettings implements ConnectionTO {
 		return type;
 	}
 
+	public TransferSettings parseKeyValueMap(Map<String, String> keyValueMap) throws StorageException {
+
+		try {
+			for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+
+				f.setAccessible(true);
+				String fName = f.getName();
+				Type fType = f.getType();
+				if (keyValueMap.containsKey(fName)) {
+					String fValue = keyValueMap.get(fName);
+
+					if (f.getType() == Integer.TYPE) {
+						f.setInt(this, Integer.parseInt(fValue));
+					}
+					else if (fType == Boolean.TYPE) {
+						f.setBoolean(this, Boolean.parseBoolean(fValue));
+					}
+					else if (fType == String.class) {
+						f.set(this, fValue);
+					}
+					else if (fType == File.class) {
+						f.set(this, new File(fValue));
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new StorageException("Unable to parse key value map (1): " + e.getMessage());
+		}
+
+		if (!isValid()) {
+			throw new StorageException("Unable to parse key value map (2): settings not valid (perhaps missing some mandatory values)");
+		}
+
+		return this;
+	}
+
 	public final boolean isValid() {
 		try {
 			for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+				f.setAccessible(true);
 				if (f.getAnnotationsByType(Element.class)[0].required() && f.get(this) == null) {
-					if (logger.isLoggable(Level.FINE)) {
-						logger.log(Level.FINE, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), f.getName() });
-					}
+					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), f.getName() });
 					return false;
 				}
 			}
 		}
 		catch (IllegalAccessException e) {
+			logger.log(Level.SEVERE, "illegalaccess", e);
 			return false;
 		}
 

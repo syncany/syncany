@@ -42,7 +42,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 		this.settings = settings;
 	}
 
-  public <T extends TransferSettings> T getConnection() {
+  public final <T extends TransferSettings> T getConnection() {
     Reflections reflections = new Reflections("org.syncany");
     try {
       for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(PluginSettings.class)) {

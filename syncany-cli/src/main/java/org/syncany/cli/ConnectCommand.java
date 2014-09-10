@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,23 @@
  */
 package org.syncany.cli;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
-
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.config.to.ConnectionTO;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 import org.syncany.plugins.StorageTestResult;
 
-public class ConnectCommand extends AbstractInitCommand {	
+import java.util.List;
+
+import static java.util.Arrays.asList;
+
+public class ConnectCommand extends AbstractInitCommand {
 	public ConnectCommand() {
 		super();
 	}
@@ -107,10 +106,10 @@ public class ConnectCommand extends AbstractInitCommand {
 		}
 
 		ConfigTO configTO = createConfigTO(connectionTO);
-		
+
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
-		operationOptions.setDaemon(!options.has(optionNoDaemon));		
+		operationOptions.setDaemon(!options.has(optionNoDaemon));
 
 		return operationOptions;
 	}
@@ -121,15 +120,15 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println("Repository connected, and local folder initialized.");
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
-			
+
 			if (operationResult.isAddedToDaemon()) {
 				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
 				out.println();
-			}			
+			}
 		}
 		else if (operationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
 			StorageTestResult testResult = operationResult.getTestResult();
-			out.println();			
+			out.println();
 
 			if (!testResult.isTargetCanConnect()) {
 				out.println("ERROR: Cannot connect to the repository, because the connection to the storage backend failed.");
@@ -140,7 +139,7 @@ public class ConnectCommand extends AbstractInitCommand {
 				out.println("ERROR: Cannot connect to the repository, because the target does not exist.");
 				out.println("       Please check if it really exists and if you can read from it / write to it.");
 			}
-			else if (!testResult.isTargetCanWrite()) {								
+			else if (!testResult.isTargetCanWrite()) {
 				out.println("ERROR: Cannot connect to the repository, because the target is not writable. This is probably");
 				out.println("       a permission issue (does the user have write permissions to the target?).");
 			}
@@ -151,13 +150,13 @@ public class ConnectCommand extends AbstractInitCommand {
 			else {
 				out.println("ERROR: Cannot connect to the repository.");
 			}
-			
+
 			out.println();
-			printTestResult(testResult);			
-		}		
+			printTestResult(testResult);
+		}
 		else if (operationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
 			out.println();
-			out.println("ERROR: Invalid password or corrupt ciphertext.");		
+			out.println("ERROR: Invalid password or corrupt ciphertext.");
 			out.println();
 			out.println("The reason for this might be an invalid password, or that the");
 			out.println("link/files have been tampered with.");

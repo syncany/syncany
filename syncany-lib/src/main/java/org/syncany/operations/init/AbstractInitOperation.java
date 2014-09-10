@@ -17,8 +17,11 @@
  */
 package org.syncany.operations.init;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.reflections.ReflectionUtils;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
@@ -33,17 +36,17 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,9 +58,9 @@ import java.util.logging.Logger;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
-    protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
+	protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
 
-    protected UserInteractionListener listener;
+	protected UserInteractionListener listener;
 
 	public AbstractInitOperation(Config config, UserInteractionListener listener) {
 		super(config);
@@ -143,28 +146,35 @@ public abstract class AbstractInitOperation extends Operation {
 	}
 
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
+		TransferSettings settings = (TransferSettings) connectionTO;
+
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
+		objectOutputStream.writeObject(createMapFromTransferSettings(settings));
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
 
+		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(settings.getType().getBytes()), cipherSuites, masterKey);
+		String encryptedEncodedPlugin = new String(Base64.encodeBase64(encryptedPluginBytes, false));
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
+		String encryptedEncodedStorage = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
 
-		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedStorageXml;
+		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedPlugin + "-" + encryptedEncodedStorage;
 	}
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
+		TransferSettings settings = (TransferSettings) connectionTO;
+
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
+		objectOutputStream.writeObject(createMapFromTransferSettings(settings));
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
+		String plaintextEncodedStorage = new String(Base64.encodeBase64(plaintextStorageXml, false));
+		String plaintextEncodedPlugin = new String(Base64.encodeBase64(settings.getType().getBytes()));
 
-		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
+		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "-" + plaintextEncodedStorage;
 	}
 
 	protected void fireNotifyCreateMaster() {
@@ -214,4 +224,16 @@ public abstract class AbstractInitOperation extends Operation {
 			return true;
 		}
 	}
+
+	private Object createMapFromTransferSettings(TransferSettings transferSettings) throws IllegalAccessException {
+
+		final Map<String, String> connection = Maps.newHashMap();
+		for (Field f : ReflectionUtils.getAllFields(transferSettings.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+			connection.put(f.getName(), f.get(transferSettings).toString());
+		}
+
+		return connection;
+
+	}
+
 }
