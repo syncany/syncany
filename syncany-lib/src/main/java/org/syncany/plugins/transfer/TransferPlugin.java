@@ -34,6 +34,7 @@ import java.util.logging.Logger;
  * details) and {@link TransferManager} (transfer methods).
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPlugin extends Plugin {
 

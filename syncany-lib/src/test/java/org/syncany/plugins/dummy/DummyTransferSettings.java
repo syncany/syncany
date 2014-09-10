@@ -15,24 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.annotations;
+package org.syncany.plugins.dummy;
 
+import org.simpleframework.xml.Element;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.annotations.Encrypted;
 import org.syncany.plugins.transfer.TransferSettings;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  * @version 0.0.1
  */
 
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface PluginSettings {
+public class DummyTransferSettings extends TransferSettings {
 
-	Class<? extends TransferSettings> value();
+	@Element(required = true)
+	@Encrypted
+	public String foo;
 
+	@Element(name = "baz")
+	public String baz;
+
+	@Element(name = "number")
+	public int number;
+
+	@Element(name = "nest", required = false)
+	public DummyTransferSettings subsettings;
+
+	@Override
+	public PluginOptionSpecs getOptionSpecs() {
+		return null;
+	}
 }
