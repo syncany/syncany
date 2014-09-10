@@ -46,4 +46,5 @@ public class DummyTransferSettings extends TransferSettings {
 	public PluginOptionSpecs getOptionSpecs() {
 		return null;
 	}
+
 }

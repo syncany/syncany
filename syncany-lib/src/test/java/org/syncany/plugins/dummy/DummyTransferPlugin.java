@@ -33,4 +33,5 @@ public class DummyTransferPlugin extends TransferPlugin {
 	public DummyTransferPlugin() {
 		super("dummy");
 	}
+
 }
