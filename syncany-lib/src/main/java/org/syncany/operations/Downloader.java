@@ -90,6 +90,8 @@ public class Downloader {
 					
 					logger.log(Level.FINE, "    -> FAILED: Decryption/extraction of multichunk failed, deleting " + multiChunkId + " ...");
 					localDecryptedMultiChunkFile.delete();
+					
+					throw e;
 				}
 				finally {
 					logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
