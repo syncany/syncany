@@ -94,18 +94,20 @@ public abstract class TransferPlugin extends Plugin {
 		}
 
 		try {
-      Constructor<?>[] potentialConstructors = transferManager.getDeclaredConstructors();
-      if (potentialConstructors.length != 1) {
-        throw new StorageException("Invalid number of constructors in pluginclass -- must be 1");
-      }
-      if (potentialConstructors[0].getParameterCount() != 1) {
-      //if (potentialConstructors[0].getParameterCount() != 1 || !TransferSettings.class.isAssignableFrom(potentialConstructors[0].getParameterTypes()[0].getClass())) {        logger.log(Level.WARNING, "" + potentialConstructors[0].getParameterTypes()[0].getClass());
-        throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 1 and subclass of " + TransferSettings.class);
-      }
+			Constructor<?>[] potentialConstructors = transferManager.getDeclaredConstructors();
+			if (potentialConstructors.length != 1) {
+				throw new StorageException("Invalid number of constructors in pluginclass -- must be 1");
+			}
+			if (potentialConstructors[0].getParameterCount() != 1) {
+				// if (potentialConstructors[0].getParameterCount() != 1 ||
+				// !TransferSettings.class.isAssignableFrom(potentialConstructors[0].getParameterTypes()[0].getClass())) { logger.log(Level.WARNING,
+				// "" + potentialConstructors[0].getParameterTypes()[0].getClass());
+				throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 1 and subclass of " + TransferSettings.class);
+			}
 
 			return (T) potentialConstructors[0].newInstance(transferSettings.cast(connection));
 		}
-		catch (InstantiationException | IllegalAccessException  | InvocationTargetException e) {
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
 		}
 
