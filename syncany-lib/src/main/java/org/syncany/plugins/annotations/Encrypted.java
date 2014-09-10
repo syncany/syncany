@@ -29,11 +29,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Option {
-
-  String name() default FIELDNAME;
-  boolean mandatory() default true;
-  boolean encrypted() default false;
-
-  public static final String FIELDNAME = "$$$FIELDNAME$$$";
+public @interface Encrypted {
 }
