@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,53 +42,52 @@ import org.syncany.plugins.transfer.files.RepoRemoteFile;
 /**
  * The init operation initializes a new repository at a given remote storage
  * location. Its responsibilities include:
- * 
+ *
  * <ul>
  *   <li>Generating a master key from the user password (if encryption is enabled)
  *       using the {@link CipherUtil#createMasterKey(String) createMasterKey()} method</li>
- *   <li>Creating the local Syncany folder structure in the local directory (.syncany 
+ *   <li>Creating the local Syncany folder structure in the local directory (.syncany
  *       folder and the sub-structure).</li>
  *   <li>Initializing the remote storage (creating folder-structure, if necessary)
  *       using the transfer manager's {@link TransferManager#init()} method.</li>
  *   <li>Creating a new repo and master file using {@link RepoTO} and {@link MasterTO},
  *       saving them locally and uploading them to the remote repository.</li>
- * </ul> 
- *   
+ * </ul>
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
     private InitOperationOptions options;
     private InitOperationResult result;
-    
+
     private TransferPlugin plugin;
     private TransferManager transferManager;
-    
+
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
 		super(null, listener);
-        
+
         this.options = options;
         this.result = new InitOperationResult();
-    }        
-            
+    }
+
     @Override
     public InitOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
-		logger.log(Level.INFO, "--------------------------------------------");                      
+		logger.log(Level.INFO, "--------------------------------------------");
 
 		// Init plugin and transfer manager
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
-		
-		TransferSettings connection = plugin.createSettings();
-		
-		connection.init(options.getConfigTO().getConnectionTO().getSettings());
+
+		TransferSettings connection = (TransferSettings) options.getConfigTO().getConnectionTO();
+
 		connection.setUserInteractionListener(listener);
-		
+
 		transferManager = plugin.createTransferManager(connection);
-		
+
 		// Test the repo
 		if (!performRepoTest()) {
-			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());			
+			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());
 			return result;
 		}
 
@@ -96,71 +95,71 @@ public class InitOperation extends AbstractInitOperation {
 
 		// Ask password (if needed)
 		String masterKeyPassword = null;
-		
+
 		if (options.isEncryptionEnabled()) {
 			masterKeyPassword = getOrAskPassword();
-		}	
-		
+		}
+
 		// Create local .syncany directory
 		File appDir = createAppDirs(options.getLocalDir());	// TODO [medium] create temp dir first, ask password cannot be done after
 		File configFile = new File(appDir, Config.FILE_CONFIG);
 		File repoFile = new File(appDir, Config.FILE_REPO);
 		File masterFile = new File(appDir, Config.FILE_MASTER);
-		
-		// Save config.xml and repo file		
+
+		// Save config.xml and repo file
 		if (options.isEncryptionEnabled()) {
-			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!			
+			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!
 			options.getConfigTO().setMasterKey(masterKey);
-			
+
 			writeXmlFile(new MasterTO(masterKey.getSalt()), masterFile);
-			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), masterKey);				
-		}	
+			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), masterKey);
+		}
 		else {
 			writeXmlFile(options.getRepoTO(), repoFile);
-		}	
-		
+		}
+
 		writeXmlFile(options.getConfigTO(), configFile);
-		
+
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository");
-		
-		initRemoteRepository();		
-		
+
+		initRemoteRepository();
+
 		try {
 			if (options.isEncryptionEnabled()) {
 				uploadMasterFile(masterFile, transferManager);
 			}
-			
+
 			uploadRepoFile(repoFile, transferManager);
 		}
 		catch (StorageException|IOException e) {
 			cleanLocalRepository(e);
-		}		
-		
-		// Shutdown plugin 
+		}
+
+		// Shutdown plugin
 		transferManager.disconnect();
-		
+
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
 			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
 			result.setAddedToDaemon(addedToDaemonConfig);
 		}
-		
-		// Make link		
+
+		// Make link
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-					
+
 		result.setResultCode(InitResultCode.OK);
 		result.setGenLinkResult(genlinkOperationResult);
-		
+
 		return result;
-    }             	
+    }
 
 	private boolean performRepoTest() {
 		boolean testCreateTarget = options.isCreateTarget();
 		StorageTestResult testResult = transferManager.test(testCreateTarget);
-		
+
 		logger.log(Level.INFO, "Storage test result ist " + testResult);
-		
+
 		if (testResult.isTargetExists() && testResult.isTargetCanWrite() && !testResult.isRepoFileExists()) {
 			logger.log(Level.INFO, "--> OKAY: Target exists and is writable, but repo doesn't exist. We're good to go!");
 			return true;
@@ -171,10 +170,10 @@ public class InitOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-			
+
 			result.setResultCode(InitResultCode.NOK_TEST_FAILED);
 			result.setTestResult(testResult);
-			
+
 			return false;
 		}
 	}
@@ -188,7 +187,7 @@ public class InitOperation extends AbstractInitOperation {
 			cleanLocalRepository(e);
  		}
 	}
-	
+
 	private void cleanLocalRepository(Exception e) throws Exception {
 		try {
 			deleteAppDirs(options.getLocalDir());
@@ -196,8 +195,8 @@ public class InitOperation extends AbstractInitOperation {
 		catch (Exception e1) {
 			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
 		}
-		
-		// TODO [low] This throws construction is odd and the error message doesn't tell me anything. 
+
+		// TODO [low] This throws construction is odd and the error message doesn't tell me anything.
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 
@@ -210,36 +209,36 @@ public class InitOperation extends AbstractInitOperation {
 			if (listener == null) {
 				throw new RuntimeException("Cannot get password from user interface. No listener.");
 			}
-			
+
 			return listener.onUserNewPassword();
 		}
 		else {
 			return options.getPassword();
-		}		
-	}	
-	
+		}
+	}
+
 	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
 		fireNotifyCreateMaster();
-		
+
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;
 	}
 
 	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
-			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);			
+			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);
 			return repoFileList.size() > 0;
 		}
 		catch (Exception e) {
 			throw new Exception("Unable to connect to repository.", e);
-		}		
+		}
 	}
-	
-	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {    		
+
+	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {
 		transferManager.upload(masterFile, new MasterRemoteFile());
-	}  
-	
-	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {    		
+	}
+
+	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {
 		transferManager.upload(repoFile, new RepoRemoteFile());
-	}    	
+	}
 }

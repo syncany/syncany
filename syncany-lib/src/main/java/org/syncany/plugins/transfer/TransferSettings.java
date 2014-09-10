@@ -22,6 +22,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.reflections.ReflectionUtils;
+import org.reflections.Reflections;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.syncany.config.to.ConnectionTO;
@@ -30,6 +33,7 @@ import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.annotations.Encrypted;
+import org.syncany.plugins.annotations.TransferPluginDefinition;
 import org.syncany.util.StringUtil;
 
 /**
@@ -46,8 +50,25 @@ import org.syncany.util.StringUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferSettings implements ConnectionTO {
-	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
+  private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 	protected UserInteractionListener userInteractionListener;
+
+	@Attribute
+	private String type;
+
+	{
+		Reflections reflections = new Reflections("org.syncany");
+		try {
+			for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(TransferPluginDefinition.class)) {
+				if (annotatedClass.getAnnotationsByType(TransferPluginDefinition.class)[0].settings().getName().equals(this.getClass().getName())) {
+					type = ((TransferPlugin) annotatedClass.newInstance()).getId();
+				}
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
+		}
+	}
 
 	public UserInteractionListener getUserInteractionListener() {
 		return userInteractionListener;
@@ -59,37 +80,41 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	public abstract PluginOptionSpecs getOptionSpecs();
 
-	public abstract void init(Map<String, String> optionValues) throws StorageException;
+	public final String getType() {
+		return type;
+	}
 
 	@Persist
 	private void encrypt() throws Exception {
 
-		for (Field f : this.getClass().getDeclaredFields()) {
-			if (f.isAnnotationPresent(Encrypted.class)) {
-				if (f.getType() != String.class) {
-					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
-				}
-				f.set(this, StringUtil.toHex(((String) f.get(this)).getBytes()));
+		for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Encrypted.class))) {
+			if (f.getType() != String.class) {
+				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
+      // TODO dummy encprytion
+			f.set(this, StringUtil.toHex(((String) f.get(this)).getBytes()));
 		}
 
-		logger.log(Level.INFO, "Encrypted transfer setting values");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.log(Level.FINE, "Encrypted transfer setting values");
+    }
 
 	}
 
 	@Commit
 	private void decrypt() throws Exception {
 
-		for (Field f : this.getClass().getDeclaredFields()) {
-			if (f.isAnnotationPresent(Encrypted.class)) {
-				if (f.getType() != String.class) {
-					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
-				}
-				f.set(this, new String(StringUtil.fromHex((String) f.get(this))));
+		for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Encrypted.class))) {
+			if (f.getType() != String.class) {
+				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
+      // TODO dummy decryption
+			f.set(this, new String(StringUtil.fromHex((String) f.get(this))));
 		}
 
-		logger.log(Level.INFO, "Decrypted transfer setting values");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.log(Level.FINE, "Decrypted transfer setting values");
+    }
 
 	}
 }

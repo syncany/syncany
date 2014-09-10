@@ -23,16 +23,14 @@ import org.junit.Test;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-import org.syncany.config.to.ConfigTONew;
+import org.syncany.config.to.ConfigTO;
 import org.syncany.plugins.PluginOptionSpecs;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.annotations.Encrypted;
 import org.syncany.plugins.transfer.TransferSettings;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,7 +56,7 @@ public class TransferSettingsTest {
 
 		final DummyTransferSettings ts = new DummyTransferSettings();
 		final DummyTransferSettings nts = new DummyTransferSettings();
-		final ConfigTONew conf = new ConfigTONew();
+		final ConfigTO conf = new ConfigTO();
 
 		conf.setConnectionTO(ts);
 		conf.setMachineName("test");
@@ -75,7 +73,7 @@ public class TransferSettingsTest {
 
 		System.out.println(new String(Files.readAllBytes(Paths.get(tmpFile.toURI()))));
 
-		ConfigTONew confRestored = serializer.read(ConfigTONew.class, tmpFile);
+		ConfigTO confRestored = serializer.read(ConfigTO.class, tmpFile);
 		DummyTransferSettings tsRestored = (DummyTransferSettings) confRestored.getConnectionTO();
 
 		assertEquals(tsRestored.foo, fooTest);
@@ -102,11 +100,6 @@ public class TransferSettingsTest {
 		@Override
 		public PluginOptionSpecs getOptionSpecs() {
 			return null;
-		}
-
-		@Override
-		public void init(Map<String, String> optionValues) throws StorageException {
-
 		}
 
 	}
