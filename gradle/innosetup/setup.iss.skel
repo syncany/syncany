@@ -75,10 +75,10 @@ var
   JavaVersion: String;
 begin
   SetArrayLength(RegRootSearchPaths, 4);
-  RegRootSearchPaths[0] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Development Kit';
-  RegRootSearchPaths[1] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Runtime Environment';
-  RegRootSearchPaths[2] := 'SOFTWARE\\JavaSoft\\Java Development Kit';
-  RegRootSearchPaths[3] := 'SOFTWARE\\JavaSoft\\Java Runtime Environment';
+  RegRootSearchPaths[0] := 'SOFTWARE\\JavaSoft\\Java Development Kit';
+  RegRootSearchPaths[1] := 'SOFTWARE\\JavaSoft\\Java Runtime Environment';
+  RegRootSearchPaths[2] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Development Kit';
+  RegRootSearchPaths[3] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Runtime Environment';
 
   if IsWin64 then begin
     RegRootKey := HKLM64;
