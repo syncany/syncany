@@ -26,6 +26,9 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.annotations.Encrypted;
+import org.syncany.plugins.annotations.TransferPluginDefinition;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 
 import java.io.File;
@@ -80,6 +83,24 @@ public class TransferSettingsTest {
 		assertEquals(tsRestored.baz, bazTest);
 		assertEquals(tsRestored.number, numberTest);
 
+	}
+
+	@TransferPluginDefinition(settings = DummyTransferSettings.class)
+	public static class DummyTransferPlugin extends TransferPlugin {
+
+		public DummyTransferPlugin() {
+			super("test");
+		}
+
+		@Override
+		public TransferSettings createSettings() {
+			return null;
+		}
+
+		@Override
+		public TransferManager createTransferManager(TransferSettings connection) {
+			return null;
+		}
 	}
 
 	public static class DummyTransferSettings extends TransferSettings {
