@@ -93,14 +93,10 @@ public class TransferSettingsTest {
 		}
 
 		@Override
-		public TransferSettings createSettings() {
-			return null;
-		}
-
-		@Override
 		public TransferManager createTransferManager(TransferSettings connection) {
 			return null;
 		}
+
 	}
 
 	public static class DummyTransferSettings extends TransferSettings {

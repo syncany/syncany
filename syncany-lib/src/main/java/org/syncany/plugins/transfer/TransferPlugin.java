@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,16 @@
 package org.syncany.plugins.transfer;
 
 import org.syncany.plugins.Plugin;
+import org.syncany.plugins.StorageException;
+import org.syncany.plugins.annotations.PluginSettings;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * The transfer plugin is a special plugin responsible for transferring files
  * to the remote storage. Implementations must provide implementations for
- * {@link TransferPlugin} (this class), {@link TransferSettings} (connection 
+ * {@link TransferPlugin} (this class), {@link TransferSettings} (connection
  * details) and {@link TransferManager} (transfer methods).
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class TransferPlugin extends Plugin {
@@ -35,18 +37,30 @@ public abstract class TransferPlugin extends Plugin {
 
 	/**
 	 * Creates an empty plugin-specific {@link TransferSettings} object.
-	 * 
+	 *
 	 * <p>The created instance must be filled with sensible connection details
 	 * and then initialized with the <tt>init()</tt> method.
 	 */
-	public abstract TransferSettings createSettings();
-	
+	public final TransferSettings createSettings() throws StorageException {
+		PluginSettings[] annotations = this.getClass().getAnnotationsByType(PluginSettings.class);
+		if (annotations.length != 1) {
+			throw new StorageException("TransferPlugin does not have any settings attached!");
+		}
+
+		try {
+			return annotations[0].value().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException e) {
+			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
+		}
+	}
+
 	/**
 	 * Creates an initialized {@link TransferManager} object using the given
 	 * connection details.
-	 * 
+	 *
 	 * <p>The created instance can be used to upload/download/delete {@link RemoteFile}s
-	 * and query the remote storage for a file list. 
+	 * and query the remote storage for a file list.
 	 */
 	public abstract TransferManager createTransferManager(TransferSettings connection);
 }
