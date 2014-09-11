@@ -44,6 +44,7 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
@@ -148,12 +149,12 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(connectionTO, plaintextOutputStream);
 
 		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
+		String masterKeySaltEncodedStr = new String(Base58.encode(masterKeySalt));
 
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
+		String encryptedEncodedStorageXml = new String(Base58.encode(encryptedConnectionBytes));
 
-		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedStorageXml;
+		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedStorageXml;
 	}
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
@@ -162,7 +163,7 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(connectionTO, plaintextOutputStream);
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
+		String plaintextEncodedStorageXml = new String(Base58.encode(plaintextStorageXml));
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
 	}

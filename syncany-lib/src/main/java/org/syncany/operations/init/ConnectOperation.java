@@ -49,6 +49,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.util.Base58;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -69,7 +70,7 @@ import org.syncany.plugins.transfer.files.RepoRemoteFile;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
 	
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+/(.+)))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
@@ -258,8 +259,8 @@ public class ConnectOperation extends AbstractInitOperation {
 			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
 			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
 			
-			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
-			byte[] ciphertextBytes = Base64.decodeBase64(ciphertext);
+			byte[] masterKeySalt = Base58.decode(masterKeySaltStr.split("/")[1]);
+			byte[] ciphertextBytes = Base58.decode(ciphertext);
 
 			boolean retryPassword = true;
 			

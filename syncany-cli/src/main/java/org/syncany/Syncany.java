@@ -52,6 +52,17 @@ import org.syncany.cli.CommandLineClient;
  */
 public class Syncany {
 	public static void main(String[] args) throws Exception {
+		/**
+		String link = "syncany://storage/1/AA-BB";
+		Pattern p = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)))$");
+		Matcher linkMatcher = p.matcher(link);
+		
+		for (int i = 0 ; i < linkMatcher.groupCount() ; i ++){
+			System.out.println(linkMatcher.group(i));
+		}
+		**/
+		
+		String[] dd= new String[]{"--localdir=/Users/vwiencek/sandbox/client2", "connect", "syncany://storage/1/5sx8ke2sxTU58fmZbKRn7pqxWCdjDbg7qwExvVnSi4muqL9q9onwSj5qBwpgcwrE87JPmZLEQaD2YYXWZziU5oLT/BwuzZQ9n7dyKY4rZhS1dRfpCpkhGh3wBYiuoM6WZapT7vZ3JK8bvMExaqaZ2UAoLC72RanuccNNG878DrbDC7DSYADdQ9hk6qLoK3UiG7dQQaJWPipTTaNDfEE3d7FV3ts8r1UEAXNY8Yd1ax6FsZo9sxpmLSs63voz35qx1z6PKBaNbdMongH6gGcZjGHUaikMWv1atZmfmfyTsbm2FbcAp4eUuDwBfFVanNC3137ut61gsDc5oeeQ59Ey84oPaCxvcs2fxKfLPMveT4tSuNjfevf9XKqKw8mssWnwKmevsszTgfcjsESVZae2aiG9Tr4NyyJnCuXQTEf6twii"};
 		System.exit(new CommandLineClient(args).start());
 	}		
 }
