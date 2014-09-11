@@ -130,7 +130,7 @@ public class FileLockedScenarioTest {
 
 		// Test 3: Check file system for inconsistencies
 		File repoPath = ((LocalTransferSettings) connection).getRepositoryPath();
-		assertEquals("Repository should contain any files.", 3, repoPath.list().length);
+		assertEquals("Repository should contain any files.", 5, repoPath.list().length);
 	}
 
 	private void runUpAndTestForEmptyDatabase(TransferSettings connection, TestClient client) throws Exception {
