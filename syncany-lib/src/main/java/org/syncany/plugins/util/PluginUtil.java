@@ -15,10 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util;
+package org.syncany.plugins.util;
 
 import org.simpleframework.xml.Element;
-import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.config.to.ConnectionTO;
+import org.syncany.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -31,21 +32,21 @@ import java.util.Map;
 
 public abstract class PluginUtil {
 
-  /**
-   * For compatibility reasons
-   * Will be removed when we have wizardstyle plugin initialisation
-   *
-   * @deprecated
-   */
-  public static Map<String,String> createMapFromTransferSettings(TransferSettings transferSettings) throws IllegalAccessException {
+	/**
+	 * For compatibility reasons
+	 * Will be removed when we have wizardstyle plugin initialisation
+	 *
+	 * @deprecated
+	 */
+	public static Map<String, String> createMapFromTransferSettings(ConnectionTO connectionTO) throws IllegalAccessException {
 
-    final Map<String, String> connection = new HashMap<>();
-    for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(transferSettings.getClass(), Element.class)) {
-      connection.put(f.getName(), f.get(transferSettings).toString());
-    }
+		final Map<String, String> connection = new HashMap<>();
+		for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(connectionTO.getClass(), Element.class)) {
+			connection.put(f.getName(), f.get(connectionTO).toString());
+		}
 
-    return connection;
+		return connection;
 
-  }
+	}
 
 }

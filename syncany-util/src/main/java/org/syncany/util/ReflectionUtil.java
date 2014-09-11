@@ -29,7 +29,7 @@ import java.util.List;
 
 public abstract class ReflectionUtil {
 
-	public static <T extends Annotation> T[] getAnnotationsForClassByType(Class<?> clazz, final Class<T> annotation) {
+	public static <T extends Annotation> T[] getAnnotationsForClassByType(Class<?> clazz, Class<T> annotation) {
 
 		List<T> matchedAnnotations = new ArrayList<>();
 
@@ -43,7 +43,7 @@ public abstract class ReflectionUtil {
 
 	}
 
-	public static Field[] getAllFieldsWithAnnotation(Class<?> clazz, final Class<? extends Annotation> annotation) {
+	public static Field[] getAllFieldsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
 
 		List<Field> matchedAnnotations = new ArrayList<>();
 

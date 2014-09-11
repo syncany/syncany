@@ -17,11 +17,15 @@
  */
 package org.syncany.config.to;
 
+import java.util.Map;
+
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface ConnectionTO {
 
-  public String getType();
+	public String getType();
+
+	public ConnectionTO parseKeyValueMap(Map<String, String> newPluginSettings) throws Exception;
 
 }

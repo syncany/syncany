@@ -19,13 +19,11 @@ package org.syncany.plugins.transfer;
 
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.StorageException;
-import org.syncany.plugins.annotations.PluginManager;
-import org.syncany.plugins.annotations.PluginSettings;
 import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.util.TransferPluginUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -58,7 +56,7 @@ public abstract class TransferPlugin extends Plugin {
 	}
 
 	public final TransferSettings createEmptySettings() throws StorageException {
-		final Class<? extends TransferSettings> transferSettings = getTransferSettingsClass();
+		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
 		if (transferSettings == null) {
 			throw new StorageException("TransferPlugin does not have any settings attached!");
 		}
@@ -83,8 +81,8 @@ public abstract class TransferPlugin extends Plugin {
 			throw new StorageException("Unable to create transfermanager: connection isn't valid (perhaps missing some mandatory fields?)");
 		}
 
-		final Class<? extends TransferSettings> transferSettings = getTransferSettingsClass();
-		final Class<? extends TransferManager> transferManager = getTransferManagerClass();
+		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
+		final Class<? extends TransferManager> transferManager = TransferPluginUtil.getTransferManagerClass(this.getClass());
 
 		if (transferSettings == null) {
 			throw new StorageException("Unable to create transfermanager: No settings class attached");
@@ -110,32 +108,6 @@ public abstract class TransferPlugin extends Plugin {
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
 		}
-
-	}
-
-	private Class<? extends TransferSettings> getTransferSettingsClass() {
-
-		PluginSettings settings = this.getClass().getAnnotation(PluginSettings.class);
-
-		if (settings == null) {
-			logger.log(Level.SEVERE, "TransferPlugin does not have any settings attached!");
-			return null;
-		}
-
-		return settings.value();
-
-	}
-
-	private Class<? extends TransferManager> getTransferManagerClass() {
-
-		PluginManager manager = this.getClass().getAnnotation(PluginManager.class);
-
-		if (manager == null) {
-			logger.log(Level.SEVERE, "TransferPlugin does not have an manager attached!");
-			return null;
-		}
-
-		return manager.value();
 
 	}
 

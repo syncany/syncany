@@ -33,10 +33,9 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.util.PluginUtil;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
-import org.syncany.util.PluginUtil;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -142,16 +141,14 @@ public abstract class AbstractInitOperation extends Operation {
 	}
 
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
-		TransferSettings settings = (TransferSettings) connectionTO;
-
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(settings));
+		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
 
-		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(settings.getType().getBytes()), cipherSuites, masterKey);
+		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSuites, masterKey);
 		String encryptedEncodedPlugin = new String(Base64.encodeBase64(encryptedPluginBytes, false));
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
 		String encryptedEncodedStorage = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
@@ -160,15 +157,13 @@ public abstract class AbstractInitOperation extends Operation {
 	}
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
-		TransferSettings settings = (TransferSettings) connectionTO;
-
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(settings));
+		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorage = new String(Base64.encodeBase64(plaintextStorageXml, false));
-		String plaintextEncodedPlugin = new String(Base64.encodeBase64(settings.getType().getBytes()));
+		String plaintextEncodedPlugin = new String(Base64.encodeBase64(connectionTO.getType().getBytes()));
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "-" + plaintextEncodedStorage;
 	}

@@ -44,23 +44,23 @@ import java.io.File;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="config", strict=false)
-@Namespace(reference="http://syncany.org/config/1")
+@Root(name = "config", strict = false)
+@Namespace(reference = "http://syncany.org/config/1")
 public class ConfigTO {
-	@Element(name="machinename", required=true)
+	@Element(name = "machinename", required = true)
 	private String machineName;
 
-	@Element(name="displayname", required=false)
+	@Element(name = "displayname", required = false)
 	private String displayName;
 
-	@Element(name="masterkey", required=false)
+	@Element(name = "masterkey", required = false)
 	private String masterKeyEncoded;
 	private SaltedSecretKey masterKey;
 
-	@Element(name="connection", required=true)
+	@Element(name = "connection", required = true)
 	private ConnectionTO connectionTO;
 
-	@Element(name="cacheKeepBytes", required=false)
+	@Element(name = "cacheKeepBytes", required = false)
 	private Long cacheKeepBytes;
 
 	public static ConfigTO load(File file) throws ConfigException {
@@ -115,7 +115,7 @@ public class ConfigTO {
 	@Persist
 	public void prepare() {
 		if (masterKey != null) {
-			masterKeyEncoded = StringUtil.toHex(masterKey.getSalt())+"/"+StringUtil.toHex(masterKey.getEncoded());
+			masterKeyEncoded = StringUtil.toHex(masterKey.getSalt()) + "/" + StringUtil.toHex(masterKey.getEncoded());
 		}
 		else {
 			masterKeyEncoded = null;

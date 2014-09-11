@@ -28,7 +28,7 @@ import org.syncany.plugins.*;
 import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.util.PluginUtil;
+import org.syncany.plugins.util.PluginUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -304,18 +304,12 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-    if (!(connectionTO instanceof TransferSettings)) {
-      throw new StorageException("Invalid connectionTO type, must be TransferSettings");
-    }
-
-    final TransferSettings connection = (TransferSettings) connectionTO;
-
 		try {
-			Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connection.getType(), TransferPlugin.class),
-					PluginUtil.createMapFromTransferSettings(connection), true);
-			connection.parseKeyValueMap(newPluginSettings);
+			Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType(), TransferPlugin.class),
+					PluginUtil.createMapFromTransferSettings(connectionTO), true);
+			connectionTO.parseKeyValueMap(newPluginSettings);
 		}
-		catch (IllegalAccessException e) {
+		catch (Exception e) {
 			logger.log(Level.SEVERE, "Unable to reload old plugin settings", e);
 			throw new StorageException("Unable to reload old plugin settings: " + e.getMessage());
 		}
