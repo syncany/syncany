@@ -23,7 +23,7 @@ import java.io.File;
 
 import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -32,7 +32,7 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 	@Test
 	public void testManySyncUpsAndDatabaseFileCleanup() throws Exception {
 		// Setup 
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		
 		// ROUND 1: many sync up (no cleanup expected here)		

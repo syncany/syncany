@@ -144,16 +144,11 @@ public class Cache {
 	 * 
 	 * @return Temporary file in local directory cache
 	 */
-    public File createTempFile(String name) throws Exception {
-       try {
-           File tempFile = File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
-           tempFile.deleteOnExit();
-           
-           return tempFile;
-       }
-       catch (IOException e) {
-           throw new Exception("Unable to create temporary file in cache.", e);
-       }
+    public File createTempFile(String name) throws IOException {
+       File tempFile = File.createTempFile(String.format("temp-%s-", name), ".tmp", cacheDir);
+       tempFile.deleteOnExit();
+       
+       return tempFile;
     }
     
     /**

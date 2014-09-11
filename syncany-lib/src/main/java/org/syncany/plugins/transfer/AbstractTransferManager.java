@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.config.Config;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -32,31 +31,49 @@ import org.syncany.plugins.StorageTestResult;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
-	private TransferSettings settings;
+	protected static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 
-	public AbstractTransferManager(TransferSettings settings) {
+	protected TransferSettings settings;
+	protected Config config;
+
+	public AbstractTransferManager(TransferSettings settings, Config config) {
 		this.settings = settings;
+		this.config = config;
 	}
 
-	public TransferSettings getConnection() {
+	public TransferSettings getSettings() {
 		return settings;
 	}
 
-	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
+	/**
+	 * Creates a temporary file, either using the config (if initialized) or 
+	 * using the global temporary directory.
+	 */
 	protected File createTempFile(String name) throws IOException {
-		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		if (config == null) {
+			return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		}
+		else {
+			return config.getCache().createTempFile(name);
+		}
 	}
 
+	/**
+	 * Checks whether the settings given to this transfer manager can be
+	 * used to create or connect to a remote repository. 
+	 * 
+	 * <p>Tests if the target exists, if it can be written to and if a 
+	 * repository can be created.
+	 */
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
-		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
+		logger.log(Level.INFO, "Performing storage test TM.test() ...");
 		StorageTestResult result = new StorageTestResult();
-		
+
 		try {
 			logger.log(Level.INFO, "- Running connect() ...");
 			connect();
-	
+
 			result.setTargetExists(testTargetExists());
 			result.setTargetCanWrite(testTargetCanWrite());
 			result.setRepoFileExists(testRepoFileExists());
@@ -72,13 +89,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 					result.setTargetCanCreate(false);
 				}
 			}
-			
+
 			result.setTargetCanConnect(true);
 		}
 		catch (StorageException e) {
 			result.setTargetCanConnect(false);
 			result.setException(e);
-			
+
 			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
@@ -89,7 +106,8 @@ public abstract class AbstractTransferManager implements TransferManager {
 				// Don't care
 			}
 		}
-		
+
 		return result;
 	}
+
 }

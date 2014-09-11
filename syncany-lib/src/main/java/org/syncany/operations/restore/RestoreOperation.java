@@ -34,7 +34,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
