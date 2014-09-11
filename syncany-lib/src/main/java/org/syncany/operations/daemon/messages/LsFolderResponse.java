@@ -17,33 +17,29 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.syncany.database.FileVersion;
 import org.syncany.operations.daemon.messages.api.FolderResponse;
+import org.syncany.operations.ls.LsOperationResult;
 
-public class GetFileTreeFolderResponse extends FolderResponse {
+public class LsFolderResponse extends FolderResponse {
 	@Element(required = true)
-	private String root;
+	private LsOperationResult result;
+
+	public LsFolderResponse() {
+		// Nothing
+	}
 	
-	@Element(required = true)
-	private String prefix;
-	
-	@ElementList(required = true, entry="file")
-	private ArrayList<FileVersion> files;	
-	
-	public GetFileTreeFolderResponse(int requestId, String root, String prefix, List<FileVersion> files) {
+	public LsFolderResponse(LsOperationResult result, int requestId) {
 		super(200, requestId, null);
-		
-		this.root = root;
-		this.prefix = prefix;
-		this.files = new ArrayList<FileVersion>(files);
-	}	
-	
-	public List<FileVersion> getFiles() {
-		return files;
+		this.result = result;
+	}
+
+	@Override
+	public LsOperationResult getResult() {
+		return result;
+	}
+
+	public void setResult(LsOperationResult result) {
+		this.result = result;
 	}
 }

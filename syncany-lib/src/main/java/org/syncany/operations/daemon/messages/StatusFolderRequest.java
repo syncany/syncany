@@ -17,11 +17,13 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.status.StatusOperationOptions;
 
 public class StatusFolderRequest extends FolderRequest {
+	@Element(required = false)
 	private StatusOperationOptions options;
 
 	public StatusOperationOptions getOptions() {

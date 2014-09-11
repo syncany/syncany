@@ -238,6 +238,6 @@ public class LsCommand extends AbstractHistoryCommand {
 	
 	@Override
 	public boolean canExecuteInDaemonScope() {
-		return false;
+		return true;
 	}
 }
