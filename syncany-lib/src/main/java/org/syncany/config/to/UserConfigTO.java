@@ -23,7 +23,6 @@ import java.util.TreeMap;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
@@ -38,28 +37,27 @@ import org.syncany.config.ConfigException;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="userConfig", strict=false)
-@Namespace(reference="http://syncany.org/userconfig/1")
+@Root(name = "userConfig", strict = false)
 public class UserConfigTO {
-	@ElementMap(name="systemProperties", entry="property", key="name", required=false, attribute=true)
+	@ElementMap(name = "systemProperties", entry = "property", key = "name", required = false, attribute = true)
 	private TreeMap<String, String> systemProperties;
-	
-	@Element(name="preventStandby", required=false)
+
+	@Element(name = "preventStandby", required = false)
 	private boolean preventStandby;
-	
+
 	public UserConfigTO() {
 		this.systemProperties = new TreeMap<String, String>();
 		this.preventStandby = false;
 	}
-	
+
 	public Map<String, String> getSystemProperties() {
 		return systemProperties;
 	}
-	
+
 	public boolean preventStandbyEnabled() {
 		return preventStandby;
 	}
-	
+
 	public static UserConfigTO load(File file) throws ConfigException {
 		try {
 			return new Persister().read(UserConfigTO.class, file);
@@ -68,7 +66,7 @@ public class UserConfigTO {
 			throw new ConfigException("User config file cannot be read or is invalid: " + file, e);
 		}
 	}
-	
+
 	public static void save(UserConfigTO userConfigTO, File file) throws ConfigException {
 		try {
 			new Persister().write(userConfigTO, file);

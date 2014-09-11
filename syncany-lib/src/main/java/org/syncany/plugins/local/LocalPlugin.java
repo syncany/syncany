@@ -17,10 +17,11 @@
  */
 package org.syncany.plugins.local;
 
+import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * Identifies the local storage {@link Plugin} for Syncany.
@@ -31,7 +32,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
  * 
  * <p>The class implements defines the identifier, name and 
  * version of the plugin. It furthermore allows the instantiation 
- * of a plugin-specific {@link LocalConnection}. 
+ * of a plugin-specific {@link LocalTransferSettings}. 
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -39,18 +40,18 @@ public class LocalPlugin extends TransferPlugin {
 	public LocalPlugin() {
 		super("local");
 	}
-	
+
 	protected LocalPlugin(String pluginId) {
 		super(pluginId);
 	}
 
-    @Override
-    public TransferSettings createSettings() {
-        return new LocalConnection();
-    }
-    
 	@Override
-	public TransferManager createTransferManager(TransferSettings connection) {
-		return new LocalTransferManager((LocalConnection) connection);
+	public TransferSettings createSettings() {
+		return new LocalTransferSettings();
+	}
+
+	@Override
+	public TransferManager createTransferManager(TransferSettings connection, Config config) {
+		return new LocalTransferManager((LocalTransferSettings) connection, config);
 	}
 }

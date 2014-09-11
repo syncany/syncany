@@ -17,7 +17,7 @@
  */
 package org.syncany.plugins.transfer.files;
 
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The repo file represents the repository-defining file. It is used to
@@ -30,17 +30,17 @@ import org.syncany.plugins.StorageException;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RepoRemoteFile extends RemoteFile {
+public class SyncanyRemoteFile extends RemoteFile {
 	private static final String NAME_FORMAT = "syncany";
-	
+
 	/**
 	 * Initializes a new repo file with the name <b>syncany</b>.
 	 * @throws StorageException Never throws an exception.
 	 */
-	public RepoRemoteFile() throws StorageException {
+	public SyncanyRemoteFile() throws StorageException {
 		super(NAME_FORMAT);
-	}	
-	
+	}
+
 	/**
 	 * Initializes a new repo file, given a name. This constructor might 
 	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
@@ -49,7 +49,7 @@ public class RepoRemoteFile extends RemoteFile {
 	 * @param name Repo file name; <b>must</b> always be <b>syncany</b> 
 	 * @throws StorageException If the name is not <b>syncany</b>
 	 */
-	public RepoRemoteFile(String name) throws StorageException {
+	public SyncanyRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
@@ -58,7 +58,7 @@ public class RepoRemoteFile extends RemoteFile {
 		if (!NAME_FORMAT.equals(name)) {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_FORMAT + " expected.");
 		}
-		
+
 		return name;
 	}
 }

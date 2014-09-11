@@ -20,7 +20,7 @@ package org.syncany.plugins.transfer.files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The database file represents a delta database.
@@ -35,8 +35,8 @@ import org.syncany.plugins.StorageException;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseRemoteFile extends RemoteFile implements Comparable<DatabaseRemoteFile> {
-	private static final Pattern NAME_PATTERN = Pattern.compile("db-([^-]+)-(\\d+)");
-	private static final String NAME_FORMAT = "db-%s-%010d";
+	private static final Pattern NAME_PATTERN = Pattern.compile("database-([^-]+)-(\\d+)");
+	private static final String NAME_FORMAT = "database-%s-%010d";
 
 	private String clientName;
 	private long clientVersion;

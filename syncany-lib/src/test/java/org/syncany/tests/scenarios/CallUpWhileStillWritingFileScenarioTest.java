@@ -34,93 +34,93 @@ import org.syncany.config.Logging;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class CallUpWhileStillWritingFileScenarioTest {	
+public class CallUpWhileStillWritingFileScenarioTest {
 	private static final Logger logger = Logger.getLogger(CallUpWhileStillWritingFileScenarioTest.class.getSimpleName());
-	
+
 	@Test
 	public void testUpWhileWritingFile() throws Exception {
-		// Setup 
+		// Setup
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
-		
+
 		final TestClient clientA = new TestClient("A", testConnection);
 		final TestClient clientB = new TestClient("B", testConnection);
-		
+
 		final File testFile = clientA.getLocalFile("large-test-file");
-		final long testFileLength = 100*1024*1024;
-		
+		final long testFileLength = 100 * 1024 * 1024;
+
 		Thread writeFileThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					logger.log(Level.SEVERE, "Started thread to write file to "+testFile+"  ...");
+					logger.log(Level.SEVERE, "Started thread to write file to " + testFile + "  ...");
 
 					FileOutputStream fos = new FileOutputStream(testFile);
 					Random randomEngine = new Random();
-					
+
 					byte[] buf = new byte[4096];
 					int writtenLen = 0;
-					
+
 					while (writtenLen < testFileLength) {
 						randomEngine.nextBytes(buf);
-					    fos.write(buf, 0, buf.length);
-					    
-					    writtenLen += buf.length;
+						fos.write(buf, 0, buf.length);
+
+						writtenLen += buf.length;
 					}
-					
-					fos.close();	
-					
-					logger.log(Level.SEVERE, "Ended thread to write file to "+testFile+"  ...");					
+
+					fos.close();
+
+					logger.log(Level.SEVERE, "Ended thread to write file to " + testFile + "  ...");
 				}
 				catch (Exception e) {
 					// Nothing.
 				}
-			}			
+			}
 		});
-		
+
 		Logging.setGlobalLogLevel(Level.SEVERE);
-				
+
 		// Before start: setup up databases (takes a while)
 		clientA.status();
 		clientB.status();
-		
+
 		// Run!
 		writeFileThread.start();
-		
+
 		Thread.sleep(50);
-		
+
 		logger.log(Level.SEVERE, "Started clientA.up()");
 		UpOperationResult upResult = clientA.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
 		logger.log(Level.SEVERE, "Ended clientA.up()");
-		
+
 		writeFileThread.join();
-		
+
 		// Test 1: Check result sets for inconsistencies
 		assertTrue("Status command expected to return changes.", statusResult.getChangeSet().hasChanges());
 		assertFalse("File should NOT be uploaded while still writing (no half-file upload).", upResult.getChangeSet().hasChanges());
-		
+
 		// Test 2: Check database for inconsistencies
 		SqlDatabase database = clientA.loadLocalDatabase();
 
-		assertNull("File should NOT be uploaded while still writing (no half-file upload).", database.getFileVersionByPath("large-test-file"));		
+		assertNull("File should NOT be uploaded while still writing (no half-file upload).", database.getFileVersionByPath("large-test-file"));
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
-		
+
 		// Test 3: Check file system for inconsistencies
-		File repoPath = new File(((LocalConnection) testConnection).getRepositoryPath()+"/databases");	
-		String[] repoFileList = repoPath.list(new FilenameFilter() {			
+		File repoPath = new File(((LocalTransferSettings) testConnection).getRepositoryPath() + "/databases");
+		String[] repoFileList = repoPath.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith("db-");
+				return name.startsWith("database-");
 			}
 		});
-		
+
 		assertEquals("Repository should NOT contain any files.", 0, repoFileList.length);
-	
+
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();

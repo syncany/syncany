@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**

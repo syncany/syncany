@@ -35,89 +35,89 @@ import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
-public class InitAndConnectCommandNoEncryptionTest {	
+public class InitAndConnectCommandNoEncryptionTest {
 	private File originalWorkingDirectory;
-	
+
 	@Rule
 	public final TextFromStandardInputStream systemInMock = emptyStandardInputStream();
-	
+
 	@Before
 	public void before() {
 		originalWorkingDirectory = new File(System.getProperty("user.dir"));
 	}
-	
+
 	@After
 	public void after() {
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);		
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
 	}
-	
+
 	@Test
 	public void testCliInitCommandUninitializedLocalDir() throws Exception {
-		// Setup		
+		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TestCliUtil.setCurrentDirectory(tempDir);
-		
+
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
-		
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
+
 		// Run
-		String[] initArgs = new String[] { 			 
-			 "init",
-			 "--plugin", "local", 
-			 "--plugin-option", "path="+clientA.get("repopath"),
-			 "--no-encryption", 
-			 "--no-compression" 
-		}; 
-		
+		String[] initArgs = new String[] {
+				"init",
+				"--plugin", "local",
+				"--plugin-option", "path=" + clientA.get("repopath"),
+				"--no-encryption",
+				"--no-compression"
+		};
+
 		new CommandLineClient(initArgs).start();
-		
+
 		assertTrue(tempDir.exists());
-		assertTrue(new File(tempDir+"/.syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
+		assertTrue(new File(tempDir + "/.syncany").exists());
+		assertTrue(new File(tempDir + "/.syncany/syncany").exists());
+		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
 		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-		
+
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
-	}	
-	
+	}
+
 	@Test
 	public void testCliInitCommandInteractive() throws Exception {
-		// Setup		
+		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TestCliUtil.setCurrentDirectory(tempDir);
-		
+
 		// Ensuring no console is set
 		InitConsole.setInstance(null);
-		
+
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
-		
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
+
 		// Run
-		String[] initArgs = new String[] { 			 
-			 "init",
-			 "--no-encryption",
-			 "--no-compression" 
-		}; 
-		
+		String[] initArgs = new String[] {
+				"init",
+				"--no-encryption",
+				"--no-compression"
+		};
+
 		systemInMock.provideText(StringUtil.join(new String[] {
-			"local", 
-			clientA.get("repopath")
-		}, "\n")+"\n");
-		
+				"local",
+				clientA.get("repopath")
+		}, "\n") + "\n");
+
 		new CommandLineClient(initArgs).start();
-		
+
 		assertTrue(tempDir.exists());
-		assertTrue(new File(tempDir+"/.syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/syncany").exists());
-		assertTrue(new File(tempDir+"/.syncany/config.xml").exists());
+		assertTrue(new File(tempDir + "/.syncany").exists());
+		assertTrue(new File(tempDir + "/.syncany/syncany").exists());
+		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
 		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-		
+
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
-	}	
+	}
 }

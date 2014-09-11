@@ -17,6 +17,7 @@
  */
 package org.syncany.plugins.transfer;
 
+import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
@@ -40,7 +41,7 @@ public abstract class TransferPlugin extends Plugin {
 	 * and then initialized with the <tt>init()</tt> method.
 	 */
 	public abstract TransferSettings createSettings();
-	
+
 	/**
 	 * Creates an initialized {@link TransferManager} object using the given
 	 * connection details.
@@ -48,5 +49,5 @@ public abstract class TransferPlugin extends Plugin {
 	 * <p>The created instance can be used to upload/download/delete {@link RemoteFile}s
 	 * and query the remote storage for a file list. 
 	 */
-	public abstract TransferManager createTransferManager(TransferSettings connection);
+	public abstract TransferManager createTransferManager(TransferSettings connection, Config config);
 }

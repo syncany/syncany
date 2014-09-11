@@ -51,10 +51,11 @@ import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResul
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.RemoteTransaction;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -77,7 +78,7 @@ import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
-	
+
 	public static final String ACTION_ID = "up";
 
 	private UpOperationOptions options;
@@ -85,6 +86,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 	private SqlDatabase localDatabase;
 	private UpOperationListener listener;
+	private RemoteTransaction remoteTransaction;
 
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions(), null);
@@ -101,6 +103,7 @@ public class UpOperation extends AbstractTransferOperation {
 		this.result = new UpOperationResult();
 		this.listener = listener;
 		this.localDatabase = new SqlDatabase(config);
+		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 	}
 
 	@Override
@@ -115,6 +118,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Upload action file (lock for cleanup)
 		startOperation();
+
+		// TODO [medium/high] Remove this and construct mechanism to resume uploads
+		transferManager.cleanTransactions();
 
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
@@ -132,10 +138,11 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
-		uploadMultiChunks(newDatabaseVersion.getMultiChunks());
+		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());		
 
-		// Create delta database
-		writeAndUploadDeltaDatabase(newDatabaseVersion);
+		// Create delta database and commit transaction
+		writeAndAddDeltaDatabase(newDatabaseVersion);
+		remoteTransaction.commit();
 
 		// Save local database
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
@@ -173,7 +180,7 @@ public class UpOperation extends AbstractTransferOperation {
 		// Check if other operations are running
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
-			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); // TODO [medium] Add new result code
+			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); 
 
 			return false;
 		}
@@ -196,11 +203,11 @@ public class UpOperation extends AbstractTransferOperation {
 		else {
 			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
 		}
-		
+
 		return true;
 	}
 
-	private void writeAndUploadDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
+	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
 
@@ -297,7 +304,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
-	private void uploadMultiChunks(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
+	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 		int multiChunkIndex = 0;
 
@@ -313,22 +320,19 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 			else {
 				File localMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkEntry.getId());
-				MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkEntry.getId());
+				MultichunkRemoteFile remoteMultiChunkFile = new MultichunkRemoteFile(multiChunkEntry.getId());
 
 				logger.log(Level.INFO, "- Uploading multichunk {0} from {1} to {2} ...", new Object[] { multiChunkEntry.getId(), localMultiChunkFile,
 						remoteMultiChunkFile });
 
-				transferManager.upload(localMultiChunkFile, remoteMultiChunkFile);
+				remoteTransaction.upload(localMultiChunkFile, remoteMultiChunkFile);
 
 				if (listener != null) {
 					listener.onUploadFile(remoteMultiChunkFile.getName(), multiChunkIndex);
 				}
-
-				logger.log(Level.INFO, "  + Removing " + multiChunkEntry.getId() + " locally ...");
-				localMultiChunkFile.delete();
 			}
 		}
-		
+
 		if (listener != null) {
 			listener.onUploadEnd();
 		}
@@ -338,10 +342,10 @@ public class UpOperation extends AbstractTransferOperation {
 		if (listener != null) {
 			listener.onUploadFile(localDatabaseFile.getName(), -1);
 		}
-		
+
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
-		transferManager.upload(localDatabaseFile, remoteDatabaseFile);
-		
+		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
+
 		if (listener != null) {
 			listener.onUploadEnd();
 		}

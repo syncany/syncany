@@ -22,8 +22,8 @@ import java.util.Map;
 
 import org.syncany.plugins.PluginOptionSpec;
 import org.syncany.plugins.PluginOptionSpecs;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.PluginOptionSpec.ValueType;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
@@ -34,7 +34,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  *  
  * @author Philipp C. Heckel
  */
-public class LocalConnection extends TransferSettings {
+public class LocalTransferSettings extends TransferSettings {
 	protected File repositoryPath;
 
 	public File getRepositoryPath() {

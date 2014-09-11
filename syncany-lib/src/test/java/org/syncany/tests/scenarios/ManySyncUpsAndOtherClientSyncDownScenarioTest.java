@@ -21,7 +21,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -29,7 +29,7 @@ public class ManySyncUpsAndOtherClientSyncDownScenarioTest {
 	@Test
 	public void testManySyncUpsAndOtherClientSyncDown() throws Exception {
 		// Setup 
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
@@ -53,7 +53,7 @@ public class ManySyncUpsAndOtherClientSyncDownScenarioTest {
 	@Test
 	public void testManySyncUpsAndOtherClientSyncDownSameFileAddRemove() throws Exception {
 		// Setup 
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

@@ -18,38 +18,39 @@
 package org.syncany.plugins.local;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.syncany.plugins.StorageException;
+import org.syncany.config.Config;
 import org.syncany.plugins.transfer.AbstractTransferManager;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageFileNotFoundException;
+import org.syncany.plugins.transfer.StorageMoveException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.transfer.files.TempRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
  * {@link LocalPlugin}. 
  * 
- * <p>Using a {@link LocalConnection}, the transfer manager is configured and uses 
+ * <p>Using a {@link LocalTransferSettings}, the transfer manager is configured and uses 
  * any local folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
  * in special sub-folders:
  * 
  * <ul>
  *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
- *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultiChunkRemoteFile}s</li>
+ *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultichunkRemoteFile}s</li>
  * </ul>
  * 
  * <p>This plugin can be used for testing or to point to a repository
@@ -65,14 +66,18 @@ public class LocalTransferManager extends AbstractTransferManager {
 	private File multichunksPath;
 	private File databasesPath;
 	private File actionsPath;
+	private File transactionsPath;
+	private File temporaryPath;
 
-	public LocalTransferManager(LocalConnection connection) {
-		super(connection);
+	public LocalTransferManager(LocalTransferSettings connection, Config config) {
+		super(connection, config);
 
 		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
 		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
 		this.databasesPath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
 		this.actionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "actions");
+		this.transactionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transactions");
+		this.temporaryPath = new File(connection.getRepositoryPath().getAbsolutePath(), "temporary");
 	}
 
 	@Override
@@ -104,9 +109,17 @@ public class LocalTransferManager extends AbstractTransferManager {
 		if (!databasesPath.mkdir()) {
 			throw new StorageException("Cannot create databases directory: " + databasesPath);
 		}
-		
+
 		if (!actionsPath.mkdir()) {
-			throw new StorageException("Cannot create actions directory: " + databasesPath);
+			throw new StorageException("Cannot create actions directory: " + actionsPath);
+		}
+
+		if (!transactionsPath.mkdir()) {
+			throw new StorageException("Cannot create transactions directory: " + transactionsPath);
+		}
+
+		if (!temporaryPath.mkdir()) {
+			throw new StorageException("Cannot create temporary directory: " + temporaryPath);
 		}
 	}
 
@@ -117,14 +130,14 @@ public class LocalTransferManager extends AbstractTransferManager {
 		File repoFile = getRemoteFile(remoteFile);
 
 		if (!repoFile.exists()) {
-			throw new StorageException("No such file in local repository: " + repoFile);
+			throw new StorageFileNotFoundException("No such file in local repository: " + repoFile);
 		}
 
 		try {
 			File tempLocalFile = createTempFile("local-tm-download");
 			tempLocalFile.deleteOnExit();
 
-			copyLocalFile(repoFile, tempLocalFile);
+			FileUtils.copyFile(repoFile, tempLocalFile);
 
 			localFile.delete();
 			FileUtils.moveFile(tempLocalFile, localFile);
@@ -132,6 +145,25 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		catch (IOException ex) {
 			throw new StorageException("Unable to copy file " + repoFile + " from local repository to " + localFile, ex);
+		}
+	}
+
+	@Override
+	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
+		connect();
+
+		File sourceRemoteFile = getRemoteFile(sourceFile);
+		File targetRemoteFile = getRemoteFile(targetFile);
+
+		if (!sourceRemoteFile.exists()) {
+			throw new StorageMoveException("Unable to move file " + sourceFile + " because it does not exist.");
+		}
+
+		try {
+			FileUtils.moveFile(sourceRemoteFile, targetRemoteFile);
+		}
+		catch (IOException ex) {
+			throw new StorageException("Unable to move file " + sourceRemoteFile + " to destination " + targetRemoteFile, ex);
 		}
 	}
 
@@ -153,7 +185,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 
 		try {
-			copyLocalFile(localFile, tempRepoFile);
+			FileUtils.copyFile(localFile, tempRepoFile);
 			FileUtils.moveFile(tempRepoFile, repoFile);
 		}
 		catch (IOException ex) {
@@ -205,11 +237,11 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	private File getRemoteFile(RemoteFile remoteFile) {
-		return new File(getRemoteFilePath(remoteFile.getClass()) + File.separator + remoteFile.getName());
+		return new File(getRemoteFilePath(remoteFile.getClass()), remoteFile.getName());
 	}
 
 	private File getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
-		if (remoteFile.equals(MultiChunkRemoteFile.class)) {
+		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath;
 		}
 		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
@@ -218,24 +250,15 @@ public class LocalTransferManager extends AbstractTransferManager {
 		else if (remoteFile.equals(ActionRemoteFile.class)) {
 			return actionsPath;
 		}
+		else if (remoteFile.equals(TransactionRemoteFile.class)) {
+			return transactionsPath;
+		}
+		else if (remoteFile.equals(TempRemoteFile.class)) {
+			return temporaryPath;
+		}
 		else {
 			return repoPath;
 		}
-	}
-
-	public void copyLocalFile(File src, File dst) throws IOException {
-		InputStream in = new FileInputStream(src);
-		OutputStream out = new FileOutputStream(dst);
-
-		byte[] buf = new byte[4096];
-
-		int len;
-		while ((len = in.read(buf)) > 0) {
-			out.write(buf, 0, len);
-		}
-
-		in.close();
-		out.close();
 	}
 
 	public String getAbsoluteParentDirectory(File file) {
@@ -278,8 +301,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 	@Override
 	public boolean testRepoFileExists() {
 		try {
-			File repoFile = getRemoteFile(new RepoRemoteFile());
-			
+			File repoFile = getRemoteFile(new SyncanyRemoteFile());
+
 			if (repoFile.exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists, list(syncany) returned one result.");
 				return true;
@@ -291,7 +314,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist. Exception occurred.", e);
-			return false;			
+			return false;
 		}
 	}
 
