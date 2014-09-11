@@ -18,9 +18,6 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +32,6 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
@@ -51,17 +47,10 @@ import org.syncany.operations.daemon.messages.GetFileFolderResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
-import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
-import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
-import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
-import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
 import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
-import org.syncany.operations.restore.RestoreOperation;
-import org.syncany.operations.restore.RestoreOperationOptions;
-import org.syncany.operations.restore.RestoreOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -170,9 +159,6 @@ public class WatchRunner implements WatchOperationListener {
 			}
 			
 			/*
-			if (folderRequest instanceof GetFileTreeFolderRequest) {
-				handleGetFileTreeRequest((GetFileTreeFolderRequest) folderRequest);			
-			}
 			else if (folderRequest instanceof GetFileHistoryFolderRequest) {
 				handleGetFileHistoryRequest((GetFileHistoryFolderRequest) folderRequest);			
 			}
@@ -182,19 +168,11 @@ public class WatchRunner implements WatchOperationListener {
 			else if (folderRequest instanceof GetDatabaseVersionHeadersFolderRequest) {
 				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersFolderRequest) folderRequest);			
 			}
-			else if (folderRequest instanceof RestoreFileFolderRequest) {
-				handleRestoreRequest((RestoreFileFolderRequest) folderRequest);			
-			}
-			else if (folderRequest instanceof StatusFolderRequest) {
-				handleStatusRequest((StatusFolderRequest) folderRequest);			
-			}
 			else {
 				
 			}*/
 		}		
 	}
-
-	
 
 	private void handleGetFileRequest(GetFileFolderRequest fileRequest) {
 		try {
@@ -223,55 +201,6 @@ public class WatchRunner implements WatchOperationListener {
 			logger.log(Level.WARNING, "Cannot reassemble file.", e);
 			eventBus.post(new BadRequestResponse(fileRequest.getId(), "Cannot reassemble file."));
 		}		
-	}
-
-	private void handleRestoreRequest(RestoreFileFolderRequest restoreRequest) {
-		RestoreOperationOptions restoreOptions = new RestoreOperationOptions();
-		
-		restoreOptions.setFileHistoryId(FileHistoryId.parseFileId(restoreRequest.getFileHistoryId()));
-		restoreOptions.setFileVersion(restoreRequest.getVersion());
-		
-		try {
-			RestoreOperationResult restoreResult = new RestoreOperation(config, restoreOptions).execute();
-			
-			RestoreFileFolderResponse restoreResponse = new RestoreFileFolderResponse(restoreRequest.getId(), restoreResult.getTargetFile());
-			eventBus.post(restoreResponse);								
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "BadRequestResponse: Cannot restore file.");
-			eventBus.post(new BadRequestResponse(restoreRequest.getId(), "Cannot restore file."));
-		}
-	}
-
-//	private void handleCliRequest(CliRequest cliRequest) {
-//		if (watchOperation.isSyncRunning() || watchOperation.isSyncRequested()) {
-//			handleCliRequestSyncRunning(cliRequest);
-//		}
-//		else {
-//			watchOperation.pause();
-//			handleCliRequestNoSyncRunning(cliRequest);
-//			watchOperation.resume();
-//		}
-//	}
-
-//	private void handleCliRequestSyncRunning(CliRequest cliRequest) {
-//		CliResponse cliResponse = new CliResponse(cliRequest.getId(), "Cannot run CLI commands while sync is running or requested.\n");
-//		eventBus.post(cliResponse);
-//	}
-
-	private void handleGetFileTreeRequest(GetFileTreeFolderRequest fileTreeRequest) {
-		try {
-			String prefixLikeQuery = fileTreeRequest.getPrefix() + "%";
-			Date date = (fileTreeRequest.getDate() != null) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").parse(fileTreeRequest.getDate()) : null;
-			
-			Map<String, FileVersion> fileTree = localDatabase.getFileTree(prefixLikeQuery, date, false, (FileType[]) null);
-			GetFileTreeFolderResponse fileTreeResponse = new GetFileTreeFolderResponse(fileTreeRequest.getId(), fileTreeRequest.getRoot(), fileTreeRequest.getPrefix(), new ArrayList<FileVersion>(fileTree.values()));
-			
-			eventBus.post(fileTreeResponse);	
-		}
-		catch (Exception e) {
-			eventBus.post(new BadRequestResponse(fileTreeRequest.getId(), "Invalid request: " + e.getMessage()));
-		}	
 	}
 	
 	private void handleGetFileHistoryRequest(GetFileHistoryFolderRequest fileHistoryRequest) {

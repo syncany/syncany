@@ -38,8 +38,8 @@ import org.syncany.operations.daemon.messages.GetFileFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
-import org.syncany.operations.daemon.messages.GetFileTreeFolderRequest;
-import org.syncany.operations.daemon.messages.GetFileTreeFolderResponse;
+import org.syncany.operations.daemon.messages.LsFolderRequest;
+import org.syncany.operations.daemon.messages.LsFolderResponse;
 import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
 import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
@@ -120,7 +120,7 @@ public class BasicWatchServerTest {
 		List<FileVersion> files = new ArrayList<FileVersion>();
 		
 		for (int i = 0; i < 20; i++) {
-			GetFileTreeFolderRequest request = new GetFileTreeFolderRequest();
+			LsFolderRequest request = new LsFolderRequest();
 			request.setId(i);
 			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
 				
@@ -128,8 +128,8 @@ public class BasicWatchServerTest {
 			
 			Response response = waitForResponse(i);
 			
-			assertTrue(response instanceof GetFileTreeFolderResponse);
-			GetFileTreeFolderResponse treeResponse = (GetFileTreeFolderResponse) response;
+			assertTrue(response instanceof LsFolderResponse);
+			LsFolderResponse treeResponse = (LsFolderResponse) response;
 			
 			files = treeResponse.getFiles();
 			

@@ -17,29 +17,18 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
+import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.restore.RestoreOperationOptions;
 
 public class RestoreFileFolderRequest extends FolderRequest {
-	@Element(required = true)
-	private String fileHistoryId;
-	
-	@Element(required = true)
-	private int version;
+	private RestoreOperationOptions options;
 
-	public String getFileHistoryId() {
-		return fileHistoryId;
+	public RestoreOperationOptions getOptions() {
+		return options;
 	}
 
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setFileHistoryId(String fileHistoryId) {
-		this.fileHistoryId = fileHistoryId;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
+	public void setOptions(OperationOptions options) {
+		this.options = (RestoreOperationOptions)options;
 	}
 }

@@ -18,40 +18,19 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.syncany.database.FileVersion.FileType;
+import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.ls.LsOperationOptions;
 
-public class GetFileTreeFolderRequest extends FolderRequest {
+public class LsFolderRequest extends FolderRequest {
 	@Element(required = false)
-	private String prefix = "";
-	
-	@Element(required = false)
-	private FileType type = null;
-	
-	@Element(required = false)
-	private String date = null;
-	
-	public String getPrefix() {
-		return prefix;
+	private LsOperationOptions options;
+
+	public LsOperationOptions getOptions() {
+		return options;
 	}
 
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	public FileType getType() {
-		return type;
-	}
-
-	public void setType(FileType type) {
-		this.type = type;
-	}
-
-	public String getDate() {
-		return date;
-	}
-
-	public void setDate(String date) {
-		this.date = date;
+	public void setOptions(OperationOptions options) {
+		this.options = (LsOperationOptions)options;
 	}
 }
