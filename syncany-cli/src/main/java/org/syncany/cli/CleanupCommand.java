@@ -52,7 +52,8 @@ public class CleanupCommand extends Command {
 
 		OptionSpec<Void> optionForce = parser.accepts("force");
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
-		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
+		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
+		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg()
 				.ofType(String.class);
@@ -68,6 +69,9 @@ public class CleanupCommand extends Command {
 
 		// -V, --no-version-removal
 		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
+		
+		// -T, --no-temp-removal
+		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
 		// -k=<count>, --keep-versions=<count>		
 		if (options.has(optionKeepVersions)) {

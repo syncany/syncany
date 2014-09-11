@@ -131,6 +131,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		startOperation();
 
+		// If there are any, rollback any existing/old transactions
 		transferManager.cleanTransactions();
 
 		// Wait two seconds (conservative cleanup, see #104)
