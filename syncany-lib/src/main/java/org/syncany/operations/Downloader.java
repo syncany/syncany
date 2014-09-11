@@ -30,6 +30,8 @@ import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
@@ -45,10 +47,12 @@ public class Downloader {
 
 	private Config config;
 	private TransferManager transferManager;
+	private LocalEventBus eventBus;
 	
 	public Downloader(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
+		this.eventBus = LocalEventBus.getInstance();
 	}
 	
 	/** 
@@ -67,6 +71,8 @@ public class Downloader {
 				logger.log(Level.INFO, "  + Decrypted multichunk exists locally " + multiChunkId + ". No need to download it!");				
 			}
 			else {
+				eventBus.post(new WatchEventResponse(config.getLocalDir().getAbsolutePath(), "DOWNLOAD_FILE", remoteMultiChunkFile.getName()));
+				
 				logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 				transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
 	

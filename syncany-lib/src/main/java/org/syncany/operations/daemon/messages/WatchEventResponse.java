@@ -40,4 +40,12 @@ public class WatchEventResponse extends Response {
 		this.action = action;
 		this.subject = subject;
 	}	
+		
+	public String getAction() {
+		return action;
+	}
+	
+	public String getSubject() {
+		return subject;
+	}
 }

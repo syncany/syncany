@@ -28,12 +28,23 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.operations.daemon.messages.WatchEventResponse;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 
+import com.google.common.eventbus.Subscribe;
+
 public class DownCommand extends Command {
+	private LocalEventBus eventBus;
+	
+	public DownCommand() {
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
+	}
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -108,6 +119,12 @@ public class DownCommand extends Command {
 		else {
 			out.println("Sync down skipped, no remote changes.");
 		}
-
+	}
+	
+	@Subscribe
+	public void onWatchEventReceived(WatchEventResponse watchEventResponse) {
+		if ("DOWNLOAD_FILE".equals(watchEventResponse.getAction())) {
+			out.print("Downloading " + watchEventResponse.getSubject() + " ...\r");
+		}
 	}
 }
