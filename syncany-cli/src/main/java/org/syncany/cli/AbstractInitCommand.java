@@ -28,6 +28,7 @@ import org.syncany.plugins.*;
 import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.util.PluginUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -36,8 +37,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
+	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
 	public static final int PASSWORD_MIN_LENGTH = 10;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 
@@ -114,7 +118,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues) throws StorageException {
+	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues)
+			throws StorageException {
 		TransferSettings connection = plugin.createSettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 
@@ -299,8 +304,21 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
-		//Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType(), TransferPlugin.class), connectionTO.getSettings(), true);
-		//connectionTO.setSettings(newPluginSettings);
+    if (!(connectionTO instanceof TransferSettings)) {
+      throw new StorageException("Invalid connectionTO type, must be TransferSettings");
+    }
+
+    final TransferSettings connection = (TransferSettings) connectionTO;
+
+		try {
+			Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connection.getType(), TransferPlugin.class),
+					PluginUtil.createMapFromTransferSettings(connection), true);
+			connection.parseKeyValueMap(newPluginSettings);
+		}
+		catch (IllegalAccessException e) {
+			logger.log(Level.SEVERE, "Unable to reload old plugin settings", e);
+			throw new StorageException("Unable to reload old plugin settings: " + e.getMessage());
+		}
 	}
 
 	protected void printLink(GenlinkOperationResult operationResult, boolean shortOutput) {
@@ -399,10 +417,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String password = null;
 
 		while (password == null) {
-			char[] passwordChars = console.readPassword("Password (min. "+PASSWORD_MIN_LENGTH+" chars): ");
+			char[] passwordChars = console.readPassword("Password (min. " + PASSWORD_MIN_LENGTH + " chars): ");
 
 			if (passwordChars.length < PASSWORD_MIN_LENGTH) {
-				out.println("ERROR: This password is not allowed (too short, min. "+PASSWORD_MIN_LENGTH+" chars)");
+				out.println("ERROR: This password is not allowed (too short, min. " + PASSWORD_MIN_LENGTH + " chars)");
 				out.println();
 
 				continue;
@@ -419,7 +437,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			if (passwordChars.length < PASSWORD_WARN_LENGTH) {
 				out.println();
-				out.println("WARNING: The password is a bit short. Less than "+PASSWORD_WARN_LENGTH+" chars are not future-proof!");
+				out.println("WARNING: The password is a bit short. Less than " + PASSWORD_WARN_LENGTH + " chars are not future-proof!");
 				String yesno = console.readLine("Are you sure you want to use it (y/n)? ");
 
 				if (!yesno.toLowerCase().startsWith("y") && !"".equals(yesno)) {

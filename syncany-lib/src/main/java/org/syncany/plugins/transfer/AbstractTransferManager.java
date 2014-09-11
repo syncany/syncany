@@ -17,7 +17,8 @@
  */
 package org.syncany.plugins.transfer;
 
-import org.reflections.Reflections;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.Plugins;
 import org.syncany.plugins.StorageException;
 import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.annotations.PluginSettings;
@@ -42,21 +43,20 @@ public abstract class AbstractTransferManager implements TransferManager {
 		this.settings = settings;
 	}
 
-  public final <T extends TransferSettings> T getConnection() {
-    Reflections reflections = new Reflections("org.syncany");
-    try {
-      for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(PluginSettings.class)) {
-        if (annotatedClass.getAnnotationsByType(PluginSettings.class)[0].value().getName().equals(settings.getClass().getName())) {
-          return (T) annotatedClass.getAnnotationsByType(PluginSettings.class)[0].value().cast(settings);
-        }
-      }
-    }
-    catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
-    }
-    return null;
+	public final <T extends TransferSettings> T getConnection() {
+		try {
+			for (Plugin plugin : Plugins.list()) {
+				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
+				if (pluginSettings == null || pluginSettings.value().equals(settings.getClass()))
+					return (T) pluginSettings.value().cast(settings);
+			}
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
+		}
+		return null;
 
-  }
+	}
 
 	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
 	protected File createTempFile(String name) throws IOException {

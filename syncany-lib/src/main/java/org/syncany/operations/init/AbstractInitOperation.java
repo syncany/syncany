@@ -17,11 +17,8 @@
  */
 package org.syncany.operations.init;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.reflections.ReflectionUtils;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
@@ -39,14 +36,13 @@ import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
+import org.syncany.util.PluginUtil;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -150,7 +146,7 @@ public abstract class AbstractInitOperation extends Operation {
 
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(createMapFromTransferSettings(settings));
+		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(settings));
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
@@ -168,7 +164,7 @@ public abstract class AbstractInitOperation extends Operation {
 
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(createMapFromTransferSettings(settings));
+		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(settings));
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorage = new String(Base64.encodeBase64(plaintextStorageXml, false));
@@ -223,17 +219,6 @@ public abstract class AbstractInitOperation extends Operation {
 
 			return true;
 		}
-	}
-
-	private Object createMapFromTransferSettings(TransferSettings transferSettings) throws IllegalAccessException {
-
-		final Map<String, String> connection = Maps.newHashMap();
-		for (Field f : ReflectionUtils.getAllFields(transferSettings.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
-			connection.put(f.getName(), f.get(transferSettings).toString());
-		}
-
-		return connection;
-
 	}
 
 }

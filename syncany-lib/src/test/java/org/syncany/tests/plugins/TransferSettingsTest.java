@@ -79,11 +79,16 @@ public class TransferSettingsTest {
 
 		ConfigTO confRestored = ConfigTO.load(tmpFile);
 		TransferPlugin plugin = Plugins.get(confRestored.getConnectionTO().getType(), TransferPlugin.class);
+		assertNotNull(plugin);
 
 		TransferSettings tsRestored = (TransferSettings) confRestored.getConnectionTO();
+		assertNotNull(tsRestored);
+
 		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored);
+		assertNotNull(transferManager);
 
 		DummyTransferSettings dts = transferManager.getConnection();
+		assertNotNull(dts);
 
 		assertEquals(dts.foo, fooTest);
 		assertEquals(dts.baz, bazTest);
@@ -102,7 +107,7 @@ public class TransferSettingsTest {
 		TransferSettings ts = p.createEmptySettings();
 		ts.parseKeyValueMap(settings);
 
-    assertTrue(ts.isValid());
+		assertTrue(ts.isValid());
 
 		DummyTransferManager dtm = p.createTransferManager(ts);
 		DummyTransferSettings dts = dtm.getConnection();

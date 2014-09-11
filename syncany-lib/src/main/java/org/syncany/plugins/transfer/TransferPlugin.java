@@ -115,27 +115,27 @@ public abstract class TransferPlugin extends Plugin {
 
 	private Class<? extends TransferSettings> getTransferSettingsClass() {
 
-		PluginSettings[] annotations = this.getClass().getAnnotationsByType(PluginSettings.class);
+		PluginSettings settings = this.getClass().getAnnotation(PluginSettings.class);
 
-		if (annotations.length != 1) {
+		if (settings == null) {
 			logger.log(Level.SEVERE, "TransferPlugin does not have any settings attached!");
 			return null;
 		}
 
-		return annotations[0].value();
+		return settings.value();
 
 	}
 
 	private Class<? extends TransferManager> getTransferManagerClass() {
 
-		PluginManager[] annotations = this.getClass().getAnnotationsByType(PluginManager.class);
+		PluginManager manager = this.getClass().getAnnotation(PluginManager.class);
 
-		if (annotations.length != 1) {
+		if (manager == null) {
 			logger.log(Level.SEVERE, "TransferPlugin does not have an manager attached!");
 			return null;
 		}
 
-		return annotations[0].value();
+		return manager.value();
 
 	}
 

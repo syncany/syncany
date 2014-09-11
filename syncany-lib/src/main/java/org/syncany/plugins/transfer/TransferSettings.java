@@ -24,19 +24,15 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.reflections.ReflectionUtils;
-import org.reflections.Reflections;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.syncany.config.to.ConnectionTO;
-import org.syncany.plugins.Plugin;
-import org.syncany.plugins.PluginOptionSpecs;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.*;
 import org.syncany.plugins.annotations.Encrypted;
 import org.syncany.plugins.annotations.PluginSettings;
+import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 
 /**
@@ -60,12 +56,11 @@ public abstract class TransferSettings implements ConnectionTO {
 	private String type;
 
 	{
-		Reflections reflections = new Reflections("org.syncany");
 		try {
-			for (Class<?> annotatedClass : reflections.getTypesAnnotatedWith(PluginSettings.class)) {
-				if (annotatedClass.getAnnotationsByType(PluginSettings.class)[0].value().getName().equals(this.getClass().getName())) {
-					type = ((TransferPlugin) annotatedClass.newInstance()).getId();
-				}
+			for (Plugin plugin : Plugins.list()) {
+				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
+				if (pluginSettings == null || pluginSettings.value().equals(this.getClass()))
+					type = plugin.getClass().newInstance().getId();
 			}
 		}
 		catch (Exception e) {
@@ -90,7 +85,7 @@ public abstract class TransferSettings implements ConnectionTO {
 	public TransferSettings parseKeyValueMap(Map<String, String> keyValueMap) throws StorageException {
 
 		try {
-			for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
 
 				f.setAccessible(true);
 				String fName = f.getName();
@@ -126,7 +121,7 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	public final boolean isValid() {
 		try {
-			for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Element.class))) {
+			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
 				f.setAccessible(true);
 				if (f.getAnnotationsByType(Element.class)[0].required() && f.get(this) == null) {
 					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), f.getName() });
@@ -145,7 +140,7 @@ public abstract class TransferSettings implements ConnectionTO {
 	@Persist
 	private void encrypt() throws Exception {
 
-		for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Encrypted.class))) {
+		for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
 			if (f.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
@@ -162,7 +157,7 @@ public abstract class TransferSettings implements ConnectionTO {
 	@Commit
 	private void decrypt() throws Exception {
 
-		for (Field f : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(Encrypted.class))) {
+		for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
 			if (f.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
