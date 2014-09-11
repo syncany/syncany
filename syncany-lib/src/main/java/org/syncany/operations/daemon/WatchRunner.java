@@ -69,27 +69,27 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WatchRunner implements WatchOperationListener {
 	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
-	
+
 	private Config config;
 	private PortTO portTO;
 	private Thread watchThread;
 	private WatchOperation watchOperation;
 	private WatchOperationResult watchOperationResult;
 	private LocalEventBus eventBus;
-	
+
 	private SqlDatabase localDatabase;
 
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
-		
+
 		this.localDatabase = new SqlDatabase(config);
-		
+
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
-	
+
 	public void start() {
 		watchThread = new Thread(new Runnable() {
 			@Override
@@ -100,15 +100,15 @@ public class WatchRunner implements WatchOperationListener {
 
 					// Write port to portFile
 					File portFile = config.getPortFile();
-					
+
 					portFile.createNewFile();
 					portFile.deleteOnExit();
 
 					new Persister().write(portTO, portFile);
-					
+
 					// Start operation (blocks!)
 					watchOperationResult = watchOperation.execute();
-					
+
 					logger.log(Level.INFO, "STOPPED watch at " + config.getLocalDir());
 				}
 				catch (Exception e) {
@@ -116,7 +116,7 @@ public class WatchRunner implements WatchOperationListener {
 				}
 			}
 		}, "WR/" + config.getLocalDir().getName());
-		
+
 		watchThread.start();
 	}
 
@@ -126,16 +126,16 @@ public class WatchRunner implements WatchOperationListener {
 
 		watchThread = null;
 	}
-	
+
 	public boolean hasStopped() {
 		return (watchOperationResult != null);
 	}
-	
+
 	@Subscribe
 	public void onRequestReceived(FolderRequest folderRequest) {		
 		File requestRootFolder = new File(folderRequest.getRoot());
 		boolean localDirMatches = requestRootFolder.equals(config.getLocalDir());
-		
+
 		if (localDirMatches) {
 			logger.log(Level.INFO, "Received " + folderRequest);
 			
@@ -178,18 +178,18 @@ public class WatchRunner implements WatchOperationListener {
 		try {
 			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileRequest.getFileHistoryId());
 			long version = fileRequest.getVersion();
-			
-			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);			
+
+			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);
 			FileContent fileContent = localDatabase.getFileContent(fileVersion.getChecksum(), true);
 			Map<ChunkChecksum, MultiChunkId> multiChunks = localDatabase.getMultiChunkIdsByChecksums(fileContent.getChunks());
-						
-			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection());			
+
+			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
 			Downloader downloader = new Downloader(config, transferManager);
 			Assembler assembler = new Assembler(config, localDatabase);
-			
+
 			downloader.downloadAndDecryptMultiChunks(new HashSet<MultiChunkId>(multiChunks.values()));
-			
-			File tempFile = assembler.assembleToCache(fileVersion);			
+
+			File tempFile = assembler.assembleToCache(fileVersion);
 			String tempFileToken = StringUtil.toHex(ObjectId.secureRandomBytes(40));
 			
 			GetFileFolderResponse fileResponse = new GetFileFolderResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
@@ -200,7 +200,7 @@ public class WatchRunner implements WatchOperationListener {
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot reassemble file.", e);
 			eventBus.post(new BadRequestResponse(fileRequest.getId(), "Cannot reassemble file."));
-		}		
+		}
 	}
 	
 	private void handleGetFileHistoryRequest(GetFileHistoryFolderRequest fileHistoryRequest) {
@@ -259,7 +259,7 @@ public class WatchRunner implements WatchOperationListener {
 		
 		eventBus.post(new WatchEventFolderResponse(root, action, subject));
 	}
-	
+
 	@Override
 	public void onIndexEnd() {
 		String root = config.getLocalDir().getAbsolutePath();

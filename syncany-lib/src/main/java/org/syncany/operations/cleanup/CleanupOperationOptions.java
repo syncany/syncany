@@ -24,30 +24,33 @@ import org.syncany.operations.status.StatusOperationOptions;
 public class CleanupOperationOptions implements OperationOptions {
 	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
-	
+
 	@Element(required = false)
 	private boolean force = false;
-	
+
 	@Element(required = false)
 	private boolean mergeRemoteFiles = true;
-	
+
 	@Element(required = false)
 	private boolean removeOldVersions = true;
-	
+
+	@Element(required = false)
+	private boolean removeUnreferencedTemporaryFiles = true;
+
 	@Element(required = false)
 	private int keepVersionsCount = 5;
-	
+
 	@Element(required = false)
 	private int maxDatabaseFiles = 15;
-	
+
 	@Element(required = false)
 	private long minSecondsBetweenCleanups = 10800;
-	
+
 	// TODO [medium] Implement multichunk repackaging
-	
+
 	// private boolean repackageMultiChunks = true; 
 	// private double repackageUnusedThreshold = 0.7;
-	
+
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
 	}
@@ -64,6 +67,10 @@ public class CleanupOperationOptions implements OperationOptions {
 		return removeOldVersions;
 	}
 
+	public boolean isRemoveUnreferencedTemporaryFiles() {
+		return removeUnreferencedTemporaryFiles;
+	}
+
 	public int getKeepVersionsCount() {
 		return keepVersionsCount;
 	}
@@ -76,30 +83,34 @@ public class CleanupOperationOptions implements OperationOptions {
 		this.removeOldVersions = removeOldVersions;
 	}
 
+	public void setRemoveUnreferencedTemporaryFiles(boolean removeUnreferencedTemporaryFiles) {
+		this.removeUnreferencedTemporaryFiles = removeUnreferencedTemporaryFiles;
+	}
+
 	public void setKeepVersionsCount(int keepVersionsCount) {
 		this.keepVersionsCount = keepVersionsCount;
 	}
-	
+
 	public void setMaxDatabaseFiles(int maxDatabaseFiles) {
 		this.maxDatabaseFiles = maxDatabaseFiles;
 	}
-	
+
 	public int getMaxDatabaseFiles() {
 		return maxDatabaseFiles;
 	}
-	
+
 	public void setMinSecondsBetweenCleanups(long minSecondsBetweenCleanups) {
 		this.minSecondsBetweenCleanups = minSecondsBetweenCleanups;
 	}
-	
+
 	public long getMinSecondsBetweenCleanups() {
 		return minSecondsBetweenCleanups;
 	}
-	
+
 	public boolean isForce() {
 		return force;
 	}
-	
+
 	public void setForce(boolean force) {
 		this.force = force;
 	}

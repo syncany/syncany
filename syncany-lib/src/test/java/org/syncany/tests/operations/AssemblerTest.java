@@ -27,7 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 
@@ -37,7 +37,7 @@ public class AssemblerTest {
 	 */
 	@Test
 	public void testAssembler() throws Exception {	
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);

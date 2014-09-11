@@ -15,39 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
+package org.syncany.plugins.transfer;
 
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
 /**
- * PortTO is the access object to the XML file written by the daemon in the client folder.
- * PortTO is used in the CLI to get access to the port information and a user-password
- * pair that can be used to authenticate with the REST-server.
- * 
- * @author Pim Otte
+ * Exception thrown when any of the methods of the {@link TransferManager}
+ * fail. Usually caused by broken sockets or a not available Internet connection.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name = "port", strict = false)
-public class PortTO {
-	@Element(name = "port", required = true)
-	private int port;
+public class StorageException extends Exception {
+	private static final long serialVersionUID = -311986990752074527L;
 
-	@Element(name = "user", required = true)
-	private UserTO user;
+	public StorageException(Throwable cause) {
+        super(cause);
+    }
 
-	public int getPort() {
-		return port;
-	}
+    public StorageException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	public UserTO getUser() {
-		return user;
-	}
-
-	public void setUser(UserTO user) {
-		this.user = user;
-	}
+    public StorageException(String message) {
+        super(message);
+    }
 }

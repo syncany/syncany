@@ -43,10 +43,10 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.unreliable_local.UnreliableLocalConnection;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
 import org.syncany.util.StringUtil;
 
@@ -98,14 +98,14 @@ public class TestConfigUtil {
 	public static ChunkerTO createFixedChunkerTO() {
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(Chunker.PROPERTY_SIZE, "32768");
-		
-		ChunkerTO chunkerTO = new ChunkerTO(); 
+
+		ChunkerTO chunkerTO = new ChunkerTO();
 		chunkerTO.setType("fixed");
 		chunkerTO.setSettings(settings);
-		
+
 		return chunkerTO;
 	}
-	
+
 	public static RepoTO createRepoTO() {
 		// Create Repo TO
 		RepoTO repoTO = new RepoTO();
@@ -172,7 +172,7 @@ public class TestConfigUtil {
 		tempLocalDir.mkdirs();
 
 		RepoTO repoTO = createRepoTO();
-		
+
 		// Create config TO
 		ConfigTO configTO = new ConfigTO();
 		configTO.setMachineName(machineName + CipherUtil.createRandomAlphabeticString(20));
@@ -181,30 +181,30 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
-		LocalConnection localConnection = (LocalConnection) connection;
+		LocalTransferSettings localConnection = (LocalTransferSettings) connection;
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
 		localConnectionSettings.put("path", localConnection.getRepositoryPath().getAbsolutePath());
-		
+
 		ConnectionTO connectionTO = new ConnectionTO();
-		
-		if (connection instanceof UnreliableLocalConnection) { // Dirty hack
-			UnreliableLocalConnection unreliableConnection = (UnreliableLocalConnection) connection;
+
+		if (connection instanceof UnreliableLocalTransferSettings) { // Dirty hack
+			UnreliableLocalTransferSettings unreliableConnection = (UnreliableLocalTransferSettings) connection;
 			String failingPatterns = StringUtil.join(unreliableConnection.getFailingOperationPatterns(), ",");
-			
+
 			localConnectionSettings.put("patterns", failingPatterns);
 
 			connectionTO.setType("unreliable_local");
-			connectionTO.setSettings(localConnectionSettings);			
+			connectionTO.setSettings(localConnectionSettings);
 		}
 		else {
 			connectionTO.setType("local");
 			connectionTO.setSettings(localConnectionSettings);
-		}		
-		
+		}
+
 		configTO.setConnectionTO(connectionTO);
-				
-		// Create 
+
+		// Create
 		Config config = new Config(tempLocalDir, configTO, repoTO);
 
 		config.setConnection(connection);
@@ -215,18 +215,18 @@ public class TestConfigUtil {
 		config.getStateDir().mkdirs();
 
 		// Write to config folder (required for some tests)
-		new Persister().write(configTO, new File(config.getAppDir()+"/"+Config.FILE_CONFIG));
-		new Persister().write(repoTO, new File(config.getAppDir()+"/"+Config.FILE_REPO));
-		
+		new Persister().write(configTO, new File(config.getAppDir() + "/" + Config.FILE_CONFIG));
+		new Persister().write(repoTO, new File(config.getAppDir() + "/" + Config.FILE_REPO));
+
 		return config;
 	}
-	
+
 	public static InitOperationOptions createTestInitOperationOptions(String machineName) throws Exception {
 		File tempLocalDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("client-" + machineName, machineName));
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", machineName));
 		tempLocalDir.mkdirs();
 		tempRepoDir.mkdirs();
-		
+
 		RepoTO repoTO = createRepoTO();
 
 		// Create config TO
@@ -240,26 +240,26 @@ public class TestConfigUtil {
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
 		localConnectionSettings.put("path", tempRepoDir.getAbsolutePath());
-		
+
 		ConnectionTO connectionTO = new ConnectionTO();
 		connectionTO.setType("local");
 		connectionTO.setSettings(localConnectionSettings);
-		
+
 		configTO.setConnectionTO(connectionTO);
-		
+
 		InitOperationOptions operationOptions = new InitOperationOptions();
-		
+
 		operationOptions.setLocalDir(tempLocalDir);
 		operationOptions.setConfigTO(configTO);
-		operationOptions.setRepoTO(repoTO); 
-		
+		operationOptions.setRepoTO(repoTO);
+
 		operationOptions.setEncryptionEnabled(cryptoEnabled);
 		operationOptions.setCipherSpecs(CipherSpecs.getDefaultCipherSpecs());
 		operationOptions.setPassword(cryptoEnabled ? "some password" : null);
-		
+
 		return operationOptions;
 	}
-	
+
 	public static InitOperationOptions createTestUnreliableInitOperationOptions(String machineName, String patterns) throws Exception {
 		InitOperationOptions initOperationOptions = createTestInitOperationOptions(machineName);
 		initOperationOptions.getConfigTO().getConnectionTO().setType("unreliable_local");
@@ -277,23 +277,26 @@ public class TestConfigUtil {
 		pluginSettings.put("path", tempRepoDir.getAbsolutePath());
 
 		conn.init(pluginSettings);
-		
-		plugin.createTransferManager(conn).init(true);
+
+		// TODO [medium] : possible problem
+		plugin.createTransferManager(conn, null).init(true);
 
 		return conn;
 	}
 
-	public static UnreliableLocalConnection createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
+	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
-		UnreliableLocalConnection unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin, failingOperationPatterns);
+		UnreliableLocalTransferSettings unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin,
+				failingOperationPatterns);
 
-		unreliableLocalPlugin.createTransferManager(unreliableLocalConnection).init(true);
+		unreliableLocalPlugin.createTransferManager(unreliableLocalConnection, null).init(true);
 
 		return unreliableLocalConnection;
 	}
-	
-	public static UnreliableLocalConnection createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin, List<String> failingOperationPatterns) throws Exception {		
-		UnreliableLocalConnection unreliableLocalConnection = (UnreliableLocalConnection) unreliableLocalPlugin.createSettings();
+
+	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin,
+			List<String> failingOperationPatterns) throws Exception {
+		UnreliableLocalTransferSettings unreliableLocalConnection = (UnreliableLocalTransferSettings) unreliableLocalPlugin.createSettings();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 
@@ -318,7 +321,7 @@ public class TestConfigUtil {
 	}
 
 	private static void deleteTestLocalConnection(Config config) {
-		LocalConnection connection = (LocalConnection) config.getConnection();
+		LocalTransferSettings connection = (LocalTransferSettings) config.getConnection();
 		TestFileUtil.deleteDirectory(connection.getRepositoryPath());
 	}
 
@@ -329,7 +332,7 @@ public class TestConfigUtil {
 	public static void setCrypto(boolean cryptoEnabled) {
 		TestConfigUtil.cryptoEnabled = cryptoEnabled;
 	}
-	
+
 	public static boolean getCrypto() {
 		return cryptoEnabled;
 	}

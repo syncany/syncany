@@ -17,9 +17,10 @@
  */
 package org.syncany.plugins.unreliable_local;
 
+import org.syncany.config.Config;
 import org.syncany.plugins.local.LocalPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * The unreliable local plugin can be used for test purposes to
@@ -30,17 +31,17 @@ import org.syncany.plugins.transfer.TransferManager;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class UnreliableLocalPlugin extends LocalPlugin {
-    public UnreliableLocalPlugin() {
-    	super("unreliable_local");
-    }
+	public UnreliableLocalPlugin() {
+		super("unreliable_local");
+	}
 
-    @Override
-    public TransferSettings createSettings() {
-        return new UnreliableLocalConnection();
-    }
-    
-    @Override
-    public TransferManager createTransferManager(TransferSettings connection) {
-        return new UnreliableLocalTransferManager((UnreliableLocalConnection) connection);
-    }
+	@Override
+	public TransferSettings createSettings() {
+		return new UnreliableLocalTransferSettings();
+	}
+
+	@Override
+	public TransferManager createTransferManager(TransferSettings connection, Config config) {
+		return new UnreliableLocalTransferManager((UnreliableLocalTransferSettings) connection, config);
+	}
 }
