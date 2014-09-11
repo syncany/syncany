@@ -4,6 +4,7 @@ Change Log
 ### Syncany 0.1.10-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
+  + Atomicity for changing operations (up/cleanup, major!) #64
   + Combined `sy` and `syd` script into one #210
   + Add folder to daemon config in `sy init` #215/#153
 - Bugfixes and other things:
