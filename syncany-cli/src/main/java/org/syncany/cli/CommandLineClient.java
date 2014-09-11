@@ -325,12 +325,18 @@ public class CommandLineClient extends Client {
 		boolean localDirHandledInDaemonScope = portFile != null && portFile.exists();
 		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
 		boolean needsToRunInInitializedScope = command.getRequiredCommandScope() == CommandScope.INITIALIZED_LOCALDIR;
-		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope && command.canExecuteInDaemonScope();
+		boolean sendToRest = daemonRunning & localDirHandledInDaemonScope && needsToRunInInitializedScope;
 		
 		command.setOut(out);
 		
 		if (sendToRest) {
-			return sendToRest(command, commandName, commandArgs, portFile);
+			if (command.canExecuteInDaemonScope()) {
+				return sendToRest(command, commandName, commandArgs, portFile);	
+			}
+			else {
+				logger.log(Level.SEVERE, "Command not allowed when folder is daemon-managed: " + command.toString());
+				return showErrorAndExit("Command not allowed when folder is daemon-managed");
+			}			
 		}
 		else {
 			return runLocally(command, commandArgs);
