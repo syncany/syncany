@@ -78,6 +78,18 @@ import com.google.common.collect.Lists;
  *       from the remote storage.</li>   
  * </ul>
  * 
+ * <p>High level strategy:
+ * <ul>
+ *    <ol>Lock repo and start thread that renews the lock every X seconds</ol>
+ *    <ol>Find old versions / contents / ... from database</ol>
+ *    <ol>Write and upload old versions to PRUNE file</ol>
+ *    <ol>Remotely delete unused multichunks</ol> 
+ *    <ol>Stop lock renewal thread and unlock repo</ol>
+ * </ul>
+ * 
+ * <p><b>Important issues:</b>
+ * All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CleanupOperation extends AbstractTransferOperation {
@@ -104,19 +116,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		this.localDatabase = new SqlDatabase(config);
 	}
 
-	/**
-	 * High level strategy:
-	 * 1. Lock repo and start thread that renews the lock every X seconds
-	 * 2. Find old versions / contents / ... from database
-	 * 3. Write and upload old versions to PRUNE file
-	 * 4. Remotely delete unused multichunks 
-	 * 5. Stop lock renewal thread and unlock repo
-	 * 
-	 * Important issues:
-	 *  - All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
-	 *  
-	 * @throws Exception 
-	 */
 	@Override
 	public CleanupOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
