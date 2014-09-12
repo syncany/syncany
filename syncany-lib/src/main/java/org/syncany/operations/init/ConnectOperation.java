@@ -259,7 +259,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
 			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
 			
-			byte[] masterKeySalt = Base58.decode(masterKeySaltStr.split("/")[1]);
+			byte[] masterKeySalt = Base58.decode(masterKeySaltStr.split("/")[0]);
 			byte[] ciphertextBytes = Base58.decode(ciphertext);
 
 			boolean retryPassword = true;
@@ -290,7 +290,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 		else {
 			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
-			plaintext = new String(Base64.decodeBase64(encodedPlaintext));
+			plaintext = new String(Base58.decode(encodedPlaintext));
 		}
 		
 		try {
