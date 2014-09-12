@@ -22,10 +22,10 @@ import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.syncany.config.Logging;
+import org.syncany.config.UserConfig;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.config.ProxyController;
-import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.util.I18n;
 
 /**
@@ -34,6 +34,8 @@ import org.syncany.gui.util.I18n;
  */
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
+	
+	public static String GUI_CONFIG_FILE = "syncany-gui-config.xml";
 
 	public static ApplicationConfiguration applicationConfiguration;
 
@@ -44,6 +46,7 @@ public class Launcher {
 	}
 
 	public static void main(String[] args) {
+		UserConfig.init();
 		startApplication();
 	}
 
@@ -53,7 +56,6 @@ public class Launcher {
 
 	public static void stopApplication() {
 		stopGUI();
-
 		System.exit(0);
 	}
 
@@ -101,14 +103,13 @@ public class Launcher {
 		log.info("Starting Graphical User Interface");
 
 		window = new MainGUI();
-		EventManager.register(window);
 		window.restoreWatchedFolders();
 		window.open();
 	}
 
 	public static void saveConfiguration() {
-		File saHome = new File(System.getProperty("user.home") + File.separator + Application.APPLICATION_DIRECTORY);
-		File f = new File(saHome, "syncany-gui-config.xml");
+		File userConfigDir = UserConfig.getUserConfigDir();
+		File f = new File(userConfigDir, GUI_CONFIG_FILE);
 
 		try {
 			ApplicationConfigurationTO.store(ApplicationConfiguration.toTO(applicationConfiguration), f);
@@ -119,13 +120,13 @@ public class Launcher {
 	}
 
 	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
-		File saHome = new File(System.getProperty("user.home") + File.separator + Application.APPLICATION_DIRECTORY);
-		File f = new File(saHome, "syncany-gui-config.xml");
+		File userConfigDir = UserConfig.getUserConfigDir();
+		File f = new File(userConfigDir, GUI_CONFIG_FILE);
 
 		if (!f.exists()) {
 			/** creates an empty ApplicationConfigurationTO file **/
-			if (!saHome.exists()) {
-				saHome.mkdir();
+			if (!userConfigDir.exists()) {
+				userConfigDir.mkdir();
 			}
 			ApplicationConfigurationTO.store(ApplicationConfigurationTO.getDefault(), f);
 			log.info("Syncany gui configuration file created");

@@ -17,6 +17,8 @@
  */
 package org.syncany.gui.command;
 
+import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +39,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.syncany.Client;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
+import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.UserTO;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.Response;
@@ -49,19 +53,36 @@ import org.syncany.operations.daemon.messages.api.Response;
 public class GUIClient extends Client {
 	private static final Logger logger = Logger.getLogger(GUIClient.class.getSimpleName());
 	
-	private static final String userName = "admin";
-	private static final String password = "vvhflnxpxqZP";
-	
 	private static final String SERVER_SCHEMA = "https://";
 	private static final String SERVER_HOSTNAME = "localhost";
 	private static final String SERVER_REST_API = "/api/rs";
 	
 	static {
 		Logging.init();
+		//Logging.disableLogging();
 	}
 	
 	public Response runCommand(Request request) {
-		return sendToRest(request, 8443, userName, password);
+		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
+		
+		if (daemonConfigFile.exists()) {
+			try {
+				DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
+				List<UserTO> users = daemonConfigTO.getUsers();
+				
+				for (UserTO user : users){
+					if (user.getUsername().equals("admin")) {
+						String userName = user.getUsername();
+						String password = user.getPassword();
+						return sendToRest(request, 8443, userName, password);
+					}
+				}
+			}
+			catch (Exception e){
+				return null;
+			}
+		}
+		return null;
 	}
 	
 	private Response sendToRest(Request request, int port, String userName, String password) {

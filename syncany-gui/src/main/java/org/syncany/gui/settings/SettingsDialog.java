@@ -36,15 +36,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.syncany.gui.Application;
+import org.syncany.config.UserConfig;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
 import org.syncany.gui.config.ApplicationConfigurationTO;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.gui.util.I18n;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -232,9 +230,9 @@ public class SettingsDialog extends Dialog {
 		Launcher.applicationConfiguration.setProxyUsername(proxyParams.get("proxy.username"));
 		Launcher.applicationConfiguration.setProxyAuthType(proxyParams.get("proxy.authType"));
 		
-		String userHome = System.getProperty("user.home");
-		File f = new File(userHome + File.separator + Application.APPLICATION_CONFIGURATION);
-		
+		File userConfigDir = UserConfig.getUserConfigDir();
+		File f = new File(userConfigDir, Launcher.GUI_CONFIG_FILE);
+
 		ApplicationConfigurationTO to = ApplicationConfiguration.toTO(Launcher.applicationConfiguration);
 		try {
 			ApplicationConfigurationTO.store(to, f);
@@ -265,10 +263,5 @@ public class SettingsDialog extends Dialog {
 				composite.layout();
 			}
 		}
-	}
-	
-	@Subscribe
-	public void updateInterface(Object event) {
-		accountSettingsPanel.watchUpdateEvent(event);
 	}
 }

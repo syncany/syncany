@@ -36,17 +36,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.CommonParameters;
-import org.syncany.gui.Launcher;
 import org.syncany.gui.SWTResourceManager;
 import org.syncany.gui.UserInput;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.command.GUIClient;
 import org.syncany.gui.util.DialogUtil;
 import org.syncany.gui.util.I18n;
-
-import sun.java2d.cmm.Profile;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -198,43 +193,6 @@ public class WizardDialog extends Dialog {
 	}
 	
 	private String commandId;
-	
-	@Subscribe
-	public void update(Object event){
-		String id = "command°id";//event.getCommandId();
-		if (commandId.equals(id)){
-			final SummaryPanel summaryPanel = (SummaryPanel)panels.get(Panel.SUMMARY);
-			summaryPanel.stopIndeterminateProgressBar();
-			
-			boolean result = true;//event.isSuccess();
-			final String shareLink = "sl";//event.getShareLink();
-			final String folder = "folder";//event.getLocalFolder();
-			final boolean shareLinkEncrypted = true;//event.isShareLinkEncrypted();
-			
-			if(result) {
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						toggleButtons(false);
-						summaryPanel.showSuccessMessage(shareLink, shareLinkEncrypted);
-
-						GUIClient gc = new GUIClient();
-						gc.watchFolder(folder);
-					}
-				});
-			}
-			else {
-				
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						finishButton.setText("Retry ...");
-						summaryPanel.showErrorMessage();
-					}
-				});
-			}					
-		}
-	}
 	
 	private void handleFinish(){
 		switch (selectedPanel) {

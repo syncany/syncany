@@ -29,6 +29,7 @@ import org.apache.commons.beanutils.BeanUtils;
 public class ApplicationConfiguration {
 	private static final Logger logger = Logger.getLogger(ApplicationConfiguration.class.getName());
 	
+	//Proxy information
 	private String proxyHost;
 	private String proxyPort;
 	private String proxyUsername;
@@ -36,7 +37,7 @@ public class ApplicationConfiguration {
 	private String proxyType;
 	private String proxyAuthType;
 	private boolean proxyAuth;
-
+	
 	public String getProxyHost() {
 		return proxyHost;
 	}

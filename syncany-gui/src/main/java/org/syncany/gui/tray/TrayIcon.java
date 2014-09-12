@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
-import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.util.I18n;
@@ -191,10 +190,8 @@ public abstract class TrayIcon {
 			@Override
 			public void run() {
 				SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
-				EventManager.register(wd);
 				wd.setApplicationConfiguration(Launcher.applicationConfiguration);
 				wd.open();
-				EventManager.unregister(wd);
 			}
 		});
 	}
@@ -204,9 +201,7 @@ public abstract class TrayIcon {
 			@Override
 			public void run() {
 				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
-				EventManager.register(wd);
 				wd.open();
-				EventManager.unregister(wd);
 			}
 		});
 	}

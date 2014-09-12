@@ -22,7 +22,6 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.WidgetDecorator;
 import org.syncany.gui.config.ApplicationConfiguration;
-import org.syncany.gui.messaging.event.EventManager;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.wizard.WizardDialog;
 
@@ -124,9 +123,7 @@ public class AccountSettingsPanel extends Composite {
 			@Override
 			public void run() {
 				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
-				EventManager.register(wd);
 				wd.open();
-				EventManager.unregister(wd);
 			}
 		});
 	}

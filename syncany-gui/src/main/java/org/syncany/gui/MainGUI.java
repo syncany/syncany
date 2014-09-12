@@ -11,12 +11,16 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.config.UserConfig;
 import org.syncany.gui.command.GUIClient;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
+import org.syncany.operations.daemon.DaemonOperation;
+import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.util.PidFileUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -48,6 +52,8 @@ public class MainGUI {
 			}
 		});
 		this.tray = new TrayIconFactory().createTrayIcon(shell);
+
+		LocalEventBus.getInstance().register(this);
 	}
 
 	public void open() {
@@ -62,22 +68,27 @@ public class MainGUI {
 
 	public void restoreWatchedFolders() {
 		logger.info("Restoring watched folders");
+		
+		File daemonPidFile = new File(UserConfig.getUserConfigDir(), DaemonOperation.PID_FILE);
+		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
 
-		GUIClient gc = new GUIClient();
-		Request req = new ListWatchesManagementRequest();
-		req.setId(Math.abs(new Random().nextInt()));
-		ListWatchesManagementResponse response = (ListWatchesManagementResponse) gc.runCommand(req);
+		if (daemonRunning) {
+			GUIClient gc = new GUIClient();
+			Request req = new ListWatchesManagementRequest();
+			req.setId(Math.abs(new Random().nextInt()));
+			ListWatchesManagementResponse response = (ListWatchesManagementResponse) gc.runCommand(req);
+			
+			Map<String, Map<String, String>> folders = new HashMap<>();
+			
+			for (File f : response.getWatches()) {
+				Map<String, String> data = new HashMap<>();
+				data.put("folder", f.getAbsolutePath());
+				data.put("status", "status");
+				folders.put(UUID.randomUUID().toString(), data);
+			}
 		
-		Map<String, Map<String, String>> folders = new HashMap<>();
-		
-		for (File f : response.getWatches()) {
-			Map<String, String> data = new HashMap<>();
-			data.put("folder", f.getAbsolutePath());
-			data.put("status", "status");
-			folders.put(UUID.randomUUID().toString(), data);
+			tray.updateFolders(folders);
 		}
-		
-		tray.updateFolders(folders);
 	}
 
 	@Subscribe
