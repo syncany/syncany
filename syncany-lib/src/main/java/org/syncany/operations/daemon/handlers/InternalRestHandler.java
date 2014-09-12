@@ -74,7 +74,7 @@ public class InternalRestHandler implements HttpHandler {
 			}
 		}
 		else {	
-			String message = IOUtils.toString(exchange.getInputStream());
+			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
 			logger.log(Level.INFO, "REST message received: " + message);
 	
 			try {
