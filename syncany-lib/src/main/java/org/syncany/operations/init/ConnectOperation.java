@@ -70,7 +70,7 @@ import org.syncany.util.Base58;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
 	
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+/(.+)))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+)/(.+))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
@@ -259,7 +259,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
 			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
 			
-			byte[] masterKeySalt = Base58.decode(masterKeySaltStr.split("/")[0]);
+			byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
 			byte[] ciphertextBytes = Base58.decode(ciphertext);
 
 			boolean retryPassword = true;

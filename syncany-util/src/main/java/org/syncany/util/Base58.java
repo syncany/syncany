@@ -25,7 +25,7 @@ import java.math.BigInteger;
  */
 public class Base58 {
 
-	private static final String Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz/";
+	private static final String Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 	private static final BigInteger Base58 = new BigInteger("58", 10);
 
 	public static String encode(byte[] indata) {
