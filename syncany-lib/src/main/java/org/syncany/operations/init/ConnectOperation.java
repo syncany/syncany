@@ -17,6 +17,16 @@
  */
 package org.syncany.operations.init;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
@@ -31,25 +41,15 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -117,10 +117,9 @@ public class ConnectOperation extends AbstractInitOperation {
 		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
 
 		TransferSettings connection = (TransferSettings) options.getConfigTO().getConnectionTO();
-
 		connection.setUserInteractionListener(listener);
 
-		transferManager = plugin.createTransferManager(connection);
+		transferManager = plugin.createTransferManager(connection, config);
 
 		// Test the repo
 		if (!performRepoTest(transferManager)) {
@@ -131,7 +130,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "- Connecting to the repo was successful; now downloading repo file ...");
 
 		// Create local .syncany directory
-		File tmpRepoFile = downloadFile(transferManager, new RepoRemoteFile());
+		File tmpRepoFile = downloadFile(transferManager, new SyncanyRemoteFile());
 
 		if (CipherUtil.isEncrypted(tmpRepoFile)) {
 			logger.log(Level.INFO, "- Repo is ENCRYPTED. Decryption necessary.");

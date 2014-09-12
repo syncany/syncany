@@ -41,19 +41,19 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.CollectionUtil;
 
 public class SyncUpOperationTest {
-	private Config testConfig;	
+	private Config testConfig;
 
 	@Before
 	public void setUp() throws Exception {
 		testConfig = TestConfigUtil.createTestLocalConfig();
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
@@ -66,68 +66,68 @@ public class SyncUpOperationTest {
 
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(testConfig.getLocalDir(), fileSize,
 				fileAmount);
-		
+
 		// Run!
-		UpOperation op = new UpOperation(testConfig);		
+		UpOperation op = new UpOperation(testConfig);
 		op.execute();
 
 		// Get databases (for comparison)
-		LocalConnection localConnection = (LocalConnection) testConfig.getConnection();
-		
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
 		File localDatabaseDir = testConfig.getDatabaseDir();
-		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/db-" + testConfig.getMachineName()+"-0000000001");
-		
+		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
 		assertNotNull(localDatabaseDir.listFiles());
 		assertTrue(localDatabaseDir.listFiles().length > 0);
 		assertTrue(remoteDatabaseFile.exists());
-		
+
 		// - Memory database
 		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
-		
-		MemoryDatabase remoteDatabase = new MemoryDatabase();		
+
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
 		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
-		
+
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
-		
+
 		// - Sql Database
 		SqlDatabase localDatabase = new SqlDatabase(testConfig);
 		Map<FileHistoryId, PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
-		
+
 		// Compare!
 		assertEquals(localDatabase.getLastDatabaseVersionHeader(), remoteDatabaseVersion.getHeader());
 
 		assertEquals(localFileHistories.size(), fileAmount);
 		assertEquals(localDatabase.getFileHistoriesWithFileVersions().size(), remoteDatabaseVersion.getFileHistories().size());
-		
+
 		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
-	
-		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>(); 
+
+		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>();
 		List<FileVersion> localFileVersions = new ArrayList<FileVersion>();
-		
+
 		for (PartialFileHistory partialFileHistory : remoteFileHistories) {
 			remoteFileVersions.add(partialFileHistory.getLastVersion());
 			assertNotNull(localFileHistories.get(partialFileHistory.getFileHistoryId()));
 		}
-		
+
 		for (PartialFileHistory partialFileHistory : localFileHistories.values()) {
 			localFileVersions.add(partialFileHistory.getLastVersion());
 		}
-		
+
 		assertTrue(CollectionUtil.containsExactly(localFileVersions, remoteFileVersions));
-		
+
 		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
 		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
 	}
 
 	private void compareFileVersionsAgainstOriginalFiles(List<File> originalFiles, List<FileVersion> localFileVersions) throws Exception {
 		int toFind = originalFiles.size();
-		for (File originalFile : originalFiles) { 
+		for (File originalFile : originalFiles) {
 			String originalFileName = originalFile.getName();
-			
+
 			for (FileVersion fileVersion : localFileVersions) {
 				String fileVersionFileName = fileVersion.getName();
-				
-				if(fileVersionFileName.equals(originalFileName)) {
+
+				if (fileVersionFileName.equals(originalFileName)) {
 					toFind--;
 				}
 			}

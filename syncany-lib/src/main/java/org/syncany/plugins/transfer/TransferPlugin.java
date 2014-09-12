@@ -17,14 +17,14 @@
  */
 package org.syncany.plugins.transfer;
 
-import org.syncany.plugins.Plugin;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.util.TransferPluginUtil;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
+
+import org.syncany.config.Config;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.plugins.util.TransferPluginUtil;
 
 /**
  * The transfer plugin is a special plugin responsible for transferring files
@@ -55,14 +55,14 @@ public abstract class TransferPlugin extends Plugin {
 		return createEmptySettings();
 	}
 
-	public final TransferSettings createEmptySettings() throws StorageException {
+	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
 		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
 		if (transferSettings == null) {
 			throw new StorageException("TransferPlugin does not have any settings attached!");
 		}
 
 		try {
-			return transferSettings.newInstance();
+			return (T) transferSettings.newInstance();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
@@ -76,7 +76,7 @@ public abstract class TransferPlugin extends Plugin {
 	 * <p>The created instance can be used to upload/download/delete {@link RemoteFile}s
 	 * and query the remote storage for a file list.
 	 */
-	public final <T extends TransferManager> T createTransferManager(TransferSettings connection) throws StorageException {
+	public final <T extends TransferManager> T createTransferManager(TransferSettings connection, Config config) throws StorageException {
 		if (!connection.isValid()) {
 			throw new StorageException("Unable to create transfermanager: connection isn't valid (perhaps missing some mandatory fields?)");
 		}
@@ -96,14 +96,14 @@ public abstract class TransferPlugin extends Plugin {
 			if (potentialConstructors.length != 1) {
 				throw new StorageException("Invalid number of constructors in pluginclass -- must be 1");
 			}
-			if (potentialConstructors[0].getParameterCount() != 1) {
+			if (potentialConstructors[0].getParameterCount() != 2) {
 				// if (potentialConstructors[0].getParameterCount() != 1 ||
 				// !TransferSettings.class.isAssignableFrom(potentialConstructors[0].getParameterTypes()[0].getClass())) { logger.log(Level.WARNING,
 				// "" + potentialConstructors[0].getParameterTypes()[0].getClass());
-				throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 1 and subclass of " + TransferSettings.class);
+				throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class + " and " + Config.class);
 			}
 
-			return (T) potentialConstructors[0].newInstance(transferSettings.cast(connection));
+			return (T) potentialConstructors[0].newInstance(transferSettings.cast(connection), config);
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());

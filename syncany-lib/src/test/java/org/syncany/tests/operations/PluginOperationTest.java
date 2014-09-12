@@ -36,7 +36,7 @@ import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -47,7 +47,7 @@ public class PluginOperationTest {
 	@Test
 	public void testPluginListLocalOnly() throws Exception {
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
@@ -88,7 +88,7 @@ public class PluginOperationTest {
 		// that will change. So we can only test the bare minimum.
 		
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
@@ -111,7 +111,7 @@ public class PluginOperationTest {
 		// that will change. So we can only test the bare minimum.
 		
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
@@ -152,7 +152,7 @@ public class PluginOperationTest {
 		UserConfig.init();
 		
 		// Setup
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();

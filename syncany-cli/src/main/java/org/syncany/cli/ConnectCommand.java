@@ -27,7 +27,7 @@ import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 
 import java.util.List;
 

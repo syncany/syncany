@@ -15,27 +15,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.unreliable_local;
+package org.syncany.plugins.util;
 
 import org.syncany.plugins.annotations.PluginManager;
 import org.syncany.plugins.annotations.PluginSettings;
+import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 
 /**
- * The unreliable local plugin can be used for test purposes to
- * test connection issues with the backend storage. Each operation of the
- * plugin (e.g upload, download, ...) can be failed on purpose through
- * regular expressions on the operation signature.
- *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth <christian.roth@port17.de>
+ * @version 0.0.1
  */
 
-@PluginSettings(UnreliableLocalTransferSettings.class)
-@PluginManager(UnreliableLocalTransferManager.class)
-public class UnreliableLocalPlugin extends TransferPlugin {
+public abstract class TransferPluginUtil extends PluginUtil{
 
-	public UnreliableLocalPlugin() {
-		super("unreliable_local");
-	}
-  
+  public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
+
+    PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
+
+    if (settings == null) {
+      return null;
+    }
+
+    return settings.value();
+
+  }
+
+  public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
+
+    PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
+
+    if (manager == null) {
+      return null;
+    }
+
+    return manager.value();
+
+  }
+
 }

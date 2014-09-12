@@ -17,13 +17,13 @@
  */
 package org.syncany.plugins.local;
 
+import java.io.File;
+
 import org.simpleframework.xml.Element;
 import org.syncany.plugins.PluginOptionSpec;
 import org.syncany.plugins.PluginOptionSpec.ValueType;
 import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.transfer.TransferSettings;
-
-import java.io.File;
 
 /**
  * The local connection represents the settings required to create to a
@@ -33,7 +33,7 @@ import java.io.File;
  *
  * @author Philipp C. Heckel
  */
-public class LocalConnection extends TransferSettings {
+public class LocalTransferSettings extends TransferSettings {
 
 	@Element(required = true)
 	public File path;

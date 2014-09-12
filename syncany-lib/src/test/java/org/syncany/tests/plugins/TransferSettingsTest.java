@@ -17,38 +17,47 @@
  */
 package org.syncany.tests.plugins;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
+
 import com.google.common.collect.Maps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.tests.util.TestConfigUtil;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Map;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class TransferSettingsTest {
 	private File tmpFile;
+	private Config config;
 
 	@Before
 	public void before() throws Exception {
 		tmpFile = File.createTempFile("syncany-transfer-settings-test", "tmp");
+		Config config = TestConfigUtil.createDummyConfig();
 		assertNotNull(Plugins.get("dummy"));
+		assertNotNull(config);
 	}
 
 	@After
 	public void after() throws Exception {
 		tmpFile.delete();
+		config = null;
 	}
 
 	@Test
@@ -84,7 +93,7 @@ public class TransferSettingsTest {
 		TransferSettings tsRestored = (TransferSettings) confRestored.getConnectionTO();
 		assertNotNull(tsRestored);
 
-		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored);
+		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored, config);
 		assertNotNull(transferManager);
 
 		DummyTransferSettings dts = transferManager.getConnection();
@@ -109,7 +118,7 @@ public class TransferSettingsTest {
 
 		assertTrue(ts.isValid());
 
-		DummyTransferManager dtm = p.createTransferManager(ts);
+		DummyTransferManager dtm = p.createTransferManager(ts, config);
 		DummyTransferSettings dts = dtm.getConnection();
 
 		assertEquals(dts.foo, "foo-value");

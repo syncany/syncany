@@ -18,7 +18,7 @@
 package org.syncany.operations.init;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 
 public class InitOperationResult implements OperationResult {
 	public enum InitResultCode {

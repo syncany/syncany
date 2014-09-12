@@ -17,21 +17,6 @@
  */
 package org.syncany.cli;
 
-import com.google.common.base.Strings;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
-import org.syncany.crypto.CipherUtil;
-import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.plugins.*;
-import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.util.PluginUtil;
-import org.syncany.util.StringUtil;
-import org.syncany.util.StringUtil.StringJoinListener;
-
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,6 +24,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
+import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConnectionTO;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.init.GenlinkOperationResult;
+import org.syncany.plugins.PluginOptionSpec;
+import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.PluginOptionSpecs;
+import org.syncany.plugins.Plugins;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.util.PluginUtil;
+import org.syncany.util.StringUtil;
+import org.syncany.util.StringUtil.StringJoinListener;
+
+import com.google.common.base.Strings;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
@@ -120,7 +127,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues)
 			throws StorageException {
-		TransferSettings connection = plugin.createSettings();
+    TransferSettings connection = plugin.createEmptySettings();
 		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
 
 		Map<String, String> pluginOptionValues = new HashMap<String, String>();

@@ -17,17 +17,18 @@
  */
 package org.syncany.operations;
 
-import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.RetriableTransferManager;
-import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.ActionRemoteFile;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.syncany.config.Config;
+import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransactionAwareTransferManager;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
 /**
  * Represents and is inherited by a transfer operation. Transfer operations are operations
@@ -49,9 +50,9 @@ public abstract class AbstractTransferOperation extends Operation {
 	 *
 	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
 	 */
-	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
+	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
 
-	protected TransferManager transferManager;
+	protected TransactionAwareTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
 	public AbstractTransferOperation(Config config, String operationName) {
@@ -70,8 +71,12 @@ public abstract class AbstractTransferOperation extends Operation {
     }
 	}
 
-	private TransferManager createReliableTransferManager(Config config) throws StorageException {
-		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection()));
+	private TransactionAwareTransferManager createReliableTransferManager(Config config) throws StorageException {
+		return new TransactionAwareTransferManager(createRetriableTransferManager(config), config);
+	}
+
+	private TransferManager createRetriableTransferManager(Config config) throws StorageException {
+		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection(), config));
 	}
 
 	protected void startOperation() throws Exception {

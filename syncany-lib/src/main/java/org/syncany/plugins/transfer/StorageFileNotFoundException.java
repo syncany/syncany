@@ -15,39 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
-
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+package org.syncany.plugins.transfer;
 
 /**
- * PortTO is the access object to the XML file written by the daemon in the client folder.
- * PortTO is used in the CLI to get access to the port information and a user-password
- * pair that can be used to authenticate with the REST-server.
- * 
+ * The StorageFileNotFoundException is thrown if a TransferManager cannot
+ * find a file. If relevant, then a TransactionAwareTransferManager can catch
+ * this and handle it accordingly.
+ *  
  * @author Pim Otte
  */
-@Root(name = "port", strict = false)
-public class PortTO {
-	@Element(name = "port", required = true)
-	private int port;
+public class StorageFileNotFoundException extends StorageException {
+	private static final long serialVersionUID = 4634353042367553250L;
 
-	@Element(name = "user", required = true)
-	private UserTO user;
-
-	public int getPort() {
-		return port;
+	public StorageFileNotFoundException(Throwable cause) {
+		super(cause);
 	}
 
-	public void setPort(int port) {
-		this.port = port;
+	public StorageFileNotFoundException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
-	public UserTO getUser() {
-		return user;
-	}
-
-	public void setUser(UserTO user) {
-		this.user = user;
+	public StorageFileNotFoundException(String message) {
+		super(message);
 	}
 }

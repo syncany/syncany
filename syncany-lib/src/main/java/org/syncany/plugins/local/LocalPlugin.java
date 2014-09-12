@@ -35,7 +35,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@PluginSettings(LocalConnection.class)
+@PluginSettings(LocalTransferSettings.class)
 @PluginManager(LocalTransferManager.class)
 public class LocalPlugin extends TransferPlugin {
 

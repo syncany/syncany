@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,6 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,9 +26,16 @@ import org.syncany.config.Config;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.local.LocalTransferSettings;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test goes through the creation of a local repo and verifies
@@ -42,54 +44,54 @@ import org.syncany.tests.util.TestFileUtil;
  * @author Pim Otte
  */
 public class InitOperationTest {
-	private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName()); 
-	
+	private static final Logger logger = Logger.getLogger(InitOperation.class.getSimpleName());
+
 	@Test
-	public void testInitOperation() throws Exception {	
+	public void testInitOperation() throws Exception {
 		InitOperationOptions operationOptions = TestConfigUtil.createTestInitOperationOptions("A");
-		InitOperation op = new InitOperation( operationOptions, null);
+		InitOperation op = new InitOperation(operationOptions, null);
 		InitOperationResult res = op.execute();
-		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
+		File repoDir = ((LocalTransferSettings) operationOptions.getConfigTO().getConnectionTO()).getRepositoryPath();
 		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
-		
-		//Test the repository
+
+		// Test the repository
 		assertTrue((new File(repoDir, "databases").exists()));
 		assertTrue((new File(repoDir, "syncany").exists()));
 		assertTrue((new File(repoDir, "multichunks").exists()));
 		assertEquals((new File(repoDir, "master").exists()), TestConfigUtil.getCrypto());
-		
-		//Test the local folder		
+
+		// Test the local folder
 		assertTrue((new File(localDir, Config.DIR_DATABASE).exists()));
 		assertTrue((new File(localDir, Config.DIR_CACHE).exists()));
 		assertTrue((new File(localDir, Config.FILE_CONFIG).exists()));
 		assertTrue((new File(localDir, Config.DIR_LOG).exists()));
 		assertTrue((new File(localDir, Config.FILE_REPO).exists()));
 		assertEquals((new File(localDir, Config.FILE_MASTER).exists()), TestConfigUtil.getCrypto());
-			
-		//Test the existance of generated link
+
+		// Test the existance of generated link
 		String link = res.getGenLinkResult().getShareLink();
 		assertNotNull(link);
-		
+
 		TestFileUtil.deleteDirectory(repoDir);
 		TestFileUtil.deleteDirectory(operationOptions.getLocalDir());
 	}
-	
+
 	@Test
 	public void testFaultyInitOperation() throws Exception {
 		// Create an unreliable connection
 		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", "rel=1.*op=upload");
 		InitOperation op = new InitOperation(operationOptions, null);
-		
-		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
-		File localDir = new File(operationOptions.getLocalDir(),".syncany");
-		
+
+    File repoDir = ((UnreliableLocalTransferSettings) operationOptions.getConfigTO().getConnectionTO()).getRepositoryPath();
+		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
+
 		try {
 			op.execute();
 		}
 		catch (StorageException e) {
 			logger.log(Level.INFO, "This operation failed because of the unreliable connection.");
 		}
-		
+
 		// The local directory should not exist, since the uploading of the repo file fails
 		// so the local directories should be removed
 		assertFalse(localDir.exists());

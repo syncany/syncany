@@ -15,28 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins;
-
-import org.syncany.plugins.transfer.TransferManager;
+package org.syncany.plugins.transfer;
 
 /**
- * Exception thrown when any of the methods of the {@link TransferManager}
- * fail. Usually caused by broken sockets or a not available Internet connection.
+ * The storage move exception is thrown if moving a file on 
+ * the remote storage fails. This usually happens if the original file
+ * does not exist.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Pim Otte
  */
-public class StorageException extends Exception {
-	private static final long serialVersionUID = -311986990752074527L;
+public class StorageMoveException extends StorageException {
+	private static final long serialVersionUID = 8929643336708862710L;
 
-	public StorageException(Throwable cause) {
-        super(cause);
-    }
+	public StorageMoveException(Throwable cause) {
+		super(cause);
+	}
 
-    public StorageException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public StorageMoveException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public StorageException(String message) {
-        super(message);
-    }
+	public StorageMoveException(String message) {
+		super(message);
+	}
 }

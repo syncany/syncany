@@ -17,13 +17,13 @@
  */
 package org.syncany.plugins.dummy;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
-import org.syncany.plugins.transfer.AbstractTransferManager;
-import org.syncany.plugins.transfer.files.RemoteFile;
-
 import java.io.File;
 import java.util.Map;
+
+import org.syncany.config.Config;
+import org.syncany.plugins.transfer.AbstractTransferManager;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -32,67 +32,67 @@ import java.util.Map;
 
 public class DummyTransferManager extends AbstractTransferManager {
 
-	public DummyTransferManager(DummyTransferSettings settings) {
-		super(settings);
-	}
+  public DummyTransferManager(DummyTransferSettings settings, Config config) {
+    super(settings, config);
+  }
 
-	@Override
-	public void connect() throws StorageException {
+  @Override
+  public void connect() throws StorageException {
 
-	}
+  }
 
-	@Override
-	public void disconnect() throws StorageException {
+  @Override
+  public void disconnect() throws StorageException {
 
-	}
+  }
 
-	@Override
-	public void init(boolean createIfRequired) throws StorageException {
+  @Override
+  public void init(boolean createIfRequired) throws StorageException {
 
-	}
+  }
 
-	@Override
-	public void download(RemoteFile remoteFile, File localFile) throws StorageException {
+  @Override
+  public void download(RemoteFile remoteFile, File localFile) throws StorageException {
 
-	}
+  }
 
-	@Override
-	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
+  @Override
+  public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
 
-	}
+  }
 
-	@Override
-	public boolean delete(RemoteFile remoteFile) throws StorageException {
-		return false;
-	}
+  @Override
+  public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException {
 
-	@Override
-	public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
-		return null;
-	}
+  }
 
-	@Override
-	public StorageTestResult test(boolean testCreateTarget) {
-		return null;
-	}
+  @Override
+  public boolean delete(RemoteFile remoteFile) throws StorageException {
+    return false;
+  }
 
-	@Override
-	public boolean testTargetExists() throws StorageException {
-		return false;
-	}
+  @Override
+  public <T extends RemoteFile> Map<String, T> list(Class<T> remoteFileClass) throws StorageException {
+    return null;
+  }
 
-	@Override
-	public boolean testTargetCanWrite() throws StorageException {
-		return false;
-	}
+  @Override
+  public boolean testTargetExists() throws StorageException {
+    return false;
+  }
 
-	@Override
-	public boolean testTargetCanCreate() throws StorageException {
-		return false;
-	}
+  @Override
+  public boolean testTargetCanWrite() throws StorageException {
+    return false;
+  }
 
-	@Override
-	public boolean testRepoFileExists() throws StorageException {
-		return false;
-	}
+  @Override
+  public boolean testTargetCanCreate() throws StorageException {
+    return false;
+  }
+
+  @Override
+  public boolean testRepoFileExists() throws StorageException {
+    return false;
+  }
 }

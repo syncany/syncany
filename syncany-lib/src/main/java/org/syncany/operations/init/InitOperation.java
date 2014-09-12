@@ -30,14 +30,14 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
 /**
  * The init operation initializes a new repository at a given remote storage
@@ -83,7 +83,7 @@ public class InitOperation extends AbstractInitOperation {
 
 		connection.setUserInteractionListener(listener);
 
-		transferManager = plugin.createTransferManager(connection);
+		transferManager = plugin.createTransferManager(connection, config);
 
 		// Test the repo
 		if (!performRepoTest()) {
@@ -101,7 +101,7 @@ public class InitOperation extends AbstractInitOperation {
 		}
 
 		// Create local .syncany directory
-		File appDir = createAppDirs(options.getLocalDir());	// TODO [medium] create temp dir first, ask password cannot be done after
+		File appDir = createAppDirs(options.getLocalDir()); // TODO [medium] create temp dir first, ask password cannot be done after
 		File configFile = new File(appDir, Config.FILE_CONFIG);
 		File repoFile = new File(appDir, Config.FILE_REPO);
 		File masterFile = new File(appDir, Config.FILE_MASTER);
@@ -132,7 +132,7 @@ public class InitOperation extends AbstractInitOperation {
 
 			uploadRepoFile(repoFile, transferManager);
 		}
-		catch (StorageException|IOException e) {
+		catch (StorageException | IOException e) {
 			cleanLocalRepository(e);
 		}
 
@@ -185,7 +185,7 @@ public class InitOperation extends AbstractInitOperation {
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created
 			cleanLocalRepository(e);
- 		}
+		}
 	}
 
 	private void cleanLocalRepository(Exception e) throws Exception {
@@ -196,7 +196,6 @@ public class InitOperation extends AbstractInitOperation {
 			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
 		}
 
-		// TODO [low] This throws construction is odd and the error message doesn't tell me anything.
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 
@@ -226,7 +225,7 @@ public class InitOperation extends AbstractInitOperation {
 
 	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
 		try {
-			Map<String, RepoRemoteFile> repoFileList = transferManager.list(RepoRemoteFile.class);
+			Map<String, SyncanyRemoteFile> repoFileList = transferManager.list(SyncanyRemoteFile.class);
 			return repoFileList.size() > 0;
 		}
 		catch (Exception e) {
@@ -239,6 +238,6 @@ public class InitOperation extends AbstractInitOperation {
 	}
 
 	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {
-		transferManager.upload(repoFile, new RepoRemoteFile());
+		transferManager.upload(repoFile, new SyncanyRemoteFile());
 	}
 }

@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 
 /**
  * The downloader uses a {@link TransferManager} to download a given set of multichunks,
@@ -61,7 +61,7 @@ public class Downloader {
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
+			MultichunkRemoteFile remoteMultiChunkFile = new MultichunkRemoteFile(multiChunkId);
 
 			if (localDecryptedMultiChunkFile.exists()) {
 				logger.log(Level.INFO, "  + Decrypted multichunk exists locally " + multiChunkId + ". No need to download it!");				
@@ -70,17 +70,33 @@ public class Downloader {
 				logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 				transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
 	
-				logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
-				InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
-				OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
+				try {
+					logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
+					InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
+					OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
+		
+					IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
+					
+					decryptedMultiChunkOutputStream.close();
+					multiChunkInputStream.close();
 	
-				IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
-				
-				decryptedMultiChunkOutputStream.close();
-				multiChunkInputStream.close();
-
-				logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
-				localEncryptedMultiChunkFile.delete();
+				}
+				catch (IOException e) {
+					// Security: Deleting the multichunk if the decryption/extraction failed is important!
+					//           If it is not deleted, the partially decrypted multichunk will reside in the
+					//           local cache and the next 'down' will try to use it. If this is the only
+					//           multichunk that has been tampered with, other changes might be applied to the 
+					//           file system! See https://github.com/syncany/syncany/issues/59#issuecomment-55154793
+					
+					logger.log(Level.FINE, "    -> FAILED: Decryption/extraction of multichunk failed, deleting " + multiChunkId + " ...");
+					localDecryptedMultiChunkFile.delete();
+					
+					throw new IOException("Decryption/extraction of multichunk " + multiChunkId + " failed. The multichunk might have been tampered with!", e);
+				}
+				finally {
+					logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
+					localEncryptedMultiChunkFile.delete();
+				}
 			}
 		}
 

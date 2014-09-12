@@ -66,12 +66,20 @@ const
 var
   JavaHome: String;
   JavaHomeSet: Boolean;
+  RegRootSearchPaths: TArrayOfString;
 
 function InitializeSetup(): Boolean;
 var 
-  RegRootKey: Integer;
+  RegRootKey, i: Integer;
+  RegRootPath: String;
   JavaVersion: String;
 begin
+  SetArrayLength(RegRootSearchPaths, 4);
+  RegRootSearchPaths[0] := 'SOFTWARE\\JavaSoft\\Java Development Kit';
+  RegRootSearchPaths[1] := 'SOFTWARE\\JavaSoft\\Java Runtime Environment';
+  RegRootSearchPaths[2] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Development Kit';
+  RegRootSearchPaths[3] := 'SOFTWARE\\Wow6432Node\\JavaSoft\\Java Runtime Environment';
+
   if IsWin64 then begin
     RegRootKey := HKLM64;
   end
@@ -79,7 +87,7 @@ begin
     RegRootKey := HKLM;
   end;
   
-  JavaHome := GetEnv('JAVA_HOME')   
+  JavaHome := GetEnv('JAVA_HOME');
   
   if JavaHome <> '' then begin
     JavaHomeSet := True;
@@ -87,34 +95,25 @@ begin
   end
   else begin
     JavaHomeSet := False;
+    Result := False;
 
-    if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion') then begin
-      RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit', 'CurrentVersion', JavaVersion);
+    for i := 0 to GetArrayLength(RegRootSearchPaths)-1 do begin
+      RegRootPath := RegRootSearchPaths[i];
+       
+      if RegValueExists(RegRootKey, RegRootPath, 'CurrentVersion') then begin
+        RegQueryStringValue(RegRootKey, RegRootPath, 'CurrentVersion', JavaVersion);
       
-      if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + JavaVersion, 'JavaHome') then begin
-        RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Development Kit\\' + JavaVersion, 'JavaHome', JavaHome);
-        Result := True;
-      end
-      else begin
-        MsgBox('Java path not set for JDK ' + JavaVersion + '. Please re-install Java.', mbInformation, MB_OK);
-        Result := False;
-      end
-    end
-    else if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion') then begin
-      RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment', 'CurrentVersion', JavaVersion);
-    
-      if RegValueExists(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + JavaVersion, 'JavaHome') then begin
-        RegQueryStringValue(RegRootKey, 'SOFTWARE\\JavaSoft\\Java Runtime Environment\\' + JavaVersion, 'JavaHome', JavaHome);
-        Result := True;
-      end
-      else begin
-        MsgBox('Java path not set for JRE ' + JavaVersion + '. Please re-install Java.', mbInformation, MB_OK);
-        Result := False;
+        if RegValueExists(RegRootKey, RegRootPath + '\\' + JavaVersion, 'JavaHome') then begin
+          RegQueryStringValue(RegRootKey, RegRootPath + '\\' + JavaVersion, 'JavaHome', JavaHome);
+
+          Result := True;
+          break;
+        end        
       end
     end
-    else begin
-      MsgBox('Java is not installed on your computer.'#13#13'Please install Java from java.com try again.', MbError, Mb_Ok);
-      Result := False;
+
+    if Result = false then begin
+      MsgBox('Java is not installed on your computer.'#13'Please install Java from java.com try again.', MbError, Mb_Ok);
     end
   end
 end;
