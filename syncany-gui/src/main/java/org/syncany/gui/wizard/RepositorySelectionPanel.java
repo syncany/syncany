@@ -46,7 +46,7 @@ import org.syncany.gui.panel.PluginPanel.PluginPanelPurpose;
 import org.syncany.gui.util.I18n;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.util.StringUtil;
 
 /**

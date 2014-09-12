@@ -18,8 +18,8 @@
 package org.syncany.gui.panel;
 
 import org.eclipse.swt.widgets.Composite;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageTestResult;
 
 
 /**
