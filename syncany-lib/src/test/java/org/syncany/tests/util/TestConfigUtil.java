@@ -263,7 +263,7 @@ public class TestConfigUtil {
 		InitOperationOptions initOperationOptions = createTestInitOperationOptions(machineName);
     // createTestInitOperationOptions always returns LocalTransferSettings
     File tempRpoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getConnectionTO()).getRepositoryPath();
-    ConnectionTO connectionTO = Plugins.get("unreliable_plugin", TransferPlugin.class).createEmptySettings();
+    ConnectionTO connectionTO = Plugins.get("unreliable_local", TransferPlugin.class).createEmptySettings();
 
     Map<String, String> unreliableLocalConnectionSettings = new HashMap<String, String>();
     unreliableLocalConnectionSettings.put("path", tempRpoDir.getAbsolutePath());

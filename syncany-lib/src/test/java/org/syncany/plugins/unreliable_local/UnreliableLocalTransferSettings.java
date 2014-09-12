@@ -17,21 +17,17 @@
  */
 package org.syncany.plugins.unreliable_local;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.syncany.plugins.local.LocalTransferSettings;
 
 public class UnreliableLocalTransferSettings extends LocalTransferSettings {
 
-	@Element(required = true)
-	public File path;
-
-  @Element(required = false)
+  @ElementList(required = false)
   private List<String> failingOperationPatterns;
 
 	private int totalOperationCounter;
@@ -43,14 +39,6 @@ public class UnreliableLocalTransferSettings extends LocalTransferSettings {
 		this.totalOperationCounter = 0;
 		this.typeOperationCounters = new HashMap<String, Integer>();
 		this.failingOperationPatterns = new ArrayList<String>();
-	}
-
-	public File getRepositoryPath() {
-		return path;
-	}
-
-	public void setRepositoryPath(File repositoryPath) {
-		this.path = path;
 	}
 
 	public List<String> getFailingOperationPatterns() {

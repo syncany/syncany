@@ -42,7 +42,7 @@ public class LocalTransferSettings extends TransferSettings {
 		return path;
 	}
 
-	public void setRepositoryPath(File repositoryPath) {
+	public void setRepositoryPath(File path) {
 		this.path = path;
 	}
 
