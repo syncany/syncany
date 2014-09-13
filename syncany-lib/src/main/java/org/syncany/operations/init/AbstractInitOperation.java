@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -45,7 +43,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.util.PluginUtil;
 import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
@@ -147,30 +144,28 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
+		new Persister().write(connectionTO, plaintextOutputStream);
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
 
 		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSuites, masterKey);
-		String encryptedEncodedPlugin = new String(Base64.encodeBase64(encryptedPluginBytes, false));
+		String encryptedEncodedPlugin = Base58.encode(encryptedPluginBytes);
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
 		String encryptedEncodedStorage = Base58.encode(encryptedConnectionBytes);
 
-		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedPlugin + "-" + encryptedEncodedStorage;
+		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedPlugin + "/" + encryptedEncodedStorage;
 	}
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(plaintextOutputStream);
-		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
+		new Persister().write(connectionTO, plaintextOutputStream);
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 		String plaintextEncodedPlugin = Base58.encode(connectionTO.getType().getBytes());
 
-		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "-" + plaintextEncodedStorage;
+		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "/" + plaintextEncodedStorage;
 	}
 
 	protected void fireNotifyCreateMaster() {

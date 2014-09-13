@@ -85,6 +85,9 @@ public abstract class TransferSettings implements ConnectionTO {
 		return type;
 	}
 
+  /**
+   * @deprecated
+   */
 	public TransferSettings parseKeyValueMap(Map<String, String> keyValueMap) throws StorageException {
 
 		try {

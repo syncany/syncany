@@ -20,8 +20,6 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -32,6 +30,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
@@ -49,6 +48,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.plugins.util.TransferPluginUtil;
 import org.syncany.util.Base58;
 
 /**
@@ -313,12 +313,13 @@ public class ConnectOperation extends AbstractInitOperation {
 				throw new StorageException("Link contains unknown connection type '" + pluginId + "'. Corresponding plugin not found.");
 			}
 
-			TransferSettings settings = plugin.createEmptySettings();
+			logger.log(Level.INFO, "Transfersettings are " + new String(pluginSettings));
 
-			ByteArrayInputStream plaintextInputStream = new ByteArrayInputStream(pluginSettings);
-			ObjectInputStream objectInputStream = new ObjectInputStream(plaintextInputStream);
+			ByteArrayInputStream plainPluginSettingsInputStream = new ByteArrayInputStream(pluginSettings);
+			ConnectionTO connectionTO = new Persister().read(TransferPluginUtil.getTransferSettingsClass(plugin.getClass()),
+					plainPluginSettingsInputStream);
 
-			configTO.setConnectionTO(settings.parseKeyValueMap((Map<String, String>) objectInputStream.readObject()));
+			configTO.setConnectionTO(connectionTO);
 		}
 		catch (Exception e) {
 			throw new StorageException(e);
