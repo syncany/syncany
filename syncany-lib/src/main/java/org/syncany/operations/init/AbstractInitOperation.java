@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
@@ -145,7 +146,9 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		new Persister(new Format(0)).write(connectionTO, plaintextOutputStream);
+		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
+		new Persister(new Format(0)).write(connectionTO, plaintextGzipOutputStream);
+		plaintextGzipOutputStream.close();
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
@@ -160,7 +163,9 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		new Persister(new Format(0)).write(connectionTO, plaintextOutputStream);
+		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
+		new Persister(new Format(0)).write(connectionTO, plaintextGzipOutputStream);
+		plaintextGzipOutputStream.close();
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);

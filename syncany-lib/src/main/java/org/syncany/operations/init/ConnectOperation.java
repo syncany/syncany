@@ -20,12 +20,15 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
@@ -283,12 +286,17 @@ public class ConnectOperation extends AbstractInitOperation {
 					ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherpluginBytes);
 					pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
 					ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(ciphersettingsBytes);
-					pluginSettings = CipherUtil.decrypt(encryptedSettings, masterKey);
+					pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(CipherUtil
+							.decrypt(encryptedSettings, masterKey))));
 
 					retryPassword = false;
 				}
 				catch (CipherException e) {
+					logger.log(Level.INFO, "CipherException: ", e);
 					retryPassword = askRetryPassword();
+				}
+				catch (IOException e) {
+					throw new StorageException("Unable to decompress connection settings: " + e.getMessage());
 				}
 			}
 
