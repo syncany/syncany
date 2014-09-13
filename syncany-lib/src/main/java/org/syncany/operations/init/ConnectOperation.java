@@ -260,58 +260,59 @@ public class ConnectOperation extends AbstractInitOperation {
 		String pluginId = null;
 		byte[] pluginSettings = null;
 
-		if (isEncryptedLink) {
-			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-			String cipherPlugin = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
-			String cipherSettings = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED);
+		try {
+			if (isEncryptedLink) {
+				String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
+				String cipherPlugin = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
+				String cipherSettings = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED);
 
-			logger.log(Level.INFO, "Encrypted plugin settings: " + cipherSettings);
+				logger.log(Level.INFO, "Encrypted plugin settings: " + cipherSettings);
 
-			byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
-			byte[] cipherpluginBytes = Base58.decode(cipherPlugin);
-			byte[] ciphersettingsBytes = Base58.decode(cipherSettings);
+				byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
+				byte[] cipherpluginBytes = Base58.decode(cipherPlugin);
+				byte[] ciphersettingsBytes = Base58.decode(cipherSettings);
 
-			boolean retryPassword = true;
+				boolean retryPassword = true;
 
-			while (retryPassword) {
-				// Ask password
-				String masterPassword = getOrAskPassword();
+				while (retryPassword) {
+					// Ask password
+					String masterPassword = getOrAskPassword();
 
-				// Generate master key
-				SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, masterKeySalt);
-				configTO.setMasterKey(masterKey);
+					// Generate master key
+					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, masterKeySalt);
+					configTO.setMasterKey(masterKey);
 
-				// Decrypt config
-				try {
-					ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherpluginBytes);
-					pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
-					ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(ciphersettingsBytes);
-					pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(CipherUtil
-							.decrypt(encryptedSettings, masterKey))));
+					// Decrypt config
+					try {
+						ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherpluginBytes);
+						pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
+						ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(ciphersettingsBytes);
+						pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings,
+								masterKey))));
 
-					retryPassword = false;
+						retryPassword = false;
+					}
+					catch (CipherException e) {
+						retryPassword = askRetryPassword();
+					}
 				}
-				catch (CipherException e) {
-					logger.log(Level.INFO, "CipherException: ", e);
-					retryPassword = askRetryPassword();
-				}
-				catch (IOException e) {
-					throw new StorageException("Unable to decompress connection settings: " + e.getMessage());
+
+				if (pluginId == null || pluginSettings == null) {
+					throw new CipherException("Unable to decrypt link.");
 				}
 			}
-
-			if (pluginId == null || pluginSettings == null) {
-				throw new CipherException("Unable to decrypt link.");
+			else {
+				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
+				String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
+				pluginId = new String(Base58.decode(encodedPlugin));
+				pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(Base58.decode(encodedSettings))));
 			}
 		}
-		else {
-			String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
-			String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
-			pluginId = new String(Base58.decode(encodedPlugin));
-			pluginSettings = Base58.decode(encodedSettings);
+		catch (IOException e) {
+			throw new StorageException("Unable to decompress connection settings: " + e.getMessage());
 		}
 
-		logger.log(Level.INFO, "Decrypted link contains: " + pluginId + " -- " + pluginSettings);
+		logger.log(Level.INFO, "Decrypted link contains: " + pluginId + " -- " + new String(pluginSettings));
 
 		try {
 

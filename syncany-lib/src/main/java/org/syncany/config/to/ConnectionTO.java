@@ -26,6 +26,9 @@ public interface ConnectionTO {
 
 	public String getType();
 
+	/**
+	 * @deprecated
+	 */
 	public ConnectionTO parseKeyValueMap(Map<String, String> newPluginSettings) throws Exception;
 
 }
