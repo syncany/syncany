@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.ConnectionTO;
@@ -144,7 +145,7 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		new Persister().write(connectionTO, plaintextOutputStream);
+		new Persister(new Format(0)).write(connectionTO, plaintextOutputStream);
 
 		byte[] masterKeySalt = masterKey.getSalt();
 		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
@@ -159,7 +160,7 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		new Persister().write(connectionTO, plaintextOutputStream);
+		new Persister(new Format(0)).write(connectionTO, plaintextOutputStream);
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
