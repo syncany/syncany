@@ -31,9 +31,10 @@ import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class GenlinkCommandTest {	
+public class GenlinkCommandTest {
 	@Rule
 	public final TextFromStandardInputStream systemInMock = emptyStandardInputStream();
+
 	// TODO [low] TextFromStandardInputStream is not thread-safe. This leads to failures from time to time.
 
 	@Test
@@ -42,72 +43,72 @@ public class GenlinkCommandTest {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 		File clientLocalDirB = TestFileUtil.createTempDirectoryInSystemTemp();
-		
+
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientA.get("localdir"),
-			"genlink",
-			"-s"
+				"--localdir", clientA.get("localdir"),
+				"genlink",
+				"-s"
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 1, cliOutA.length);
 		String createdLink = cliOutA[0];
-		
+
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientLocalDirB.getAbsolutePath(),
-			"connect",
-			"--no-daemon",
-			createdLink
+				"--localdir", clientLocalDirB.getAbsolutePath(),
+				"--no-daemon",
+				"connect",
+				createdLink
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 3, cliOutB.length);
 		assertEquals("Repository connected, and local folder initialized.", cliOutB[1]);
-		
+
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
-		TestFileUtil.deleteDirectory(clientLocalDirB);	
-	}			
-	
+		TestFileUtil.deleteDirectory(clientLocalDirB);
+	}
+
 	@Test
 	public void testGenlinkCommandShortEncrypted() throws Exception {
 		// Setup		
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);				
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
 		File clientLocalDirB = TestFileUtil.createTempDirectoryInSystemTemp();
 
-		systemInMock.provideText("somelongpassword\nsomelongpassword\nsomelongpassword\n");		
+		systemInMock.provideText("somelongpassword\nsomelongpassword\nsomelongpassword\n");
 
 		// Run Init
-		String[] initArgs = new String[] { 		
-			"--localdir", clientA.get("localdir"),
-			"init",
-			"--no-daemon",
-			"--plugin", "local", 
-			"--plugin-option", "path=" + clientA.get("repopath"),
-			"--no-compression" 
-		}; 
-				
+		String[] initArgs = new String[] {
+				"--localdir", clientA.get("localdir"),
+				"init",
+				"--no-daemon",
+				"--plugin", "local",
+				"--plugin-option", "path=" + clientA.get("repopath"),
+				"--no-compression"
+		};
+
 		new CommandLineClient(initArgs).start();
-		
+
 		// Run Genlink (on A)		
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientA.get("localdir"),
-			"genlink",
-			"-s"
+				"--localdir", clientA.get("localdir"),
+				"genlink",
+				"-s"
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 1, cliOutA.length);
 		String createdLink = cliOutA[0];
-		
+
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientLocalDirB.getAbsolutePath(),
-			"connect",
-			"--no-daemon",
-			createdLink
+				"--localdir", clientLocalDirB.getAbsolutePath(),
+				"--no-daemon",
+				"connect",
+				createdLink
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 4, cliOutB.length);
 		assertEquals("Repository connected, and local folder initialized.", cliOutB[2]);
-		
+
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
-		TestFileUtil.deleteDirectory(clientLocalDirB);	
-	}			
+		TestFileUtil.deleteDirectory(clientLocalDirB);
+	}
 }
