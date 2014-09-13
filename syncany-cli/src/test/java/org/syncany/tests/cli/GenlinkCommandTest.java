@@ -55,6 +55,7 @@ public class GenlinkCommandTest {
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 			"--localdir", clientLocalDirB.getAbsolutePath(),
 			"connect",
+			"--no-daemon",
 			createdLink
 		}));
 		
@@ -78,9 +79,10 @@ public class GenlinkCommandTest {
 		String[] initArgs = new String[] { 		
 			"--localdir", clientA.get("localdir"),
 			"init",
-			 "--plugin", "local", 
-			 "--plugin-option", "path=" + clientA.get("repopath"),
-			 "--no-compression" 
+			"--no-daemon",
+			"--plugin", "local", 
+			"--plugin-option", "path=" + clientA.get("repopath"),
+			"--no-compression" 
 		}; 
 				
 		new CommandLineClient(initArgs).start();
@@ -98,11 +100,12 @@ public class GenlinkCommandTest {
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 			"--localdir", clientLocalDirB.getAbsolutePath(),
 			"connect",
+			"--no-daemon",
 			createdLink
 		}));
 		
 		assertEquals("Different number of output lines expected.", 4, cliOutB.length);
-		assertEquals("Repository connected, and local folder initialized.", cliOutB[1]);
+		assertEquals("Repository connected, and local folder initialized.", cliOutB[2]);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(clientLocalDirB);	

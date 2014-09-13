@@ -100,5 +100,7 @@ public class TransactionTO {
 
 		Serializer serializer = new Persister();
 		serializer.write(this, out);
+		out.flush();
+		out.close();
 	}
 }

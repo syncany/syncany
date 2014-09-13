@@ -13,6 +13,7 @@ Change Log
   + Rewrite bash completion, fixes --localdir issue #209
   + Fix issue with `sy daemon force-stop` #212
   + Fix multichunk decryption failure cache issue (part of #59)
+  + Make syncany://-links Windows CMD compatible #219/#225
 
 ### Syncany 0.1.9-alpha (Date: 28 Aug 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

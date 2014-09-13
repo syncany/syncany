@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -50,6 +49,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import org.syncany.util.Base58;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -70,7 +70,7 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());
 
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+-(.+)-(.+)))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+)/(.+)/(.+))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
@@ -264,9 +264,9 @@ public class ConnectOperation extends AbstractInitOperation {
 
 			logger.log(Level.INFO, "Encrypted plugin settings: " + cipherSettings);
 
-			byte[] masterKeySalt = Base64.decodeBase64(masterKeySaltStr);
-			byte[] cipherpluginBytes = Base64.decodeBase64(cipherPlugin);
-			byte[] ciphersettingsBytes = Base64.decodeBase64(cipherSettings);
+			byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
+			byte[] cipherpluginBytes = Base58.decode(cipherPlugin);
+			byte[] ciphersettingsBytes = Base58.decode(cipherSettings);
 
 			boolean retryPassword = true;
 
@@ -299,8 +299,8 @@ public class ConnectOperation extends AbstractInitOperation {
 		else {
 			String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 			String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
-			pluginId = new String(Base64.decodeBase64(encodedPlugin));
-			pluginSettings = Base64.decodeBase64(encodedSettings);
+			pluginId = new String(Base58.decode(encodedPlugin));
+			pluginSettings = Base58.decode(encodedSettings);
 		}
 
 		logger.log(Level.INFO, "Decrypted link contains: " + pluginId + " -- " + pluginSettings);

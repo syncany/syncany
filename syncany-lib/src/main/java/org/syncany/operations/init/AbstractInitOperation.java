@@ -17,6 +17,18 @@
  */
 package org.syncany.operations.init;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
@@ -34,16 +46,9 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.util.PluginUtil;
+import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The abstract init operation implements common functions of the {@link InitOperation}
@@ -146,12 +151,12 @@ public abstract class AbstractInitOperation extends Operation {
 		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
 
 		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
+		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
 
 		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSuites, masterKey);
 		String encryptedEncodedPlugin = new String(Base64.encodeBase64(encryptedPluginBytes, false));
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorage = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
+		String encryptedEncodedStorage = Base58.encode(encryptedConnectionBytes);
 
 		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedPlugin + "-" + encryptedEncodedStorage;
 	}
@@ -162,8 +167,8 @@ public abstract class AbstractInitOperation extends Operation {
 		objectOutputStream.writeObject(PluginUtil.createMapFromTransferSettings(connectionTO));
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorage = new String(Base64.encodeBase64(plaintextStorageXml, false));
-		String plaintextEncodedPlugin = new String(Base64.encodeBase64(connectionTO.getType().getBytes()));
+		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
+		String plaintextEncodedPlugin = Base58.encode(connectionTO.getType().getBytes());
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "-" + plaintextEncodedStorage;
 	}

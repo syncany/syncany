@@ -20,6 +20,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.util.Base58Test;
 import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTest;
 import org.syncany.tests.util.LimitedDosFileAttributesTest;
@@ -29,6 +30,7 @@ import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({	
+	Base58Test.class,
 	CollectionUtilTest.class,
 	FileUtilTest.class,
 	LimitedDosFileAttributesTest.class,
