@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -258,7 +259,7 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		boolean isEncryptedLink = notEncryptedFlag == null;
 		String pluginId = null;
-		byte[] pluginSettings = null;
+		InputStream pluginSettingsInputStream = null;
 
 		try {
 			if (isEncryptedLink) {
@@ -287,8 +288,7 @@ public class ConnectOperation extends AbstractInitOperation {
 						ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherpluginBytes);
 						pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
 						ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(ciphersettingsBytes);
-						pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings,
-								masterKey))));
+						pluginSettingsInputStream = new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings, masterKey)));
 
 						retryPassword = false;
 					}
@@ -297,7 +297,7 @@ public class ConnectOperation extends AbstractInitOperation {
 					}
 				}
 
-				if (pluginId == null || pluginSettings == null) {
+				if (pluginId == null || pluginSettingsInputStream == null) {
 					throw new CipherException("Unable to decrypt link.");
 				}
 			}
@@ -305,14 +305,14 @@ public class ConnectOperation extends AbstractInitOperation {
 				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 				String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
 				pluginId = new String(Base58.decode(encodedPlugin));
-				pluginSettings = IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(Base58.decode(encodedSettings))));
+				pluginSettingsInputStream = new GZIPInputStream(new ByteArrayInputStream(Base58.decode(encodedSettings)));
 			}
+
+			logger.log(Level.INFO, "(Decrypted) link contains: " + pluginId + " -- " + IOUtils.toString(pluginSettingsInputStream));
 		}
 		catch (IOException e) {
 			throw new StorageException("Unable to decompress connection settings: " + e.getMessage());
 		}
-
-		logger.log(Level.INFO, "Decrypted link contains: " + pluginId + " -- " + new String(pluginSettings));
 
 		try {
 
@@ -322,11 +322,8 @@ public class ConnectOperation extends AbstractInitOperation {
 				throw new StorageException("Link contains unknown connection type '" + pluginId + "'. Corresponding plugin not found.");
 			}
 
-			logger.log(Level.INFO, "Transfersettings are " + new String(pluginSettings));
-
-			ByteArrayInputStream plainPluginSettingsInputStream = new ByteArrayInputStream(pluginSettings);
 			ConnectionTO connectionTO = new Persister().read(TransferPluginUtil.getTransferSettingsClass(plugin.getClass()),
-					plainPluginSettingsInputStream);
+					pluginSettingsInputStream);
 
 			configTO.setConnectionTO(connectionTO);
 		}
