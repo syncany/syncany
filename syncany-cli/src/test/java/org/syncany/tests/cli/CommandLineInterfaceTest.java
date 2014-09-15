@@ -48,7 +48,8 @@ public class CommandLineInterfaceTest {
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
 				"--no-encryption",
-				"--no-compression"
+				"--no-compression",
+				"--no-daemon"
 		};
 
 		logger.log(Level.INFO, "Running syncany with argument: " + StringUtil.join(initArgs, " "));
@@ -66,6 +67,7 @@ public class CommandLineInterfaceTest {
 				"--localdir", clientB.get("localdir"),
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientB.get("repopath"),
+				"--no-daemon",
 		};
 
 		logger.log(Level.INFO, "Running syncany with argument: " + StringUtil.join(connectArgs, " "));
