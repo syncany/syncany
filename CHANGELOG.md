@@ -8,6 +8,7 @@ Change Log
   + Atomicity for changing operations (up/cleanup, major!) #64
   + Combined `sy` and `syd` script into one #210
   + Add folder to daemon config in `sy init` #215/#153
+  + Bash completion for Arch Linux users #220
 - Bugfixes and other things:
   + Fix daemon tests #185
   + Rewrite bash completion, fixes --localdir issue #209
