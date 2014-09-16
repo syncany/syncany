@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-### Syncany 0.1.10-alpha (Date: Tbd.)
+### Syncany 0.1.11-alpha (Date: Tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Nothing here yet.
+
+### Syncany 0.1.10-alpha (Date: 16 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - **Breaks compatiblity to 0.1.9-alpha repositories!**
 - Features and significant changes:
