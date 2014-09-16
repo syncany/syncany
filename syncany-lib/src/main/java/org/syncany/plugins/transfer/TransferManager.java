@@ -20,12 +20,10 @@ package org.syncany.plugins.transfer;
 import java.io.File;
 import java.util.Map;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.transfer.files.RepoRemoteFile;
+import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
 /**
  * The transfer manager synchronously connects to the remote storage. It is
@@ -43,7 +41,7 @@ import org.syncany.plugins.transfer.files.RepoRemoteFile;
  * <p>A transfer manager may organize files according to their type or name as
  * it is optimal for the given storage. {@link RemoteFile}s can be classified
  * by their sub-type. For network-transfer optimization reasons, it might be
- * useful to place {@link MultiChunkRemoteFile}s and {@link DatabaseRemoteFile}s
+ * useful to place {@link MultichunkRemoteFile}s and {@link DatabaseRemoteFile}s
  * in a separate sub-folder on the remote storage.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -87,6 +85,8 @@ public interface TransferManager {
 	 *
 	 * <p>Implementations must make sure that if a file matches the specified name
 	 * schema, it must be complete and consistent.
+	 * 
+	 * <p>If remoteFile does not exist, a {@link StorageFileNotFoundException} is thrown.
 	 *
 	 * @param remoteFile Existing source file on the remote storage.
 	 *        The only required property of the remote file is the name.
@@ -118,6 +118,18 @@ public interface TransferManager {
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException;
 
 	/**
+	 * Moves an existing file in the online storage.
+	 * 
+	 * <p> If the sourceFile does not exists, a {@link StorageMoveException} is thrown.
+	 * 
+	 * @param source Existing remote file that is to be moved.
+	 * @param target Destination for the remote file.
+	 * @throws StorageException If the connection fails due to no Internet connection,
+	 *         authentication errors, etc.
+	 */
+	public void move(RemoteFile sourceFile, RemoteFile targetFile) throws StorageException;
+
+	/**
 	 * Deletes an existing file from the remote storage permanently.
 	 *
 	 * <p>In case the remote file does not exist, it returns immediately without
@@ -147,7 +159,7 @@ public interface TransferManager {
 	 * Tests whether the repository parameters are valid. In particular, the method tests
 	 * whether a target (folder, bucket, etc.) exists or, if not, whether it can be created.
 	 * It furthermore tests whether a repository at the target already exists by checking if the
-	 * {@link RepoRemoteFile} exists.
+	 * {@link SyncanyRemoteFile} exists.
 	 * 
 	 * <p>The relevant result is determined by the following methods:
 	 * 
@@ -178,7 +190,7 @@ public interface TransferManager {
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
 	public boolean testTargetExists() throws StorageException;
-	
+
 	/**
 	 * Tests whether the target path/folder is <b>writable</b> by the application. This method may either
 	 * check the write permissions of the target or actually write a test file to check write access. If the
@@ -207,10 +219,10 @@ public interface TransferManager {
 	 * @return Returns <tt>true</tt> if the target can be created or already exists, <tt>false</tt> otherwise 
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure 
 	 */
-	public boolean testTargetCanCreate() throws StorageException; 
+	public boolean testTargetCanCreate() throws StorageException;
 
 	/**
-	 * Tests whether the <b>repository file exists</b> (see {@link RepoRemoteFile}). This method is called by the {@link #test()} method 
+	 * Tests whether the <b>repository file exists</b> (see {@link SyncanyRemoteFile}). This method is called by the {@link #test()} method 
 	 * (only during repository initialization (or initial connection).
 	 * 
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization 

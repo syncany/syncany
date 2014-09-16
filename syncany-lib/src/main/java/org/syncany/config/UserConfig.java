@@ -21,12 +21,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.UserConfigTO;
+import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -44,10 +51,17 @@ public class UserConfig {
 	 *    
 	 */
 	
+	// Daemon-specific config
+	public static final String DAEMON_FILE = "daemon.xml";
+	public static final String DAEMON_EXAMPLE_FILE = "daemon-example.xml";	
+	public static final String DEFAULT_FOLDER = "Syncany";
+	public static final String USER_ADMIN = "admin";
+	public static final String USER_CLI = "CLI";
+	
 	// These fields are not final to enable a PluginOperationTest
 	private static File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
 	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
-	
+		
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
 	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
@@ -178,6 +192,44 @@ public class UserConfig {
 		catch (Exception e) {
 			// Don't care!
 		}
+	}
+	
+	// Daemon XML config methods
+
+    public static DaemonConfigTO createAndWriteDefaultDaemonConfig(File daemonConfigFile) {
+		return createAndWriteDaemonConfig(daemonConfigFile, new ArrayList<FolderTO>());
+	}
+
+    public static DaemonConfigTO createAndWriteExampleDaemonConfig(File daemonConfigFile) {
+    	File defaultFolder = new File(System.getProperty("user.home"), UserConfig.DEFAULT_FOLDER);		
+    	
+    	FolderTO defaultFolderTO = new FolderTO();
+    	defaultFolderTO.setPath(defaultFolder.getAbsolutePath());
+    	defaultFolderTO.setWatchOptions(new WatchOperationOptions());
+		
+    	return createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { defaultFolderTO }));
+	}
+
+    public static DaemonConfigTO createAndWriteDaemonConfig(File configFile, List<FolderTO> folders) {
+    	UserTO defaultUserTO = new UserTO();
+		defaultUserTO.setUsername(UserConfig.USER_ADMIN);
+		defaultUserTO.setPassword(CipherUtil.createRandomAlphabeticString(12));
+		
+		ArrayList<UserTO> users = new ArrayList<>();
+		users.add(defaultUserTO);
+		
+		DaemonConfigTO defaultDaemonConfigTO = new DaemonConfigTO();
+		defaultDaemonConfigTO.setFolders(new ArrayList<>(folders));	
+		defaultDaemonConfigTO.setUsers(users);
+		
+		try {
+			DaemonConfigTO.save(defaultDaemonConfigTO, configFile);
+		}
+		catch (Exception e) {
+			// Don't care!
+		}
+		
+		return defaultDaemonConfigTO;
 	}
 	
 	// Key store / Trust store methods

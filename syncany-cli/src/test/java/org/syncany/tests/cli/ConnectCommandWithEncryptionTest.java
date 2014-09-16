@@ -56,62 +56,63 @@ import org.syncany.util.StringUtil;
  * However, the TextFromStandardInputStream is somewhat incompatible with this logic. At least I have not
  * been able to do the above. If you stumble over some weird code, this is probably the reason. 
  */
-public class ConnectCommandWithEncryptionTest {	
+public class ConnectCommandWithEncryptionTest {
 	private File originalWorkingDirectory;
-	
+
 	private File initializedRepoFolder;
 	private File initializedRepoFolderCopy;
 	private Map<String, String> initializedRepoConnectionSettings;
 	private String initializedRepoPassword;
 	private String initializedRepoConnectLink;
-	
+
 	@Rule
 	public final TextFromStandardInputStream systemInMock = emptyStandardInputStream();
-	
+
 	@Before
 	public void before() throws Exception {
-		originalWorkingDirectory = new File(System.getProperty("user.dir"));		
-		initInteractiveWithEncryptionWithParams(); // sets the initialized* variables			
+		originalWorkingDirectory = new File(System.getProperty("user.dir"));
+		initInteractiveWithEncryptionWithParams(); // sets the initialized* variables
 	}
-	
+
 	@After
 	public void after() {
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);	
+		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
 		TestFileUtil.deleteDirectory(initializedRepoFolder);
 		TestFileUtil.deleteDirectory(initializedRepoFolderCopy);
 	}
-	
+
 	@Test
 	public void testCliConnectInteractiveWithParamsEnc() throws Exception {
-		// Setup 
+		// Setup
 		resetRepo();
 		Map<String, String> clientB = TestCliUtil.createLocalTestEnv("B", initializedRepoConnectionSettings);
-		
-		// Run				
+
+		// Run
 		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp();
 		TestCliUtil.setCurrentDirectory(localDirB);
-		
-		String[] connectArgs = new String[] { 			 
-			 "connect"
-		}; 
 
-		System.out.println("repopath = "+clientB.get("repopath"));
+		String[] connectArgs = new String[] {
+				"connect",
+				"--no-daemon"
+		};
+
+		System.out.println("repopath = " + clientB.get("repopath"));
 		systemInMock.provideText(StringUtil.join(new String[] {
-			"local", 
-			clientB.get("repopath"),
-			"somesuperlongpassword"
-		}, "\n")+"\n");
-		
+				"local",
+				clientB.get("repopath"),
+				"somesuperlongpassword"
+		}, "\n") + "\n");
+
 		String[] cliOutputA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(connectArgs));
 		String cliOutputSingleLineA = StringUtil.join(cliOutputA, " ");
-		
+
 		assertTrue(localDirB.exists());
-		assertTrue(new File(localDirB+"/.syncany").exists());
-		assertTrue(new File(localDirB+"/.syncany/syncany").exists());
-		assertTrue(new File(localDirB+"/.syncany/master").exists());
-		assertTrue(new File(localDirB+"/.syncany/config.xml").exists());
+		assertTrue(new File(localDirB + "/.syncany").exists());
+		assertTrue(new File(localDirB + "/.syncany/syncany").exists());
+		assertTrue(new File(localDirB + "/.syncany/master").exists());
+		assertTrue(new File(localDirB + "/.syncany/config.xml").exists());
 		assertTrue(cliOutputSingleLineA.contains("Repository connected"));
-		
+
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/syncany"), new File(initializedRepoConnectionSettings.get("path"), "syncany"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/master"), new File(initializedRepoConnectionSettings.get("path"), "master"),
@@ -119,35 +120,36 @@ public class ConnectCommandWithEncryptionTest {
 
 		// Tear down
 		TestFileUtil.deleteDirectory(localDirB);
-	}	
-	
+	}
+
 	@Test
 	public void testCliConnectInteractiveWithLinkEnc() throws Exception {
 		// Setup
 		resetRepo();
-		
+
 		// 2. Connect
 		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp();
 		TestCliUtil.setCurrentDirectory(localDirB);
-		
-		String[] connectArgs = new String[] { 			 
-			"connect",
-			initializedRepoConnectLink
-		}; 
+
+		String[] connectArgs = new String[] {
+				"connect",
+				"--no-daemon",
+				initializedRepoConnectLink
+		};
 
 		systemInMock.provideText(StringUtil.join(new String[] {
-			// No path or params, not needed because link provided
-			initializedRepoPassword
-		}, "\n")+"\n");
-		
+				// No path or params, not needed because link provided
+				initializedRepoPassword
+		}, "\n") + "\n");
+
 		String[] cliOutputA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(connectArgs));
 		String cliOutputSingleLineA = StringUtil.join(cliOutputA, " ");
-		
+
 		assertTrue(localDirB.exists());
-		assertTrue(new File(localDirB+"/.syncany").exists());
-		assertTrue(new File(localDirB+"/.syncany/syncany").exists());
-		assertTrue(new File(localDirB+"/.syncany/master").exists());
-		assertTrue(new File(localDirB+"/.syncany/config.xml").exists());
+		assertTrue(new File(localDirB + "/.syncany").exists());
+		assertTrue(new File(localDirB + "/.syncany/syncany").exists());
+		assertTrue(new File(localDirB + "/.syncany/master").exists());
+		assertTrue(new File(localDirB + "/.syncany/config.xml").exists());
 		assertTrue(cliOutputSingleLineA.contains("Repository connected"));
 
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/syncany"), new File(initializedRepoConnectionSettings.get("path"), "syncany"),
@@ -155,10 +157,10 @@ public class ConnectCommandWithEncryptionTest {
 		TestAssertUtil.assertFileEquals(new File(localDirB, ".syncany/master"), new File(initializedRepoConnectionSettings.get("path"), "master"),
 				FileChange.CHANGED_ATTRIBUTES, FileChange.CHANGED_LAST_MOD_DATE);
 
-		// Tear down		
+		// Tear down
 		TestFileUtil.deleteDirectory(localDirB);
-	}	
-	
+	}
+
 	@Test
 	@Ignore
 	public void testCliConnectInteractiveWithParamsInvalidPassEnc() throws Exception {
@@ -168,65 +170,66 @@ public class ConnectCommandWithEncryptionTest {
 	@Test
 	@Ignore
 	public void testCliConnectInteractiveWithLinkInvalidPassEnc() throws Exception {
-		// TODO 
+		// TODO
 	}
-	
+
 	private void initInteractiveWithEncryptionWithParams() throws Exception {
 		// Ensuring no console is set
 		InitConsole.setInstance(null);
-		
+
 		// Create test repo and temp. client
-		initializedRepoPassword = "somesuperlongpassword";		
+		initializedRepoPassword = "somesuperlongpassword";
 		initializedRepoConnectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
-		
+
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", initializedRepoConnectionSettings);
 		File tempLocalDirA = new File(clientA.get("localdir"));
 
 		initializedRepoFolder = new File(clientA.get("repopath"));
-		
+
 		TestCliUtil.setCurrentDirectory(tempLocalDirA);
-		
-		String[] initArgs = new String[] { 			 
-			 "init"
-		}; 
+
+		String[] initArgs = new String[] {
+				"init",
+				"--no-daemon"
+		};
 
 		systemInMock.provideText(StringUtil.join(new String[] {
-			"local", 
-			initializedRepoFolder.getAbsolutePath(),
-			initializedRepoPassword, 
-			initializedRepoPassword
-		}, "\n")+"\n");
-		
+				"local",
+				initializedRepoFolder.getAbsolutePath(),
+				initializedRepoPassword,
+				initializedRepoPassword
+		}, "\n") + "\n");
+
 		String[] cliOutputA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(initArgs));
 		String cliOutputSingleLineA = StringUtil.join(cliOutputA, " ");
-		
-		assertTrue(new File(initializedRepoFolder+"/syncany").exists());
-		assertTrue(new File(initializedRepoFolder+"/master").exists());
-		assertTrue(new File(initializedRepoFolder+"/databases").exists());
-		assertTrue(new File(initializedRepoFolder+"/multichunks").exists());				
-		
+
+		assertTrue(new File(initializedRepoFolder + "/syncany").exists());
+		assertTrue(new File(initializedRepoFolder + "/master").exists());
+		assertTrue(new File(initializedRepoFolder + "/databases").exists());
+		assertTrue(new File(initializedRepoFolder + "/multichunks").exists());
+
 		Pattern linkPattern = Pattern.compile("(syncany://[^\\s]+)");
 		Matcher linkMatcher = linkPattern.matcher(cliOutputSingleLineA);
-		
+
 		if (!linkMatcher.find()) {
 			fail("Cannot find syncany:// link");
 		}
-		
-		initializedRepoConnectLink = linkMatcher.group(1);		
+
+		initializedRepoConnectLink = linkMatcher.group(1);
 		initializedRepoFolderCopy = TestFileUtil.createTempDirectoryInSystemTemp();
-		
+
 		// Make copy of the repo
 		TestFileUtil.deleteDirectory(initializedRepoFolderCopy);
 		FileUtils.copyDirectory(initializedRepoFolder, initializedRepoFolderCopy);
-		
+
 		TestFileUtil.deleteDirectory(tempLocalDirA);
-	}	
-	
+	}
+
 	private void resetRepo() throws IOException {
 		TestFileUtil.deleteDirectory(initializedRepoFolder);
 		assertFalse(initializedRepoFolder.exists());
-		
+
 		FileUtils.copyDirectory(initializedRepoFolderCopy, initializedRepoFolder);
 		assertTrue(initializedRepoFolder.exists());
-	}	
+	}
 }

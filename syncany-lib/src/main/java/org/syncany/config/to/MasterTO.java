@@ -18,7 +18,6 @@
 package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
@@ -38,17 +37,16 @@ import org.syncany.util.StringUtil;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="master")
-@Namespace(reference="http://syncany.org/master/1")
+@Root(name = "master")
 public class MasterTO {
 	@Element(name = "salt", required = false)
 	private String saltEncoded;
 	private byte[] salt;
-	
+
 	public MasterTO() {
 		// Required default constructor
 	}
-	
+
 	public MasterTO(byte[] salt) {
 		this.salt = salt;
 	}
@@ -70,7 +68,7 @@ public class MasterTO {
 	public void release() {
 		saltEncoded = null;
 	}
-	
+
 	@Commit
 	public void commit() {
 		salt = (saltEncoded != null) ? StringUtil.fromHex(saltEncoded) : null;

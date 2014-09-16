@@ -47,51 +47,53 @@ import org.syncany.tests.operations.SyncUpOperationTest;
 import org.syncany.tests.plugins.PluginOptionSpecTest;
 import org.syncany.tests.plugins.PluginsTest;
 import org.syncany.tests.plugins.local.LocalTransferManagerPluginTest;
+import org.syncany.tests.plugins.unreliable_local.CleanupInterruptedTest;
 import org.syncany.tests.plugins.unreliable_local.UploadInterruptedTest;
 import org.syncany.tests.util.SqlRunnerTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	// Util
-	SqlRunnerTest.class,
-	
-	// Crypto	
-	CipherSpecsTest.class,
-	CipherUtilTest.class,
-	MultiCipherStreamsTest.class,
-	CipherSessionTest.class,
-	AesGcmWithBcInputStreamTest.class,
-	
-	// Chunking Framework
-	MultiChunkerTest.class,
-	FixedOffsetChunkerTest.class,
-	TTTDChunkerTest.class,
-	FrameworkCombinationTest.class,
-	
-	// Connection
-	PluginsTest.class,
-	PluginOptionSpecTest.class,
-	LocalTransferManagerPluginTest.class,
-	UploadInterruptedTest.class,
-	
-	// Operations
-	CleanupOperationTest.class,
-	ConnectOperationTest.class,
-	FileSystemActionComparatorTest.class,
-	FileSystemActionReconciliatorTest.class,
-	IndexerTest.class,
-	InitOperationTest.class,
-	NotificationListenerTest.class,
-	OperationPerformanceTest.class,
-	PluginOperationTest.class,
-	RecursiveWatcherTest.class,
-	StatusOperationTest.class,
-	SyncUpOperationTest.class,
-	
-	// Config
-	CacheTest.class,
-	ConfigHelperTest.class,
-	ConfigTest.class
+		// Util
+		SqlRunnerTest.class,
+
+		// Crypto	
+		CipherSpecsTest.class,
+		CipherUtilTest.class,
+		MultiCipherStreamsTest.class,
+		CipherSessionTest.class,
+		AesGcmWithBcInputStreamTest.class,
+
+		// Chunking Framework
+		MultiChunkerTest.class,
+		FixedOffsetChunkerTest.class,
+		TTTDChunkerTest.class,
+		FrameworkCombinationTest.class,
+
+		// Connection
+		PluginsTest.class,
+		PluginOptionSpecTest.class,
+		LocalTransferManagerPluginTest.class,
+		UploadInterruptedTest.class,
+		CleanupInterruptedTest.class,
+
+		// Operations
+		CleanupOperationTest.class,
+		ConnectOperationTest.class,
+		FileSystemActionComparatorTest.class,
+		FileSystemActionReconciliatorTest.class,
+		IndexerTest.class,
+		InitOperationTest.class,
+		NotificationListenerTest.class,
+		OperationPerformanceTest.class,
+		PluginOperationTest.class,
+		RecursiveWatcherTest.class,
+		StatusOperationTest.class,
+		SyncUpOperationTest.class,
+
+		// Config
+		CacheTest.class,
+		ConfigHelperTest.class,
+		ConfigTest.class
 })
 public class OtherShortTestSuite {
 	// This class executes all tests

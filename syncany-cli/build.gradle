@@ -6,7 +6,6 @@ import java.io.File;
 dependencies {
 	compile			project(":syncany-lib")
 	compile			project(":syncany-util")
-	compile			project(":syncany-messages")	
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
 	compile			"org.apache.httpcomponents:httpclient:4.3.4"
 	

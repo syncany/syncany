@@ -47,7 +47,7 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -95,6 +95,7 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
+		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 		
 		OptionSet options = parser.parse(operationArguments);	
 						
@@ -130,6 +131,7 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(null); // set by callback in operation 
+		operationOptions.setDaemon(!options.has(optionNoDaemon));
 		
 		return operationOptions;
 	}		
@@ -141,6 +143,11 @@ public class InitCommand extends AbstractInitCommand {
 			out.println("with others, you can share this link:");
 
 			printLink(operationResult.getGenLinkResult(), false);
+			
+			if (operationResult.isAddedToDaemon()) {
+				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
+				out.println();
+			}
 		}
 		else if (operationResult.getResultCode() == InitResultCode.NOK_TEST_FAILED) {
 			StorageTestResult testResult = operationResult.getTestResult();

@@ -18,24 +18,26 @@
 package org.syncany.operations.init;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 
 public class ConnectOperationResult implements OperationResult {
 	public enum ConnectResultCode {
 		OK, NOK_DECRYPT_ERROR, NOK_TEST_FAILED
 	}
 
-    private ConnectResultCode resultCode = ConnectResultCode.OK;
-    private StorageTestResult testResult = null;
+    private ConnectResultCode resultCode;
+    private StorageTestResult testResult;
+    private boolean addedToDaemon;
 
-    public ConnectOperationResult(ConnectResultCode resultCode) {
-		this.resultCode = resultCode;
-	}
+    public ConnectOperationResult() {
+    	this(ConnectResultCode.NOK_TEST_FAILED);
+    }   
     
-    public ConnectOperationResult(ConnectResultCode resultCode, StorageTestResult testResult) {
-		this.resultCode = resultCode;
-		this.testResult = testResult;
-	}
+    public ConnectOperationResult(ConnectResultCode resultCode) {
+    	this.resultCode = resultCode;
+    	this.testResult = null;
+    	this.addedToDaemon = false;
+    }   
 
 	public ConnectResultCode getResultCode() {
 		return resultCode;
@@ -47,5 +49,17 @@ public class ConnectOperationResult implements OperationResult {
 
 	public StorageTestResult getTestResult() {
 		return testResult;
-	}                
+	}
+
+	public boolean isAddedToDaemon() {
+		return addedToDaemon;
+	}
+
+	public void setAddedToDaemon(boolean addedToDaemon) {
+		this.addedToDaemon = addedToDaemon;
+	}
+
+	public void setTestResult(StorageTestResult testResult) {
+		this.testResult = testResult;
+	}       	
 }

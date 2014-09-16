@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * @author pheckel

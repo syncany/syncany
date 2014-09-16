@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.UserConfig;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 

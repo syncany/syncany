@@ -23,14 +23,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.config.UserConfig;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
+import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
@@ -38,7 +43,9 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
+import org.syncany.util.FileUtil;
 
 /**
  * The abstract init operation implements common functions of the {@link InitOperation}
@@ -48,6 +55,8 @@ import org.syncany.util.EnvironmentUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
+    protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
+    
     protected UserInteractionListener listener;
 
 	public AbstractInitOperation(Config config, UserInteractionListener listener) {
@@ -139,12 +148,12 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(connectionTO, plaintextOutputStream);
 
 		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = new String(Base64.encodeBase64(masterKeySalt, false));
+		String masterKeySaltEncodedStr = new String(Base58.encode(masterKeySalt));
 
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorageXml = new String(Base64.encodeBase64(encryptedConnectionBytes, false));
+		String encryptedEncodedStorageXml = new String(Base58.encode(encryptedConnectionBytes));
 
-		return "syncany://storage/1/" + masterKeySaltEncodedStr + "-" + encryptedEncodedStorageXml;
+		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedStorageXml;
 	}
 
 	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
@@ -153,7 +162,7 @@ public abstract class AbstractInitOperation extends Operation {
 		serializer.write(connectionTO, plaintextOutputStream);
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorageXml = new String(Base64.encodeBase64(plaintextStorageXml, false));
+		String plaintextEncodedStorageXml = new String(Base58.encode(plaintextStorageXml));
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
 	}
@@ -161,6 +170,48 @@ public abstract class AbstractInitOperation extends Operation {
 	protected void fireNotifyCreateMaster() {
 		if (listener != null) {
 			listener.onShowMessage("\nCreating master key from password (this might take a while) ...");
+		}
+	}
+	
+	protected boolean addToDaemonConfig(File localDir) {
+		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
+		
+		if (daemonConfigFile.exists()) {
+			try {
+				DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
+				String localDirPath = FileUtil.getCanonicalFile(localDir).getAbsolutePath();
+				
+				// Check if folder already exists
+				boolean folderExists = false;
+				
+				for (FolderTO folderTO : daemonConfigTO.getFolders()) {
+					if (localDirPath.equals(folderTO.getPath())) {
+						folderExists = true;
+						break;
+					}
+				}
+				
+				// Add to config if it's not already in there
+				if (!folderExists) {					
+					logger.log(Level.INFO, "Adding folder to daemon config: " + localDirPath + ", and saving config at " + daemonConfigFile);
+
+					daemonConfigTO.getFolders().add(new FolderTO(localDirPath));							
+					DaemonConfigTO.save(daemonConfigTO, daemonConfigFile);
+					
+					return true;
+				}				
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Adding folder to daemon failed. Ignoring.");
+			}
+
+			return false;
+		}
+		else {
+			FolderTO localDirFolderTO = new FolderTO(localDir.getAbsolutePath());			
+			UserConfig.createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { localDirFolderTO }));
+			
+			return true;
 		}
 	}
 }

@@ -20,7 +20,7 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.syncany.plugins.local.LocalConnection;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -38,7 +38,7 @@ public class ManySyncUpsLargeFileScenarioTest {
 	@Test
 	public void testManySyncUpsWithLargeFile() throws Exception {
 		// Setup 
-		LocalConnection testConnection = (LocalConnection) TestConfigUtil.createTestLocalConnection();		
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		

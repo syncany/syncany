@@ -18,25 +18,23 @@
 package org.syncany.operations.init;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.plugins.transfer.StorageTestResult;
 
 public class InitOperationResult implements OperationResult {
 	public enum InitResultCode {
 		OK, NOK_TEST_FAILED
 	}
 
-	private InitResultCode resultCode = InitResultCode.OK;
-	private StorageTestResult testResult = null;
-	private GenlinkOperationResult genLinkResult = null;
+	private InitResultCode resultCode;
+	private StorageTestResult testResult;
+	private GenlinkOperationResult genLinkResult;
+	private boolean addedToDaemon;
 
-	public InitOperationResult(InitResultCode resultCode, StorageTestResult testResult) {
-		this.resultCode = resultCode;
-		this.testResult = testResult;
-	}
-
-	public InitOperationResult(InitResultCode resultCode, GenlinkOperationResult genLinkResult) {
-		this.resultCode = resultCode;
-		this.genLinkResult = genLinkResult;
+	public InitOperationResult() {
+		this.resultCode = InitResultCode.NOK_TEST_FAILED;
+		this.testResult = null;
+		this.genLinkResult = null;
+		this.addedToDaemon = false;
 	}
 
 	public InitResultCode getResultCode() {
@@ -49,5 +47,25 @@ public class InitOperationResult implements OperationResult {
 
 	public StorageTestResult getTestResult() {
 		return testResult;
+	}
+
+	public boolean isAddedToDaemon() {
+		return addedToDaemon;
+	}
+
+	public void setAddedToDaemon(boolean addedToDaemon) {
+		this.addedToDaemon = addedToDaemon;
+	}
+
+	public void setResultCode(InitResultCode resultCode) {
+		this.resultCode = resultCode;
+	}
+
+	public void setTestResult(StorageTestResult testResult) {
+		this.testResult = testResult;
+	}
+
+	public void setGenLinkResult(GenlinkOperationResult genLinkResult) {
+		this.genLinkResult = genLinkResult;
 	}
 }
