@@ -20,9 +20,7 @@ package org.syncany.tests.plugins;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,10 +35,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TransferSettingsTest {
 	private File tmpFile;
@@ -106,15 +101,12 @@ public class TransferSettingsTest {
 	}
 
 	@Test
-	public void createNewConnectionTOfromMap() throws Exception {
-
-		final Map<String, String> settings = Maps.newHashMap();
-		settings.put("foo", "foo-value");
-		settings.put("number", "5");
+	public void createNewValidConnectionTO() throws Exception {
 
 		TransferPlugin p = Plugins.get("dummy", TransferPlugin.class);
-		TransferSettings ts = p.createEmptySettings();
-		ts.parseKeyValueMap(settings);
+		DummyTransferSettings ts = p.createEmptySettings();
+		ts.foo = "foo-value";
+		ts.number = 5;
 
 		assertTrue(ts.isValid());
 
@@ -124,6 +116,16 @@ public class TransferSettingsTest {
 		assertEquals(dts.foo, "foo-value");
 		assertEquals(dts.number, 5);
 		assertNull(dts.baz);
+
+	}
+
+	@Test
+	public void createNewInvalidConnectionTO() throws Exception {
+
+		TransferPlugin p = Plugins.get("dummy", TransferPlugin.class);
+		DummyTransferSettings ts = p.createEmptySettings();
+
+		assertFalse(ts.isValid());
 
 	}
 

@@ -18,7 +18,6 @@
 package org.syncany.tests.plugins;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.After;
@@ -83,14 +82,11 @@ public abstract class AbstractTransferManagerTest {
 	public void testConnectWithInvalidSettings() throws StorageException {
 		TransferPlugin plugin = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
-
 		TransferSettings connection = plugin.createSettings();
-		connection.parseKeyValueMap(invalidEmptyPluginSettings);
-
-		TransferManager transferManager = plugin.createTransferManager(connection, null);
 
 		// This should cause a Storage exception, because the path does not exist
+		TransferManager transferManager = plugin.createTransferManager(connection, null);
+
 		transferManager.connect();
 	}
 
@@ -110,24 +106,18 @@ public abstract class AbstractTransferManagerTest {
 		cleanTestLocation(transferManager);
 
 		// Run!
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class, new SyncanyRemoteFile[] {
-				new SyncanyRemoteFile()
-		});
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class,
+				new SyncanyRemoteFile[] { new SyncanyRemoteFile() });
 
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] {
-				new MasterRemoteFile()
-		});
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] { new MasterRemoteFile() });
 
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, DatabaseRemoteFile.class, new DatabaseRemoteFile[] {
-				new DatabaseRemoteFile("database-A-0001"),
-				new DatabaseRemoteFile("database-B-0002")
-		});
+				new DatabaseRemoteFile("database-A-0001"), new DatabaseRemoteFile("database-B-0002") });
 
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MultichunkRemoteFile.class, new MultichunkRemoteFile[] {
 				new MultichunkRemoteFile("multichunk-84f7e2b31440aaef9b73de3cadcf4e449aeb55a1"),
 				new MultichunkRemoteFile("multichunk-beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"),
-				new MultichunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-		});
+				new MultichunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") });
 
 		// Clear up previous test (if test location is reused)
 		cleanTestLocation(transferManager);
@@ -197,7 +187,9 @@ public abstract class AbstractTransferManagerTest {
 		TransferPlugin pluginInfo = Plugins.get(getPluginId(), TransferPlugin.class);
 
 		TransferSettings connection = pluginInfo.createSettings();
-		connection.parseKeyValueMap(createPluginSettings());
+		for (Map.Entry<String, String> pair : createPluginSettings().entrySet()) {
+			connection.setField(pair.getKey(), pair.getValue());
+		}
 
 		return new TransactionAwareTransferManager(pluginInfo.createTransferManager(connection, null), null);
 	}

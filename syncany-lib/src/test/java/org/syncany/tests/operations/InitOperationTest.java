@@ -18,9 +18,11 @@
 package org.syncany.tests.operations;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.init.InitOperation;
@@ -79,7 +81,8 @@ public class InitOperationTest {
 	@Test
 	public void testFaultyInitOperation() throws Exception {
 		// Create an unreliable connection
-		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", "rel=1.*op=upload");
+    List<String> failingOperationsPattern = Lists.newArrayList("rel=1.*op=upload");
+		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", failingOperationsPattern);
 		InitOperation op = new InitOperation(operationOptions, null);
 
     File repoDir = ((UnreliableLocalTransferSettings) operationOptions.getConfigTO().getConnectionTO()).getRepositoryPath();

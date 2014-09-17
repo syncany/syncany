@@ -17,7 +17,7 @@
  */
 package org.syncany.config.to;
 
-import java.util.Map;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -26,9 +26,8 @@ public interface ConnectionTO {
 
 	public String getType();
 
-	/**
-	 * @deprecated
-	 */
-	public ConnectionTO parseKeyValueMap(Map<String, String> newPluginSettings) throws Exception;
+  public String getField(String key) throws StorageException;
+
+  public ConnectionTO setField(String key, String value) throws StorageException;
 
 }

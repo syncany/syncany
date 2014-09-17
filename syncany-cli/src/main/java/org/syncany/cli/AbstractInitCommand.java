@@ -25,9 +25,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.Strings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
@@ -41,11 +41,8 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.util.PluginUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
-
-import com.google.common.base.Strings;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
@@ -73,8 +70,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
 			OptionSpec<Void> optionNonInteractive) throws Exception {
 
-		TransferPlugin plugin = null;
-		Map<String, String> pluginSettings = null;
+		TransferPlugin plugin;
+		TransferSettings transferSettings;
 
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
 		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
@@ -87,15 +84,15 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				plugin = askPlugin();
 			}
 
-			pluginSettings = askPluginSettings(plugin, knownPluginSettings, false);
+			transferSettings = askPluginSettings(plugin.createEmptySettings(), false);
 		}
 		else {
 			plugin = initPlugin(options.valueOf(optionPlugin));
-			pluginSettings = initPluginSettings(plugin, knownPluginSettings);
+			transferSettings = initPluginSettings(plugin.createEmptySettings(), knownPluginSettings);
 		}
 
 		// Create configTO
-		return plugin.createEmptySettings().parseKeyValueMap(pluginSettings);
+		return transferSettings;
 	}
 
 	protected Map<String, String> parsePluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
@@ -125,22 +122,18 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
-	protected Map<String, String> askPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues, boolean confirmKnownValues)
-			throws StorageException {
-    TransferSettings connection = plugin.createEmptySettings();
-		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
-
-		Map<String, String> pluginOptionValues = new HashMap<String, String>();
+	protected TransferSettings askPluginSettings(TransferSettings settings, boolean confirmKnownValues) throws StorageException {
+		PluginOptionSpecs pluginOptionSpecs = settings.getOptionSpecs();
 
 		out.println();
-		out.println("Connection details for " + plugin.getName() + " connection:");
+		out.println("Connection details for " + settings.getType() + " connection:");
 
 		for (PluginOptionSpec optionSpec : pluginOptionSpecs.values()) {
-			String knownOptionValue = knownPluginOptionValues.get(optionSpec.getId());
+			String knownOptionValue = settings.getField(optionSpec.getId());
 			String optionValue = null;
 
 			if (knownOptionValue == null) {
-				optionValue = askPluginOption(optionSpec, knownOptionValue);
+				optionValue = askPluginOption(optionSpec, null);
 			}
 			else {
 				if (confirmKnownValues) {
@@ -151,25 +144,24 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				}
 			}
 
-			pluginOptionValues.put(optionSpec.getId(), optionValue);
+			settings.setField(optionSpec.getId(), optionValue);
 		}
 
-		pluginOptionSpecs.validate(pluginOptionValues); // throws error if invalid
+		validateSettingsWithException(settings); // throws error if invalid
 
-		return pluginOptionValues;
+		return settings;
 	}
 
-	protected Map<String, String> initPluginSettings(TransferPlugin plugin, Map<String, String> knownPluginOptionValues) throws StorageException {
-		if (knownPluginOptionValues == null) {
-			knownPluginOptionValues = new HashMap<String, String>();
+	protected TransferSettings initPluginSettings(TransferSettings settings, Map<String, String> knownPluginOptionValues) throws StorageException {
+		if (knownPluginOptionValues != null) {
+			for (Map.Entry<String, String> pair : knownPluginOptionValues.entrySet()) {
+				settings.setField(pair.getKey(), pair.getValue());
+			}
 		}
 
-		TransferSettings connection = plugin.createSettings();
-		PluginOptionSpecs pluginOptionSpecs = connection.getOptionSpecs();
+		validateSettingsWithException(settings); // throws error if invalid
 
-		pluginOptionSpecs.validate(knownPluginOptionValues); // throws error if invalid
-
-		return knownPluginOptionValues;
+		return settings;
 	}
 
 	private String askPluginOption(PluginOptionSpec optionSpec, String knownOptionValue) {
@@ -310,11 +302,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return onUserConfirm(null, "Connection failure", "Would you change the settings and retry the connection");
 	}
 
-	protected void updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
+	protected ConnectionTO updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
 		try {
-			Map<String, String> newPluginSettings = askPluginSettings(Plugins.get(connectionTO.getType(), TransferPlugin.class),
-					PluginUtil.createMapFromTransferSettings(connectionTO), true);
-			connectionTO.parseKeyValueMap(newPluginSettings);
+			return askPluginSettings((TransferSettings) connectionTO, true);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Unable to reload old plugin settings", e);
@@ -451,5 +441,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 
 		return password;
+	}
+
+	private void validateSettingsWithException(TransferSettings settings) throws StorageException {
+		if (!settings.isValid()) {
+			throw new StorageException("Transfersettings are not valid (maybe missing a mandatory field)");
+		}
 	}
 }

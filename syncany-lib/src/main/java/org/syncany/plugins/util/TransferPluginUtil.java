@@ -28,30 +28,30 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @version 0.0.1
  */
 
-public abstract class TransferPluginUtil extends PluginUtil{
+public abstract class TransferPluginUtil {
 
-  public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
+	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
 
-    PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
+		PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
 
-    if (settings == null) {
-      return null;
-    }
+		if (settings == null) {
+			return null;
+		}
 
-    return settings.value();
+		return settings.value();
 
-  }
+	}
 
-  public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
+	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
 
-    PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
+		PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
 
-    if (manager == null) {
-      return null;
-    }
+		if (manager == null) {
+			return null;
+		}
 
-    return manager.value();
+		return manager.value();
 
-  }
+	}
 
 }

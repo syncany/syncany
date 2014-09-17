@@ -20,7 +20,6 @@ package org.syncany.plugins.transfer;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,11 +41,8 @@ import org.syncany.util.StringUtil;
  * A connection represents the configuration settings of a storage/connection
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
  *
- * <p>A connection must be initialized by calling the {@link #init(Map) init()} method,
- * using plugin specific configuration parameters.
- *
- * <p>Once initialized, a {@link TransferManager} can be created through the {@link #createTransferManager()}
- * method. The transfer manager can then be used to upload/download files.
+ * Options for a plugin specific {@link TransferSettings} can be defined using the
+ * {@link Element} annotation. Furthermore some syncany specific annotations are available.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
@@ -85,7 +81,24 @@ public abstract class TransferSettings implements ConnectionTO {
 		return type;
 	}
 
-	public TransferSettings parseKeyValueMap(Map<String, String> keyValueMap) throws StorageException {
+	@Override
+	public String getField(String key) throws StorageException {
+		try {
+			Object fieldValueAsObject = this.getClass().getDeclaredField(key).get(this);
+
+			if (fieldValueAsObject == null) {
+				return null;
+			}
+
+			return fieldValueAsObject.toString();
+		}
+		catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new StorageException("Unable to getField named " + key + ": " + e.getMessage());
+		}
+	}
+
+	@Override
+	public TransferSettings setField(String key, String value) throws StorageException {
 
 		try {
 			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
@@ -93,20 +106,19 @@ public abstract class TransferSettings implements ConnectionTO {
 				f.setAccessible(true);
 				String fName = f.getName();
 				Type fType = f.getType();
-				if (keyValueMap.containsKey(fName)) {
-					String fValue = keyValueMap.get(fName);
+				if (key.equalsIgnoreCase(fName)) {
 
 					if (f.getType() == Integer.TYPE) {
-						f.setInt(this, Integer.parseInt(fValue));
+						f.setInt(this, Integer.parseInt(value));
 					}
 					else if (fType == Boolean.TYPE) {
-						f.setBoolean(this, Boolean.parseBoolean(fValue));
+						f.setBoolean(this, Boolean.parseBoolean(value));
 					}
 					else if (fType == String.class) {
-						f.set(this, fValue);
+						f.set(this, value);
 					}
 					else if (fType == File.class) {
-						f.set(this, new File(fValue));
+						f.set(this, new File(value));
 					}
 				}
 			}
