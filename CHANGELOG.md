@@ -3,7 +3,8 @@ Change Log
 
 ### Syncany 0.1.11-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
-- Nothing here yet.
+- Bugfixes and other things:
+  + Amazon S3 plugin now uses proxy setitngs #228
 
 ### Syncany 0.1.10-alpha (Date: 16 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
