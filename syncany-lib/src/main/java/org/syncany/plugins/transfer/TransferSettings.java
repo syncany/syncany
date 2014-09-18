@@ -138,7 +138,7 @@ public abstract class TransferSettings implements ConnectionTO {
 		try {
 			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
 				f.setAccessible(true);
-				if (f.getAnnotationsByType(Element.class)[0].required() && f.get(this) == null) {
+				if (f.getAnnotation(Element.class).required() && f.get(this) == null) {
 					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), f.getName() });
 					return false;
 				}

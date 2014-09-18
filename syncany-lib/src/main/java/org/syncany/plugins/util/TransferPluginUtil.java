@@ -19,6 +19,7 @@ package org.syncany.plugins.util;
 
 import org.syncany.plugins.annotations.PluginManager;
 import org.syncany.plugins.annotations.PluginSettings;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
@@ -30,24 +31,26 @@ import org.syncany.plugins.transfer.TransferSettings;
 
 public abstract class TransferPluginUtil {
 
-	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
+	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass)
+			throws StorageException {
 
 		PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
 
 		if (settings == null) {
-			return null;
+			throw new StorageException("There are no transfer settings attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 
 		return settings.value();
 
 	}
 
-	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
+	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass)
+			throws StorageException {
 
 		PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
 
 		if (manager == null) {
-			return null;
+			throw new StorageException("There is no transfer manager attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 
 		return manager.value();
