@@ -49,12 +49,7 @@ public abstract class TransferPlugin extends Plugin {
 	 *
 	 * <p>The created instance must be filled with sensible connection details
 	 * and then initialized with the <tt>init()</tt> method.
-	*
-	* @deprecated
 	 */
-	public final TransferSettings createSettings() throws StorageException {
-		return createEmptySettings();
-	}
 
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
 

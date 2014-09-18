@@ -82,7 +82,7 @@ public abstract class AbstractTransferManagerTest {
 	public void testConnectWithInvalidSettings() throws StorageException {
 		TransferPlugin plugin = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		TransferSettings connection = plugin.createSettings();
+		TransferSettings connection = plugin.createEmptySettings();
 
 		// This should cause a Storage exception, because the path does not exist
 		TransferManager transferManager = plugin.createTransferManager(connection, null);
@@ -186,7 +186,7 @@ public abstract class AbstractTransferManagerTest {
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
 		TransferPlugin pluginInfo = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		TransferSettings connection = pluginInfo.createSettings();
+		TransferSettings connection = pluginInfo.createEmptySettings();
 		for (Map.Entry<String, String> pair : createPluginSettings().entrySet()) {
 			connection.setField(pair.getKey(), pair.getValue());
 		}
