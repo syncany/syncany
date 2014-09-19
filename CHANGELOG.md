@@ -1,13 +1,19 @@
 Change Log
 ==========
 
-### Syncany 0.1.10-alpha (Date: Tbd.)
+### Syncany 0.1.11-alpha (Date: Tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes and other things:
+  + Amazon S3 plugin now uses proxy setitngs #228
+
+### Syncany 0.1.10-alpha (Date: 16 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - **Breaks compatiblity to 0.1.9-alpha repositories!**
 - Features and significant changes:
   + Atomicity for changing operations (up/cleanup, major!) #64
   + Combined `sy` and `syd` script into one #210
   + Add folder to daemon config in `sy init` #215/#153
+  + Bash completion for Arch Linux users #220
 - Bugfixes and other things:
   + Fix daemon tests #185
   + Rewrite bash completion, fixes --localdir issue #209

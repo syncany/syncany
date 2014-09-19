@@ -6,7 +6,7 @@ pkgdesc="Cloud storage and filesharing application with a focus on security and 
 arch=(any)
 url=https://www.syncany.org/
 license=(GPL3)
-depends=('java-runtime>=7')
+depends=('java-runtime>=7', 'bash-completion')
 makedepends=(git)
 source=("${pkgname}"::'git+http://github.com/syncany/syncany')
 md5sums=('SKIP')
@@ -23,6 +23,7 @@ build(){
 
 package(){
     install -Dm755 "$srcdir/$pkgname/gradle/arch/syncany/syncany" "${pkgdir}/usr/bin/syncany"
+    install -Dm755 "$srcdir/$pkgname/gradle/bash/syncany.bash-completion" "${pkgdir}/etc/bash_completion.d/"
 
     cd "$srcdir/$pkgname/build/install/syncany/lib"
     for jar in *; do
