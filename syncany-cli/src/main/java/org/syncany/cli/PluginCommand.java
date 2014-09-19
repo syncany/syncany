@@ -37,21 +37,29 @@ import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
 
 public class PluginCommand extends Command {
+	private PluginOperationOptions operationOptions;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.ANY;
 	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false; // TODO [low] Doesn't have an impact if command scope is ANY
+	}
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		PluginOperationOptions operationOptions = parseOptions(operationArgs);
+		operationOptions = parseOptions(operationArgs);
 		PluginOperationResult operationResult = client.plugin(operationOptions);
 
-		printResults(operationOptions, operationResult);
+		printResults(operationResult);
 
 		return 0;
 	}
 
+	@Override
 	public PluginOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		PluginOperationOptions operationOptions = new PluginOperationOptions();
 
@@ -120,22 +128,25 @@ public class PluginCommand extends Command {
 		}
 	}
 
-	private void printResults(PluginOperationOptions operationOptions, PluginOperationResult operationResult) throws Exception {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		PluginOperationResult concreteOperationResult = (PluginOperationResult) operationResult;
+		
 		switch (operationOptions.getAction()) {
 		case LIST:
-			printResultList(operationResult);
+			printResultList(concreteOperationResult);
 			return;
 
 		case INSTALL:
-			printResultInstall(operationResult);
+			printResultInstall(concreteOperationResult);
 			return;
 
 		case REMOVE:
-			printResultRemove(operationResult);
+			printResultRemove(concreteOperationResult);
 			return;
 
 		default:
-			throw new Exception("Unknown action: " + operationOptions.getAction());
+			out.println("Unknown action: " + operationOptions.getAction());
 		}
 	}
 
@@ -277,15 +288,5 @@ public class PluginCommand extends Command {
 		}
 
 		return tableColumnWidths;
-	}
-
-	@Override
-	public void printResults(OperationResult result) {
-		// TODO [medium] Move output here.
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
 	}
 }

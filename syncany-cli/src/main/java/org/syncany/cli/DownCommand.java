@@ -41,6 +41,11 @@ public class DownCommand extends Command {
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		DownOperationOptions operationOptions = parseOptions(operationArgs);		
 		DownOperationResult operationResult = client.down(operationOptions);		
@@ -75,8 +80,10 @@ public class DownCommand extends Command {
 		return operationOptions;
 	}
 
+	@Override
 	public void printResults(OperationResult operationResult) {
 		DownOperationResult concreteOperationResult = (DownOperationResult) operationResult;
+		
 		if (concreteOperationResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 			ChangeSet changeSet = concreteOperationResult.getChangeSet();
 			
@@ -111,10 +118,5 @@ public class DownCommand extends Command {
 			out.println("Sync down skipped, no remote changes.");
 		}
 
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+	}	
 }

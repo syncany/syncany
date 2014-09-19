@@ -79,7 +79,12 @@ import org.syncany.util.StringUtil;
  * The command line client implements a typical CLI. It represents the first entry
  * point for the Syncany command line application and can be used to run all of the
  * supported commands. 
- *  
+ * 
+ * <p>The responsibilities of the command line client include the parsing and interpretation
+ * of global options (like log file, debugging), displaying of help pages, and executing 
+ * commands. It furthermore detects if a local folder is handled by the daemon and, if so,
+ * passes the command to the daemon via REST.
+ *   
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CommandLineClient extends Client {
@@ -382,18 +387,22 @@ public class CommandLineClient extends Client {
 				.setHostnameVerifier(hostnameVerifier)
 				.setDefaultCredentialsProvider(credentialsProvider)
 				.build();
-
 			
 			// Build and send request, print response
 			Request request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
 			String serverUri = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 
-			HttpPost post = new HttpPost(serverUri);
-			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
+			String xmlMessageString = MessageFactory.toRequest(request);
+			StringEntity xmlMessageEntity = new StringEntity(xmlMessageString);
+			
+			HttpPost httpPost = new HttpPost(serverUri);
+			httpPost.setEntity(xmlMessageEntity);
 
 			logger.log(Level.INFO, "Sending HTTP Request to: " + serverUri);
+			logger.log(Level.FINE, httpPost.toString());
+			logger.log(Level.FINE, xmlMessageString);
 						
-			HttpResponse httpResponse = client.execute(post);			
+			HttpResponse httpResponse = client.execute(httpPost);			
 			int exitCode = handleRestResponse(command, httpResponse);
 			
 			return exitCode;

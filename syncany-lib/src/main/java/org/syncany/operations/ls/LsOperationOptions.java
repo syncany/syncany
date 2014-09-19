@@ -17,18 +17,19 @@
  */
 package org.syncany.operations.ls;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.OperationOptions;
+
+import com.google.common.collect.Sets;
 
 public class LsOperationOptions implements OperationOptions {
 	private Date date = null;
 	private String pathExpression = null;	
 	private boolean recursive = false;
-	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
+	private HashSet<FileType> fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
 	private boolean fetchHistories;
 	
 	public Date getDate() {
@@ -55,11 +56,11 @@ public class LsOperationOptions implements OperationOptions {
 		this.recursive = recursive;
 	}
 
-	public List<FileType> getFileTypes() {
+	public HashSet<FileType> getFileTypes() {
 		return fileTypes;
 	}
 
-	public void setFileTypes(List<FileType> fileTypes) {
+	public void setFileTypes(HashSet<FileType> fileTypes) {
 		this.fileTypes = fileTypes;
 	}
 

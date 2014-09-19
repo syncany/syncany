@@ -62,7 +62,6 @@ public abstract class Command {
 	 * @return Returns a return code
 	 * @throws Exception If the command or the corresponding operation fails 
 	 */
-	// TODO [low] Return code of commands not used right now
 	public abstract int execute(String[] operationArgs) throws Exception;
 
 	/**
@@ -77,11 +76,29 @@ public abstract class Command {
 	 */
 	public abstract CommandScope getRequiredCommandScope();
 
-	public abstract OperationOptions parseOptions(String[] operationArgs) throws Exception;
-	public abstract void printResults(OperationResult result);
-	
+	/**
+	 * Returns whether a command can be run inside the scope of the daemon. 
+	 * 
+	 * <p>If a folder is daemon-managed, the command line client passes the command
+	 * to the daemon via REST and the daemon executes this command/operation. For some
+	 * commands, this does not make sense or is dangerous. This method allows certain
+	 * commands to be daemon-enabled, and other to be daemon-disabled.
+	 */
 	public abstract boolean canExecuteInDaemonScope();
+
+	/**
+	 * A command can typically be configured using command line options. This method
+	 * parses these command line options and returns an {@link OperationOptions} object
+	 * representing the options.
+	 */
+	public abstract OperationOptions parseOptions(String[] operationArgs) throws Exception;
 	
+	/**
+	 * A command typically prints a result to the console. This method takes an
+	 * {@link OperationResult} object and formats it to be human-readable.
+	 */
+	public abstract void printResults(OperationResult result);
+		
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
 	}

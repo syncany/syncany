@@ -37,6 +37,11 @@ public class RestoreCommand extends AbstractHistoryCommand {
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = parseOptions(operationArgs);
 		RestoreOperationResult operationResult = client.restore(operationOptions);
@@ -46,6 +51,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return 0;		
 	}
 	
+	@Override
 	public RestoreOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
@@ -78,6 +84,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 	
+	@Override
 	public void printResults(OperationResult operationResult) {
 		RestoreOperationResult concreteOperationResult = (RestoreOperationResult) operationResult;
 		
@@ -97,10 +104,5 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode());	
 		}
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
 	}
 }

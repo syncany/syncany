@@ -19,8 +19,8 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +43,19 @@ public class LsCommand extends AbstractHistoryCommand {
 	private static final int CHECKSUM_LENGTH_LONG = 40;
 	private static final int CHECKSUM_LENGTH_SHORT = 10;
 	
+	private LsOperationOptions operationOptions;
+
 	private int checksumLength;
 	private boolean groupedVersions;
-	private LsOperationOptions operationOptions;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
 	}
 
 	@Override
@@ -62,10 +68,13 @@ public class LsCommand extends AbstractHistoryCommand {
 		return 0;
 	}	
 
+	@Override
 	public LsOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		LsOperationOptions operationOptions = new LsOperationOptions();
 
 		OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<String> optionDateStr = parser.acceptsAll(asList("D", "date")).withRequiredArg();
 		OptionSpec<Void> optionRecursive = parser.acceptsAll(asList("r", "recursive"));
 		OptionSpec<String> optionFileTypes = parser.acceptsAll(asList("t", "types")).withRequiredArg();
@@ -87,7 +96,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		// --types=[tds]
 		if (options.has(optionFileTypes)) {
 			String fileTypesStr = options.valueOf(optionFileTypes).toLowerCase();
-			List<FileType> fileTypes = new ArrayList<FileType>();
+			HashSet<FileType> fileTypes = new HashSet<>();
 			
 			if (fileTypesStr.contains("f")) {
 				fileTypes.add(FileType.FILE);
@@ -123,6 +132,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 
+	@Override
 	public void printResults(OperationResult operationResult) {
 		LsOperationResult concreteOperationResult = (LsOperationResult) operationResult;
 		
@@ -130,8 +140,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileTree());
 
 		if (operationOptions.isFetchHistories()) {
-			printHistories(operationOptions, concreteOperationResult, longestSize, longestVersion);
-				
+			printHistories(operationOptions, concreteOperationResult, longestSize, longestVersion);				
 		}
 		else {
 			printTree(operationOptions, concreteOperationResult, longestSize, longestVersion);			
@@ -234,10 +243,5 @@ public class LsCommand extends AbstractHistoryCommand {
 		}
 		
 		return result;	
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return true;
 	}
 }

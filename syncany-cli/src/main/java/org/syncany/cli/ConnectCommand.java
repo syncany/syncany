@@ -21,14 +21,12 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
-import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
@@ -47,11 +45,16 @@ public class ConnectCommand extends AbstractInitCommand {
 	}
 
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		boolean retryNeeded = true;
 		boolean performOperation = true;
 
-		ConnectOperationOptions operationOptions = parseConnectOptions(operationArgs);
+		ConnectOperationOptions operationOptions = parseOptions(operationArgs);
 
 		while (retryNeeded && performOperation) {
 			ConnectOperationResult operationResult = client.connect(operationOptions, this);
@@ -72,7 +75,8 @@ public class ConnectCommand extends AbstractInitCommand {
 		return 0;
 	}
 
-	private ConnectOperationOptions parseConnectOptions(String[] operationArguments) throws OptionException, Exception {
+	@Override
+	public ConnectOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		ConnectOperationOptions operationOptions = new ConnectOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -81,7 +85,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 
-		OptionSet options = parser.parse(operationArguments);
+		OptionSet options = parser.parse(operationArgs);
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
 		// --no-interaction
@@ -117,8 +121,10 @@ public class ConnectCommand extends AbstractInitCommand {
 		return operationOptions;
 	}
 
+	@Override
 	public void printResults(OperationResult operationResult) {
 		ConnectOperationResult concreteOperationResult = (ConnectOperationResult)operationResult;
+		
 		if (concreteOperationResult.getResultCode() == ConnectResultCode.OK) {
 			out.println();
 			out.println("Repository connected, and local folder initialized.");
@@ -171,15 +177,5 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + operationResult);
 			out.println();
 		}
-	}
-
-	@Override
-	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
-		return null;
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+	}		
 }

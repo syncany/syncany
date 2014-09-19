@@ -28,6 +28,10 @@ public class LsOperationResult implements OperationResult {
 	private Map<String, FileVersion> fileTree;
 	private Map<FileHistoryId, PartialFileHistory> fileVersions;
 	
+	public LsOperationResult() {
+		// Nothing
+	}
+	
 	public LsOperationResult(Map<String, FileVersion> fileTree, Map<FileHistoryId, PartialFileHistory> fileVersions) {
 		this.fileTree = fileTree;
 		this.fileVersions = fileVersions;

@@ -28,20 +28,28 @@ import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
 	private GenlinkOperationOptions commandOptions;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		commandOptions = parseOptions(operationArgs);
+		
 		GenlinkOperationResult operationResult = client.genlink();		
 		printResults(operationResult);
 		
 		return 0;		
 	}
 	
+	@Override
 	public GenlinkOperationOptions parseOptions(String[] operationArgs) {
 		GenlinkOperationOptions commandOptions = new GenlinkOperationOptions();
 
@@ -56,6 +64,7 @@ public class GenlinkCommand extends AbstractInitCommand {
 		return commandOptions;
 	}
 	
+	@Override
 	public void printResults(OperationResult operationResult) {
 		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
 		
@@ -65,10 +74,5 @@ public class GenlinkCommand extends AbstractInitCommand {
 		}
 		
 		printLink(concreteOperationResult, commandOptions.isShortOutput());			
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+	}	
 }

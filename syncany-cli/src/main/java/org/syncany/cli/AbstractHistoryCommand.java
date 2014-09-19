@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.cli.util.CliUtil;
+import org.syncany.cli.util.CommandLineUtil;
 
 public abstract class AbstractHistoryCommand extends Command {
 	protected static final Logger logger = Logger.getLogger(AbstractHistoryCommand.class.getSimpleName());
@@ -37,7 +37,7 @@ public abstract class AbstractHistoryCommand extends Command {
 		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
 		
 		if (relativeDateMatcher.find()) {
-			long restoreDateMillies = CliUtil.parseTimePeriod(dateStr)*1000;
+			long restoreDateMillies = CommandLineUtil.parseTimePeriod(dateStr)*1000;
 			
 			Date restoreDate = new Date(System.currentTimeMillis()-restoreDateMillies);
 			
