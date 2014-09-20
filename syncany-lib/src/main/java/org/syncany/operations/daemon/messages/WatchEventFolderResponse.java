@@ -40,5 +40,17 @@ public class WatchEventFolderResponse extends Response {
 		this.root = root;
 		this.action = action;
 		this.subject = subject;
+	}
+
+	public String getRoot() {
+		return root;
+	}
+
+	public String getAction() {
+		return action;
+	}
+
+	public String getSubject() {
+		return subject;
 	}	
 }

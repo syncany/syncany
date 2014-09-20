@@ -25,6 +25,7 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.to.PortTO;
+import org.syncany.events.LocalEventBus;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
@@ -185,22 +186,5 @@ public class WatchRunner implements WatchOperationListener {
 		String action = "INDEX_END";
 		
 		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
-
-	@Override
-	public void onDownloadStart(int fileCount) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "DOWNLOAD_START";
-		
-		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
-
-	@Override
-	public void onDownloadFile(String fileName, int fileNumber) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "DOWNLOAD_FILE";
-		String subject = fileName;
-		
-		eventBus.post(new WatchEventFolderResponse(root, action, subject));
 	}
 }

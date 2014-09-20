@@ -15,13 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.watch;
+package org.syncany.config.to;
 
-import org.syncany.operations.up.UpOperationListener;
+import org.simpleframework.xml.Element;
 
-/**
- * @author Vincent Wiencek
- */
-public interface WatchOperationListener extends UpOperationListener {
-	// Nothing
+public class HooksTO {
+	@Element(name = "runAfterDown")
+	private String runAfterDownCommand;
+
+	public String getRunAfterDownCommand() {
+		return runAfterDownCommand;
+	}
+
+	public void setRunAfterDownCommand(String runAfterDownCommand) {
+		this.runAfterDownCommand = runAfterDownCommand;
+	}
 }

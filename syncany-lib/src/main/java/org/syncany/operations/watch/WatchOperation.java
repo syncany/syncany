@@ -236,7 +236,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				boolean notifyChanges = false;
 				
 				// Run down
-				DownOperationResult downResult = new DownOperation(config, options.getDownOptions(), listener).execute();
+				DownOperationResult downResult = new DownOperation(config, options.getDownOptions()).execute();
 				
 				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 					// TODO [low] Do something?

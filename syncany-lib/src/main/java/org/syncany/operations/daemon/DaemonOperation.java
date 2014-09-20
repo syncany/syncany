@@ -29,6 +29,7 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.events.LocalEventBus;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;

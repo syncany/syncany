@@ -15,12 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.down;
+package org.syncany.events;
 
-/**
- * @author Vincent Wiencek
- */
-public interface DownOperationListener {
-	public void onDownloadStart(int fileCount);
-	public void onDownloadFile(String fileName, int fileNumber);
+public class SyncEvent {
+	public enum Type { DOWNLOAD_START, DOWNLOAD_FILE, DOWNLOAD_END, OPERATION_DONE_DOWN };
+	
+	private Type type;
+	private Object[] subjects;
+	
+	public SyncEvent(Type type, Object... subjects) {
+		this.type = type;
+		this.subjects = subjects;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public Object[] getSubjects() {
+		return subjects;
+	}
 }
