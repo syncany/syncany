@@ -61,8 +61,8 @@ public class MessageFactory {
 		}
 	}
 	
-	public static Request createRequest(String requestMessageStr) throws Exception {
-		Message requestMessage = createMessage(requestMessageStr);
+	public static Request toRequest(String requestMessageXml) throws Exception {
+		Message requestMessage = toMessage(requestMessageXml);
 
 		if (!(requestMessage instanceof Request)) {
 			throw new Exception("Invalid class: Message is not a request type.");
@@ -71,8 +71,8 @@ public class MessageFactory {
 		return (Request) requestMessage;
 	}
 	
-	public static Response createResponse(String responseMessageStr) throws Exception {
-		Message responseMessage = createMessage(responseMessageStr);
+	public static Response toResponse(String responseMessageXml) throws Exception {
+		Message responseMessage = toMessage(responseMessageXml);
 
 		if (!(responseMessage instanceof Response)) {
 			throw new Exception("Invalid class: Message is not a response type.");
@@ -81,15 +81,7 @@ public class MessageFactory {
 		return (Response) responseMessage;
 	}
 	
-	public static String toResponse(Response response) throws Exception {
-		return toMessage(response);
-	}
-	
-	public static String toRequest(Request request) throws Exception {
-		return toMessage(request);
-	}
-	
-	public static Message createMessage(String messageStr) throws Exception {
+	public static Message toMessage(String messageStr) throws Exception {
 		String messageType = getMessageType(messageStr);			
 		Class<? extends Message> messageClass = getMessageClass(messageType);
 		
@@ -99,7 +91,7 @@ public class MessageFactory {
 		return message;
 	}
 	
-	private static String toMessage(Message response) throws Exception {
+	public static String toXml(Message response) throws Exception {
 		StringWriter messageWriter = new StringWriter();
 		serializer.write(response, messageWriter);
 

@@ -244,9 +244,52 @@ public class WebServer {
 		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
 		
 		return handler;
-	}	
+	}		
 
+	@Subscribe
+	public void onGetFileResponseInternal(GetFileFolderResponseInternal fileResponseInternal) {
+		File tempFile = fileResponseInternal.getTempFile();
+		GetFileFolderResponse fileResponse = fileResponseInternal.getFileResponse();
+		
+		fileTokenTempFileCache.asMap().put(fileResponse.getTempToken(), tempFile);
+		eventBus.post(fileResponse);
+	}
+
+	@Subscribe
+	public void onResponse(Response response) {
+		try {
+			// Serialize response
+			String responseMessage = MessageFactory.toXml(response);
+			
+			// Send to one or many receivers
+			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
+
+			if (responseWithoutRequest) {
+				sendBroadcast(responseMessage);
+			}
+			else {
+				HttpServerExchange responseToHttpServerExchange = requestIdRestSocketCache.asMap().get(response.getRequestId());
+				WebSocketChannel responseToWebSocketChannel = requestIdWebSocketCache.asMap().get(response.getRequestId());
+
+				if (responseToHttpServerExchange != null) {
+					sendTo(responseToHttpServerExchange, responseMessage);
+				}				
+				else if (responseToWebSocketChannel != null) {
+					sendTo(responseToWebSocketChannel, responseMessage);
+				}
+				else {
+					logger.log(Level.WARNING, "Cannot send message, because request ID in response is unknown or timed out." + responseMessage);
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private void sendBroadcast(String message) {
+		logger.log(Level.INFO, "Sending broadcast message to " + clientChannels.size() + " websocket client(s)");
+
 		synchronized (clientChannels) {
 			for (WebSocketChannel clientChannel : clientChannels) {
 				sendTo(clientChannel, message);
@@ -264,49 +307,6 @@ public class WebServer {
 		
 		serverExchange.getResponseSender().send(message);
 		serverExchange.endExchange();
-	}
-
-	@Subscribe
-	public void onGetFileResponseInternal(GetFileFolderResponseInternal fileResponseInternal) {
-		File tempFile = fileResponseInternal.getTempFile();
-		GetFileFolderResponse fileResponse = fileResponseInternal.getFileResponse();
-		
-		fileTokenTempFileCache.asMap().put(fileResponse.getTempToken(), tempFile);
-		eventBus.post(fileResponse);
-	}
-
-	@Subscribe
-	public void onResponse(Response response) {
-		try {
-			// Serialize response
-			String responseMessage = MessageFactory.toResponse(response);
-
-			logger.log(Level.INFO, "Sending response message: " + responseMessage);
-			
-			// Send to one or many receivers
-			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
-
-			if (responseWithoutRequest) {
-				sendBroadcast(responseMessage);
-			}
-			else {
-				HttpServerExchange responseServerExchange = requestIdRestSocketCache.asMap().get(response.getRequestId());
-				WebSocketChannel responseToClientSocket = requestIdWebSocketCache.asMap().get(response.getRequestId());
-
-				if (responseServerExchange != null) {
-					sendTo(responseServerExchange, responseMessage);
-				}				
-				else if (responseToClientSocket != null) {
-					sendTo(responseToClientSocket, responseMessage);
-				}
-				else {
-					logger.log(Level.WARNING, "Cannot send message, because request ID in response is unknown or timed out." + responseMessage);
-				}
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	// Client channel access methods

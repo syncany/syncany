@@ -38,7 +38,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 	
 	@Override
 	public boolean canExecuteInDaemonScope() {
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -56,6 +56,8 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
 		OptionParser parser = new OptionParser();	
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Integer> optionRevision = parser.acceptsAll(asList("r", "revision")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionTarget = parser.acceptsAll(asList("t", "target")).withRequiredArg().ofType(String.class);
 		

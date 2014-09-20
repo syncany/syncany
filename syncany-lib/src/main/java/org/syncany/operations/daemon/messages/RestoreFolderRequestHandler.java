@@ -26,19 +26,19 @@ import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationResult;
 
-public class RestoreFileFolderRequestHandler extends FolderRequestHandler {
-	public RestoreFileFolderRequestHandler(Config config) {
+public class RestoreFolderRequestHandler extends FolderRequestHandler {
+	public RestoreFolderRequestHandler(Config config) {
 		super(config);		
 	}
 
 	@Override
 	public Response handleRequest(FolderRequest request) {
-		RestoreFileFolderRequest concreteRequest = (RestoreFileFolderRequest) request;
+		RestoreFolderRequest concreteRequest = (RestoreFolderRequest) request;
 
 		try {
 			RestoreOperation operation = new RestoreOperation(config, concreteRequest.getOptions());
 			RestoreOperationResult operationResult = operation.execute();
-			RestoreFileFolderResponse response = new RestoreFileFolderResponse(operationResult, request.getId());
+			RestoreFolderResponse response = new RestoreFolderResponse(operationResult, request.getId());
 		
 			return response;
 		}

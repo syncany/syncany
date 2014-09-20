@@ -78,7 +78,7 @@ public class InternalRestHandler implements HttpHandler {
 			logger.log(Level.INFO, "REST message received: " + message);
 	
 			try {
-				Request request = MessageFactory.createRequest(message);
+				Request request = MessageFactory.toRequest(message);
 	
 				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
 				eventBus.post(request);

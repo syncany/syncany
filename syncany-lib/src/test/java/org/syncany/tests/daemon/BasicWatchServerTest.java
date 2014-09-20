@@ -37,8 +37,8 @@ import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
 import org.syncany.operations.daemon.messages.LsFolderRequest;
 import org.syncany.operations.daemon.messages.LsFolderResponse;
-import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
-import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
+import org.syncany.operations.daemon.messages.RestoreFolderRequest;
+import org.syncany.operations.daemon.messages.RestoreFolderResponse;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
 import org.syncany.operations.daemon.messages.StatusFolderResponse;
 import org.syncany.operations.daemon.messages.api.Response;
@@ -243,7 +243,7 @@ public class BasicWatchServerTest {
 		
 		// Restore file test
 		
-		RestoreFileFolderRequest restoreRequest = new RestoreFileFolderRequest();
+		RestoreFolderRequest restoreRequest = new RestoreFolderRequest();
 		RestoreOperationOptions restoreOperationOption = new RestoreOperationOptions();
 		restoreOperationOption.setFileHistoryId(files[0].getFileHistoryId());
 		restoreOperationOption.setFileVersion(1);
@@ -256,8 +256,8 @@ public class BasicWatchServerTest {
 		
 		response = waitForResponse(70);
 		
-		assertTrue(response instanceof RestoreFileFolderResponse);
-		RestoreFileFolderResponse restoreResponse = (RestoreFileFolderResponse) response;
+		assertTrue(response instanceof RestoreFolderResponse);
+		RestoreFolderResponse restoreResponse = (RestoreFolderResponse) response;
 		
 		byte[] copyChecksum = FileUtil.createChecksum(clientA.getLocalFile("file-1.bak"), "SHA1");
 		byte[] restoreChecksum = FileUtil.createChecksum(restoreResponse.getResult().getTargetFile(), "SHA1");

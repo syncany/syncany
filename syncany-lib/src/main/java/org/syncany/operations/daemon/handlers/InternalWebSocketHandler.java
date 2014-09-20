@@ -130,7 +130,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
-			Request request = MessageFactory.createRequest(message);
+			Request request = MessageFactory.toRequest(message);
 
 			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
 			eventBus.post(request);
