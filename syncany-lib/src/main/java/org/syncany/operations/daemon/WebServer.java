@@ -281,6 +281,8 @@ public class WebServer {
 			// Serialize response
 			String responseMessage = MessageFactory.toResponse(response);
 
+			logger.log(Level.INFO, "Sending response message: " + responseMessage);
+			
 			// Send to one or many receivers
 			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
 

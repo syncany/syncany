@@ -449,7 +449,7 @@ public class CommandLineClient extends Client {
 			FolderRequest folderRequest = folderRequestClass.newInstance();
 			
 			folderRequest.setRoot(root);
-			folderRequest.setId(new Random().nextInt());
+			folderRequest.setId(Math.abs(new Random().nextInt()));
 			folderRequest.setOptions(command.parseOptions(args));
 			
 			return folderRequest;
