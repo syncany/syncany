@@ -22,6 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 
@@ -29,6 +30,11 @@ public class StatusCommand extends Command {
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
 	}
 	
 	@Override
@@ -41,7 +47,8 @@ public class StatusCommand extends Command {
 		return 0;
 	}
 
-	public StatusOperationOptions parseOptions(String[] operationArgs) {
+	@Override
+	public StatusOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = new StatusOperationOptions();
 
 		OptionParser parser = new OptionParser();	
@@ -57,17 +64,20 @@ public class StatusCommand extends Command {
 		return operationOptions;
 	}	
 
-	public void printResults(StatusOperationResult operationResult) {
-		if (operationResult.getChangeSet().hasChanges()) {
-			for (String newFile : operationResult.getChangeSet().getNewFiles()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		StatusOperationResult concreteOperationResult = (StatusOperationResult) operationResult;
+		
+		if (concreteOperationResult.getChangeSet().hasChanges()) {
+			for (String newFile : concreteOperationResult.getChangeSet().getNewFiles()) {
 				out.println("? "+newFile);
 			}
 
-			for (String changedFile : operationResult.getChangeSet().getChangedFiles()) {
+			for (String changedFile : concreteOperationResult.getChangeSet().getChangedFiles()) {
 				out.println("M "+changedFile);
 			}
 			
-			for (String deletedFile : operationResult.getChangeSet().getDeletedFiles()) {
+			for (String deletedFile : concreteOperationResult.getChangeSet().getDeletedFiles()) {
 				out.println("D "+deletedFile);
 			}						
 		}
@@ -75,5 +85,4 @@ public class StatusCommand extends Command {
 			out.println("No local changes.");
 		}
 	}
-
 }

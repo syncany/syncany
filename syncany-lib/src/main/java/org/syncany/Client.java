@@ -49,7 +49,7 @@ import org.syncany.operations.ls.LsOperation;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
-import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationResult;

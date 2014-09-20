@@ -18,6 +18,7 @@
 package org.syncany.operations.ls;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -53,9 +54,9 @@ public class LsOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");		
 
 		String pathExpression = parsePathExpression(options.getPathExpression());
-		List<FileType> fileTypes = options.getFileTypes();
+		HashSet<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes.toArray(new FileType[0]));
+		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 		
 		if (options.isFetchHistories()) {

@@ -28,7 +28,6 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationResult;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -45,6 +44,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  */
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());
+	
 	private TransferManager loadedTransferManager;
 	private SqlDatabase localDatabase;
 
@@ -74,7 +74,7 @@ public class LsRemoteOperation extends Operation {
 
 		transferManager.disconnect();
 
-		return new LsRemoteOperationResult(unknownRemoteDatabases);
+		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
 	}
 
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases)
@@ -124,18 +124,6 @@ public class LsRemoteOperation extends Operation {
 				}
 			}
 
-			return unknownRemoteDatabases;
-		}
-	}
-
-	public class LsRemoteOperationResult implements OperationResult {
-		private List<DatabaseRemoteFile> unknownRemoteDatabases;
-
-		public LsRemoteOperationResult(List<DatabaseRemoteFile> unknownRemoteDatabases) {
-			this.unknownRemoteDatabases = unknownRemoteDatabases;
-		}
-
-		public List<DatabaseRemoteFile> getUnknownRemoteDatabases() {
 			return unknownRemoteDatabases;
 		}
 	}

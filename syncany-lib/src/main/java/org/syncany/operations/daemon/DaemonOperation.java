@@ -64,7 +64,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
-	private static final String PID_FILE = "daemon.pid";
+	public static final String PID_FILE = "daemon.pid";
 
 	private File pidFile;
 	

@@ -32,10 +32,10 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.ListWatchesRequest;
-import org.syncany.operations.daemon.messages.ListWatchesResponse;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.WatchRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 
@@ -172,24 +172,23 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onRequestReceived(Request request) {
-		if (request instanceof ListWatchesRequest) {
-			processListWatchesRequest((ListWatchesRequest) request);
-		}
-		else if (request instanceof WatchRequest) {
-			processWatchRequest((WatchRequest) request);
-		}
+	public void onManagementRequestReceived(ManagementRequest request) {
+		if (request instanceof ListWatchesManagementRequest) {
+			processListWatchesRequest((ListWatchesManagementRequest) request);
+		}		
 	}
 
-	private void processListWatchesRequest(ListWatchesRequest request) {
-		eventBus.post(new ListWatchesResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
-	}
-	
-	private void processWatchRequest(WatchRequest watchRequest) {
-		File rootFolder = new File(watchRequest.getRoot());
+	@Subscribe
+	public void onFolderRequestReceived(FolderRequest folderRequest) {
+		File rootFolder = new File(folderRequest.getRoot());
 		
 		if (!watchOperations.containsKey(rootFolder)) {
-			eventBus.post(new BadRequestResponse(watchRequest.getId(), "Unknown root folder."));
+			eventBus.post(new BadRequestResponse(folderRequest.getId(), "Unknown root folder."));
 		}
 	}
+	
+	private void processListWatchesRequest(ListWatchesManagementRequest request) {
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+	}
+	
 }

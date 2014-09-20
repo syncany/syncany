@@ -26,7 +26,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 
 public class DownOperationResult implements OperationResult {
 	public enum DownResultCode {

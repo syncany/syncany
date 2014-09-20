@@ -28,6 +28,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
@@ -37,6 +38,11 @@ public class DownCommand extends Command {
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 	
 	@Override
@@ -74,9 +80,12 @@ public class DownCommand extends Command {
 		return operationOptions;
 	}
 
-	public void printResults(DownOperationResult operationResult) {
-		if (operationResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
-			ChangeSet changeSet = operationResult.getChangeSet();
+	@Override
+	public void printResults(OperationResult operationResult) {
+		DownOperationResult concreteOperationResult = (DownOperationResult) operationResult;
+		
+		if (concreteOperationResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
+			ChangeSet changeSet = concreteOperationResult.getChangeSet();
 			
 			if (changeSet.hasChanges()) {
 				List<String> newFiles = new ArrayList<String>(changeSet.getNewFiles());
@@ -100,7 +109,7 @@ public class DownCommand extends Command {
 				}		
 			}
 			else {
-				out.println(operationResult.getDownloadedUnknownDatabases().size() + " database file(s) processed.");
+				out.println(concreteOperationResult.getDownloadedUnknownDatabases().size() + " database file(s) processed.");
 			}
 			
 			out.println("Sync down finished.");
@@ -109,5 +118,5 @@ public class DownCommand extends Command {
 			out.println("Sync down skipped, no remote changes.");
 		}
 
-	}
+	}	
 }

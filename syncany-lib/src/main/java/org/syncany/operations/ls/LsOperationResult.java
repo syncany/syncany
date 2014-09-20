@@ -19,14 +19,22 @@ package org.syncany.operations.ls;
 
 import java.util.Map;
 
+import org.simpleframework.xml.ElementMap;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationResult;
 
 public class LsOperationResult implements OperationResult {
+	@ElementMap(required = false, key = "filePath", value = "fileVersion")
 	private Map<String, FileVersion> fileTree;
+	
+	@ElementMap(required = false, key = "fileHistoryId", value = "partialFileHistory")
 	private Map<FileHistoryId, PartialFileHistory> fileVersions;
+	
+	public LsOperationResult() {
+		// Nothing
+	}
 	
 	public LsOperationResult(Map<String, FileVersion> fileTree, Map<FileHistoryId, PartialFileHistory> fileVersions) {
 		this.fileTree = fileTree;

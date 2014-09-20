@@ -22,55 +22,56 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
+	private boolean shortOutput;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		GenlinkCommandOptions commandOptions = parseGenlinkOptions(operationArgs);
+		parseOptions(operationArgs);		
 		GenlinkOperationResult operationResult = client.genlink();		
-		printResults(operationResult, commandOptions);
+		
+		printResults(operationResult);
 		
 		return 0;		
 	}
 	
-	private GenlinkCommandOptions parseGenlinkOptions(String[] operationArgs) {
-		GenlinkCommandOptions commandOptions = new GenlinkCommandOptions();
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) {
+		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));		
 
-		OptionParser parser = new OptionParser();			
-		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));
-		
+		parser.allowsUnrecognizedOptions();		
 		OptionSet options = parser.parse(operationArgs);
 
 		// --short
-		commandOptions.setShortOutput(options.has(optionShort));
+		shortOutput = options.has(optionShort);
 		
-		return commandOptions;
+		return null;
 	}
 	
-	private void printResults(GenlinkOperationResult operationResult, GenlinkCommandOptions commandOptions) {
-		if (!commandOptions.isShortOutput()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
+		
+		if (!shortOutput) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(operationResult, commandOptions.isShortOutput());			
-	}
-	
-	private class GenlinkCommandOptions {
-		private boolean shortOutput = false;
-
-		public boolean isShortOutput() {
-			return shortOutput;
-		}
-
-		public void setShortOutput(boolean shortOutput) {
-			this.shortOutput = shortOutput;
-		}				
-	}
+		printLink(concreteOperationResult, shortOutput);			
+	}	
 }

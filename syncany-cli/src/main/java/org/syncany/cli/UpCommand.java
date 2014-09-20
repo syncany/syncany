@@ -23,6 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.OperationResult;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
@@ -35,6 +36,11 @@ public class UpCommand extends Command {
 	}
 
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
 		UpOperationResult operationResult = client.up(operationOptions);
@@ -44,8 +50,8 @@ public class UpCommand extends Command {
 		return 0;
 	}
 
+	@Override
 	public UpOperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// Sync up options
 		UpOperationOptions operationOptions = new UpOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -64,17 +70,20 @@ public class UpCommand extends Command {
 		return operationOptions;
 	}
 
-	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
 		return statusCommand.parseOptions(operationArgs);
 	}
 
-	public void printResults(UpOperationResult operationResult) {
-		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		UpOperationResult concreteOperationResult = (UpOperationResult)operationResult;
+		
+		if (concreteOperationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
-		else if (operationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
-			ChangeSet changeSet = operationResult.getChangeSet();
+		else if (concreteOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
+			ChangeSet changeSet = concreteOperationResult.getChangeSet();
 
 			for (String newFile : changeSet.getNewFiles()) {
 				out.println("A " + newFile);

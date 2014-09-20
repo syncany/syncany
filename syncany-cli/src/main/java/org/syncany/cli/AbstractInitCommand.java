@@ -25,9 +25,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.base.Strings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
+import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
@@ -43,6 +44,8 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
+import com.google.common.base.Strings;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
