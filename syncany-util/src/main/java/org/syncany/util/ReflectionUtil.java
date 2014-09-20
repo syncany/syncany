@@ -18,6 +18,7 @@
 package org.syncany.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,42 @@ public abstract class ReflectionUtil {
 		}
 
 		return matchedAnnotations.toArray(new Field[matchedAnnotations.size()]);
+
+	}
+
+	public static Constructor<?> getMatchingConstructorForClass(Class<?> clazz, Class<?>... find) {
+
+		// try fast matching
+		try {
+			return clazz.getConstructor(find);
+		}
+		catch (NoSuchMethodException e) {
+			// ignore
+		}
+
+		findConstructor: for (Constructor c : clazz.getConstructors()) {
+
+			if (c.getParameterTypes().length != find.length) {
+				continue;
+			}
+
+			int i = 0;
+
+			for (Class<?> t : c.getParameterTypes()) {
+
+				// TODO [low] Handle type erasure (see test)
+				if (!find[i].isAssignableFrom(t)) {
+					continue findConstructor;
+				}
+
+				++i;
+			}
+
+			return c;
+
+		}
+
+		return null;
 
 	}
 

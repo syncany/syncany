@@ -25,12 +25,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferSettings;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
@@ -44,7 +46,7 @@ public class TransferSettingsTest {
 	@Before
 	public void before() throws Exception {
 		tmpFile = File.createTempFile("syncany-transfer-settings-test", "tmp");
-		Config config = TestConfigUtil.createDummyConfig();
+		Config config = TestConfigUtil.createTestLocalConfig();
 		assertNotNull(Plugins.get("dummy"));
 		assertNotNull(config);
 	}
@@ -64,10 +66,9 @@ public class TransferSettingsTest {
 
 		final DummyTransferSettings ts = new DummyTransferSettings();
 		final DummyTransferSettings nts = new DummyTransferSettings();
-		final ConfigTO conf = new ConfigTO();
+		final ConfigTO conf = TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO();
 
 		conf.setConnectionTO(ts);
-		conf.setMachineName("test");
 
 		ts.foo = fooTest;
 		ts.baz = bazTest;
@@ -128,5 +129,32 @@ public class TransferSettingsTest {
 		assertFalse(ts.isValid());
 
 	}
+
+  @Test
+  public void testDeserializeCorrectClass() throws Exception {
+
+    Serializer serializer = new Persister();
+    // allways LocalTransferSettings
+    serializer.write(TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO(), tmpFile);
+
+    ConfigTO confRestored = ConfigTO.load(tmpFile);
+
+    assertEquals(LocalTransferSettings.class, confRestored.getConnectionTO().getClass());
+
+  }
+
+  @Test(expected = ElementException.class)
+  public void testDeserializeWrongClass() throws Exception {
+
+    LocalTransferSettings lts = new LocalTransferSettings();
+    lts.setRepositoryPath(tmpFile);
+
+    Serializer serializer = new Persister();
+    serializer.write(lts, tmpFile);
+
+    // boom
+    DummyTransferSettings settings = serializer.read(DummyTransferSettings.class, tmpFile);
+
+  }
 
 }

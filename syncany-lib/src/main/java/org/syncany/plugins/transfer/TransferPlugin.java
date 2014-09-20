@@ -25,6 +25,7 @@ import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.util.TransferPluginUtil;
+import org.syncany.util.ReflectionUtil;
 
 /**
  * The transfer plugin is a special plugin responsible for transferring files
@@ -48,15 +49,12 @@ public abstract class TransferPlugin extends Plugin {
 	 *
 	 * <p>The created instance must be filled with sensible connection details
 	 * and then initialized with the <tt>init()</tt> method.
-	*
-	* @deprecated
 	 */
-	public final TransferSettings createSettings() throws StorageException {
-		return createEmptySettings();
-	}
 
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
+
 		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
+
 		if (transferSettings == null) {
 			throw new StorageException("TransferPlugin does not have any settings attached!");
 		}
@@ -65,8 +63,9 @@ public abstract class TransferPlugin extends Plugin {
 			return (T) transferSettings.newInstance();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
-			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
+			throw new RuntimeException("Unable to create TransferSettings: " + e.getMessage());
 		}
+
 	}
 
 	/**
@@ -77,6 +76,7 @@ public abstract class TransferPlugin extends Plugin {
 	 * and query the remote storage for a file list.
 	 */
 	public final <T extends TransferManager> T createTransferManager(TransferSettings connection, Config config) throws StorageException {
+
 		if (!connection.isValid()) {
 			throw new StorageException("Unable to create transfermanager: connection isn't valid (perhaps missing some mandatory fields?)");
 		}
@@ -92,21 +92,15 @@ public abstract class TransferPlugin extends Plugin {
 		}
 
 		try {
-			Constructor<?>[] potentialConstructors = transferManager.getDeclaredConstructors();
-			if (potentialConstructors.length != 1) {
-				throw new StorageException("Invalid number of constructors in pluginclass -- must be 1");
-			}
-			if (potentialConstructors[0].getParameterCount() != 2) {
-				// if (potentialConstructors[0].getParameterCount() != 1 ||
-				// !TransferSettings.class.isAssignableFrom(potentialConstructors[0].getParameterTypes()[0].getClass())) { logger.log(Level.WARNING,
-				// "" + potentialConstructors[0].getParameterTypes()[0].getClass());
+			Constructor<?> potentialConstructor = ReflectionUtil.getMatchingConstructorForClass(transferManager, TransferSettings.class, Config.class);
+			if (potentialConstructor == null) {
 				throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class + " and " + Config.class);
 			}
 
-			return (T) potentialConstructors[0].newInstance(transferSettings.cast(connection), config);
+			return (T) potentialConstructor.newInstance(transferSettings.cast(connection), config);
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new StorageException("Unable to create TransferSettings: " + e.getMessage());
+			throw new RuntimeException("Unable to create TransferSettings: " + e.getMessage());
 		}
 
 	}

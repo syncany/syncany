@@ -26,8 +26,8 @@ public interface ConnectionTO {
 
 	public String getType();
 
-  public String getField(String key) throws StorageException;
+	public String getField(String key) throws StorageException;
 
-  public ConnectionTO setField(String key, String value) throws StorageException;
+	public ConnectionTO setField(String key, String value) throws StorageException;
 
 }

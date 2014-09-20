@@ -322,8 +322,8 @@ public class ConnectOperation extends AbstractInitOperation {
 				throw new StorageException("Link contains unknown connection type '" + pluginId + "'. Corresponding plugin not found.");
 			}
 
-			ConnectionTO connectionTO = new Persister().read(TransferPluginUtil.getTransferSettingsClass(plugin.getClass()),
-					pluginSettingsInputStream);
+			Class<? extends TransferSettings> pluginTransferSettingsClass = TransferPluginUtil.getTransferSettingsClass(plugin.getClass());
+			ConnectionTO connectionTO = new Persister().read(pluginTransferSettingsClass, pluginSettingsInputStream);
 
 			configTO.setConnectionTO(connectionTO);
 		}
