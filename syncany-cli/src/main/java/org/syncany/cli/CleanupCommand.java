@@ -133,7 +133,7 @@ public class CleanupCommand extends Command {
 
 	@Override
 	public void printResults(OperationResult operationResult) {	
-		CleanupOperationResult concreteOperationResult = (CleanupOperationResult)operationResult;
+		CleanupOperationResult concreteOperationResult = (CleanupOperationResult) operationResult;
 
 		switch (concreteOperationResult.getResultCode()) {
 		case NOK_DIRTY_LOCAL:

@@ -123,7 +123,7 @@ public class ConnectCommand extends AbstractInitCommand {
 
 	@Override
 	public void printResults(OperationResult operationResult) {
-		ConnectOperationResult concreteOperationResult = (ConnectOperationResult)operationResult;
+		ConnectOperationResult concreteOperationResult = (ConnectOperationResult) operationResult;
 		
 		if (concreteOperationResult.getResultCode() == ConnectResultCode.OK) {
 			out.println();

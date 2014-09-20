@@ -147,7 +147,8 @@ public class InitCommand extends AbstractInitCommand {
 
 	@Override
 	public void printResults(OperationResult operationResult) {
-		InitOperationResult concreteOperationResult = (InitOperationResult)operationResult;
+		InitOperationResult concreteOperationResult = (InitOperationResult) operationResult;
+		
 		if (concreteOperationResult.getResultCode() == InitResultCode.OK) {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
