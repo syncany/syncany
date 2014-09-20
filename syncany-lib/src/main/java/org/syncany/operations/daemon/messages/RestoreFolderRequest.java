@@ -17,11 +17,13 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.restore.RestoreOperationOptions;
 
 public class RestoreFolderRequest extends FolderRequest {
+	@Element(required = true)
 	private RestoreOperationOptions options;
 
 	public RestoreOperationOptions getOptions() {
@@ -29,6 +31,6 @@ public class RestoreFolderRequest extends FolderRequest {
 	}
 
 	public void setOptions(OperationOptions options) {
-		this.options = (RestoreOperationOptions)options;
+		this.options = (RestoreOperationOptions) options;
 	}
 }

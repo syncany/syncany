@@ -37,7 +37,7 @@ import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
 
 public class PluginCommand extends Command {
-	private PluginOperationOptions operationOptions;
+	private PluginAction action;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {
@@ -51,7 +51,7 @@ public class PluginCommand extends Command {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		operationOptions = parseOptions(operationArgs);
+		PluginOperationOptions operationOptions = parseOptions(operationArgs);
 		PluginOperationResult operationResult = client.plugin(operationOptions);
 
 		printResults(operationResult);
@@ -79,7 +79,7 @@ public class PluginCommand extends Command {
 
 		// <action>
 		String actionStr = nonOptionArgs.get(0).toString();
-		PluginAction action = parsePluginAction(actionStr);
+		action = parsePluginAction(actionStr);
 
 		operationOptions.setAction(action);
 
@@ -132,7 +132,7 @@ public class PluginCommand extends Command {
 	public void printResults(OperationResult operationResult) {
 		PluginOperationResult concreteOperationResult = (PluginOperationResult) operationResult;
 		
-		switch (operationOptions.getAction()) {
+		switch (action) {
 		case LIST:
 			printResultList(concreteOperationResult);
 			return;
@@ -146,7 +146,7 @@ public class PluginCommand extends Command {
 			return;
 
 		default:
-			out.println("Unknown action: " + operationOptions.getAction());
+			out.println("Unknown action: " + action);
 		}
 	}
 

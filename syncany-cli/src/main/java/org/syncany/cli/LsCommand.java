@@ -19,16 +19,23 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.ObjectId;
@@ -39,14 +46,17 @@ import org.syncany.operations.ls.LsOperationResult;
 
 import com.google.common.base.Function;
 
-public class LsCommand extends AbstractHistoryCommand {
-	private static final int CHECKSUM_LENGTH_LONG = 40;
-	private static final int CHECKSUM_LENGTH_SHORT = 10;
+public class LsCommand extends Command {	
+	protected static final Logger logger = Logger.getLogger(LsCommand.class.getSimpleName());
 	
-	private LsOperationOptions operationOptions;
-
+	private static final int CHECKSUM_LENGTH_LONG = 40;
+	private static final int CHECKSUM_LENGTH_SHORT = 10;	
+	private static final String DATE_FORMAT_PATTERN = "yy-MM-dd HH:mm:ss";
+	private static final DateFormat DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_PATTERN);
+	
 	private int checksumLength;
 	private boolean groupedVersions;
+	private boolean fetchHistories;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
@@ -60,7 +70,7 @@ public class LsCommand extends AbstractHistoryCommand {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		operationOptions = parseOptions(operationArgs);
+		LsOperationOptions operationOptions = parseOptions(operationArgs);
 		LsOperationResult operationResult = client.ls(operationOptions);
 
 		printResults(operationResult);
@@ -114,7 +124,8 @@ public class LsCommand extends AbstractHistoryCommand {
 		}
 				
 		// --versions
-		operationOptions.setFetchHistories(options.has(optionWithVersions));
+		fetchHistories = options.has(optionWithVersions);
+		operationOptions.setFetchHistories(fetchHistories);
 		
 		// --long-checksums (display option)
 		checksumLength = (options.has(optionLongChecksums)) ? CHECKSUM_LENGTH_LONG : CHECKSUM_LENGTH_SHORT;
@@ -139,30 +150,30 @@ public class LsCommand extends AbstractHistoryCommand {
 		int longestSize = calculateLongestSize(concreteOperationResult.getFileTree());
 		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileTree());
 
-		if (operationOptions.isFetchHistories()) {
-			printHistories(operationOptions, concreteOperationResult, longestSize, longestVersion);				
+		if (fetchHistories) {
+			printHistories(concreteOperationResult, longestSize, longestVersion);				
 		}
 		else {
-			printTree(operationOptions, concreteOperationResult, longestSize, longestVersion);			
+			printTree(concreteOperationResult, longestSize, longestVersion);			
 		}
 	}
 	
-	private void printTree(LsOperationOptions operationOptions, LsOperationResult operationResult, int longestSize, int longestVersion) {
+	private void printTree(LsOperationResult operationResult, int longestSize, int longestVersion) {
 		for (FileVersion fileVersion : operationResult.getFileTree().values()) {			
 			printOneVersion(fileVersion, longestVersion, longestSize);				
 		}
 	}
 
-	private void printHistories(LsOperationOptions operationOptions, LsOperationResult operationResult, int longestSize, int longestVersion) {
+	private void printHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
 		if (groupedVersions) {
-			printGroupedHistories(operationOptions, operationResult, longestSize, longestVersion);			
+			printGroupedHistories(operationResult, longestSize, longestVersion);			
 		}
 		else {
-			printNonGroupedHistories(operationOptions, operationResult, longestSize, longestVersion);			
+			printNonGroupedHistories(operationResult, longestSize, longestVersion);			
 		}
 	}
 
-	private void printNonGroupedHistories(LsOperationOptions operationOptions, LsOperationResult operationResult, int longestSize, int longestVersion) {
+	private void printNonGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
 		for (FileVersion fileVersion : operationResult.getFileTree().values()) {
 			PartialFileHistory fileHistory = operationResult.getFileVersions().get(fileVersion.getFileHistoryId());
 			
@@ -172,7 +183,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		}	
 	}
 
-	private void printGroupedHistories(LsOperationOptions operationOptions, LsOperationResult operationResult, int longestSize, int longestVersion) {
+	private void printGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
 		Iterator<FileVersion> fileVersionIterator = operationResult.getFileTree().values().iterator();
 		
 		while (fileVersionIterator.hasNext()) {
@@ -206,7 +217,7 @@ public class LsCommand extends AbstractHistoryCommand {
 		String path = (fileVersion.getType() == FileType.SYMLINK) ? fileVersion.getPath() + " -> " + fileVersion.getLinkTarget() : fileVersion.getPath();
 
 		out.printf("%-20s %9s %4s %" + longestSize + "d %8s %" + checksumLength + "s %" + checksumLength + "s %"+longestVersion+"d %s\n", 
-				dateFormat.format(fileVersion.getUpdated()), posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), 
+				DATE_FORMAT.format(fileVersion.getUpdated()), posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), 
 				fileChecksum, fileHistoryId, fileVersion.getVersion(), path);
 	}
 	
@@ -243,5 +254,30 @@ public class LsCommand extends AbstractHistoryCommand {
 		}
 		
 		return result;	
+	}
+	
+	protected Date parseDateOption(String dateStr) throws Exception {
+		Pattern relativeDatePattern = Pattern.compile("(\\d+(?:[.,]\\d+)?)(mo|[smhdwy])");		
+		Matcher relativeDateMatcher = relativeDatePattern.matcher(dateStr);		
+		
+		if (relativeDateMatcher.find()) {
+			long restoreDateMillies = CommandLineUtil.parseTimePeriod(dateStr)*1000;
+			
+			Date restoreDate = new Date(System.currentTimeMillis()-restoreDateMillies);
+			
+			logger.log(Level.FINE, "Restore date: "+restoreDate);
+			return restoreDate;
+		}
+		else {
+			try {
+				Date restoreDate = DATE_FORMAT.parse(dateStr);
+				
+				logger.log(Level.FINE, "Restore date: "+restoreDate);
+				return restoreDate;
+			}
+			catch (Exception e) {
+				throw new Exception("Invalid '--date' argument: " + dateStr + ", use relative date or absolute format: " + DATE_FORMAT_PATTERN);
+			}
+		}		
 	}
 }

@@ -433,7 +433,7 @@ public class CommandLineClient extends Client {
 			return 1;
 		}
 		else if (response instanceof BadRequestResponse) {
-			out.println("Invalid Request : " + response.getMessage());
+			out.println(response.getMessage());
 			return 1;
 		}
 		
@@ -456,7 +456,7 @@ public class CommandLineClient extends Client {
 			throw new Exception("Cannot read request class from request type: " + commandName, e);
 		}	
 		
-		OperationOptions operationOptions = command.parseOptions(commandArgs);
+		OperationOptions operationOptions = command.parseOptions(commandArgs);	
 		int requestId = Math.abs(new Random().nextInt());
 		
 		folderRequest.setRoot(root);

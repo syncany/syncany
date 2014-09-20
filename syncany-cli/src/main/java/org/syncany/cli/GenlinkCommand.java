@@ -22,12 +22,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.genlink.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
-	private GenlinkOperationOptions commandOptions;
+	private boolean shortOutput;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
@@ -36,43 +36,42 @@ public class GenlinkCommand extends AbstractInitCommand {
 	
 	@Override
 	public boolean canExecuteInDaemonScope() {
-		return false;
+		return true;
 	}
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		commandOptions = parseOptions(operationArgs);
-		
+		parseOptions(operationArgs);		
 		GenlinkOperationResult operationResult = client.genlink();		
+		
 		printResults(operationResult);
 		
 		return 0;		
 	}
 	
 	@Override
-	public GenlinkOperationOptions parseOptions(String[] operationArgs) {
-		GenlinkOperationOptions commandOptions = new GenlinkOperationOptions();
+	public OperationOptions parseOptions(String[] operationArgs) {
+		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));		
 
-		OptionParser parser = new OptionParser();			
-		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));
-		
+		parser.allowsUnrecognizedOptions();		
 		OptionSet options = parser.parse(operationArgs);
 
 		// --short
-		commandOptions.setShortOutput(options.has(optionShort));
+		shortOutput = options.has(optionShort);
 		
-		return commandOptions;
+		return null;
 	}
 	
 	@Override
 	public void printResults(OperationResult operationResult) {
 		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
 		
-		if (!commandOptions.isShortOutput()) {
+		if (!shortOutput) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(concreteOperationResult, commandOptions.isShortOutput());			
+		printLink(concreteOperationResult, shortOutput);			
 	}	
 }

@@ -47,6 +47,11 @@ public class DebugCommand extends Command {
 	}
 
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		OptionParser parser = new OptionParser();
 		OptionSet options = parser.parse(operationArgs);	
@@ -102,10 +107,5 @@ public class DebugCommand extends Command {
 	@Override
 	public void printResults(OperationResult result) {
 		// Nothing.
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+	}	
 }
