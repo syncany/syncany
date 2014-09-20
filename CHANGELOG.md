@@ -3,6 +3,8 @@ Change Log
 
 ### Syncany 0.1.11-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Updated, more flexible WebSocket/REST-like API (basis for GUI/web) #205
 - Bugfixes and other things:
   + Amazon S3 plugin now uses proxy setitngs #228
 
