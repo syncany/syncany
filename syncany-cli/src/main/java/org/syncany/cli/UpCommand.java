@@ -22,6 +22,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
+import org.syncany.events.SyncEvent.Type;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.status.StatusOperationOptions;
@@ -29,7 +32,16 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
+import com.google.common.eventbus.Subscribe;
+
 public class UpCommand extends Command {
+	private LocalEventBus eventBus;
+	
+	public UpCommand() {
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
+	}
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -101,6 +113,17 @@ public class UpCommand extends Command {
 		}
 		else {
 			out.println("Sync up skipped, no local changes.");
+		}
+	}
+	
+	@Subscribe
+	public void onSyncEventReceived(SyncEvent syncEvent) {
+		if (syncEvent.getType() == Type.INDEXING) {
+			out.print("Indexing file tree ...\r");
+		}
+		else if (syncEvent.getType() == Type.UPLOAD_FILE) {
+			String uploadFilename = (String) syncEvent.getSubjects()[0];
+			out.print("Uploading " + uploadFilename + " ...\r");
 		}
 	}
 }

@@ -132,7 +132,7 @@ public class DownCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onWatchEventReceived(SyncEvent syncEvent) {
+	public void onSyncEventReceived(SyncEvent syncEvent) {
 		if (syncEvent.getType() == Type.DOWNLOAD_FILE) {
 			String downloadFilename = (String) syncEvent.getSubjects()[0];
 			out.print("Downloading " + downloadFilename + " ...\r");

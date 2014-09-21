@@ -51,6 +51,9 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
+import org.syncany.events.SyncEvent.Type;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -82,11 +85,14 @@ public class Indexer {
 	private SqlDatabase localDatabase;
 	private IndexerListener listener;
 	
+	private LocalEventBus eventBus;
+	
 	public Indexer(Config config, Deduper deduper, IndexerListener listener) {
 		this.config = config;
 		this.deduper = deduper;
 		this.localDatabase = new SqlDatabase(config);
 		this.listener = listener;
+		this.eventBus = LocalEventBus.getInstance();
 	}
 	
 	/**
@@ -103,6 +109,8 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
+		eventBus.post(new SyncEvent(Type.INDEXING));
+		
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();		
 		
 		// Load file history cache

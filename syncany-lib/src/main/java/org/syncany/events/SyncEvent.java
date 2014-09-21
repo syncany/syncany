@@ -18,7 +18,7 @@
 package org.syncany.events;
 
 public class SyncEvent {
-	public enum Type { DOWNLOAD_START, DOWNLOAD_FILE, DOWNLOAD_END, OPERATION_DONE_DOWN };
+	public enum Type { DOWNLOAD_START, DOWNLOAD_FILE, DOWNLOAD_END, INDEXING, UPLOAD_FILE, OPERATION_DONE_DOWN };
 	
 	private Type type;
 	private Object[] subjects;

@@ -22,6 +22,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
+import org.syncany.events.SyncEvent.Type;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -41,10 +44,13 @@ public class RemoteTransaction {
 	private Config config;
 	private TransactionTO transactionTO;
 
+	private LocalEventBus eventBus;
+
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
 		this.transactionTO = new TransactionTO(config.getMachineName());
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	/**
@@ -139,6 +145,8 @@ public class RemoteTransaction {
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
+		eventBus.post(new SyncEvent(Type.UPLOAD_FILE, remoteTransactionFile.getName()));
+		
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 
@@ -152,8 +160,10 @@ public class RemoteTransaction {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				File localFile = action.getLocalTempLocation();
 
+				eventBus.post(new SyncEvent(Type.UPLOAD_FILE, tempRemoteFile.getName()));
+
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
-				transferManager.upload(localFile, tempRemoteFile);
+				transferManager.upload(localFile, tempRemoteFile);				
 			}
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
