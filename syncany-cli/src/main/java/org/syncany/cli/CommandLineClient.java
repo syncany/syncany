@@ -63,6 +63,7 @@ import org.syncany.config.LogFormatter;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
+import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.DaemonOperation;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
@@ -79,7 +80,12 @@ import org.syncany.util.StringUtil;
  * The command line client implements a typical CLI. It represents the first entry
  * point for the Syncany command line application and can be used to run all of the
  * supported commands. 
- *  
+ * 
+ * <p>The responsibilities of the command line client include the parsing and interpretation
+ * of global options (like log file, debugging), displaying of help pages, and executing 
+ * commands. It furthermore detects if a local folder is handled by the daemon and, if so,
+ * passes the command to the daemon via REST.
+ *   
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CommandLineClient extends Client {
@@ -382,18 +388,22 @@ public class CommandLineClient extends Client {
 				.setHostnameVerifier(hostnameVerifier)
 				.setDefaultCredentialsProvider(credentialsProvider)
 				.build();
-
 			
 			// Build and send request, print response
-			Request request = buildFolderRequestFromCommand(command, commandName, config.getLocalDir().getAbsolutePath());
+			Request request = buildFolderRequestFromCommand(command, commandName, commandArgs, config.getLocalDir().getAbsolutePath());
 			String serverUri = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 
-			HttpPost post = new HttpPost(serverUri);
-			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
+			String xmlMessageString = MessageFactory.toXml(request);
+			StringEntity xmlMessageEntity = new StringEntity(xmlMessageString);
+			
+			HttpPost httpPost = new HttpPost(serverUri);
+			httpPost.setEntity(xmlMessageEntity);
 
 			logger.log(Level.INFO, "Sending HTTP Request to: " + serverUri);
+			logger.log(Level.FINE, httpPost.toString());
+			logger.log(Level.FINE, xmlMessageString);
 						
-			HttpResponse httpResponse = client.execute(post);			
+			HttpResponse httpResponse = client.execute(httpPost);			
 			int exitCode = handleRestResponse(command, httpResponse);
 			
 			return exitCode;
@@ -410,7 +420,7 @@ public class CommandLineClient extends Client {
 		String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
 		logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 		
-		Response response = MessageFactory.createResponse(responseStr);
+		Response response = MessageFactory.toResponse(responseStr);
 		
 		if (response instanceof FolderResponse) {
 			FolderResponse folderResponse = (FolderResponse) response;
@@ -423,33 +433,38 @@ public class CommandLineClient extends Client {
 			return 1;
 		}
 		else if (response instanceof BadRequestResponse) {
-			out.println("Invalid Request : " + response.getMessage());
+			out.println(response.getMessage());
 			return 1;
 		}
 		
 		return 1;
 	}
 
-	private Request buildFolderRequestFromCommand(Command command, String commandName, String root) throws Exception {
+	private Request buildFolderRequestFromCommand(Command command, String commandName, String[] commandArgs, String root) throws Exception {
 		String thisPackage = BadRequestResponse.class.getPackage().getName(); // TODO [low] Medium-dirty hack.
 		String camelCaseMessageType = StringUtil.toCamelCase(commandName) + FolderRequest.class.getSimpleName();
 		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 
+		FolderRequest folderRequest;
+		
 		try {		
 			Class<? extends FolderRequest> folderRequestClass = Class.forName(fqMessageClassName).asSubclass(FolderRequest.class);			
-			FolderRequest folderRequest = folderRequestClass.newInstance();
-			
-			folderRequest.setRoot(root);
-			folderRequest.setId(new Random().nextInt());
-			folderRequest.setOptions(command.parseOptions(args));
-			
-			return folderRequest;
-		} 
+			folderRequest = folderRequestClass.newInstance();
+		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
 			throw new Exception("Cannot read request class from request type: " + commandName, e);
-		}		
-	}
+		}	
+		
+		OperationOptions operationOptions = command.parseOptions(commandArgs);	
+		int requestId = Math.abs(new Random().nextInt());
+		
+		folderRequest.setRoot(root);
+		folderRequest.setId(requestId);
+		folderRequest.setOptions(operationOptions);
+		
+		return folderRequest;
+	} 
 
 	private PortTO readPortConfig(File portFile) {
 		try {

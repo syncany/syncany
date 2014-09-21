@@ -53,13 +53,18 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 public class InitCommand extends AbstractInitCommand {
-	private InitOperationOptions operationOptions;
-	
 	public static final int REPO_ID_LENGTH = 32;
+
+	private InitOperationOptions operationOptions;	
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.UNINITIALIZED_LOCALDIR;
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 	
 	@Override
@@ -87,6 +92,7 @@ public class InitCommand extends AbstractInitCommand {
 		return 0;		
 	}
 
+	@Override
 	public InitOperationOptions parseOptions(String[] operationArguments) throws Exception {
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
@@ -139,8 +145,10 @@ public class InitCommand extends AbstractInitCommand {
 		return operationOptions;
 	}		
 
+	@Override
 	public void printResults(OperationResult operationResult) {
-		InitOperationResult concreteOperationResult = (InitOperationResult)operationResult;
+		InitOperationResult concreteOperationResult = (InitOperationResult) operationResult;
+		
 		if (concreteOperationResult.getResultCode() == InitResultCode.OK) {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
@@ -365,10 +373,5 @@ public class InitCommand extends AbstractInitCommand {
 		cipherTransformerTO.setSettings(cipherTransformerSettings);
 
 		return cipherTransformerTO;
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
 	}
 }

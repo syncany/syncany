@@ -17,34 +17,33 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.util.logging.Level;
+import java.util.List;
 
 import org.syncany.config.Config;
+import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
-import org.syncany.operations.restore.RestoreOperation;
-import org.syncany.operations.restore.RestoreOperationResult;
 
-public class RestoreFileFolderRequestHandler extends FolderRequestHandler {
-	public RestoreFileFolderRequestHandler(Config config) {
-		super(config);		
+@Deprecated
+// TODO [medium] The file history id should be selectable via 'LsRequest'
+public class GetFileHistoryFolderRequestHandler extends FolderRequestHandler {
+	private SqlDatabase localDatabase;
+
+	public GetFileHistoryFolderRequestHandler(Config config) {
+		super(config);
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override
 	public Response handleRequest(FolderRequest request) {
-		RestoreFileFolderRequest concreteRequest = (RestoreFileFolderRequest) request;
-
-		try {
-			RestoreOperation operation = new RestoreOperation(config, concreteRequest.getOptions());
-			RestoreOperationResult operationResult = operation.execute();
-			RestoreFileFolderResponse response = new RestoreFileFolderResponse(operationResult, request.getId());
+		GetFileHistoryFolderRequest concreteRequest = (GetFileHistoryFolderRequest) request;
 		
-			return response;
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot obtain status.", e);
-			return new BadRequestResponse(request.getId(), "Cannot execute operation: " + e.getMessage());
-		}		
+		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(concreteRequest.getFileHistoryId());
+		List<FileVersion> fileHistory = localDatabase.getFileHistory(fileHistoryId);
+		
+		return new GetFileHistoryFolderResponse(concreteRequest.getId(), concreteRequest.getRoot(), fileHistory);			
 	}
 }

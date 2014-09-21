@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
@@ -210,7 +211,7 @@ public class SqlDatabase {
 		return fileVersionDao.getFileTreeAtDate(date);
 	}
 
-	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, FileType... fileTypes) {
+	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, Set<FileType> fileTypes) {
 		return fileVersionDao.getFileTree(filter, date, recursive, fileTypes);
 	}
 

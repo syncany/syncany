@@ -18,9 +18,6 @@
 package org.syncany.operations.daemon;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,25 +25,8 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.to.PortTO;
-import org.syncany.database.ChunkEntry.ChunkChecksum;
-import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.FileContent;
-import org.syncany.database.FileVersion;
-import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.database.ObjectId;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.database.SqlDatabase;
-import org.syncany.operations.Assembler;
-import org.syncany.operations.Downloader;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderRequest;
-import org.syncany.operations.daemon.messages.GetDatabaseVersionHeadersFolderResponse;
-import org.syncany.operations.daemon.messages.GetFileFolderRequest;
-import org.syncany.operations.daemon.messages.GetFileFolderResponse;
-import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
-import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
-import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
 import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
@@ -55,8 +35,6 @@ import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.operations.watch.WatchOperationResult;
-import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.util.StringUtil;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -77,14 +55,10 @@ public class WatchRunner implements WatchOperationListener {
 	private WatchOperationResult watchOperationResult;
 	private LocalEventBus eventBus;
 
-	private SqlDatabase localDatabase;
-
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
-
-		this.localDatabase = new SqlDatabase(config);
 
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
@@ -145,7 +119,10 @@ public class WatchRunner implements WatchOperationListener {
 					
 					FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
 					Response response = handler.handleRequest(folderRequest);
-					eventBus.post(response);
+					
+					if (response != null) {
+						eventBus.post(response);
+					}
 					
 					watchOperation.resume();
 				}
@@ -157,67 +134,9 @@ public class WatchRunner implements WatchOperationListener {
 			catch (Exception e) {
 				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));
 			}
-			
-			/*
-			else if (folderRequest instanceof GetFileHistoryFolderRequest) {
-				handleGetFileHistoryRequest((GetFileHistoryFolderRequest) folderRequest);			
-			}
-			else if (folderRequest instanceof GetFileFolderRequest) {
-				handleGetFileRequest((GetFileFolderRequest) folderRequest);
-			}
-			else if (folderRequest instanceof GetDatabaseVersionHeadersFolderRequest) {
-				handleGetDatabaseVersionHeadersRequest((GetDatabaseVersionHeadersFolderRequest) folderRequest);			
-			}
-			else {
-				
-			}*/
 		}		
 	}
-
-	private void handleGetFileRequest(GetFileFolderRequest fileRequest) {
-		try {
-			FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileRequest.getFileHistoryId());
-			long version = fileRequest.getVersion();
-
-			FileVersion fileVersion = localDatabase.getFileVersion(fileHistoryId, version);
-			FileContent fileContent = localDatabase.getFileContent(fileVersion.getChecksum(), true);
-			Map<ChunkChecksum, MultiChunkId> multiChunks = localDatabase.getMultiChunkIdsByChecksums(fileContent.getChunks());
-
-			TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
-			Downloader downloader = new Downloader(config, transferManager);
-			Assembler assembler = new Assembler(config, localDatabase);
-
-			downloader.downloadAndDecryptMultiChunks(new HashSet<MultiChunkId>(multiChunks.values()));
-
-			File tempFile = assembler.assembleToCache(fileVersion);
-			String tempFileToken = StringUtil.toHex(ObjectId.secureRandomBytes(40));
-			
-			GetFileFolderResponse fileResponse = new GetFileFolderResponse(fileRequest.getId(), fileRequest.getRoot(), tempFileToken);
-			GetFileFolderResponseInternal fileResponseInternal = new GetFileFolderResponseInternal(fileResponse, tempFile);
-
-			eventBus.post(fileResponseInternal);
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot reassemble file.", e);
-			eventBus.post(new BadRequestResponse(fileRequest.getId(), "Cannot reassemble file."));
-		}
-	}
 	
-	private void handleGetFileHistoryRequest(GetFileHistoryFolderRequest fileHistoryRequest) {
-		FileHistoryId fileHistoryId = FileHistoryId.parseFileId(fileHistoryRequest.getFileHistoryId());
-		List<FileVersion> fileHistory = localDatabase.getFileHistory(fileHistoryId);
-		GetFileHistoryFolderResponse fileHistoryRespose = new GetFileHistoryFolderResponse(fileHistoryRequest.getId(), fileHistoryRequest.getRoot(), fileHistory);
-		
-		eventBus.post(fileHistoryRespose);
-	}
-	
-	private void handleGetDatabaseVersionHeadersRequest(GetDatabaseVersionHeadersFolderRequest headersRequest) {
-		List<DatabaseVersionHeader> databaseVersionHeaders = localDatabase.getNonEmptyDatabaseVersionHeaders(); 
-		GetDatabaseVersionHeadersFolderResponse headersResponse = new GetDatabaseVersionHeadersFolderResponse(headersRequest.getId(), headersRequest.getRoot(), databaseVersionHeaders);
-		
-		eventBus.post(headersResponse);
-	}
-
 	@Override
 	public void onUploadStart(int fileCount) {
 		String root = config.getLocalDir().getAbsolutePath();

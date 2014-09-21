@@ -20,6 +20,7 @@ package org.syncany.cli;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -30,10 +31,17 @@ import org.syncany.operations.OperationResult;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
 
-public class RestoreCommand extends AbstractHistoryCommand {
+public class RestoreCommand extends Command {
+	protected static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
+
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+	
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
 	}
 	
 	@Override
@@ -46,10 +54,13 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return 0;		
 	}
 	
+	@Override
 	public RestoreOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
 		OptionParser parser = new OptionParser();	
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Integer> optionRevision = parser.acceptsAll(asList("r", "revision")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionTarget = parser.acceptsAll(asList("t", "target")).withRequiredArg().ofType(String.class);
 		
@@ -78,6 +89,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 	
+	@Override
 	public void printResults(OperationResult operationResult) {
 		RestoreOperationResult concreteOperationResult = (RestoreOperationResult) operationResult;
 		
@@ -97,10 +109,5 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode());	
 		}
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
 	}
 }

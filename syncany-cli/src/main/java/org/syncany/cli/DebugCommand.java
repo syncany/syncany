@@ -31,7 +31,6 @@ import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.ls.LsOperation;
 
 /**
  * Intentionally undocumented command to help debugging the application. Implements various
@@ -40,11 +39,16 @@ import org.syncany.operations.ls.LsOperation;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DebugCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(DebugCommand.class.getSimpleName());
 
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 
 	@Override
@@ -103,10 +107,5 @@ public class DebugCommand extends Command {
 	@Override
 	public void printResults(OperationResult result) {
 		// Nothing.
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+	}	
 }

@@ -36,7 +36,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.cli.InitConsole;
+import org.syncany.cli.util.InitConsole;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestCliUtil;
@@ -92,7 +92,8 @@ public class ConnectCommandWithEncryptionTest {
 		TestCliUtil.setCurrentDirectory(localDirB);
 
 		String[] connectArgs = new String[] {
-				"connect"
+				"connect",
+				"--no-daemon"
 		};
 
 		System.out.println("repopath = " + clientB.get("repopath"));
@@ -132,6 +133,7 @@ public class ConnectCommandWithEncryptionTest {
 
 		String[] connectArgs = new String[] {
 				"connect",
+				"--no-daemon",
 				initializedRepoConnectLink
 		};
 
@@ -187,7 +189,8 @@ public class ConnectCommandWithEncryptionTest {
 		TestCliUtil.setCurrentDirectory(tempLocalDirA);
 
 		String[] initArgs = new String[] {
-				"init"
+				"init",
+				"--no-daemon"
 		};
 
 		systemInMock.provideText(StringUtil.join(new String[] {

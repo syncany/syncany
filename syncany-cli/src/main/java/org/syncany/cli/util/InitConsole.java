@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.cli;
+package org.syncany.cli.util;
 
 import java.io.BufferedReader;
 import java.io.Console;

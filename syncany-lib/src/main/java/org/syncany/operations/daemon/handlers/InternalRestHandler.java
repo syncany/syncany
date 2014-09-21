@@ -74,11 +74,11 @@ public class InternalRestHandler implements HttpHandler {
 			}
 		}
 		else {	
-			String message = IOUtils.toString(exchange.getInputStream());
+			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
 			logger.log(Level.INFO, "REST message received: " + message);
 	
 			try {
-				Request request = MessageFactory.createRequest(message);
+				Request request = MessageFactory.toRequest(message);
 	
 				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
 				eventBus.post(request);

@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -208,7 +210,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean recursive, FileType... fileTypes) {
+	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean recursive, Set<FileType> fileTypes) {
 		// Determine sensible query parameters
 		// Basic idea: If null/empty given, match them all!
 		
@@ -239,14 +241,17 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	private String[] createFileTypesArray(FileType[] fileTypes) {
+	private String[] createFileTypesArray(Set<FileType> fileTypes) {
 		String[] fileTypesStr = null;
 		
 		if (fileTypes != null) {
-			fileTypesStr = new String[fileTypes.length];
+			fileTypesStr = new String[fileTypes.size()];
 
-			for (int i = 0; i < fileTypes.length; i++) {
-				fileTypesStr[i] = fileTypes[i].toString();
+			int i = 0;
+			Iterator<FileType> fileTypeIterator = fileTypes.iterator();
+			
+			while (fileTypeIterator.hasNext()) {
+				fileTypesStr[i++] = fileTypeIterator.next().toString();
 			}
 		}
 		else {

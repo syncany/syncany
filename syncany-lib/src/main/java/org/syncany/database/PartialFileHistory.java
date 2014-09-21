@@ -42,6 +42,10 @@ public class PartialFileHistory {
     
     private FileHistoryId fileHistoryId;
     private TreeMap<Long, FileVersion> versions;
+        
+    public PartialFileHistory() {
+    	// Required for SimpleXML.
+    }
     
     /**
      * Creates a new file history instance, given a {@link FileHistoryId} as identifier

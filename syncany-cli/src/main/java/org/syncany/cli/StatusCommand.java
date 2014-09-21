@@ -31,6 +31,11 @@ public class StatusCommand extends Command {
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
@@ -79,10 +84,5 @@ public class StatusCommand extends Command {
 		else {
 			out.println("No local changes.");
 		}
-	}
-
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return true;
 	}
 }

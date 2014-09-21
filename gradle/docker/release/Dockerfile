@@ -13,7 +13,7 @@ MAINTAINER Philipp Heckel <philipp.heckel@gmail.com>
 
 # Install Syncany and dependencies
 RUN apt-get update
-RUN apt-get install -y wget openjdk-7-jre-headless vim
+RUN apt-get install -y wget openjdk-7-jre-headless vim bash-completion
 RUN wget -O syncany.deb https://syncany.org/r/latest.deb
 RUN dpkg -i syncany.deb
 RUN rm syncany.deb

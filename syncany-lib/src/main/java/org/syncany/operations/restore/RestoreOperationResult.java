@@ -29,6 +29,10 @@ public class RestoreOperationResult implements OperationResult {
 	private RestoreResultCode resultCode;
 	private File targetFile;
 	
+	public RestoreOperationResult() {
+		// Nothing.
+	}
+	
 	public RestoreOperationResult(RestoreResultCode resultCode) {
 		this(resultCode, null);
 	}

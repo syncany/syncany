@@ -15,28 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.init;
+package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.OperationResult;
+import org.simpleframework.xml.Element;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.restore.RestoreOperationOptions;
 
-public class GenlinkOperationResult implements OperationResult {
-    private String shareLink;
-	private boolean shareLinkEncrypted;
-    
-	public GenlinkOperationResult() {
-		// Required.
-	}
-	
-	public GenlinkOperationResult(String shareLink, boolean shareLinkEncrypted) {
-		this.shareLink = shareLink;
-		this.shareLinkEncrypted = shareLinkEncrypted;
+public class RestoreFolderRequest extends FolderRequest {
+	@Element(required = true)
+	private RestoreOperationOptions options;
+
+	public RestoreOperationOptions getOptions() {
+		return options;
 	}
 
-	public String getShareLink() {
-		return shareLink;
+	public void setOptions(OperationOptions options) {
+		this.options = (RestoreOperationOptions) options;
 	}
-
-	public boolean isShareLinkEncrypted() {
-		return shareLinkEncrypted;
-	}   				
 }

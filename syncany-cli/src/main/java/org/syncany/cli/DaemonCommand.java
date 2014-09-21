@@ -28,6 +28,11 @@ public class DaemonCommand extends Command {
 	}
 
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		new DaemonOperation(client.getConfig()).execute();		
 		return 0;
@@ -40,12 +45,6 @@ public class DaemonCommand extends Command {
 
 	@Override
 	public void printResults(OperationResult result) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
-	}
+		// Nothing.
+	}	
 }

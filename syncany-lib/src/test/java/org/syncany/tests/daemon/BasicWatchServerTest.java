@@ -22,10 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -40,11 +37,13 @@ import org.syncany.operations.daemon.messages.GetFileHistoryFolderRequest;
 import org.syncany.operations.daemon.messages.GetFileHistoryFolderResponse;
 import org.syncany.operations.daemon.messages.LsFolderRequest;
 import org.syncany.operations.daemon.messages.LsFolderResponse;
-import org.syncany.operations.daemon.messages.RestoreFileFolderRequest;
-import org.syncany.operations.daemon.messages.RestoreFileFolderResponse;
+import org.syncany.operations.daemon.messages.RestoreFolderRequest;
+import org.syncany.operations.daemon.messages.RestoreFolderResponse;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
 import org.syncany.operations.daemon.messages.StatusFolderResponse;
 import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.ls.LsOperationOptions;
+import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
@@ -117,13 +116,15 @@ public class BasicWatchServerTest {
 		Thread.sleep(100);
 		
 		// Repeat request until 3 files are found.
-		List<FileVersion> files = new ArrayList<FileVersion>();
+		FileVersion[] files = null;
 		
 		for (int i = 0; i < 20; i++) {
 			LsFolderRequest request = new LsFolderRequest();
+			LsOperationOptions lsOperationOption = new LsOperationOptions();
+			
 			request.setId(i);
 			request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-				
+			request.setOptions(lsOperationOption);
 			eventBus.post(request);
 			
 			Response response = waitForResponse(i);
@@ -131,50 +132,50 @@ public class BasicWatchServerTest {
 			assertTrue(response instanceof LsFolderResponse);
 			LsFolderResponse treeResponse = (LsFolderResponse) response;
 			
-			files = treeResponse.getFiles();
+			files = treeResponse.getResult().getFileTree().values().toArray(new FileVersion[]{});
 			
-			if (files.size() == 2) {
+			if (files.length == 2) {
 				break;
 			}
 			
 			if (i == 19) {
-				assertEquals(2, files.size());
+				assertEquals(2, files.length);
 			}
 			else {
 				Thread.sleep(1000);
 			}
 		}
 		
-		if (files.get(0).getName().equals("folder")) {
-			files = Arrays.asList(new FileVersion[]{files.get(1), files.get(0)});
+		if (files[0].getName().equals("folder")) {
+			files = new FileVersion[]{files[1], files[0]};
 		}
 
-		assertEquals(clientA.getLocalFile("file-1").getName(), files.get(0).getName());
-		assertEquals(clientA.getLocalFile("file-1").length(), (long) files.get(0).getSize());
+		assertEquals(clientA.getLocalFile("file-1").getName(), files[0].getName());
+		assertEquals(clientA.getLocalFile("file-1").length(), (long) files[0].getSize());
 
-		assertEquals(clientA.getLocalFile("folder").getName(), files.get(1).getName());
+		assertEquals(clientA.getLocalFile("folder").getName(), files[1].getName());
 		assertTrue(clientA.getLocalFile("folder").isDirectory());
-		assertEquals(files.get(1).getType(), FileVersion.FileType.FOLDER);
+		assertEquals(files[1].getType(), FileVersion.FileType.FOLDER);
 
 		// Create GetFileHistoryRequest for the first returned file
 		GetFileHistoryFolderRequest request = new GetFileHistoryFolderRequest();
 		request.setId(21);
 		request.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-		request.setFileHistoryId(files.get(0).getFileHistoryId().toString());
-						
+		request.setFileHistoryId(files[0].getFileHistoryId().toString());
+		
 		eventBus.post(request);
 		
 		Response response = waitForResponse(21);
 		assertTrue(response instanceof GetFileHistoryFolderResponse);
 		GetFileHistoryFolderResponse fileHistoryResponse = (GetFileHistoryFolderResponse) response;
 		assertEquals(1, fileHistoryResponse.getFiles().size());
-		assertEquals(files.get(0), fileHistoryResponse.getFiles().get(0));
+		assertEquals(files[0], fileHistoryResponse.getFiles().get(0));
 		
 		// Create GetFileRequest for the first returned file
 		GetFileFolderRequest getFileRequest = new GetFileFolderRequest();
 		getFileRequest.setId(22);
 		getFileRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-		getFileRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
+		getFileRequest.setFileHistoryId(files[0].getFileHistoryId().toString());
 		getFileRequest.setVersion(1);		
 				
 		eventBus.post(getFileRequest);
@@ -185,7 +186,7 @@ public class BasicWatchServerTest {
 			i++;
 		}
 		
-		assertEquals((long)files.get(0).getSize(), internalResponse.getTempFile().length());
+		assertEquals((long)files[0].getSize(), internalResponse.getTempFile().length());
 		
 		// Cli Requests
 		clientA.copyFile("file-1", "file-1.bak");
@@ -203,7 +204,6 @@ public class BasicWatchServerTest {
 		clientA.createNewFile("bigfileforlongsync", 5000);
 
 		// ^^ Now sync should start and we send 'status' requests
-		StatusFolderResponse statusResponse = null;
 		boolean syncRunningMessageReceived = false;
 		
 		for (i = 30; i < 50; i++) {
@@ -243,21 +243,24 @@ public class BasicWatchServerTest {
 		
 		// Restore file test
 		
-		RestoreFileFolderRequest restoreRequest = new RestoreFileFolderRequest();
+		RestoreFolderRequest restoreRequest = new RestoreFolderRequest();
+		RestoreOperationOptions restoreOperationOption = new RestoreOperationOptions();
+		restoreOperationOption.setFileHistoryId(files[0].getFileHistoryId());
+		restoreOperationOption.setFileVersion(1);
+		
 		restoreRequest.setId(70);
 		restoreRequest.setRoot(clientA.getConfig().getLocalDir().getAbsolutePath());
-		restoreRequest.setFileHistoryId(files.get(0).getFileHistoryId().toString());
-		restoreRequest.setVersion(1);
+		restoreRequest.setOptions(restoreOperationOption);
 		
 		eventBus.post(restoreRequest);
 		
 		response = waitForResponse(70);
 		
-		assertTrue(response instanceof RestoreFileFolderResponse);
-		RestoreFileFolderResponse restoreResponse = (RestoreFileFolderResponse) response;
+		assertTrue(response instanceof RestoreFolderResponse);
+		RestoreFolderResponse restoreResponse = (RestoreFolderResponse) response;
 		
 		byte[] copyChecksum = FileUtil.createChecksum(clientA.getLocalFile("file-1.bak"), "SHA1");
-		byte[] restoreChecksum = FileUtil.createChecksum(restoreResponse.getRestoredFile(), "SHA1");
+		byte[] restoreChecksum = FileUtil.createChecksum(restoreResponse.getResult().getTargetFile(), "SHA1");
 		
 		assertArrayEquals(copyChecksum, restoreChecksum);
 		watchServer.stop();

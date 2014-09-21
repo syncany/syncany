@@ -17,19 +17,39 @@
  */
 package org.syncany.operations.ls;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.OperationOptions;
 
+import com.google.common.collect.Sets;
+
 public class LsOperationOptions implements OperationOptions {
-	private Date date = null;
-	private String pathExpression = null;	
-	private boolean recursive = false;
-	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
+	@Element(required = false)
+	private Date date;
+
+	@Element(required = false)
+	private String pathExpression;	
+
+	@Element(required = false)
+	private boolean recursive;
+
+	@ElementList(required = false, entry = "fileType")
+	private HashSet<FileType> fileTypes;
+
+	@Element(required = false)
 	private boolean fetchHistories;
+	
+	public LsOperationOptions() {
+		this.date = null;
+		this.pathExpression = null;
+		this.recursive = false;
+		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
+		this.fetchHistories = false;
+	}
 	
 	public Date getDate() {
 		return date;
@@ -55,11 +75,11 @@ public class LsOperationOptions implements OperationOptions {
 		this.recursive = recursive;
 	}
 
-	public List<FileType> getFileTypes() {
+	public HashSet<FileType> getFileTypes() {
 		return fileTypes;
 	}
 
-	public void setFileTypes(List<FileType> fileTypes) {
+	public void setFileTypes(HashSet<FileType> fileTypes) {
 		this.fileTypes = fileTypes;
 	}
 

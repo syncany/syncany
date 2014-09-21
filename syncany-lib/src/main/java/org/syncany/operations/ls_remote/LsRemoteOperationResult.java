@@ -15,28 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.init;
+package org.syncany.operations.ls_remote;
+
+import java.util.ArrayList;
 
 import org.syncany.operations.OperationResult;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
-public class GenlinkOperationResult implements OperationResult {
-    private String shareLink;
-	private boolean shareLinkEncrypted;
-    
-	public GenlinkOperationResult() {
-		// Required.
+public class LsRemoteOperationResult implements OperationResult {
+	private ArrayList<DatabaseRemoteFile> unknownRemoteDatabases;
+
+	public LsRemoteOperationResult() {
+		// Nothing.
 	}
 	
-	public GenlinkOperationResult(String shareLink, boolean shareLinkEncrypted) {
-		this.shareLink = shareLink;
-		this.shareLinkEncrypted = shareLinkEncrypted;
+	public LsRemoteOperationResult(ArrayList<DatabaseRemoteFile> unknownRemoteDatabases) {
+		this.unknownRemoteDatabases = unknownRemoteDatabases;
 	}
 
-	public String getShareLink() {
-		return shareLink;
+	public ArrayList<DatabaseRemoteFile> getUnknownRemoteDatabases() {
+		return unknownRemoteDatabases;
 	}
-
-	public boolean isShareLinkEncrypted() {
-		return shareLinkEncrypted;
-	}   				
 }

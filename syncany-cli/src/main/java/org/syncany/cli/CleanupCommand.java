@@ -22,7 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.cli.util.CliUtil;
+import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
@@ -36,6 +36,11 @@ public class CleanupCommand extends Command {
 	}
 
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		CleanupOperationOptions operationOptions = parseOptions(operationArgs);
 		CleanupOperationResult operationResult = client.cleanup(operationOptions);
@@ -45,6 +50,7 @@ public class CleanupCommand extends Command {
 		return 0;
 	}
 
+	@Override
 	public CleanupOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		CleanupOperationOptions operationOptions = new CleanupOperationOptions();
 
@@ -87,7 +93,7 @@ public class CleanupCommand extends Command {
 
 		// -t=<count>, --time-between-cleanups=<count>		
 		if (options.has(optionSecondsBetweenCleanups)) {
-			long secondsBetweenCleanups = CliUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
+			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
 
 			if (secondsBetweenCleanups < 0) {
 				throw new Exception("Invalid value for --time-between-cleanups=" + secondsBetweenCleanups + "; must be >= 0");
@@ -125,8 +131,9 @@ public class CleanupCommand extends Command {
 		return statusCommand.parseOptions(operationArgs);
 	}
 
+	@Override
 	public void printResults(OperationResult operationResult) {	
-		CleanupOperationResult concreteOperationResult = (CleanupOperationResult)operationResult;
+		CleanupOperationResult concreteOperationResult = (CleanupOperationResult) operationResult;
 
 		switch (concreteOperationResult.getResultCode()) {
 		case NOK_DIRTY_LOCAL:
@@ -180,10 +187,5 @@ public class CleanupCommand extends Command {
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
 		}	
-	}
-	
-	@Override
-	public boolean canExecuteInDaemonScope() {
-		return false;
 	}
 }

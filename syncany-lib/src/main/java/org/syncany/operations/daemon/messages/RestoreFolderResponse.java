@@ -17,18 +17,29 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.daemon.messages.api.FolderRequest;
-import org.syncany.operations.restore.RestoreOperationOptions;
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.FolderResponse;
+import org.syncany.operations.restore.RestoreOperationResult;
 
-public class RestoreFileFolderRequest extends FolderRequest {
-	private RestoreOperationOptions options;
+public class RestoreFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private RestoreOperationResult result;
 
-	public RestoreOperationOptions getOptions() {
-		return options;
+	public RestoreFolderResponse() {
+		// Nothing
+	}
+	
+	public RestoreFolderResponse(RestoreOperationResult result, int requestId) {
+		super(200, requestId, null);
+		this.result = result;
 	}
 
-	public void setOptions(OperationOptions options) {
-		this.options = (RestoreOperationOptions)options;
+	@Override
+	public RestoreOperationResult getResult() {
+		return result;
+	}
+
+	public void setResult(RestoreOperationResult result) {
+		this.result = result;
 	}
 }

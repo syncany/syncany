@@ -17,12 +17,18 @@
  */
 package org.syncany.operations.restore;
 
+import org.simpleframework.xml.Element;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationOptions;
 
 public class RestoreOperationOptions implements OperationOptions {
+	@Element(required = true)	
 	private FileHistoryId fileHistoryId;
+	
+	@Element(required = false)
 	private Integer fileVersion;
+	
+	@Element(required = false)
 	private String relativeTargetPath;
 
 	public FileHistoryId getFileHistoryId() {

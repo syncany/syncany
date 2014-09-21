@@ -26,6 +26,7 @@ import java.util.Map;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
