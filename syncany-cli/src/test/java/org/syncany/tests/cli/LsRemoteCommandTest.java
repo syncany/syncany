@@ -28,7 +28,7 @@ import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class LsRemoteCommandTest {	
+public class LsRemoteCommandTest {
 	@Test
 	public void testLsRemoteCommand() throws Exception {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
@@ -37,30 +37,30 @@ public class LsRemoteCommandTest {
 
 		// Round 1: No changes / remote databases expected
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientA.get("localdir"),
-			"ls-remote"
+				"--localdir", clientA.get("localdir"),
+				"ls-remote"
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 1, cliOut.length);
-		
+
 		// Round 2: One new database expected
-		TestFileUtil.createRandomFile(new File(clientB.get("localdir")+"/file1"), 20*1024);
-		TestFileUtil.createRandomFile(new File(clientB.get("localdir")+"/file2"), 20*1024);
-		
-		new CommandLineClient(new String[] { 
-			 "--localdir", clientB.get("localdir"),
-			 "up",
+		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);
+		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file2"), 20 * 1024);
+
+		new CommandLineClient(new String[] {
+				"--localdir", clientB.get("localdir"),
+				"up",
 		}).start();
-		
+
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientA.get("localdir"),
-			"ls-remote"
+				"--localdir", clientA.get("localdir"),
+				"ls-remote"
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 1, cliOut.length);
-		assertEquals("? db-B-0000000001", cliOut[0]);
-		
+		assertEquals("? database-B-0000000001", cliOut[0]);
+
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);
-	}	
+	}
 }

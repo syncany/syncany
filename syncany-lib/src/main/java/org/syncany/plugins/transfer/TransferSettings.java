@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.PluginOptionSpecs;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.UserInteractionListener;
 
 /**

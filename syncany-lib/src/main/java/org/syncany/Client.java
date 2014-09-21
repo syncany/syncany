@@ -34,7 +34,6 @@ import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.down.DownOperation;
-import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.init.ConnectOperation;
@@ -49,7 +48,7 @@ import org.syncany.operations.ls.LsOperation;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
-import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationResult;
@@ -121,15 +120,11 @@ public class Client {
 	}
 
 	public DownOperationResult down() throws Exception {
-		return down(new DownOperationOptions(), null);
+		return down(new DownOperationOptions());
 	}
 
 	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return down(options, null);
-	}
-
-	public DownOperationResult down(DownOperationOptions options, DownOperationListener listener) throws Exception {
-		return new DownOperation(config, options, listener).execute();
+		return new DownOperation(config, options).execute();
 	}
 
 	public StatusOperationResult status() throws Exception {

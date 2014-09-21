@@ -17,12 +17,11 @@
  */
 package org.syncany.operations.watch;
 
-import org.syncany.operations.down.DownOperationListener;
 import org.syncany.operations.up.UpOperationListener;
 
 /**
  * @author Vincent Wiencek
  */
-public interface WatchOperationListener extends UpOperationListener, DownOperationListener {
+public interface WatchOperationListener extends UpOperationListener {
 	// Nothing
 }

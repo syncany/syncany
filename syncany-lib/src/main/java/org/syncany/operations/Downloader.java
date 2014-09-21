@@ -30,11 +30,12 @@ import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.operations.daemon.LocalEventBus;
-import org.syncany.operations.daemon.messages.WatchEventResponse;
-import org.syncany.plugins.StorageException;
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
+import org.syncany.events.SyncEvent.Type;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.files.MultiChunkRemoteFile;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 
 /**
  * The downloader uses a {@link TransferManager} to download a given set of multichunks,
@@ -65,13 +66,13 @@ public class Downloader {
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
-			MultiChunkRemoteFile remoteMultiChunkFile = new MultiChunkRemoteFile(multiChunkId);
+			MultichunkRemoteFile remoteMultiChunkFile = new MultichunkRemoteFile(multiChunkId);
 
 			if (localDecryptedMultiChunkFile.exists()) {
 				logger.log(Level.INFO, "  + Decrypted multichunk exists locally " + multiChunkId + ". No need to download it!");				
 			}
 			else {
-				eventBus.post(new WatchEventResponse(config.getLocalDir().getAbsolutePath(), "DOWNLOAD_FILE", remoteMultiChunkFile.getName()));
+				eventBus.post(new SyncEvent(Type.DOWNLOAD_FILE, remoteMultiChunkFile.getName()));
 				
 				logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 				transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);

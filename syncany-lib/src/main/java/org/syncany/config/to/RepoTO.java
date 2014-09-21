@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
@@ -41,22 +40,21 @@ import org.syncany.util.StringUtil;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="repo")
-@Namespace(reference="http://syncany.org/repo/1")
+@Root(name = "repo", strict = false)
 public class RepoTO {
-	@Element(name="repoid", required=true)
+	@Element(name = "repoid", required = true)
 	private String repoIdEncoded;
 	private byte[] repoId;
-	
-	@Element(name="chunker", required=false)
+
+	@Element(name = "chunker", required = false)
 	private ChunkerTO chunker;
-	
-	@Element(name="multichunker", required=false)
+
+	@Element(name = "multichunker", required = false)
 	private MultiChunkerTO multiChunker;
-	
-	@ElementList(name="transformers", required=false, entry="transformer")
+
+	@ElementList(name = "transformers", required = false, entry = "transformer")
 	private ArrayList<TransformerTO> transformers;
-	
+
 	public byte[] getRepoId() {
 		return repoId;
 	}
@@ -64,7 +62,7 @@ public class RepoTO {
 	public void setRepoId(byte[] repoId) {
 		this.repoId = repoId;
 	}
-	
+
 	@Persist
 	public void prepare() {
 		repoIdEncoded = (repoId != null) ? StringUtil.toHex(repoId) : null;
@@ -74,7 +72,7 @@ public class RepoTO {
 	public void release() {
 		repoIdEncoded = null;
 	}
-	
+
 	@Commit
 	public void commit() {
 		repoId = (repoIdEncoded != null) ? StringUtil.fromHex(repoIdEncoded) : null;
@@ -107,12 +105,12 @@ public class RepoTO {
 	public static class ChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
-	
+
 	public static class MultiChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
-	
+
 	public static class TransformerTO extends TypedPropertyListTO {
 		// Nothing special about this
-	} 
+	}
 }

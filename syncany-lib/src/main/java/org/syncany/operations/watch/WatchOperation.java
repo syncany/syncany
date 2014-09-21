@@ -180,10 +180,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		
 		return new WatchOperationResult();
 	}
-	
-	public SqlDatabase getLocalDatabase() {
-		return localDatabase;
-	}
 
 	private void startRecursiveWatcher() {
 		logger.log(Level.INFO, "Starting recursive watcher for " + config.getLocalDir() + " ...");
@@ -240,7 +236,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				boolean notifyChanges = false;
 				
 				// Run down
-				DownOperationResult downResult = new DownOperation(config, options.getDownOptions(), listener).execute();
+				DownOperationResult downResult = new DownOperation(config, options.getDownOptions()).execute();
 				
 				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 					// TODO [low] Do something?
@@ -349,7 +345,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	private void scheduleForceKill() {
-		String killTimerName = "KillTim/" + config.getLocalDir().getName();
+		String killTimerName = "Kill/" + config.getLocalDir().getName();
 		
 		new Timer(killTimerName).schedule(new TimerTask() {
 			@Override

@@ -23,6 +23,10 @@ public class GenlinkOperationResult implements OperationResult {
     private String shareLink;
 	private boolean shareLinkEncrypted;
     
+	public GenlinkOperationResult() {
+		// Required.
+	}
+	
 	public GenlinkOperationResult(String shareLink, boolean shareLinkEncrypted) {
 		this.shareLink = shareLink;
 		this.shareLinkEncrypted = shareLinkEncrypted;

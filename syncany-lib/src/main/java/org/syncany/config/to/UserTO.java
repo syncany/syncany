@@ -18,6 +18,7 @@
 package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
+
 /**
  * This class is the access object to user-password pairs in XML.
  * 
@@ -26,22 +27,22 @@ import org.simpleframework.xml.Element;
 public class UserTO {
 	@Element(required = true)
 	private String username;
-	
+
 	@Element(required = true)
 	private String password;
-	
+
 	public String getUsername() {
 		return username;
 	}
-	
+
 	public void setUsername(String username) {
 		this.username = username;
 	}
-	
+
 	public String getPassword() {
 		return password;
 	}
-	
+
 	public void setPassword(String password) {
 		this.password = password;
 	}

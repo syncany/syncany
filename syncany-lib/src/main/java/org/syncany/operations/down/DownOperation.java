@@ -43,14 +43,16 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
-import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
@@ -88,28 +90,26 @@ public class DownOperation extends AbstractTransferOperation {
 
 	public static final String ACTION_ID = "down";
 	
+	private LocalEventBus eventBus;
+	
 	private DownOperationOptions options;
 	private DownOperationResult result;
-	private DownOperationListener listener;
 	
 	private SqlDatabase localDatabase;
 	private DatabaseReconciliator databaseReconciliator;
 	private DatabaseXmlSerializer databaseSerializer;
 	
 	public DownOperation(Config config) {
-		this(config, new DownOperationOptions(), null);
-	}
-	
-	public DownOperation(Config config, DownOperationListener listener) {
-		this(config, new DownOperationOptions(), listener);
+		this(config, new DownOperationOptions());
 	}
 
-	public DownOperation(Config config, DownOperationOptions options, DownOperationListener listener) {
+	public DownOperation(Config config, DownOperationOptions options) {
 		super(config, ACTION_ID);
 
+		this.eventBus = LocalEventBus.getInstance();
+		
 		this.options = options;
 		this.result = new DownOperationResult();
-		this.listener = listener;
 
 		this.localDatabase = new SqlDatabase(config);
 		this.databaseReconciliator = new DatabaseReconciliator();
@@ -159,6 +159,8 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 
 		finishOperation();
+		
+		eventBus.post(new SyncEvent(SyncEvent.Type.OPERATION_DONE_DOWN, result));	
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -223,26 +225,22 @@ public class DownOperation extends AbstractTransferOperation {
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 		int downloadFileIndex = 0;
 
-		if (listener != null) {
-			listener.onDownloadStart(unknownRemoteDatabases.size());
-		}
+		eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_START, unknownRemoteDatabases.size()));
 		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-
-			downloadFileIndex++;
-			if (listener != null) {
-				listener.onDownloadFile(remoteFile.getName(), downloadFileIndex);
-			}
+			eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_FILE, remoteFile.getName(), ++downloadFileIndex));
 			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
 			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
 			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
 		}
+		
+		eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_END, unknownRemoteDatabases.size()));
 
 		return unknownRemoteDatabasesInCache;
 	}

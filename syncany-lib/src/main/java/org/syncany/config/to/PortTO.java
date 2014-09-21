@@ -27,26 +27,26 @@ import org.simpleframework.xml.Root;
  * 
  * @author Pim Otte
  */
-@Root(name="port", strict=false)
+@Root(name = "port", strict = false)
 public class PortTO {
-	@Element(name="port", required = true)
+	@Element(name = "port", required = true)
 	private int port;
-	
-	@Element(name="user", required = true)
+
+	@Element(name = "user", required = true)
 	private UserTO user;
 
 	public int getPort() {
 		return port;
 	}
-	
+
 	public void setPort(int port) {
 		this.port = port;
 	}
-	
+
 	public UserTO getUser() {
 		return user;
 	}
-	
+
 	public void setUser(UserTO user) {
 		this.user = user;
 	}

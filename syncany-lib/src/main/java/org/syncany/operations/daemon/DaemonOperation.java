@@ -29,6 +29,7 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.events.LocalEventBus;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;
@@ -64,7 +65,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
-	private static final String PID_FILE = "daemon.pid";
+	public static final String PID_FILE = "daemon.pid";
 
 	private File pidFile;
 	

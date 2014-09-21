@@ -17,8 +17,12 @@
  */
 package org.syncany.plugins.transfer.files;
 
-import org.syncany.plugins.StorageException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.util.StringUtil;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -35,6 +39,11 @@ import org.syncany.plugins.transfer.TransferManager;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RemoteFile {
+	private static final Logger logger = Logger.getLogger(RemoteFile.class.getSimpleName());
+	
+	private static final String REMOTE_FILE_PACKAGE = RemoteFile.class.getPackage().getName();
+	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
+	
 	private String name;
 
 	/**
@@ -94,6 +103,31 @@ public abstract class RemoteFile {
 		catch (Exception e) {
 			throw new StorageException(e);
 		}
+	}
+	
+	/**
+	 * Creates a remote file based on a name and derives the class name using the 
+	 * file name.   
+	 * 
+	 * <p>The name must match the corresponding name pattern (nameprefix-...), and
+	 * the derived class can either be <tt>RemoteFile</tt>, or a sub-class thereof. 
+	 * 
+	 * @param name The name of the remote file  
+	 * @return Returns a new object of the given class
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends RemoteFile> T createRemoteFile(String name) throws StorageException {
+		String prefix = name.contains("-") ? name.substring(0, name.indexOf('-')) : name;
+		String camelCasePrefix = StringUtil.toCamelCase(prefix);
+		
+		try {		
+			Class<T> remoteFileClass = (Class<T>) Class.forName(REMOTE_FILE_PACKAGE + "." + camelCasePrefix + REMOTE_FILE_SUFFIX);
+			return createRemoteFile(name, remoteFileClass);
+		}
+		catch (ClassNotFoundException| StorageException e) {
+			logger.log(Level.INFO, "Invalid filename for remote file " + name);
+			throw new StorageException("Invalid filename for remote file " + name);
+		}		
 	}
 
 	@Override

@@ -24,8 +24,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.StorageException;
 import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
@@ -49,52 +50,57 @@ public abstract class AbstractTransferOperation extends Operation {
 	 * 
 	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
 	 */
-	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5*60*1000; // Minutes
+	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
 
-	protected TransferManager transferManager;
+	protected TransactionAwareTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
 
 		// Do NOT reuse TransferManager for action file renewal; see #140
-		
+
 		this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
 		this.transferManager = createReliableTransferManager(config);
 	}
-	
-	private TransferManager createReliableTransferManager(Config config) {
-		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection()));
+
+	private TransactionAwareTransferManager createReliableTransferManager(Config config) {
+		return new TransactionAwareTransferManager(createRetriableTransferManager(config), config);
+	}
+
+	private TransferManager createRetriableTransferManager(Config config) {
+		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(
+				config.getConnection(), config));
 	}
 
 	protected void startOperation() throws Exception {
 		actionHandler.start();
 	}
-	
+
 	protected void finishOperation() throws StorageException {
 		actionHandler.finish();
-		
+
 		cleanActionFiles();
 		disconnectTransferManager();
 		clearCache();
 	}
-	
+
 	protected boolean otherRemoteOperationsRunning(String... operationIdentifiers) throws StorageException {
 		logger.log(Level.INFO, "Looking for other running remote operations ...");
 		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
-		
+
 		boolean otherRemoteOperationsRunning = false;
 		List<String> disallowedOperationIdentifiers = Arrays.asList(operationIdentifiers);
-		
+
 		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
 			String operationName = actionRemoteFile.getOperationName();
 			String machineName = actionRemoteFile.getClientName();
-			
+
 			boolean isOwnActionFile = machineName.equals(config.getMachineName());
 			boolean isOperationAllowed = !disallowedOperationIdentifiers.contains(operationName);
 			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
-			
-			if (!isOwnActionFile) {			
+
+			if (!isOwnActionFile) {
 				if (!isOutdatedActionFile) {
 					if (isOperationAllowed) {
 						logger.log(Level.INFO, "- Action file from other client, but allowed operation; not marking running; " + actionRemoteFile);
@@ -116,13 +122,13 @@ public abstract class AbstractTransferOperation extends Operation {
 	private void cleanActionFiles() throws StorageException {
 		logger.log(Level.INFO, "Cleaning own old action files ...");
 		Map<String, ActionRemoteFile> actionRemoteFiles = transferManager.list(ActionRemoteFile.class);
-		
+
 		for (ActionRemoteFile actionRemoteFile : actionRemoteFiles.values()) {
-			String machineName = actionRemoteFile.getClientName();			
-			
+			String machineName = actionRemoteFile.getClientName();
+
 			boolean isOwnActionFile = machineName.equals(config.getMachineName());
 			boolean isOutdatedActionFile = isOutdatedActionFile(actionRemoteFile);
-			
+
 			if (isOwnActionFile) {
 				logger.log(Level.INFO, "- Deleting own action file " + actionRemoteFile + " ...");
 				transferManager.delete(actionRemoteFile);
@@ -136,12 +142,12 @@ public abstract class AbstractTransferOperation extends Operation {
 			}
 		}
 	}
-	
+
 	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {
 		// TODO [low] Even though this is UTC and the times frames are large, this might be an issue with different timezones or wrong system clocks
 		return System.currentTimeMillis() - ACTION_FILE_DELETE_TIME > actionFile.getTimestamp();
 	}
-	
+
 	private void disconnectTransferManager() {
 		try {
 			transferManager.disconnect();

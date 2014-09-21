@@ -22,13 +22,11 @@ import java.util.ArrayList;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
 @Root(name = "daemon", strict = false)
-@Namespace(reference = "http://syncany.org/daemon/1")
 public class DaemonConfigTO {
 	@Element(name = "webServer", required = false)
 	private WebServerTO webServer = new WebServerTO();
@@ -39,6 +37,9 @@ public class DaemonConfigTO {
 	@ElementList(name = "users", entry = "user", required = false)
 	private ArrayList<UserTO> users = new ArrayList<UserTO>();
 
+	@Element(name = "hooks", required = false)
+	private HooksTO hooks;
+	
 	private PortTO portTO; // This is generated dynamically by the daemon. It should't be in the XML.
 	
 	public static DaemonConfigTO load(File file) throws ConfigException {
@@ -89,5 +90,13 @@ public class DaemonConfigTO {
 	
 	public void setPortTO(PortTO portTO) {
 		this.portTO = portTO;
+	}
+
+	public HooksTO getHooks() {
+		return hooks;
+	}
+
+	public void setHooks(HooksTO hooks) {
+		this.hooks = hooks;
 	}
 }

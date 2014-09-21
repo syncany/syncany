@@ -25,7 +25,21 @@ package org.syncany.cli;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public enum CommandScope {
+	/**
+	 * Indicates that the local folder must be initialized
+	 * to run this command. If it is not, the command will not run.
+	 */
 	INITIALIZED_LOCALDIR,
+
+	/**
+	 * Indicates that the local folder must not be initialized
+	 * to run this command. If it is, the command will not run.
+	 */
 	UNINITIALIZED_LOCALDIR,
+
+	/**
+	 * Indicates that for this command to run, it does not matter
+	 * whether the local folder is initialized or not.
+	 */
 	ANY
 }

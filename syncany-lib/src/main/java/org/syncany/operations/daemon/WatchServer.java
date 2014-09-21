@@ -30,14 +30,18 @@ import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
-import org.syncany.config.to.PortTO;
+import org.syncany.events.LocalEventBus;
+import org.syncany.events.SyncEvent;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.ListWatchesRequest;
-import org.syncany.operations.daemon.messages.ListWatchesResponse;
-import org.syncany.operations.daemon.messages.Request;
-import org.syncany.operations.daemon.messages.WatchRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
+import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
+import org.syncany.util.StringUtil;
 
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -53,11 +57,12 @@ import com.google.common.eventbus.Subscribe;
 public class WatchServer {	
 	private static final Logger logger = Logger.getLogger(WatchServer.class.getSimpleName());
 	
+	private DaemonConfigTO daemonConfig;	
 	private Map<File, WatchRunner> watchOperations;
 	private LocalEventBus eventBus;
-	private PortTO portTO;
 	
 	public WatchServer() {
+		this.daemonConfig = null;
 		this.watchOperations = new TreeMap<File, WatchRunner>();
 		
 		this.eventBus = LocalEventBus.getInstance();
@@ -71,8 +76,8 @@ public class WatchServer {
 	public void reload(DaemonConfigTO daemonConfigTO) {
 		logger.log(Level.INFO, "Starting/reloading watch server ... ");
 		
-		// Update port number
-		portTO = daemonConfigTO.getPortTO();
+		// Update config
+		this.daemonConfig = daemonConfigTO;
 		
 		// Restart threads
 		try {
@@ -117,7 +122,7 @@ public class WatchServer {
 						watchOptions = new WatchOperationOptions();
 					}
 					
-					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, portTO);	
+					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, daemonConfig.getPortTO());	
 					watchRunner.start();
 	
 					watchOperations.put(localDir, watchRunner);
@@ -172,24 +177,74 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onRequestReceived(Request request) {
-		if (request instanceof ListWatchesRequest) {
-			processListWatchesRequest((ListWatchesRequest) request);
+	public void onWatchEventReceived(SyncEvent syncEvent) {
+		if (daemonConfig.getHooks() != null) {
+			switch (syncEvent.getType()) {
+			case OPERATION_DONE_DOWN:
+				runHookPostDownOperation(syncEvent);
+				break;
+				
+			default:
+				// Nothing.
+			}			
 		}
-		else if (request instanceof WatchRequest) {
-			processWatchRequest((WatchRequest) request);
-		}
-	}
-
-	private void processListWatchesRequest(ListWatchesRequest request) {
-		eventBus.post(new ListWatchesResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
 	}
 	
-	private void processWatchRequest(WatchRequest watchRequest) {
-		File rootFolder = new File(watchRequest.getRoot());
+	@Subscribe
+	public void onManagementRequestReceived(ManagementRequest request) {
+		if (request instanceof ListWatchesManagementRequest) {
+			processListWatchesRequest((ListWatchesManagementRequest) request);
+		}		
+	}
+
+	@Subscribe
+	public void onFolderRequestReceived(FolderRequest folderRequest) {
+		File rootFolder = new File(folderRequest.getRoot());
 		
 		if (!watchOperations.containsKey(rootFolder)) {
-			eventBus.post(new BadRequestResponse(watchRequest.getId(), "Unknown root folder."));
+			eventBus.post(new BadRequestResponse(folderRequest.getId(), "Unknown root folder."));
 		}
 	}
+	
+	private void processListWatchesRequest(ListWatchesManagementRequest request) {
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+	}
+	
+
+	private void runHookPostDownOperation(SyncEvent syncEvent) {
+		String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
+		
+		if (runAfterSyncCommand != null) {
+			DownOperationResult downOperationResult = (DownOperationResult) syncEvent.getSubjects()[0];
+			ChangeSet changeSet = downOperationResult.getChangeSet();
+			
+			List<String> changeMessageParts = new ArrayList<>();
+			
+			if (changeSet.getNewFiles().size() > 0) {
+				changeMessageParts.add(changeSet.getNewFiles().size() + " file(s) added");
+			}
+			
+			if (changeSet.getChangedFiles().size() > 0) {
+				changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) changed");
+			}
+			
+			if (changeSet.getDeletedFiles().size() > 0) {
+				changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) deleted");
+			}
+			
+			String changedMessage = StringUtil.join(changeMessageParts, ", ");
+			
+			String escapedSubject = changedMessage.replace("\"", "\\\"");			
+			runAfterSyncCommand = runAfterSyncCommand.replace("%subject", escapedSubject);
+						
+			try {
+				logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
+				Runtime.getRuntime().exec(runAfterSyncCommand);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot run sync after command: " + runAfterSyncCommand, e);
+			}
+		}
+	}
+	
 }
