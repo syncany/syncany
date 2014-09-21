@@ -111,7 +111,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
-		File repoPath = new File(((LocalTransferSettings) testConnection).getRepositoryPath() + "/databases");
+		File repoPath = new File(((LocalTransferSettings) testConnection).getPath() + "/databases");
 		String[] repoFileList = repoPath.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {

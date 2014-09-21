@@ -15,46 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.util;
+package org.syncany.plugins.transfer;
 
 import org.syncany.plugins.annotations.PluginManager;
 import org.syncany.plugins.annotations.PluginSettings;
-import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
-
 public abstract class TransferPluginUtil {
-
-	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass)
-			throws StorageException {
-
+	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
 		PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
 
 		if (settings == null) {
-			throw new StorageException("There are no transfer settings attached to that plugin (" + transferPluginClass.getName() + ")");
+			throw new RuntimeException("There are no transfer settings attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 
 		return settings.value();
-
 	}
 
-	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass)
-			throws StorageException {
-
+	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
 		PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
 
 		if (manager == null) {
-			throw new StorageException("There is no transfer manager attached to that plugin (" + transferPluginClass.getName() + ")");
+			throw new RuntimeException("There is no transfer manager attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 
 		return manager.value();
-
 	}
-
 }

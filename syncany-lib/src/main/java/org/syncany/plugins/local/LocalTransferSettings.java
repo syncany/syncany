@@ -34,15 +34,14 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Philipp C. Heckel
  */
 public class LocalTransferSettings extends TransferSettings {
-
 	@Element(required = true)
 	public File path;
 
-	public File getRepositoryPath() {
+	public File getPath() {
 		return path;
 	}
 
-	public void setRepositoryPath(File path) {
+	public void setPath(File path) {
 		this.path = path;
 	}
 
@@ -50,5 +49,4 @@ public class LocalTransferSettings extends TransferSettings {
 	public PluginOptionSpecs getOptionSpecs() {
 		return new PluginOptionSpecs(new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null));
 	}
-
 }

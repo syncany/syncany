@@ -92,7 +92,7 @@ public class TransferSettingsTest {
 		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored, config);
 		assertNotNull(transferManager);
 
-		DummyTransferSettings dts = transferManager.getConnection();
+		DummyTransferSettings dts = transferManager.getSettings();
 		assertNotNull(dts);
 
 		assertEquals(dts.foo, fooTest);
@@ -112,7 +112,7 @@ public class TransferSettingsTest {
 		assertTrue(ts.isValid());
 
 		DummyTransferManager dtm = p.createTransferManager(ts, config);
-		DummyTransferSettings dts = dtm.getConnection();
+		DummyTransferSettings dts = dtm.getSettings();
 
 		assertEquals(dts.foo, "foo-value");
 		assertEquals(dts.number, 5);
@@ -147,7 +147,7 @@ public class TransferSettingsTest {
   public void testDeserializeWrongClass() throws Exception {
 
     LocalTransferSettings lts = new LocalTransferSettings();
-    lts.setRepositoryPath(tmpFile);
+    lts.setPath(tmpFile);
 
     Serializer serializer = new Persister();
     serializer.write(lts, tmpFile);

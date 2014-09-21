@@ -60,15 +60,14 @@ public abstract class AbstractTransferOperation extends Operation {
 
 		// Do NOT reuse TransferManager for action file renewal; see #140
 
-    try {
-      this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
-      this.transferManager = createReliableTransferManager(config);
-    }
-    catch (StorageException e) {
-      // TODO How were storage errors handled in the past?
-      logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
-      throw new RuntimeException("Unable to create AbstractTransferOperation: Unable to create TransferManager: " + e.getMessage());
-    }
+		try {
+			this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
+			this.transferManager = createReliableTransferManager(config);
+		}
+		catch (StorageException e) {
+			logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
+			throw new RuntimeException("Unable to create AbstractTransferOperation: Unable to create TransferManager: " + e.getMessage());
+		}
 	}
 
 	private TransactionAwareTransferManager createReliableTransferManager(Config config) throws StorageException {

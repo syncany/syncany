@@ -181,7 +181,7 @@ public class TestConfigUtil {
 		LocalTransferSettings localConnection = (LocalTransferSettings) connection;
 		// Create connection TO
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
-		localConnectionSettings.put("path", localConnection.getRepositoryPath().getAbsolutePath());
+		localConnectionSettings.put("path", localConnection.getPath().getAbsolutePath());
 
 		// if (connection instanceof UnreliableLocalTransferSettings) { // Dirty hack
 		// UnreliableLocalTransferSettings unreliableConnection = (UnreliableLocalTransferSettings) connection;
@@ -237,7 +237,7 @@ public class TestConfigUtil {
 		// connectionTO.setType("local");
 		// connectionTO.setSettings(localConnectionSettings);
 		LocalTransferSettings connectionTO = Plugins.get("local", TransferPlugin.class).createEmptySettings();
-		connectionTO.setRepositoryPath(tempRepoDir);
+		connectionTO.setPath(tempRepoDir);
 
 		configTO.setConnectionTO(connectionTO);
 
@@ -258,9 +258,9 @@ public class TestConfigUtil {
 			throws Exception {
 		InitOperationOptions initOperationOptions = createTestInitOperationOptions(machineName);
 		// createTestInitOperationOptions always returns LocalTransferSettings
-		File tempRpoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getConnectionTO()).getRepositoryPath();
+		File tempRpoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getConnectionTO()).getPath();
 		UnreliableLocalTransferSettings connectionTO = Plugins.get("unreliable_local", TransferPlugin.class).createEmptySettings();
-		connectionTO.setRepositoryPath(tempRpoDir);
+		connectionTO.setPath(tempRpoDir);
 		connectionTO.setFailingOperationPatterns(failingOperationPatterns);
 
 		initOperationOptions.getConfigTO().setConnectionTO(connectionTO);
@@ -273,7 +273,7 @@ public class TestConfigUtil {
 		LocalTransferSettings conn = plugin.createEmptySettings();
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", conn));
-		conn.setRepositoryPath(tempRepoDir);
+		conn.setPath(tempRepoDir);
 
 		// TODO [medium] : possible problem
 		plugin.createTransferManager(conn, null).init(true);
@@ -297,7 +297,7 @@ public class TestConfigUtil {
 
 		File tempRepoDir = TestFileUtil.createTempDirectoryInSystemTemp(createUniqueName("repo", new Random().nextFloat()));
 
-		unreliableLocalConnection.setRepositoryPath(tempRepoDir);
+		unreliableLocalConnection.setPath(tempRepoDir);
 		unreliableLocalConnection.setFailingOperationPatterns(failingOperationPatterns);
 		return unreliableLocalConnection;
 	}
@@ -319,7 +319,7 @@ public class TestConfigUtil {
 
 	private static void deleteTestLocalConnection(Config config) {
 		LocalTransferSettings connection = (LocalTransferSettings) config.getConnection();
-		TestFileUtil.deleteDirectory(connection.getRepositoryPath());
+		TestFileUtil.deleteDirectory(connection.getPath());
 	}
 
 	public static String createUniqueName(String name, Object uniqueHashObj) {

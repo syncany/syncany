@@ -144,18 +144,18 @@ public abstract class AbstractInitOperation extends Operation {
 		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
 	}
 
-	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
+	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
 		new Persister(new Format(0)).write(connectionTO, plaintextGzipOutputStream);
 		plaintextGzipOutputStream.close();
 
 		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
+		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSpecs, masterKey);
+		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSpecs, masterKey);
 
-		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSuites, masterKey);
+		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
 		String encryptedEncodedPlugin = Base58.encode(encryptedPluginBytes);
-		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
 		String encryptedEncodedStorage = Base58.encode(encryptedConnectionBytes);
 
 		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedPlugin + "/" + encryptedEncodedStorage;
@@ -168,8 +168,9 @@ public abstract class AbstractInitOperation extends Operation {
 		plaintextGzipOutputStream.close();
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
+		
 		String plaintextEncodedPlugin = Base58.encode(connectionTO.getType().getBytes());
+		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "/" + plaintextEncodedStorage;
 	}

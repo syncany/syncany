@@ -17,7 +17,15 @@
  */
 package org.syncany.config;
 
-import org.syncany.chunk.*;
+import java.io.File;
+import java.util.ArrayList;
+
+import org.syncany.chunk.Chunker;
+import org.syncany.chunk.CipherTransformer;
+import org.syncany.chunk.FixedChunker;
+import org.syncany.chunk.MultiChunker;
+import org.syncany.chunk.NoTransformer;
+import org.syncany.chunk.Transformer;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
@@ -30,9 +38,6 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-
-import java.io.File;
-import java.util.ArrayList;
 
 /**
  * The config class is the central point to configure a Syncany instance. It is mainly
@@ -80,7 +85,7 @@ public class Config {
 
 	private Cache cache;
 	private TransferPlugin plugin;
-	private TransferSettings connection;
+	private TransferSettings transferSettings;
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
@@ -218,7 +223,7 @@ public class Config {
 			}
 
 			try {
-				connection = (TransferSettings) configTO.getConnectionTO();
+				transferSettings = (TransferSettings) configTO.getConnectionTO();
 			}
 			catch (Exception e) {
 				throw new ConfigException("Cannot initialize storage: " + e.getMessage(), e);
@@ -263,11 +268,11 @@ public class Config {
 	}
 
 	public TransferSettings getConnection() {
-		return connection;
+		return transferSettings;
 	}
 
 	public void setConnection(TransferSettings connection) {
-		this.connection = connection;
+		this.transferSettings = connection;
 	}
 
 	public byte[] getRepoId() {

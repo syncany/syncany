@@ -94,7 +94,6 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			transferSettings = initPluginSettings(plugin.createEmptySettings(), knownPluginSettings);
 		}
 
-		// Create configTO
 		return transferSettings;
 	}
 
@@ -448,7 +447,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	private void validateSettingsWithException(TransferSettings settings) throws StorageException {
 		if (!settings.isValid()) {
-			throw new StorageException("Transfersettings are not valid (maybe missing a mandatory field)");
+			throw new StorageException("Transfer settings are not valid (maybe missing a mandatory field)");
 		}
 	}
 }

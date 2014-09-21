@@ -38,9 +38,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
 @PluginSettings(LocalTransferSettings.class)
 @PluginManager(LocalTransferManager.class)
 public class LocalPlugin extends TransferPlugin {
-
 	public LocalPlugin() {
 		super("local");
 	}
-
 }

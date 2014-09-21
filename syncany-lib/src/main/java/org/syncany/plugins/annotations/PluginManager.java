@@ -26,13 +26,9 @@ import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
-
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PluginManager {
-
   Class<? extends TransferManager> value();
-
 }

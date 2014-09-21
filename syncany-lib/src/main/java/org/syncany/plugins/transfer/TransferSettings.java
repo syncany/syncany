@@ -42,7 +42,7 @@ import org.syncany.util.StringUtil;
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
  *
  * Options for a plugin specific {@link TransferSettings} can be defined using the
- * {@link Element} annotation. Furthermore some syncany specific annotations are available.
+ * {@link Element} annotation. Furthermore some Syncany-specific annotations are available.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
@@ -52,20 +52,7 @@ public abstract class TransferSettings implements ConnectionTO {
 	protected UserInteractionListener userInteractionListener;
 
 	@Attribute
-	private String type;
-
-	{
-		try {
-			for (Plugin plugin : Plugins.list()) {
-				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
-				if (pluginSettings == null || pluginSettings.value().equals(this.getClass()))
-					type = plugin.getClass().newInstance().getId();
-			}
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
-		}
-	}
+	private String type = findPluginId();
 
 	public UserInteractionListener getUserInteractionListener() {
 		return userInteractionListener;
@@ -99,26 +86,27 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	@Override
 	public TransferSettings setField(String key, String value) throws StorageException {
-
 		try {
-			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
-
-				f.setAccessible(true);
-				String fName = f.getName();
-				Type fType = f.getType();
-				if (key.equalsIgnoreCase(fName)) {
-
-					if (f.getType() == Integer.TYPE) {
-						f.setInt(this, Integer.parseInt(value));
+			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
+			
+			for (Field field : simpleXmlElementFields) {
+				field.setAccessible(true);
+				
+				String fieldName = field.getName();
+				Type fieldType = field.getType();
+				
+				if (key.equalsIgnoreCase(fieldName)) {
+					if (field.getType() == Integer.TYPE) {
+						field.setInt(this, Integer.parseInt(value));
 					}
-					else if (fType == Boolean.TYPE) {
-						f.setBoolean(this, Boolean.parseBoolean(value));
+					else if (fieldType == Boolean.TYPE) {
+						field.setBoolean(this, Boolean.parseBoolean(value));
 					}
-					else if (fType == String.class) {
-						f.set(this, value);
+					else if (fieldType == String.class) {
+						field.set(this, value);
 					}
-					else if (fType == File.class) {
-						f.set(this, new File(value));
+					else if (fieldType == File.class) {
+						field.set(this, new File(value));
 					}
 				}
 			}
@@ -136,10 +124,13 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	public final boolean isValid() {
 		try {
-			for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
-				f.setAccessible(true);
-				if (f.getAnnotation(Element.class).required() && f.get(this) == null) {
-					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), f.getName() });
+			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
+
+			for (Field field : simpleXmlElementFields) {
+				field.setAccessible(true);
+				
+				if (field.getAnnotation(Element.class).required() && field.get(this) == null) {
+					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), field.getName() });
 					return false;
 				}
 			}
@@ -154,35 +145,47 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	@Persist
 	private void encrypt() throws Exception {
-
-		for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
-			if (f.getType() != String.class) {
+		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
+			if (field.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-			// TODO dummy encprytion
-			f.set(this, StringUtil.toHex(((String) f.get(this)).getBytes()));
+			
+			// TODO [medium] Do actual encryption
+			field.set(this, StringUtil.toHex(((String) field.get(this)).getBytes()));
 		}
 
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, "Encrypted transfer setting values");
-		}
-
+		logger.log(Level.FINE, "Encrypted transfer setting values");
 	}
 
 	@Commit
 	private void decrypt() throws Exception {
-
-		for (Field f : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
-			if (f.getType() != String.class) {
+		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
+			if (field.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-			// TODO dummy decryption
-			f.set(this, new String(StringUtil.fromHex((String) f.get(this))));
+			
+			// TODO [medium] Do actual decryption
+			field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
 		}
 
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, "Decrypted transfer setting values");
+		logger.log(Level.FINE, "Decrypted transfer setting values");
+	}
+	
+	private String findPluginId() {
+		try {
+			for (Plugin plugin : Plugins.list()) {
+				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
+				
+				if (pluginSettings == null || pluginSettings.value().equals(this.getClass())) {
+					return plugin.getClass().newInstance().getId();
+				}
+			}
+			
+			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");
 		}
-
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
+			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings", e);
+		}
 	}
 }

@@ -19,12 +19,10 @@ package org.syncany.plugins.transfer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.transfer.files.RemoteFile;
-import org.syncany.plugins.util.TransferPluginUtil;
 import org.syncany.util.ReflectionUtil;
 
 /**
@@ -37,9 +35,6 @@ import org.syncany.util.ReflectionUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPlugin extends Plugin {
-
-	private static final Logger logger = Logger.getLogger(TransferPlugin.class.getName());
-
 	public TransferPlugin(String pluginId) {
 		super(pluginId);
 	}
@@ -50,9 +45,8 @@ public abstract class TransferPlugin extends Plugin {
 	 * <p>The created instance must be filled with sensible connection details
 	 * and then initialized with the <tt>init()</tt> method.
 	 */
-
+	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
-
 		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
 
 		if (transferSettings == null) {
@@ -75,34 +69,34 @@ public abstract class TransferPlugin extends Plugin {
 	 * <p>The created instance can be used to upload/download/delete {@link RemoteFile}s
 	 * and query the remote storage for a file list.
 	 */
-	public final <T extends TransferManager> T createTransferManager(TransferSettings connection, Config config) throws StorageException {
-
-		if (!connection.isValid()) {
-			throw new StorageException("Unable to create transfermanager: connection isn't valid (perhaps missing some mandatory fields?)");
+	@SuppressWarnings("unchecked")
+	public final <T extends TransferManager> T createTransferManager(TransferSettings transferSettings, Config config) throws StorageException {
+		if (!transferSettings.isValid()) {
+			throw new StorageException("Unable to create transfer manager: connection isn't valid (perhaps missing some mandatory fields?)");
 		}
 
-		final Class<? extends TransferSettings> transferSettings = TransferPluginUtil.getTransferSettingsClass(this.getClass());
-		final Class<? extends TransferManager> transferManager = TransferPluginUtil.getTransferManagerClass(this.getClass());
+		final Class<? extends TransferSettings> transferSettingsClass = TransferPluginUtil.getTransferSettingsClass(this.getClass());
+		final Class<? extends TransferManager> transferManagerClass = TransferPluginUtil.getTransferManagerClass(this.getClass());
 
-		if (transferSettings == null) {
-			throw new StorageException("Unable to create transfermanager: No settings class attached");
+		if (transferSettingsClass == null) {
+			throw new RuntimeException("Unable to create transfer manager: No settings class attached");
 		}
-		if (transferManager == null) {
-			throw new StorageException("Unable to create transfermanager: No manager class attached");
+		
+		if (transferManagerClass == null) {
+			throw new RuntimeException("Unable to create transfer manager: No manager class attached");
 		}
 
 		try {
-			Constructor<?> potentialConstructor = ReflectionUtil.getMatchingConstructorForClass(transferManager, TransferSettings.class, Config.class);
+			Constructor<?> potentialConstructor = ReflectionUtil.getMatchingConstructorForClass(transferManagerClass, TransferSettings.class, Config.class);
+			
 			if (potentialConstructor == null) {
-				throw new StorageException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class + " and " + Config.class);
+				throw new RuntimeException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class + " and " + Config.class);
 			}
 
-			return (T) potentialConstructor.newInstance(transferSettings.cast(connection), config);
+			return (T) potentialConstructor.newInstance(transferSettingsClass.cast(transferSettings), config);
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException("Unable to create TransferSettings: " + e.getMessage());
+			throw new RuntimeException("Unable to create transfer settings: " + e.getMessage(), e);
 		}
-
 	}
-
 }

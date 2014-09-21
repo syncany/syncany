@@ -45,18 +45,23 @@ public abstract class AbstractTransferManager implements TransferManager {
 		this.config = config;
 	}
 
-	public final <T extends TransferSettings> T getConnection() {
+	@SuppressWarnings("unchecked")
+	public final <T extends TransferSettings> T getSettings() {
 		try {
 			for (Plugin plugin : Plugins.list()) {
 				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
-				if (pluginSettings == null || pluginSettings.value().equals(settings.getClass()))
+				
+				if (pluginSettings == null || pluginSettings.value().equals(settings.getClass())) {
 					return (T) pluginSettings.value().cast(settings);
+				}
 			}
+			
+			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
-		}
-		return null;
+			throw e;
+		}		
 	}
 
 	/**
@@ -123,5 +128,4 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 		return result;
 	}
-
 }

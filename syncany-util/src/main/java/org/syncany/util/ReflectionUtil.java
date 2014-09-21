@@ -25,27 +25,22 @@ import java.util.List;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
-
 public abstract class ReflectionUtil {
-
+	@SuppressWarnings("unchecked")
 	public static <T extends Annotation> T[] getAnnotationsForClassByType(Class<?> clazz, Class<T> annotation) {
-
 		List<T> matchedAnnotations = new ArrayList<>();
 
-		for (Annotation a : clazz.getAnnotations()) {
-			if (a.annotationType().equals(annotation)) {
-				matchedAnnotations.add((T) a);
+		for (Annotation classAnnotation : clazz.getAnnotations()) {
+			if (classAnnotation.annotationType().equals(annotation)) {
+				matchedAnnotations.add((T) classAnnotation);
 			}
 		}
 
-		return (T[]) matchedAnnotations.toArray(new Annotation[matchedAnnotations.size()]);
-
+		return (T[]) matchedAnnotations.toArray(new Annotation[0]);
 	}
 
 	public static Field[] getAllFieldsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
-
 		List<Field> matchedAnnotations = new ArrayList<>();
 
 		for (Field f : clazz.getDeclaredFields()) {
@@ -55,43 +50,35 @@ public abstract class ReflectionUtil {
 		}
 
 		return matchedAnnotations.toArray(new Field[matchedAnnotations.size()]);
-
 	}
 
-	public static Constructor<?> getMatchingConstructorForClass(Class<?> clazz, Class<?>... find) {
-
-		// try fast matching
+	public static Constructor<?> getMatchingConstructorForClass(Class<?> clazz, Class<?>... parameterTypes) {
+		// Try fast matching
 		try {
-			return clazz.getConstructor(find);
+			return clazz.getConstructor(parameterTypes);
 		}
 		catch (NoSuchMethodException e) {
 			// ignore
 		}
 
-		findConstructor: for (Constructor c : clazz.getConstructors()) {
-
-			if (c.getParameterTypes().length != find.length) {
-				continue;
-			}
-
-			int i = 0;
-
-			for (Class<?> t : c.getParameterTypes()) {
-
-				// TODO [low] Handle type erasure (see test)
-				if (!find[i].isAssignableFrom(t)) {
-					continue findConstructor;
+		// If fast matching fails, check for assignable constructor
+		findConstructor: for (Constructor<?> constructor : clazz.getConstructors()) {
+			if (constructor.getParameterTypes().length == parameterTypes.length) {			
+				int i = 0;
+	
+				for (Class<?> t : constructor.getParameterTypes()) {
+					// TODO [low] Handle type erasure (see test)
+					if (!parameterTypes[i].isAssignableFrom(t)) {
+						continue findConstructor;
+					}
+	
+					++i;
 				}
-
-				++i;
+	
+				return constructor;
 			}
-
-			return c;
-
 		}
 
 		return null;
-
 	}
-
 }

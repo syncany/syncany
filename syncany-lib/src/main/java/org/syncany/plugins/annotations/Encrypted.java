@@ -24,10 +24,9 @@ import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
-
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Encrypted {
+	// Empty.
 }

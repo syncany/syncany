@@ -54,7 +54,7 @@ public class MoveFolderWithQuotesOnWindowsScenario {
 		clientA.moveFile("folder_without_quotes", "folder_with_quotes");
 		clientA.up();
 		
-		for (File databaseFile : new File(testConnection.getRepositoryPath()+"/databases/").listFiles()) {
+		for (File databaseFile : new File(testConnection.getPath()+"/databases/").listFiles()) {
 			String databaseFileA2Content = IOUtils.toString(new FileInputStream(databaseFile), "UTF-8");
 			String databaseFileA2NewContent = databaseFileA2Content.replaceAll("folder_with_quotes", "folder &quot;with&quot; quotes");
 
