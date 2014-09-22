@@ -178,10 +178,38 @@ end;
 // 3. Write memory limit file (on post install) ////////
 
 procedure WriteMemoryLimitFile();
+var 
+  UserConfigFileName, UserConfigXml: String;
+  TagMaxMemoryPosStart, TagMaxMemoryPosEnd, TagUserConfigEnd: Integer;
 begin
   if LimitMemory then begin
-    Log('Limit memory enabled; writing to ' + ExpandConstant('{userappdata}\\Syncany\\java.properties'));
-    SaveStringToFile(ExpandConstant('{userappdata}\\Syncany\\java.properties'), 'org.syncany.limit-memory=1300M', false);           
+    UserConfigFileName := ExpandConstant('{userappdata}\\Syncany\\userconfig.xml');
+
+    // If userconfig.xml exists, replace <maxMemory>-tags with maximum limit
+    if FileExists(UserConfigFileName) then begin
+      if LoadStringFromFile(UserConfigFileName, UserConfigXml) then begin
+        // Remove <maxMemory>..</maxMemory> 
+        TagMaxMemoryPosStart := Pos('<maxMemory>', UserConfigXml);
+        TagMaxMemoryPosEnd := Pos('</maxMemory>', UserConfigXml) + Length('</maxMemory>');
+
+        if (TagMaxMemoryPosStart > 0) and (TagMaxMemoryPosEnd > 0) then begin
+          UserConfigXml := Copy(UserConfigXml, 1, TagMaxMemoryPosStart-1) + Copy(UserConfigXml, TagMaxMemoryPosEnd, Length(UserConfigXml));
+        end
+       
+        // Add <maxMemory>1300M</maxmemory>
+        TagUserConfigEnd := Pos('</userConfig>', UserConfigXml);
+
+        if TagUserConfigEnd > 0 then begin
+          UserConfigXml := Copy(UserConfigXml, 1, TagUserConfigEnd-1) + '   <maxMemory>1300M</maxMemory>'#13#10'</userConfig>';
+          SaveStringToFile(UserConfigFileName, UserConfigXml, False);
+        end
+      end
+    end
+
+    // If userconfig.xml does not exist, create new file
+    else begin
+      SaveStringToFile(UserConfigFileName, '<userConfig>'#13#10'   <maxMemory>1300M</maxMemory>'#13#10'</userConfig>', False);           
+    end
   end
 end;
 
