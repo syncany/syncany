@@ -113,7 +113,10 @@ public class GUIClient extends Client {
 			
 			logger.log(Level.INFO, "Sending HTTP Request to: " + SERVER_URI);
 			
-			post.setEntity(new StringEntity(MessageFactory.toRequest(request)));
+			String xmlMessageString = MessageFactory.toXml(request);
+			StringEntity xmlMessageEntity = new StringEntity(xmlMessageString);
+			
+			post.setEntity(xmlMessageEntity);
 			
 			// Handle response
 			HttpResponse httpResponse = client.execute(post);
@@ -122,8 +125,8 @@ public class GUIClient extends Client {
 			String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());			
 			logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 			
-			Response response = MessageFactory.createResponse(responseStr);
-			return response;
+			Response response = MessageFactory.toResponse(responseStr);
+			return response;	
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Request " + request.toString() + " FAILED. ", e);
