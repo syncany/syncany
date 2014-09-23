@@ -18,8 +18,10 @@
 package org.syncany.plugins.dummy;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Validate;
 import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.annotations.Encrypted;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
@@ -47,4 +49,10 @@ public class DummyTransferSettings extends TransferSettings {
 		return null;
 	}
 
+	@Validate
+	public void validate() throws StorageException {
+		if (baz != null && !baz.equalsIgnoreCase("baz")) {
+			throw new StorageException("Only allowed value for baz field is 'baz'");
+		}
+	}
 }

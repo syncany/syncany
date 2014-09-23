@@ -19,6 +19,8 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +29,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Validate;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.PluginOptionSpecs;
@@ -88,13 +91,13 @@ public abstract class TransferSettings implements ConnectionTO {
 	public TransferSettings setField(String key, String value) throws StorageException {
 		try {
 			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
-			
+
 			for (Field field : simpleXmlElementFields) {
 				field.setAccessible(true);
-				
+
 				String fieldName = field.getName();
 				Type fieldType = field.getType();
-				
+
 				if (key.equalsIgnoreCase(fieldName)) {
 					if (field.getType() == Integer.TYPE) {
 						field.setInt(this, Integer.parseInt(value));
@@ -123,24 +126,46 @@ public abstract class TransferSettings implements ConnectionTO {
 	}
 
 	public final boolean isValid() {
+		Method[] validationMethods = ReflectionUtil.getAllMethodsWithAnnotation(this.getClass(), Validate.class);
+
+		try {
+			for (Method method : validationMethods) {
+				method.setAccessible(true);
+				method.invoke(this);
+			}
+		}
+		catch (InvocationTargetException | IllegalAccessException e) {
+			if (e.getCause() instanceof StorageException) {
+				return false;
+			}
+			throw new RuntimeException("Unable to call plugin validator: ", e);
+		}
+
+		return true;
+	}
+
+	@Validate
+	public final void validateRequiredFields() throws StorageException {
+
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "Validating required fields");
+		}
+
 		try {
 			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
 
 			for (Field field : simpleXmlElementFields) {
 				field.setAccessible(true);
-				
+
 				if (field.getAnnotation(Element.class).required() && field.get(this) == null) {
 					logger.log(Level.WARNING, "Missing mandatory field {0}#{1}", new Object[] { this.getClass().getSimpleName(), field.getName() });
-					return false;
+					throw new StorageException("Missing mandatory field " + this.getClass().getSimpleName() + "#" + field.getName());
 				}
 			}
 		}
 		catch (IllegalAccessException e) {
-			logger.log(Level.SEVERE, "illegalaccess", e);
-			return false;
+			throw new RuntimeException("IllegalAccessException when validating required fields: ", e);
 		}
-
-		return true;
 	}
 
 	@Persist
@@ -149,7 +174,7 @@ public abstract class TransferSettings implements ConnectionTO {
 			if (field.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-			
+
 			// TODO [medium] Do actual encryption
 			field.set(this, StringUtil.toHex(((String) field.get(this)).getBytes()));
 		}
@@ -163,24 +188,24 @@ public abstract class TransferSettings implements ConnectionTO {
 			if (field.getType() != String.class) {
 				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
 			}
-			
+
 			// TODO [medium] Do actual decryption
 			field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
 		}
 
 		logger.log(Level.FINE, "Decrypted transfer setting values");
 	}
-	
+
 	private String findPluginId() {
 		try {
 			for (Plugin plugin : Plugins.list()) {
 				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
-				
+
 				if (pluginSettings == null || pluginSettings.value().equals(this.getClass())) {
 					return plugin.getClass().newInstance().getId();
 				}
 			}
-			
+
 			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");
 		}
 		catch (Exception e) {

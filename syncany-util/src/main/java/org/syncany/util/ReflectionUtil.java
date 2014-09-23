@@ -20,6 +20,7 @@ package org.syncany.util;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +53,18 @@ public abstract class ReflectionUtil {
 		return matchedAnnotations.toArray(new Field[matchedAnnotations.size()]);
 	}
 
+	public static Method[] getAllMethodsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
+		List<Method> matchedAnnotations = new ArrayList<>();
+
+		for (Method m : clazz.getMethods()) {
+			if (m.isAnnotationPresent(annotation)) {
+				matchedAnnotations.add(m);
+			}
+		}
+
+		return matchedAnnotations.toArray(new Method[matchedAnnotations.size()]);
+	}
+
 	public static Constructor<?> getMatchingConstructorForClass(Class<?> clazz, Class<?>... parameterTypes) {
 		// Try fast matching
 		try {
@@ -63,18 +76,18 @@ public abstract class ReflectionUtil {
 
 		// If fast matching fails, check for assignable constructor
 		findConstructor: for (Constructor<?> constructor : clazz.getConstructors()) {
-			if (constructor.getParameterTypes().length == parameterTypes.length) {			
+			if (constructor.getParameterTypes().length == parameterTypes.length) {
 				int i = 0;
-	
+
 				for (Class<?> t : constructor.getParameterTypes()) {
 					// TODO [low] Handle type erasure (see test)
 					if (!parameterTypes[i].isAssignableFrom(t)) {
 						continue findConstructor;
 					}
-	
+
 					++i;
 				}
-	
+
 				return constructor;
 			}
 		}

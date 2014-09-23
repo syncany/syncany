@@ -61,7 +61,7 @@ public class TransferSettingsTest {
 	public void testRestore() throws Exception {
 
 		final String fooTest = "foo-test";
-		final String bazTest = "baz-test";
+		final String bazTest = "baz";
 		final int numberTest = 1234;
 
 		final DummyTransferSettings ts = new DummyTransferSettings();
@@ -76,6 +76,8 @@ public class TransferSettingsTest {
 		nts.foo = fooTest;
 		nts.baz = bazTest;
 		ts.subsettings = nts;
+
+		assertTrue(ts.isValid());
 
 		Serializer serializer = new Persister();
 		serializer.write(conf, tmpFile);
@@ -130,31 +132,31 @@ public class TransferSettingsTest {
 
 	}
 
-  @Test
-  public void testDeserializeCorrectClass() throws Exception {
+	@Test
+	public void testDeserializeCorrectClass() throws Exception {
 
-    Serializer serializer = new Persister();
-    // allways LocalTransferSettings
-    serializer.write(TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO(), tmpFile);
+		Serializer serializer = new Persister();
+		// allways LocalTransferSettings
+		serializer.write(TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO(), tmpFile);
 
-    ConfigTO confRestored = ConfigTO.load(tmpFile);
+		ConfigTO confRestored = ConfigTO.load(tmpFile);
 
-    assertEquals(LocalTransferSettings.class, confRestored.getConnectionTO().getClass());
+		assertEquals(LocalTransferSettings.class, confRestored.getConnectionTO().getClass());
 
-  }
+	}
 
-  @Test(expected = ElementException.class)
-  public void testDeserializeWrongClass() throws Exception {
+	@Test(expected = ElementException.class)
+	public void testDeserializeWrongClass() throws Exception {
 
-    LocalTransferSettings lts = new LocalTransferSettings();
-    lts.setPath(tmpFile);
+		LocalTransferSettings lts = new LocalTransferSettings();
+		lts.setPath(tmpFile);
 
-    Serializer serializer = new Persister();
-    serializer.write(lts, tmpFile);
+		Serializer serializer = new Persister();
+		serializer.write(lts, tmpFile);
 
-    // boom
-    DummyTransferSettings settings = serializer.read(DummyTransferSettings.class, tmpFile);
+		// boom
+		DummyTransferSettings settings = serializer.read(DummyTransferSettings.class, tmpFile);
 
-  }
+	}
 
 }
