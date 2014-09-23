@@ -44,10 +44,13 @@ public abstract class ReflectionUtil {
 	public static Field[] getAllFieldsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
 		List<Field> matchedAnnotations = new ArrayList<>();
 
-		for (Field f : clazz.getDeclaredFields()) {
-			if (f.isAnnotationPresent(annotation)) {
-				matchedAnnotations.add(f);
+		while (clazz != null) {
+			for (Field f : clazz.getDeclaredFields()) {
+				if (f.isAnnotationPresent(annotation)) {
+					matchedAnnotations.add(f);
+				}
 			}
+			clazz = clazz.getSuperclass();
 		}
 
 		return matchedAnnotations.toArray(new Field[matchedAnnotations.size()]);
@@ -56,10 +59,13 @@ public abstract class ReflectionUtil {
 	public static Method[] getAllMethodsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
 		List<Method> matchedAnnotations = new ArrayList<>();
 
-		for (Method m : clazz.getMethods()) {
-			if (m.isAnnotationPresent(annotation)) {
-				matchedAnnotations.add(m);
+		while (clazz != null) {
+			for (Method m : clazz.getDeclaredMethods()) {
+				if (m.isAnnotationPresent(annotation)) {
+					matchedAnnotations.add(m);
+				}
 			}
+			clazz = clazz.getSuperclass();
 		}
 
 		return matchedAnnotations.toArray(new Method[matchedAnnotations.size()]);
