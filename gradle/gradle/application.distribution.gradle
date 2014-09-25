@@ -1,21 +1,43 @@
 // Application Plugin Settings and Hooks ///////////////////////////////////////	
 
+import java.util.regex.Matcher
+
 apply plugin: "application"
 
 applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 startScripts {
-	defaultJvmOpts = [ "-Xmx2048m", "-Dfile.encoding=utf-8" ]
-	
-	doLast {
-		def winFile = file getWindowsScript()
-		def unixFile = file getUnixScript()
-
-		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/lib/*')
+	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
 		
-		// Post Java process commands: Delayed plugin JAR file deletion (Windows only)
+	doLast {		
+		def defaultMaxMemory = "2048M"
+
+		///// Windows batch files fixes/enhancements  /////
+		def winFile = file getWindowsScript()
+
+		// - Add lib/* to classpath
+		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
+		
+		// - Read max memory (-Xmx) from userconfig.xml 
+		String winMaxMemoryCommands = "@rem Read max memory from userconfig.xml\r\n"
+		winMaxMemoryCommands += "set APP_USERCONFIG_FILE=%AppData%\\\\Syncany\\\\userconfig.xml\r\n";
+		winMaxMemoryCommands += "\r\n";
+		winMaxMemoryCommands += "if exist \"%APP_USERCONFIG_FILE%\" (\r\n";
+		winMaxMemoryCommands += "  for /F tokens^=2^,3^,5delims^=^<^\"^=^> %%a in (%APP_USERCONFIG_FILE%) do ( \r\n";
+		winMaxMemoryCommands += "    if \"%%a\" equ \"maxMemory\" set APP_MAX_MEMORY=%%b\r\n";
+		winMaxMemoryCommands += "  )\r\n";
+		winMaxMemoryCommands += ")\r\n";
+		winMaxMemoryCommands += "\r\n";
+		winMaxMemoryCommands += "if defined APP_MAX_MEMORY (\r\n";
+		winMaxMemoryCommands += "  set DEFAULT_JVM_OPTS=%DEFAULT_JVM_OPTS% \"-Xmx%APP_MAX_MEMORY%\"\r\n";
+		winMaxMemoryCommands += ") else (\r\n";
+		winMaxMemoryCommands += "  set DEFAULT_JVM_OPTS=%DEFAULT_JVM_OPTS% \"-Xmx" + defaultMaxMemory + "\"\r\n";
+		winMaxMemoryCommands += ")";
+		
+		winFile.text = winFile.text.replaceAll("(set DEFAULT_JVM_OPTS.+)", '$1' + Matcher.quoteReplacement("\r\n\r\n${winMaxMemoryCommands}"))
+		
+		// - Post Java process commands: Delayed plugin JAR file deletion (Windows only)
 		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs\r\n"
 		winPurgeFileDeletionCommands += "SET PURGEFILE=%AppData%\\\\Syncany\\\\purgefile\r\n";
 		winPurgeFileDeletionCommands += "if exist %PURGEFILE% (\r\n";
@@ -25,6 +47,7 @@ startScripts {
 		
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
 		
+		// - Append daemon batch script (handle 'sy daemon')
 		def winTextTmp = ""
 		def winText = winFile.text
 		def windowsDaemonScript = new File('gradle/daemon/syncanyd.bat.skel').text		
@@ -50,7 +73,29 @@ startScripts {
 		
 		winFile.text = winTextTmp
 		
-		// Update unix text
+		///// Linux/Unix script fixes/enhancements /////
+		def unixFile = file getUnixScript()
+		
+		// - Add lib/* to classpath
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/lib/*')
+
+		// - Read max memory (-Xmx) from userconfig.xml
+		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml\n"
+		unixMaxMemoryCommands += "APP_USERCONFIG_FILE=~/.config/syncany/userconfig.xml\n";
+		unixMaxMemoryCommands += "\n";
+		unixMaxMemoryCommands += "if [ -f \$APP_USERCONFIG_FILE ]; then\n";
+		unixMaxMemoryCommands += "    APP_MAX_MEMORY=\$(cat \$APP_USERCONFIG_FILE | sed -n 's/.*<maxMemory>\\([^<]*\\)<\\/maxMemory>.*/\\1/p')\n";
+		unixMaxMemoryCommands += "fi\n";
+		unixMaxMemoryCommands += "\n";
+		unixMaxMemoryCommands += "if [ -z \"\$APP_MAX_MEMORY\" ]; then\n";
+		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx" + defaultMaxMemory + "\\\"\"\n";
+		unixMaxMemoryCommands += "else\n";
+		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx\$APP_MAX_MEMORY\\\"\"\n";
+		unixMaxMemoryCommands += "fi\n";
+
+		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
+
+		// - Append daemon batch script (handle 'sy daemon')		
 		def unixTextTmp = ""
 		def unixText = unixFile.text
 		def unixDaemonScript = new File('gradle/daemon/syncanyd.skel').text		
