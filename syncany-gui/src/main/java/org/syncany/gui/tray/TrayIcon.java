@@ -24,13 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
-import org.syncany.gui.settings.SettingsDialog;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.util.I18n;
-import org.syncany.gui.wizard.WizardDialog;
 
 /**
  * @author pheckel
@@ -186,24 +183,11 @@ public abstract class TrayIcon {
 	});
 
 	protected void showSettings() {
-		shell.getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				SettingsDialog wd = new SettingsDialog(shell, SWT.APPLICATION_MODAL);
-				wd.setApplicationConfiguration(Launcher.applicationConfiguration);
-				wd.open();
-			}
-		});
+		// show settings
 	}
 
 	protected void showWizard() {
-		shell.getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				WizardDialog wd = new WizardDialog(getShell(), SWT.APPLICATION_MODAL);
-				wd.open();
-			}
-		});
+		// start wizard
 	}
 
 	// Abstract methods
