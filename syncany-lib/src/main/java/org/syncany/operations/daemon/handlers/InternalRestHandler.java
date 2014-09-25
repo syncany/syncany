@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
-import org.syncany.events.LocalEventBus;
+import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.api.MessageFactory;

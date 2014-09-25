@@ -28,14 +28,14 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
-import org.syncany.events.LocalEventBus;
-import org.syncany.events.SyncEvent;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.down.DownOperationResult;
@@ -177,7 +177,7 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onWatchEventReceived(SyncEvent syncEvent) {
+	public void onWatchEventReceived(SyncExternalEvent syncEvent) {
 		if (daemonConfig.getHooks() != null) {
 			switch (syncEvent.getType()) {
 			case OPERATION_DONE_DOWN:
@@ -211,7 +211,7 @@ public class WatchServer {
 	}
 	
 
-	private void runHookPostDownOperation(SyncEvent syncEvent) {
+	private void runHookPostDownOperation(SyncExternalEvent syncEvent) {
 		String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
 		
 		if (runAfterSyncCommand != null) {

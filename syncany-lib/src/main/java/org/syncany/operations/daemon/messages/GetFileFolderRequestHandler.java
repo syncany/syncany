@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.ObjectId;
@@ -30,7 +31,6 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.events.LocalEventBus;
 import org.syncany.operations.Assembler;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.daemon.messages.api.FolderRequest;

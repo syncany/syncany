@@ -15,10 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.daemon.messages;
 
-public interface IndexerListener {
-	public void onIndexStart(int fileCount);
-	public void onIndexFile(String fileName, int fileNumber);
-	public void onIndexEnd();
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+
+public class SyncExternalEvent extends ExternalEvent {
+	public enum Type {
+		DOWNLOAD_START, DOWNLOAD_FILE, DOWNLOAD_END, OPERATION_DONE_DOWN, UPLOAD_START, UPLOAD_END, UPLOAD_FILE, INDEX_FILE, INDEX_START, INDEX_END
+	};
+
+	private Type type;
+	private Object[] subjects;
+	
+	public SyncExternalEvent(Type type, Object... subjects) {
+		this.type = type;
+		this.subjects = subjects;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public Object[] getSubjects() {
+		return subjects;
+	}
 }

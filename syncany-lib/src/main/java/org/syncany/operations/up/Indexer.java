@@ -34,6 +34,7 @@ import org.syncany.chunk.Deduper;
 import org.syncany.chunk.DeduperListener;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
@@ -51,6 +52,8 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -80,13 +83,15 @@ public class Indexer {
 	private Config config;
 	private Deduper deduper;
 	private SqlDatabase localDatabase;
-	private IndexerListener listener;
 	
-	public Indexer(Config config, Deduper deduper, IndexerListener listener) {
+	private LocalEventBus eventBus;
+	
+	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
 		this.localDatabase = new SqlDatabase(config);
-		this.listener = listener;
+
+		this.eventBus = LocalEventBus.getInstance();
 	}
 	
 	/**
@@ -113,7 +118,7 @@ public class Indexer {
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 		
 		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache, listener));			
+		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));			
 		
 		// Find and remove deleted files
 		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
@@ -228,10 +233,8 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;		
 		
-		private IndexerListener listener;
-
 		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache,
-				Map<String, PartialFileHistory> filePathCache, IndexerListener listener) {
+				Map<String, PartialFileHistory> filePathCache) {
 			
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
@@ -239,7 +242,6 @@ public class Indexer {
 			
 			this.fileChecksumCache = fileChecksumCache;
 			this.filePathCache = filePathCache;
-			this.listener = listener;
 		}				
 
 		@Override
@@ -270,9 +272,7 @@ public class Indexer {
 		public boolean onFileStart(File file, int fileIndex) {
 			boolean processFile = startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
 			
-			if (processFile && listener != null) {
-				listener.onIndexFile(file.getName(), fileIndex);
-			}
+			eventBus.post(new SyncExternalEvent(Type.INDEX_FILE, file.getName(), fileIndex));
 			
 			return processFile;
 		}
@@ -610,16 +610,12 @@ public class Indexer {
 		
 		@Override
 		public void onStart(int fileCount) {
-			if (listener != null) {
-				listener.onIndexStart(fileCount);
-			}
+			eventBus.post(new SyncExternalEvent(Type.INDEX_START, fileCount));
 		}
 		
 		@Override
 		public void onFinish() {
-			if (listener != null) {
-				listener.onIndexEnd();
-			}
+			eventBus.post(new SyncExternalEvent(Type.INDEX_END));
 		}
 
 		/**
