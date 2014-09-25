@@ -19,7 +19,7 @@ package org.syncany.cli.util;
 
 import java.io.PrintStream;
 
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 
 public class CarriageReturnPrinter {
 	private PrintStream underlyingPrintStream;	
@@ -77,7 +77,7 @@ public class CarriageReturnPrinter {
 	
 	private void clearLastLine() {
 		if (lastWasWithCarriageReturn) {
-			String spacesStr = "\r" + Strings.repeat(' ', lineLength) + "\r";		
+			String spacesStr = "\r" + Strings.repeat(" ", lineLength) + "\r";		
 			underlyingPrintStream.print(spacesStr);
 			
 			lastWasWithCarriageReturn = false;

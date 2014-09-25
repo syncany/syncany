@@ -154,13 +154,17 @@ public class RemoteTransaction {
 	}
 
 	private void uploadAndMoveToTempLocation() throws StorageException {
+		TransactionStats stats = gatherTransactionStats();		
+		int uploadFileIndex = 0;
+		
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				File localFile = action.getLocalTempLocation();
+				long localFileSize = localFile.length();
 
-				eventBus.post(new SyncExternalEvent(Type.UP_UPLOAD_FILE, tempRemoteFile.getName()));
+				eventBus.post(new SyncExternalEvent(Type.UP_UPLOAD_FILE_IN_TX, ++uploadFileIndex, stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
 
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);				
@@ -177,6 +181,19 @@ public class RemoteTransaction {
 				}
 			}
 		}
+	}
+
+	private TransactionStats gatherTransactionStats() {
+		TransactionStats stats = new TransactionStats();
+		
+		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				stats.totalUploadFileCount++;
+				stats.totalUploadSize += action.getLocalTempLocation().length();
+			}			
+		}
+		
+		return stats;
 	}
 
 	private void moveToFinalLocation() throws StorageException {
@@ -217,5 +234,10 @@ public class RemoteTransaction {
 		}
 
 		logger.log(Level.INFO, "Sucessfully deleted final files.");
+	}
+	
+	private class TransactionStats {
+		private long totalUploadSize;
+		private int totalUploadFileCount;
 	}
 }

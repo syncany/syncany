@@ -29,10 +29,13 @@ import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.util.FileUtil;
 
 import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
+	private long uploadedFileSize;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -127,6 +130,21 @@ public class UpCommand extends Command {
 			out.printr("Uploading " + uploadFilename + " ...");
 			break;
 		
+		case UP_UPLOAD_FILE_IN_TX:
+			int currentFileNumber = (Integer) syncEvent.getSubjects()[0];
+			int totalFileCount = (Integer) syncEvent.getSubjects()[1];
+			long currentFileSize = (Long) syncEvent.getSubjects()[2];
+			long totalUploadFileSize = (Long) syncEvent.getSubjects()[3];
+									
+			String currentFileSizeStr = FileUtil.formatFileSize(currentFileSize);
+			String uploadedFileSizeStr = FileUtil.formatFileSize(uploadedFileSize);
+			String totalUploadFileSizeStr = FileUtil.formatFileSize(totalUploadFileSize);
+			
+			out.printr("Uploading " + currentFileNumber + "/" + totalFileCount + " (" + currentFileSizeStr + ", " + uploadedFileSizeStr + "/" + totalUploadFileSizeStr + ") ...");
+			uploadedFileSize += currentFileSize;
+			
+			break;
+
 		default:					
 			// Nothing.
 		}

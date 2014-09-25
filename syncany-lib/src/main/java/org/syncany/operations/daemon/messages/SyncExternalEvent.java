@@ -21,11 +21,11 @@ import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public class SyncExternalEvent extends ExternalEvent {
 	public enum Type {
-		UP_START, UP_END, UPLOAD_END, UP_INDEX_START, UP_INDEX_END, UP_UPLOAD_FILE, 
+		UP_START, UP_END, UPLOAD_END, UP_INDEX_START, UP_INDEX_END, UP_UPLOAD_FILE, UP_UPLOAD_FILE_IN_TX,
 
 		DOWN_START, DOWN_END, DOWN_DOWNLOAD_FILE,
 
-		STATUS_START, STATUS_END,
+		STATUS_START, STATUS_END, 
 	};
 
 	private Type type;
