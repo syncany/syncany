@@ -7,6 +7,8 @@ Change Log
   + Updated, more flexible WebSocket/REST-like API (basis for GUI/web) #205
 - Bugfixes and other things:
   + Amazon S3 plugin now uses proxy setitngs #228
+  + Windows/Limit: Detect 32-bit Java on 64-bit systems in installer; 
+    limit JVM memory with `<maxMemory>` tag in userconfig.xml #222
 
 ### Syncany 0.1.10-alpha (Date: 16 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
