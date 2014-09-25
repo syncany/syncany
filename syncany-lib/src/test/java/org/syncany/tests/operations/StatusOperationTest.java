@@ -104,7 +104,7 @@ public class StatusOperationTest {
 		
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new UpOperation(config, syncUpOptions, null).execute();		
+		new UpOperation(config, syncUpOptions).execute();		
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
 		
 		// Run 'status', this should run a checksum-based file comparison

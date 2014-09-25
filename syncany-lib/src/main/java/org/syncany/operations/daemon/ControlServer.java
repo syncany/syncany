@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
-import org.syncany.events.LocalEventBus;
 
 /**
  * The control server watches the daemon control file for changes and 

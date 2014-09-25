@@ -24,12 +24,12 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.events.LocalEventBus;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;

@@ -59,11 +59,9 @@ import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
-import org.syncany.operations.up.UpOperationListener;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.plugins.UserInteractionListener;
 
@@ -112,11 +110,7 @@ public class Client {
 	}
 
 	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return up(options, null);
-	}
-
-	public UpOperationResult up(UpOperationOptions options, UpOperationListener listener) throws Exception {
-		return new UpOperation(config, options, listener).execute();
+		return new UpOperation(config, options).execute();
 	}
 
 	public DownOperationResult down() throws Exception {
@@ -148,11 +142,7 @@ public class Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		watch(options, null);	
-	}	
-
-	public void watch(WatchOperationOptions options, WatchOperationListener listener) throws Exception {
-		new WatchOperation(config, options, listener).execute();		
+		new WatchOperation(config, options).execute();		
 	}	
 
 	public GenlinkOperationResult genlink() throws Exception {

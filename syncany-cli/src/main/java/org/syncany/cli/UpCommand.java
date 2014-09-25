@@ -22,11 +22,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.events.LocalEventBus;
-import org.syncany.events.SyncEvent;
-import org.syncany.events.SyncEvent.Type;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
@@ -35,13 +33,6 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
-	private LocalEventBus eventBus;
-	
-	public UpCommand() {
-		this.eventBus = LocalEventBus.getInstance();
-		this.eventBus.register(this);
-	}
-	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -117,13 +108,27 @@ public class UpCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(SyncEvent syncEvent) {
-		if (syncEvent.getType() == Type.INDEXING) {
-			out.print("Indexing file tree ...\r");
-		}
-		else if (syncEvent.getType() == Type.UPLOAD_FILE) {
+	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
+		switch (syncEvent.getType()) {
+		case UP_START:
+			out.printr("Starting indexing and upload ...");			
+			break;
+			
+		case STATUS_START:
+			out.printr("Checking file tree ...");
+			break;
+
+		case UP_INDEX_START:
+			out.printr("Indexing file tree ...");
+			break;
+					
+		case UP_UPLOAD_FILE:
 			String uploadFilename = (String) syncEvent.getSubjects()[0];
-			out.print("Uploading " + uploadFilename + " ...\r");
+			out.printr("Uploading " + uploadFilename + " ...");
+			break;
+		
+		default:					
+			// Nothing.
 		}
 	}
 }

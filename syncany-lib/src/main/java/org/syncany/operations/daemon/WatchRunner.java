@@ -24,16 +24,14 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.PortTO;
-import org.syncany.events.LocalEventBus;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.WatchEventFolderResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperationListener;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.operations.watch.WatchOperationResult;
 
@@ -46,7 +44,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchRunner implements WatchOperationListener {
+public class WatchRunner {
 	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());
 
 	private Config config;
@@ -59,7 +57,7 @@ public class WatchRunner implements WatchOperationListener {
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portTO = portTO;
-		this.watchOperation = new WatchOperation(config, watchOperationOptions, this);
+		this.watchOperation = new WatchOperation(config, watchOperationOptions);
 
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
@@ -136,55 +134,5 @@ public class WatchRunner implements WatchOperationListener {
 				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));
 			}
 		}		
-	}
-	
-	@Override
-	public void onUploadStart(int fileCount) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "UPLOAD_START";
-		
-		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
-
-	@Override
-	public void onUploadFile(String fileName, int fileNumber) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "UPLOAD_FILE";
-		String subject = fileName;
-		
-		eventBus.post(new WatchEventFolderResponse(root, action, subject));
-	}
-
-	@Override
-	public void onUploadEnd() {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "UPLOAD_END";
-		
-		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
-
-	@Override
-	public void onIndexStart(int fileCount) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "INDEX_START";
-		
-		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
-
-	@Override
-	public void onIndexFile(String fileName, int fileNumber) {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "INDEX_FILE";
-		String subject = fileName;
-		
-		eventBus.post(new WatchEventFolderResponse(root, action, subject));
-	}
-
-	@Override
-	public void onIndexEnd() {
-		String root = config.getLocalDir().getAbsolutePath();
-		String action = "INDEX_END";
-		
-		eventBus.post(new WatchEventFolderResponse(root, action));
-	}
+	}	
 }

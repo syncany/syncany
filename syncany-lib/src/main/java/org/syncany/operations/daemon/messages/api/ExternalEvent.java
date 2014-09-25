@@ -15,24 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.events;
+package org.syncany.operations.daemon.messages.api;
 
-public class SyncEvent {
-	public enum Type { DOWNLOAD_START, DOWNLOAD_FILE, DOWNLOAD_END, INDEXING, UPLOAD_FILE, OPERATION_DONE_DOWN };
-	
-	private Type type;
-	private Object[] subjects;
-	
-	public SyncEvent(Type type, Object... subjects) {
-		this.type = type;
-		this.subjects = subjects;
-	}
-
-	public Type getType() {
-		return type;
-	}
-
-	public Object[] getSubjects() {
-		return subjects;
-	}
+public class ExternalEvent extends Event {
+	// Marker
 }

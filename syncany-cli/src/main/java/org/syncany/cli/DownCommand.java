@@ -27,11 +27,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.events.LocalEventBus;
-import org.syncany.events.SyncEvent;
-import org.syncany.events.SyncEvent.Type;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
@@ -40,13 +38,6 @@ import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import com.google.common.eventbus.Subscribe;
 
 public class DownCommand extends Command {
-	private LocalEventBus eventBus;
-	
-	public DownCommand() {
-		this.eventBus = LocalEventBus.getInstance();
-		this.eventBus.register(this);
-	}
-	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -132,10 +123,19 @@ public class DownCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(SyncEvent syncEvent) {
-		if (syncEvent.getType() == Type.DOWNLOAD_FILE) {
-			String downloadFilename = (String) syncEvent.getSubjects()[0];
-			out.print("Downloading " + downloadFilename + " ...\r");
-		}
+	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
+		switch (syncEvent.getType()) {
+						
+		case DOWN_DOWNLOAD_FILE:
+			String fileDescription = (String) syncEvent.getSubjects()[0];
+			int currentFileNumber = (Integer) syncEvent.getSubjects()[1];
+			int maxFileCount = (Integer) syncEvent.getSubjects()[2];
+			
+			out.printr("Downloading " + fileDescription + " "+ currentFileNumber + "/" + maxFileCount + " ...");
+			break;
+
+		default:					
+			// Nothing.
+		}		
 	}
 }

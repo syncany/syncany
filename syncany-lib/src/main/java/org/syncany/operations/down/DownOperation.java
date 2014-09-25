@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
@@ -43,10 +44,10 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
-import org.syncany.events.LocalEventBus;
-import org.syncany.events.SyncEvent;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
@@ -139,6 +140,8 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		
 		startOperation();
+		
+		eventBus.post(new SyncExternalEvent(Type.DOWN_START, result));			
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
@@ -160,7 +163,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 		finishOperation();
 		
-		eventBus.post(new SyncEvent(SyncEvent.Type.OPERATION_DONE_DOWN, result));	
+		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.DOWN_END, result));	
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -225,22 +228,18 @@ public class DownOperation extends AbstractTransferOperation {
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 		int downloadFileIndex = 0;
 
-		eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_START, unknownRemoteDatabases.size()));
-		
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
 			File unknownRemoteDatabaseFileInCache = config.getCache().getDatabaseFile(remoteFile.getName());
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-			eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_FILE, remoteFile.getName(), ++downloadFileIndex));
+			eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.DOWN_DOWNLOAD_FILE, "database", ++downloadFileIndex, unknownRemoteDatabases.size()));
 			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 
 			unknownRemoteDatabasesInCache.put(unknownRemoteDatabaseFileInCache, unknownDatabaseRemoteFile);
 			result.getDownloadedUnknownDatabases().add(remoteFile.getName());
 		}
-		
-		eventBus.post(new SyncEvent(SyncEvent.Type.DOWNLOAD_END, unknownRemoteDatabases.size()));
 
 		return unknownRemoteDatabasesInCache;
 	}

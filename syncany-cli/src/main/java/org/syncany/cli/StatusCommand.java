@@ -23,8 +23,11 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.SyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
+
+import com.google.common.eventbus.Subscribe;
 
 public class StatusCommand extends Command {
 	@Override
@@ -83,6 +86,18 @@ public class StatusCommand extends Command {
 		}
 		else {
 			out.println("No local changes.");
+		}
+	}
+	
+	@Subscribe
+	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
+		switch (syncEvent.getType()) {
+		case STATUS_START:
+			out.printr("Checking file tree ...");
+			break;
+
+		default:					
+			// Nothing.
 		}
 	}
 }
