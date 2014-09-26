@@ -239,7 +239,11 @@ public class WatchServer {
 						
 			try {
 				logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
-				Runtime.getRuntime().exec(runAfterSyncCommand);
+				
+				List<String> commandArgsList = StringUtil.splitCommandLineArgs(runAfterSyncCommand);
+				String[] commandArgs = commandArgsList.toArray(new String[0]);
+			    
+				Runtime.getRuntime().exec(commandArgs);
 			}
 			catch (Exception e) {
 				logger.log(Level.WARNING, "Cannot run sync after command: " + runAfterSyncCommand, e);

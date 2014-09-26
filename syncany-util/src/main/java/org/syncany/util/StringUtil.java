@@ -18,8 +18,11 @@
 package org.syncany.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -29,6 +32,8 @@ import javax.xml.bind.DatatypeConverter;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StringUtil {   
+	private static Pattern COMMAND_ARGS_PATTERN = Pattern.compile("([^'\"\\s]+)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\'([^'\\\\]*(?:\\\\.[^'\\\\]*)*)\'");
+	
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
@@ -179,5 +184,24 @@ public class StringUtil {
 	
 	public static interface StringJoinListener<T> {
 		public String getString(T object);
+	}
+
+	public static List<String> splitCommandLineArgs(String commandLine) {		
+		List<String> commandArgsList = new ArrayList<String>();
+	    Matcher commandArgsMatcher = COMMAND_ARGS_PATTERN.matcher(commandLine);
+	    
+	    while (commandArgsMatcher.find()) {
+	    	if (commandArgsMatcher.group(1) != null) {
+	    		commandArgsList.add(commandArgsMatcher.group(1));
+	    	}
+	    	else if (commandArgsMatcher.group(2) != null) {
+	    		commandArgsList.add(commandArgsMatcher.group(2).replace("\\", ""));
+	    	}
+	    	else if (commandArgsMatcher.group(3) != null) {
+	    		commandArgsList.add(commandArgsMatcher.group(3).replace("\\", ""));
+	    	}	    	
+	    }	 		
+	    
+	    return commandArgsList;
 	}
 }
