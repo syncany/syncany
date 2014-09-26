@@ -145,8 +145,8 @@ public class RemoteTransaction {
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
-		eventBus.post(new UpUploadFileSyncExternalEvent(remoteTransactionFile.getName()));
-		
+		eventBus.post(new UpUploadFileSyncExternalEvent(config.getLocalDir().getAbsolutePath(), remoteTransactionFile.getName()));
+
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 
@@ -154,9 +154,9 @@ public class RemoteTransaction {
 	}
 
 	private void uploadAndMoveToTempLocation() throws StorageException {
-		TransactionStats stats = gatherTransactionStats();		
+		TransactionStats stats = gatherTransactionStats();
 		int uploadFileIndex = 0;
-		
+
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
@@ -164,10 +164,11 @@ public class RemoteTransaction {
 				File localFile = action.getLocalTempLocation();
 				long localFileSize = localFile.length();
 
-				eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(++uploadFileIndex, stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
+				eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(config.getLocalDir().getAbsolutePath(), ++uploadFileIndex,
+						stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
 
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
-				transferManager.upload(localFile, tempRemoteFile);				
+				transferManager.upload(localFile, tempRemoteFile);
 			}
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
@@ -185,14 +186,14 @@ public class RemoteTransaction {
 
 	private TransactionStats gatherTransactionStats() {
 		TransactionStats stats = new TransactionStats();
-		
+
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				stats.totalUploadFileCount++;
 				stats.totalUploadSize += action.getLocalTempLocation().length();
-			}			
+			}
 		}
-		
+
 		return stats;
 	}
 
@@ -235,7 +236,7 @@ public class RemoteTransaction {
 
 		logger.log(Level.INFO, "Sucessfully deleted final files.");
 	}
-	
+
 	private class TransactionStats {
 		private long totalUploadSize;
 		private int totalUploadFileCount;

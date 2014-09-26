@@ -48,48 +48,49 @@ public class Downloader {
 	private Config config;
 	private TransferManager transferManager;
 	private LocalEventBus eventBus;
-	
+
 	public Downloader(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
 		this.eventBus = LocalEventBus.getInstance();
 	}
-	
+
 	/** 
 	 * Downloads the given multichunks from the remote storage and decrypts them
 	 * to the local cache folder. 
 	 */
 	public void downloadAndDecryptMultiChunks(Set<MultiChunkId> unknownMultiChunkIds) throws StorageException, IOException {
 		logger.log(Level.INFO, "Downloading and extracting multichunks ...");
-		
+
 		int multiChunkNumber = 0;
-		
+
 		for (MultiChunkId multiChunkId : unknownMultiChunkIds) {
 			File localEncryptedMultiChunkFile = config.getCache().getEncryptedMultiChunkFile(multiChunkId);
 			File localDecryptedMultiChunkFile = config.getCache().getDecryptedMultiChunkFile(multiChunkId);
 			MultichunkRemoteFile remoteMultiChunkFile = new MultichunkRemoteFile(multiChunkId);
 
 			multiChunkNumber++;
-			
+
 			if (localDecryptedMultiChunkFile.exists()) {
 				logger.log(Level.INFO, "  + Decrypted multichunk exists locally " + multiChunkId + ". No need to download it!");
 			}
 			else {
-				eventBus.post(new DownDownloadFileSyncExternalEvent("multichunk", multiChunkNumber, unknownMultiChunkIds.size()));
-				
+				eventBus.post(new DownDownloadFileSyncExternalEvent(config.getLocalDir().getAbsolutePath(), "multichunk", multiChunkNumber,
+						unknownMultiChunkIds.size()));
+
 				logger.log(Level.INFO, "  + Downloading multichunk " + multiChunkId + " ...");
 				transferManager.download(remoteMultiChunkFile, localEncryptedMultiChunkFile);
-	
+
 				try {
 					logger.log(Level.INFO, "  + Decrypting multichunk " + multiChunkId + " ...");
 					InputStream multiChunkInputStream = config.getTransformer().createInputStream(new FileInputStream(localEncryptedMultiChunkFile));
 					OutputStream decryptedMultiChunkOutputStream = new FileOutputStream(localDecryptedMultiChunkFile);
-		
+
 					IOUtils.copy(multiChunkInputStream, decryptedMultiChunkOutputStream);
-					
+
 					decryptedMultiChunkOutputStream.close();
 					multiChunkInputStream.close();
-	
+
 				}
 				catch (IOException e) {
 					// Security: Deleting the multichunk if the decryption/extraction failed is important!
@@ -97,11 +98,12 @@ public class Downloader {
 					//           local cache and the next 'down' will try to use it. If this is the only
 					//           multichunk that has been tampered with, other changes might be applied to the 
 					//           file system! See https://github.com/syncany/syncany/issues/59#issuecomment-55154793
-					
+
 					logger.log(Level.FINE, "    -> FAILED: Decryption/extraction of multichunk failed, deleting " + multiChunkId + " ...");
 					localDecryptedMultiChunkFile.delete();
-					
-					throw new IOException("Decryption/extraction of multichunk " + multiChunkId + " failed. The multichunk might have been tampered with!", e);
+
+					throw new IOException("Decryption/extraction of multichunk " + multiChunkId
+							+ " failed. The multichunk might have been tampered with!", e);
 				}
 				finally {
 					logger.log(Level.FINE, "  + Locally deleting multichunk " + multiChunkId + " ...");
@@ -109,7 +111,7 @@ public class Downloader {
 				}
 			}
 		}
-		
+
 		transferManager.disconnect();
 	}
 }

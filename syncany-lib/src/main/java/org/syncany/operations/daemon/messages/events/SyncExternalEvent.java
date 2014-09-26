@@ -17,14 +17,22 @@
  */
 package org.syncany.operations.daemon.messages.events;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public abstract class SyncExternalEvent extends ExternalEvent {
-	public enum Type {
-		 UP_INDEX_START, UP_INDEX_END, UP_UPLOAD_FILE, UP_UPLOAD_FILE_IN_TX,
+	@Element(required = true)
+	private String root;
 
-		DOWN_START, DOWN_END, DOWN_DOWNLOAD_FILE,
+	public SyncExternalEvent() {
+		// Nothing.
+	}
+	
+	public SyncExternalEvent(String root) {
+		this.root = root;
+	}
 
-		STATUS_START, STATUS_END, 
-	};
+	public String getRoot() {
+		return root;
+	}	
 }

@@ -17,6 +17,9 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import org.simpleframework.xml.Root;
+
+@Root
 public abstract class ExternalEvent extends Event {
 	// Marker
 }

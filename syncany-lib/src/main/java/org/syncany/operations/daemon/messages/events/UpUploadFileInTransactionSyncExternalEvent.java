@@ -23,7 +23,9 @@ public class UpUploadFileInTransactionSyncExternalEvent extends SyncExternalEven
 	private int totalFileCount;
 	private long totalFileSize;
 	
-	public UpUploadFileInTransactionSyncExternalEvent(int currentFileIndex, int totalFileCount, long currentFileSize, long totalFileSize) {
+	public UpUploadFileInTransactionSyncExternalEvent(String root, int currentFileIndex, int totalFileCount, long currentFileSize, long totalFileSize) {
+		super(root);
+		
 		this.currentFileIndex = currentFileIndex;
 		this.currentFileSize = currentFileSize;
 		this.totalFileCount = totalFileCount;

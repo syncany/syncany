@@ -85,7 +85,7 @@ public class StatusOperation extends Operation {
 		
 		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		eventBus.post(new StatusStartSyncExternalEvent());		
+		eventBus.post(new StatusStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
 		
 		// Path to actual file version
 		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
@@ -102,7 +102,7 @@ public class StatusOperation extends Operation {
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(localChanges);
 		
-		eventBus.post(new StatusEndSyncExternalEvent());		
+		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
 		
 		return statusResult;
 	}

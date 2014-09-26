@@ -23,7 +23,9 @@ public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
 	private int currentFileIndex;
 	private int maxFileCount;
 	
-	public DownDownloadFileSyncExternalEvent(String fileDescription, int currentFileIndex, int maxFileCount) {
+	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
+		super(root);
+		
 		this.fileDescription = fileDescription;
 		this.currentFileIndex = currentFileIndex;
 		this.maxFileCount = maxFileCount;

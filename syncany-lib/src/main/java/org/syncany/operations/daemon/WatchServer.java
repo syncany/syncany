@@ -216,7 +216,7 @@ public class WatchServer {
 				}
 				
 				if (changeSet.getDeletedFiles().size() > 0) {
-					changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) deleted");
+					changeMessageParts.add(changeSet.getDeletedFiles().size() + " file(s) deleted");
 				}
 				
 				String changedMessage = StringUtil.join(changeMessageParts, ", ");

@@ -20,9 +20,10 @@ package org.syncany.operations.daemon.messages.events;
 public class UpIndexStartSyncExternalEvent extends SyncExternalEvent {
 	private int fileCount;
 	
-	public UpIndexStartSyncExternalEvent(int fileCount) {
+	public UpIndexStartSyncExternalEvent(String root, int fileCount) {
+		super(root);
 		this.fileCount = fileCount;
-	}
+	}	
 
 	public int getFileCount() {
 		return fileCount;

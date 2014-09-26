@@ -112,7 +112,7 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		eventBus.post(new UpStartSyncExternalEvent());
+		eventBus.post(new UpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 		
 		if (!checkPreconditions()) {
 			return result;
@@ -157,7 +157,7 @@ public class UpOperation extends AbstractTransferOperation {
 		finishOperation();
 		logger.log(Level.INFO, "Sync up done.");
 		
-		eventBus.post(new UpEndSyncExternalEvent());
+		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());

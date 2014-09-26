@@ -627,12 +627,12 @@ public class Indexer {
 
 		@Override
 		public void onStart(int fileCount) {
-			eventBus.post(new UpIndexStartSyncExternalEvent(fileCount));
+			eventBus.post(new UpIndexStartSyncExternalEvent(config.getLocalDir().getAbsolutePath(), fileCount));
 		}
 
 		@Override
 		public void onFinish() {
-			eventBus.post(new UpIndexEndSyncExternalEvent());
+			eventBus.post(new UpIndexEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 		} 
 
 		/**

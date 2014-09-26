@@ -142,7 +142,7 @@ public class DownOperation extends AbstractTransferOperation {
 		
 		startOperation();
 		
-		eventBus.post(new DownStartSyncExternalEvent());			
+		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));			
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
@@ -164,7 +164,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 		finishOperation();
 		
-		eventBus.post(new DownEndSyncExternalEvent(result));	
+		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));	
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -234,7 +234,7 @@ public class DownOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-			eventBus.post(new DownDownloadFileSyncExternalEvent("database", ++downloadFileIndex, unknownRemoteDatabases.size()));
+			eventBus.post(new DownDownloadFileSyncExternalEvent(config.getLocalDir().getAbsolutePath(), "database", ++downloadFileIndex, unknownRemoteDatabases.size()));
 			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 

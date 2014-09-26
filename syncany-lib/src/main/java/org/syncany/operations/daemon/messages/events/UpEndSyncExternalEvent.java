@@ -18,5 +18,7 @@
 package org.syncany.operations.daemon.messages.events;
 
 public class UpEndSyncExternalEvent extends SyncExternalEvent {
-
+	public UpEndSyncExternalEvent(String root) {
+		super(root);
+	}
 }

@@ -22,7 +22,8 @@ import org.syncany.operations.down.DownOperationResult;
 public class DownEndSyncExternalEvent extends SyncExternalEvent {
 	private DownOperationResult result;
 
-	public DownEndSyncExternalEvent(DownOperationResult result) {
+	public DownEndSyncExternalEvent(String root, DownOperationResult result) {
+		super(root);
 		this.result = result;
 	}
 
