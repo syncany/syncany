@@ -17,15 +17,11 @@
  */
 package org.syncany.gui;
 
-import java.io.File;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Display;
 import org.syncany.config.Logging;
 import org.syncany.config.UserConfig;
-import org.syncany.gui.config.ApplicationConfiguration;
-import org.syncany.gui.config.ApplicationConfigurationTO;
-import org.syncany.gui.config.ProxyController;
 import org.syncany.gui.util.I18n;
 import org.syncany.gui.util.SWTResourceManager;
 
@@ -37,8 +33,6 @@ public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
 	
 	public static String GUI_CONFIG_FILE = "syncany-gui-config.xml";
-
-	public static ApplicationConfiguration applicationConfiguration;
 
 	private static MainGUI window;
 
@@ -64,30 +58,8 @@ public class Launcher {
 		window.dispose();
 	}
 
-	public static void loadConfiguration() {
-		applicationConfiguration = null;
-		
-		try {
-			ApplicationConfigurationTO acto = loadApplicationConfiguration();
-			applicationConfiguration = ApplicationConfiguration.from(acto);
-		}
-		catch (Exception e) {
-			log.severe("Unable to load application configuration File : " + e);
-			return;
-		}
-
-		try {
-			ProxyController.instance().initProxy(applicationConfiguration);
-		}
-		catch (Exception e) {
-			log.severe("Unable to initiate proxy");
-		}
-	}
-
 	private static void startGUI() {
 		Display.setAppName("Syncany");
-
-		loadConfiguration();
 
 		// Register messages bundles
 		I18n.registerBundleName("i18n/messages");
@@ -106,34 +78,5 @@ public class Launcher {
 		window = new MainGUI();
 		window.restoreWatchedFolders();
 		window.open();
-	}
-
-	public static void saveConfiguration() {
-		File userConfigDir = UserConfig.getUserConfigDir();
-		File f = new File(userConfigDir, GUI_CONFIG_FILE);
-
-		try {
-			ApplicationConfigurationTO.store(ApplicationConfiguration.toTO(applicationConfiguration), f);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static ApplicationConfigurationTO loadApplicationConfiguration() throws Exception {
-		File userConfigDir = UserConfig.getUserConfigDir();
-		File f = new File(userConfigDir, GUI_CONFIG_FILE);
-
-		if (!f.exists()) {
-			/** creates an empty ApplicationConfigurationTO file **/
-			if (!userConfigDir.exists()) {
-				userConfigDir.mkdir();
-			}
-			ApplicationConfigurationTO.store(ApplicationConfigurationTO.getDefault(), f);
-			log.info("Syncany gui configuration file created");
-		}
-
-		ApplicationConfigurationTO acto = ApplicationConfigurationTO.load(f);
-		return acto;
 	}
 }
