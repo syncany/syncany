@@ -135,12 +135,15 @@ public class UpCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
-		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
-		String uploadedFileSizeStr = FileUtil.formatFileSize(uploadedFileSize);
-		String totalUploadFileSizeStr = FileUtil.formatFileSize(syncEvent.getTotalFileSize());
+	public void onUploadFileInTransactionEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
+		if (syncEvent.getCurrentFileIndex() <= 1) {
+			uploadedFileSize = 0;
+		}
 		
-		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", " + uploadedFileSizeStr + "/" + totalUploadFileSizeStr + ") ...");
+		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
+		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100); 
+		
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total " + uploadedPercent + "%) ...");
 		uploadedFileSize += syncEvent.getCurrentFileSize();
 	}	
 }
