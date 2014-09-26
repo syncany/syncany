@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages.events;
 
-public abstract class ExternalEvent extends Event {
-	// Marker
+public class UpStartSyncExternalEvent extends SyncExternalEvent {
+
 }

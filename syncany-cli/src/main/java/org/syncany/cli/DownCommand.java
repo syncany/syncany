@@ -29,7 +29,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
@@ -123,19 +123,11 @@ public class DownCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
-		switch (syncEvent.getType()) {
-						
-		case DOWN_DOWNLOAD_FILE:
-			String fileDescription = (String) syncEvent.getSubjects()[0];
-			int currentFileNumber = (Integer) syncEvent.getSubjects()[1];
-			int maxFileCount = (Integer) syncEvent.getSubjects()[2];
-			
-			out.printr("Downloading " + fileDescription + " "+ currentFileNumber + "/" + maxFileCount + " ...");
-			break;
-
-		default:					
-			// Nothing.
-		}		
+	public void onSyncEventReceived(DownDownloadFileSyncExternalEvent syncEvent) {
+		String fileDescription = syncEvent.getFileDescription();
+		int currentFileIndex = syncEvent.getCurrentFileIndex();
+		int maxFileCount = syncEvent.getMaxFileCount();
+		
+		out.printr("Downloading " + fileDescription + " "+ currentFileIndex + "/" + maxFileCount + " ...");			
 	}
 }

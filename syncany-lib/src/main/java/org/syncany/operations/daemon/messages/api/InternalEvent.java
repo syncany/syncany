@@ -17,6 +17,6 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
-public class InternalEvent extends Event {
+public abstract class InternalEvent extends Event {
 	// Marker
 }

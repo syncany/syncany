@@ -46,8 +46,9 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
-import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
+import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.DownEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.DownStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
@@ -141,7 +142,7 @@ public class DownOperation extends AbstractTransferOperation {
 		
 		startOperation();
 		
-		eventBus.post(new SyncExternalEvent(Type.DOWN_START, result));			
+		eventBus.post(new DownStartSyncExternalEvent());			
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
@@ -163,7 +164,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 		finishOperation();
 		
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.DOWN_END, result));	
+		eventBus.post(new DownEndSyncExternalEvent(result));	
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
@@ -233,7 +234,7 @@ public class DownOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile unknownDatabaseRemoteFile = new DatabaseRemoteFile(remoteFile.getName());
 			
 			logger.log(Level.INFO, "- Downloading {0} to local cache at {1}", new Object[] { remoteFile.getName(), unknownRemoteDatabaseFileInCache });
-			eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.DOWN_DOWNLOAD_FILE, "database", ++downloadFileIndex, unknownRemoteDatabases.size()));
+			eventBus.post(new DownDownloadFileSyncExternalEvent("database", ++downloadFileIndex, unknownRemoteDatabases.size()));
 			
 			transferManager.download(unknownDatabaseRemoteFile, unknownRemoteDatabaseFileInCache);
 

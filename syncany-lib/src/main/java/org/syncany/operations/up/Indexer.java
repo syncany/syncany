@@ -52,8 +52,8 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
-import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
+import org.syncany.operations.daemon.messages.events.UpIndexEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpIndexStartSyncExternalEvent;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -108,8 +108,6 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
-		eventBus.post(new SyncExternalEvent(Type.UP_INDEX_START));
-
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
 		// Load file history cache
@@ -629,13 +627,13 @@ public class Indexer {
 
 		@Override
 		public void onStart(int fileCount) {
-			eventBus.post(new SyncExternalEvent(Type.UP_INDEX_START, fileCount));
+			eventBus.post(new UpIndexStartSyncExternalEvent(fileCount));
 		}
 
 		@Override
 		public void onFinish() {
-			eventBus.post(new SyncExternalEvent(Type.UP_INDEX_END));
-		}
+			eventBus.post(new UpIndexEndSyncExternalEvent());
+		} 
 
 		/**
 		 * Checks if chunk already exists in all database versions

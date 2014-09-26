@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
-import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
+import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -145,7 +145,7 @@ public class RemoteTransaction {
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
-		eventBus.post(new SyncExternalEvent(Type.UP_UPLOAD_FILE, remoteTransactionFile.getName()));
+		eventBus.post(new UpUploadFileSyncExternalEvent(remoteTransactionFile.getName()));
 		
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
@@ -164,7 +164,7 @@ public class RemoteTransaction {
 				File localFile = action.getLocalTempLocation();
 				long localFileSize = localFile.length();
 
-				eventBus.post(new SyncExternalEvent(Type.UP_UPLOAD_FILE_IN_TX, ++uploadFileIndex, stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
+				eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(++uploadFileIndex, stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
 
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);				

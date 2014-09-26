@@ -39,8 +39,8 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.Operation;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
-import org.syncany.operations.daemon.messages.SyncExternalEvent.Type;
+import org.syncany.operations.daemon.messages.events.StatusEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
 import org.syncany.util.FileUtil;
 
 /**
@@ -85,7 +85,7 @@ public class StatusOperation extends Operation {
 		
 		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		eventBus.post(new SyncExternalEvent(Type.STATUS_START));		
+		eventBus.post(new StatusStartSyncExternalEvent());		
 		
 		// Path to actual file version
 		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
@@ -102,7 +102,7 @@ public class StatusOperation extends Operation {
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(localChanges);
 		
-		eventBus.post(new SyncExternalEvent(Type.STATUS_END));		
+		eventBus.post(new StatusEndSyncExternalEvent());		
 		
 		return statusResult;
 	}

@@ -15,8 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages.events;
 
-public abstract class ExternalEvent extends Event {
-	// Marker
+
+public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
+	private String fileDescription;
+	private int currentFileIndex;
+	private int maxFileCount;
+	
+	public DownDownloadFileSyncExternalEvent(String fileDescription, int currentFileIndex, int maxFileCount) {
+		this.fileDescription = fileDescription;
+		this.currentFileIndex = currentFileIndex;
+		this.maxFileCount = maxFileCount;
+	}
+
+	public String getFileDescription() {
+		return fileDescription;
+	}
+
+	public int getCurrentFileIndex() {
+		return currentFileIndex;
+	}
+
+	public int getMaxFileCount() {
+		return maxFileCount;
+	}
 }

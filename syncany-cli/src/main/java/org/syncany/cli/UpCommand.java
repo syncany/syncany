@@ -24,7 +24,11 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpIndexStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
@@ -111,42 +115,32 @@ public class UpCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
-		switch (syncEvent.getType()) {
-		case UP_START:
-			out.printr("Starting indexing and upload ...");			
-			break;
-			
-		case STATUS_START:
-			out.printr("Checking file tree ...");
-			break;
-
-		case UP_INDEX_START:
-			out.printr("Indexing file tree ...");
-			break;
-					
-		case UP_UPLOAD_FILE:
-			String uploadFilename = (String) syncEvent.getSubjects()[0];
-			out.printr("Uploading " + uploadFilename + " ...");
-			break;
-		
-		case UP_UPLOAD_FILE_IN_TX:
-			int currentFileNumber = (Integer) syncEvent.getSubjects()[0];
-			int totalFileCount = (Integer) syncEvent.getSubjects()[1];
-			long currentFileSize = (Long) syncEvent.getSubjects()[2];
-			long totalUploadFileSize = (Long) syncEvent.getSubjects()[3];
-									
-			String currentFileSizeStr = FileUtil.formatFileSize(currentFileSize);
-			String uploadedFileSizeStr = FileUtil.formatFileSize(uploadedFileSize);
-			String totalUploadFileSizeStr = FileUtil.formatFileSize(totalUploadFileSize);
-			
-			out.printr("Uploading " + currentFileNumber + "/" + totalFileCount + " (" + currentFileSizeStr + ", " + uploadedFileSizeStr + "/" + totalUploadFileSizeStr + ") ...");
-			uploadedFileSize += currentFileSize;
-			
-			break;
-
-		default:					
-			// Nothing.
-		}
+	public void onUpStartEventReceived(UpStartSyncExternalEvent syncEvent) {
+		out.printr("Starting indexing and upload ...");					
 	}
+	
+	@Subscribe
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
+	}
+	
+	@Subscribe
+	public void onIndexStartEventReceived(UpIndexStartSyncExternalEvent syncEvent) {
+		out.printr("Indexing " + syncEvent.getFileCount() + " new or altered file(s)...");
+	}
+	
+	@Subscribe
+	public void onUploadFileEventReceived(UpUploadFileSyncExternalEvent syncEvent) {
+		out.printr("Uploading " + syncEvent.getFilename() + " ...");
+	}
+	
+	@Subscribe
+	public void onSyncEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
+		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
+		String uploadedFileSizeStr = FileUtil.formatFileSize(uploadedFileSize);
+		String totalUploadFileSizeStr = FileUtil.formatFileSize(syncEvent.getTotalFileSize());
+		
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", " + uploadedFileSizeStr + "/" + totalUploadFileSizeStr + ") ...");
+		uploadedFileSize += syncEvent.getCurrentFileSize();
+	}	
 }

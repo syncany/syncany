@@ -46,7 +46,8 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
@@ -111,7 +112,7 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UP_START));
+		eventBus.post(new UpStartSyncExternalEvent());
 		
 		if (!checkPreconditions()) {
 			return result;
@@ -156,7 +157,7 @@ public class UpOperation extends AbstractTransferOperation {
 		finishOperation();
 		logger.log(Level.INFO, "Sync up done.");
 		
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UP_END));
+		eventBus.post(new UpEndSyncExternalEvent());
 
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
@@ -309,11 +310,8 @@ public class UpOperation extends AbstractTransferOperation {
 
 	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
-		int multiChunkIndex = 0;
 		
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
-			multiChunkIndex++;
-
 			if (dirtyMultiChunkIds.contains(multiChunkEntry.getId())) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
 			}
@@ -325,21 +323,13 @@ public class UpOperation extends AbstractTransferOperation {
 						remoteMultiChunkFile });
 
 				remoteTransaction.upload(localMultiChunkFile, remoteMultiChunkFile);
-
-				eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UP_UPLOAD_FILE, remoteMultiChunkFile.getName(), multiChunkIndex));
 			}
 		}
-
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UPLOAD_END));		
 	}
 
 	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UP_UPLOAD_FILE, localDatabaseFile.getName(), -1));
-
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
-
-		eventBus.post(new SyncExternalEvent(SyncExternalEvent.Type.UPLOAD_END));
 	}
 
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {

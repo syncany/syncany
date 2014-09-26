@@ -15,8 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages.events;
 
-public abstract class ExternalEvent extends Event {
-	// Marker
+import org.syncany.operations.down.DownOperationResult;
+
+public class DownEndSyncExternalEvent extends SyncExternalEvent {
+	private DownOperationResult result;
+
+	public DownEndSyncExternalEvent(DownOperationResult result) {
+		this.result = result;
+	}
+
+	public DownOperationResult getResult() {
+		return result;
+	}
 }

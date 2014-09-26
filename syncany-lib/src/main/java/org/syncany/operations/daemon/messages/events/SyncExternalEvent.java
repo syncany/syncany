@@ -15,8 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages.events;
 
-public abstract class ExternalEvent extends Event {
-	// Marker
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+
+public abstract class SyncExternalEvent extends ExternalEvent {
+	public enum Type {
+		 UP_INDEX_START, UP_INDEX_END, UP_UPLOAD_FILE, UP_UPLOAD_FILE_IN_TX,
+
+		DOWN_START, DOWN_END, DOWN_DOWNLOAD_FILE,
+
+		STATUS_START, STATUS_END, 
+	};
 }

@@ -35,9 +35,9 @@ import org.syncany.operations.ChangeSet;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.ManagementRequest;
+import org.syncany.operations.daemon.messages.events.DownEndSyncExternalEvent;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
@@ -177,20 +177,6 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onWatchEventReceived(SyncExternalEvent syncEvent) {
-		if (daemonConfig.getHooks() != null) {
-			switch (syncEvent.getType()) {
-			case DOWN_END:
-				runHookPostDownOperation(syncEvent);
-				break;
-				
-			default:
-				// Nothing.
-			}			
-		}
-	}
-	
-	@Subscribe
 	public void onManagementRequestReceived(ManagementRequest request) {
 		if (request instanceof ListWatchesManagementRequest) {
 			processListWatchesRequest((ListWatchesManagementRequest) request);
@@ -210,45 +196,46 @@ public class WatchServer {
 		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
 	}
 	
-
-	private void runHookPostDownOperation(SyncExternalEvent syncEvent) {
-		String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
-		
-		if (runAfterSyncCommand != null) {
-			DownOperationResult downOperationResult = (DownOperationResult) syncEvent.getSubjects()[0];
-			ChangeSet changeSet = downOperationResult.getChangeSet();
+	@Subscribe
+	public void onPostDownOperation(DownEndSyncExternalEvent downEndSyncEvent) {
+		if (daemonConfig.getHooks() != null) {
+			String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
 			
-			List<String> changeMessageParts = new ArrayList<>();
-			
-			if (changeSet.getNewFiles().size() > 0) {
-				changeMessageParts.add(changeSet.getNewFiles().size() + " file(s) added");
-			}
-			
-			if (changeSet.getChangedFiles().size() > 0) {
-				changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) changed");
-			}
-			
-			if (changeSet.getDeletedFiles().size() > 0) {
-				changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) deleted");
-			}
-			
-			String changedMessage = StringUtil.join(changeMessageParts, ", ");
-			
-			String escapedSubject = changedMessage.replace("\"", "\\\"");			
-			runAfterSyncCommand = runAfterSyncCommand.replace("%subject", escapedSubject);
-						
-			try {
-				logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
+			if (runAfterSyncCommand != null) {
+				DownOperationResult downOperationResult = downEndSyncEvent.getResult();
+				ChangeSet changeSet = downOperationResult.getChangeSet();
 				
-				List<String> commandArgsList = StringUtil.splitCommandLineArgs(runAfterSyncCommand);
-				String[] commandArgs = commandArgsList.toArray(new String[0]);
-			    
-				Runtime.getRuntime().exec(commandArgs);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot run sync after command: " + runAfterSyncCommand, e);
+				List<String> changeMessageParts = new ArrayList<>();
+				
+				if (changeSet.getNewFiles().size() > 0) {
+					changeMessageParts.add(changeSet.getNewFiles().size() + " file(s) added");
+				}
+				
+				if (changeSet.getChangedFiles().size() > 0) {
+					changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) changed");
+				}
+				
+				if (changeSet.getDeletedFiles().size() > 0) {
+					changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) deleted");
+				}
+				
+				String changedMessage = StringUtil.join(changeMessageParts, ", ");
+				
+				String escapedSubject = changedMessage.replace("\"", "\\\"");			
+				runAfterSyncCommand = runAfterSyncCommand.replace("%subject", escapedSubject);
+							
+				try {
+					logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
+					
+					List<String> commandArgsList = StringUtil.splitCommandLineArgs(runAfterSyncCommand);
+					String[] commandArgs = commandArgsList.toArray(new String[0]);
+				    
+					Runtime.getRuntime().exec(commandArgs);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Cannot run sync after command: " + runAfterSyncCommand, e);
+				}
 			}
 		}
-	}
-	
+	}	
 }

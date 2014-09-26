@@ -23,7 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.SyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 
@@ -90,14 +90,7 @@ public class StatusCommand extends Command {
 	}
 	
 	@Subscribe
-	public void onSyncEventReceived(SyncExternalEvent syncEvent) {
-		switch (syncEvent.getType()) {
-		case STATUS_START:
-			out.printr("Checking file tree ...");
-			break;
-
-		default:					
-			// Nothing.
-		}
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
 	}
 }
