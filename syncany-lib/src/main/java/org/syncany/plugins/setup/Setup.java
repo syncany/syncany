@@ -33,4 +33,5 @@ public @interface Setup {
 
 	String description() default "";
 
+  Class<? extends FieldGenerator> generator() default FieldGenerator.class;
 }

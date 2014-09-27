@@ -38,155 +38,162 @@ import com.google.common.primitives.Ints;
 
 public class PluginSetup {
 
-	public static class Builder {
+  public static class Builder {
 
-		private final List<Field> fields;
+    private final List<Field> fields;
 
-		private Builder(List<Field> fields) {
-			this.fields = fields;
-		}
+    private Builder(List<Field> fields) {
+      this.fields = fields;
+    }
 
-		public List<Item> asQueriableList() {
-			return createQueriableList(fields);
-		}
+    public List<Item> asQueriableList() {
+      return createQueriableList(fields);
+    }
 
-		public List<Field> toFields() {
-			return fields;
-		}
+    public List<Field> toFields() {
+      return fields;
+    }
 
-	}
+  }
 
-	public static Builder forClass(Class<? extends TransferSettings> transferSettingsClass) {
+  public static Builder forClass(Class<? extends TransferSettings> transferSettingsClass) {
 
-		List<Field> fields = Lists.newArrayList(ReflectionUtil.getAllFieldsWithAnnotation(transferSettingsClass, Element.class));
+    List<Field> fields = Lists.newArrayList(ReflectionUtil.getAllFieldsWithAnnotation(transferSettingsClass, Element.class));
 
-		Ordering<Field> byOrderAnnotation = new Ordering<Field>() {
-			@Override
-			public int compare(Field left, Field right) {
-				int leftV = left.getAnnotation(Setup.class) != null ? left.getAnnotation(Setup.class).order() : -1;
-				int rightV = right.getAnnotation(Setup.class) != null ? right.getAnnotation(Setup.class).order() : -1;
-				return Ints.compare(leftV, rightV);
-			}
-		};
+    Ordering<Field> byOrderAnnotation = new Ordering<Field>() {
+      @Override
+      public int compare(Field left, Field right) {
+        int leftV = left.getAnnotation(Setup.class) != null ? left.getAnnotation(Setup.class).order() : -1;
+        int rightV = right.getAnnotation(Setup.class) != null ? right.getAnnotation(Setup.class).order() : -1;
+        return Ints.compare(leftV, rightV);
+      }
+    };
 
-		return new Builder(ImmutableList.copyOf(byOrderAnnotation.nullsLast().sortedCopy(fields)));
+    return new Builder(ImmutableList.copyOf(byOrderAnnotation.nullsLast().sortedCopy(fields)));
 
-	}
+  }
 
-	private static List<Item> createQueriableList(List<Field> fields) {
+  private static List<Item> createQueriableList(List<Field> fields) {
 
-		ImmutableList.Builder<Item> items = ImmutableList.builder();
+    ImmutableList.Builder<Item> items = ImmutableList.builder();
 
-		for (Field field : fields) {
-			Element elementA = field.getAnnotation(Element.class);
-			Setup setupA = field.getAnnotation(Setup.class);
-			String fieldName = !elementA.name().equalsIgnoreCase("") ? elementA.name() : field.getName();
-			String fieldDesc = setupA != null && !setupA.description().equalsIgnoreCase("") ? setupA.description() : field.getName();
-			boolean required = elementA.required();
-			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
+    for (Field field : fields) {
+      Element elementA = field.getAnnotation(Element.class);
+      Setup setupA = field.getAnnotation(Setup.class);
+      String fieldName = !elementA.name().equalsIgnoreCase("") ? elementA.name() : field.getName();
+      String fieldDesc = setupA != null && !setupA.description().equalsIgnoreCase("") ? setupA.description() : field.getName();
+      Class<? extends FieldGenerator> fieldGen = setupA != null && !setupA.generator().isInterface() ? setupA.generator() : null;
+      boolean required = elementA.required();
+      boolean encrypted = field.getAnnotation(Encrypted.class) != null;
 
-			items.add(new Item(field, fieldName, fieldDesc, field.getType(), encrypted, required));
-		}
+      items.add(new Item(field, fieldName, fieldDesc, field.getType(), encrypted, required, fieldGen));
+    }
 
-		return items.build();
+    return items.build();
 
-	}
+  }
 
-	public static class Item {
+  public static class Item {
 
-		public enum ValidationResult {
-			VALID, INVALID_TYPE, validationResult, INVALID_NOT_SET
-		}
+    public enum ValidationResult {
+      VALID, INVALID_TYPE, INVALID_NOT_SET
+    }
 
-		private final Field field;
-		private final String name;
-		private final String description;
-		private final Type type;
-		private final boolean encrypted;
-		private final boolean required;
+    private final Field field;
+    private final String name;
+    private final String description;
+    private final Type type;
+    private final boolean encrypted;
+    private final boolean required;
+    private final Class<? extends FieldGenerator> generator;
 
-		public Item(Field field, String name, String description, Type type, boolean encrypted, boolean required) {
-			this.field = field;
-			this.name = name;
-			this.description = description;
-			this.type = type;
-			this.encrypted = encrypted;
-			this.required = required;
-		}
+    public Item(Field field, String name, String description, Type type, boolean encrypted, boolean required, Class<? extends FieldGenerator> generator) {
+      this.field = field;
+      this.name = name;
+      this.description = description;
+      this.type = type;
+      this.encrypted = encrypted;
+      this.required = required;
+      this.generator = generator;
+    }
 
-		public Field getField() {
-			return field;
-		}
+    public Field getField() {
+      return field;
+    }
 
-		public String getName() {
-			return name;
-		}
+    public String getName() {
+      return name;
+    }
 
-		public String getDescription() {
-			return description;
-		}
+    public String getDescription() {
+      return description;
+    }
 
-		public Type getType() {
-			return type;
-		}
+    public Type getType() {
+      return type;
+    }
 
-		public boolean isEncrypted() {
-			return encrypted;
-		}
+    public boolean isEncrypted() {
+      return encrypted;
+    }
 
-		public boolean isRequired() {
-			return required;
-		}
+    public boolean isRequired() {
+      return required;
+    }
 
-		public ValidationResult isValid(String value) {
+    public Class<? extends FieldGenerator> getGenerator() {
+      return generator;
+    }
 
-			if (!validateInputMandatory(value)) {
-				return ValidationResult.INVALID_NOT_SET;
-			}
+    public ValidationResult isValid(String value) {
 
-			if (!validateInputType(value)) {
-				return ValidationResult.INVALID_TYPE;
-			}
+      if (!validateInputMandatory(value)) {
+        return ValidationResult.INVALID_NOT_SET;
+      }
 
-			return ValidationResult.VALID;
-		}
+      if (!validateInputType(value)) {
+        return ValidationResult.INVALID_TYPE;
+      }
 
-		private boolean validateInputMandatory(String value) {
-			return !isRequired() || (value != null && !value.equals(""));
-		}
+      return ValidationResult.VALID;
+    }
 
-		private boolean validateInputType(String value) {
+    private boolean validateInputMandatory(String value) {
+      return !isRequired() || (value != null && !value.equals(""));
+    }
 
-			if (type == String.class) {
-				return true;
-			}
-			else if (type == Integer.TYPE) {
-				try {
-					Integer.toString(Integer.parseInt(value));
-					return true;
-				}
-				catch (NumberFormatException e) {
-					return false;
-				}
-			}
-			else if (type == Boolean.TYPE) {
-				return true;
-			}
-			else if (type == File.class) {
-				try {
-					new File(value);
-					return true;
-				}
-				catch (NullPointerException e) {
-					return false;
-				}
-			}
-			else {
-				throw new RuntimeException("Unknown type: " + type);
-			}
+    private boolean validateInputType(String value) {
 
-		}
+      if (type == String.class) {
+        return true;
+      }
+      else if (type == Integer.TYPE) {
+        try {
+          Integer.toString(Integer.parseInt(value));
+          return true;
+        }
+        catch (NumberFormatException e) {
+          return false;
+        }
+      }
+      else if (type == Boolean.TYPE) {
+        return true;
+      }
+      else if (type == File.class) {
+        try {
+          new File(value);
+          return true;
+        }
+        catch (NullPointerException e) {
+          return false;
+        }
+      }
+      else {
+        throw new RuntimeException("Unknown type: " + type);
+      }
 
-	}
+    }
+
+  }
 
 }

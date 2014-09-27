@@ -25,23 +25,26 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.base.Strings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.setup.FieldGenerator;
+import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
+import com.google.common.base.Strings;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
@@ -125,9 +128,20 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		out.println();
 		out.println("Connection details for " + settings.getType() + " connection:");
 
-		for (PluginSetup.Item option : PluginSetup.forClass(settings.getClass()).asQueriableList()) {
-			String optionValue = askPluginOption(settings, option);
-			settings.setField(option.getField().getName(), optionValue);
+		try {
+			for (PluginSetup.Item option : PluginSetup.forClass(settings.getClass()).asQueriableList()) {
+
+				Class<? extends FieldGenerator> optionGenerator = option.getGenerator();
+				if (optionGenerator != null) {
+					out.println(optionGenerator.newInstance().triggered());
+				}
+
+				String optionValue = askPluginOption(settings, option);
+				settings.setField(option.getField().getName(), optionValue);
+			}
+		}
+		catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
 
 		validateSettingsWithException(settings); // throws error if invalid

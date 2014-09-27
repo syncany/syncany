@@ -20,6 +20,7 @@ package org.syncany.plugins.local;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
+import org.syncany.plugins.setup.FieldGenerator;
 import org.syncany.plugins.setup.Setup;
 import org.syncany.plugins.transfer.TransferSettings;
 
@@ -34,7 +35,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 public class LocalTransferSettings extends TransferSettings {
 
 	@Element(required = true)
-	@Setup(description = "Another local folder to sync to")
+	@Setup(description = "Another local folder to sync to", generator = TemporaryFieldGenerator.class)
 	public File path;
 
 	public File getPath() {
@@ -43,5 +44,12 @@ public class LocalTransferSettings extends TransferSettings {
 
 	public void setPath(File path) {
 		this.path = path;
+	}
+
+	public static class TemporaryFieldGenerator implements FieldGenerator {
+		@Override
+		public String triggered() {
+			return "The folder must exist!";
+		}
 	}
 }

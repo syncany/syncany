@@ -26,7 +26,6 @@ import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
 
 public class DummyTransferSettings extends TransferSettings {
