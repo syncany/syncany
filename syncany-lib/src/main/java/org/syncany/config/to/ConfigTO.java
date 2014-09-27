@@ -17,6 +17,9 @@
  */
 package org.syncany.config.to;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -28,9 +31,6 @@ import org.syncany.config.ConfigException;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
-
-import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
 
 /**
  * The config transfer object is used to create and load the local config
