@@ -40,11 +40,8 @@ import org.syncany.util.EnvironmentUtil;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class PluginOperationTest {
-
-  private static final int EXPECTED_NUM_PLUGINS = 3;
 
 	@Test
 	public void testPluginListLocalOnly() throws Exception {
@@ -64,7 +61,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 		assertEquals(pluginList.size(), pluginResult.getPluginList().size());
-		assertEquals(EXPECTED_NUM_PLUGINS, pluginResult.getPluginList().size()); // local and unreliable_local
+		assertEquals(3, pluginResult.getPluginList().size()); // local and unreliable_local and dummy
 
 		for (ExtendedPluginInfo pluginInfo : pluginResult.getPluginList()) {
 			assertNull(pluginInfo.getRemotePluginInfo());
@@ -131,27 +128,20 @@ public class PluginOperationTest {
 	}
 
 	@Test
-	public void testPluginInstallAndPluginRemove() throws Exception {
+	public void testPluginInstall() throws Exception {
 		// Test the installation of FTP plugin
+
+		// Note that we would like to test removal of plugins.
+		// However, this is highly non-trivial due to the fact
+		// that classpath hacks would be needed to load plugins
+		// that are not in default locations.
 
 		if (EnvironmentUtil.isWindows()) {
 			// Test is Unix-specific.
 			return;
 		}
 
-		// Set the directory for the global config
-		Field userAppDirUnix = UserConfig.class.getDeclaredField("USER_APP_DIR_UNIX_LIKE");
-		userAppDirUnix.setAccessible(true);
-		File configDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		userAppDirUnix.set(null, configDir);
-
-		// Forget the current global config
-		Field userConfigDir = UserConfig.class.getDeclaredField("userConfigDir");
-		userConfigDir.setAccessible(true);
-		userConfigDir.set(null, null);
-
-		// Reinitialize global config
-		UserConfig.init();
+		File configDir = setupCleanConfigDir();
 
 		// Setup
 		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
@@ -167,11 +157,76 @@ public class PluginOperationTest {
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 
 		// Only one file should be in here: the jar for ftp.
-		assertTrue((new File(configDir, "plugins/lib/")).list().length == 1);
+		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
 
 		// Tear down
 		client.deleteTestData();
 		TestFileUtil.deleteDirectory(configDir);
 		System.setProperty("user.home", "/tmp");
+	}
+
+	@Test
+	public void testPluginInstallUrl() throws Exception {
+		// Test the installation of FTP plugin, through a url.
+		// First a list is done to get the url, then this is used to download.
+
+		if (EnvironmentUtil.isWindows()) {
+			// Test is Unix-specific.
+			return;
+		}
+
+		File configDir = setupCleanConfigDir();
+
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+		TestClient client = new TestClient("A", testConnection);
+
+		PluginOperationOptions pluginOptions = new PluginOperationOptions();
+		pluginOptions.setAction(PluginAction.LIST);
+		pluginOptions.setListMode(PluginListMode.REMOTE);
+		pluginOptions.setSnapshots(false);
+
+		PluginOperationResult pluginResult = client.plugin(pluginOptions);
+
+		String pluginDownloadUrl = null;
+		for (ExtendedPluginInfo pluginInfo : pluginResult.getPluginList()) {
+			if (pluginInfo.getRemotePluginInfo().getPluginId().equals("ftp")) {
+				pluginDownloadUrl = pluginInfo.getRemotePluginInfo().getDownloadUrl();
+			}
+		}
+
+		pluginOptions = new PluginOperationOptions();
+		pluginOptions.setAction(PluginAction.INSTALL);
+		pluginOptions.setPluginId(pluginDownloadUrl);
+
+		pluginResult = client.plugin(pluginOptions);
+
+		assertNotNull(pluginResult);
+		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
+
+		// Only one file should be in here: the jar for ftp.
+		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
+
+		// Tear down
+		client.deleteTestData();
+		TestFileUtil.deleteDirectory(configDir);
+		System.setProperty("user.home", "/tmp");
+	}
+
+	private File setupCleanConfigDir() throws Exception {
+		// Set the directory for the global config
+		Field userAppDirUnix = UserConfig.class.getDeclaredField("USER_APP_DIR_UNIX_LIKE");
+		userAppDirUnix.setAccessible(true);
+		File configDir = TestFileUtil.createTempDirectoryInSystemTemp();
+		userAppDirUnix.set(null, configDir);
+
+		// Forget the current global config
+		Field userConfigDir = UserConfig.class.getDeclaredField("userConfigDir");
+		userConfigDir.setAccessible(true);
+		userConfigDir.set(null, null);
+
+		// Reinitialize global config
+		UserConfig.init();
+		return configDir;
 	}
 }
