@@ -15,10 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.daemon.messages.events;
 
-public interface IndexerListener {
-	public void onIndexStart(int fileCount);
-	public void onIndexFile(String fileName, int fileNumber);
-	public void onIndexEnd();
+public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
+	private String filename;
+
+	public UpUploadFileSyncExternalEvent(String root, String filename) {
+		super(root);
+		this.filename = filename;
+	}
+
+	public String getFilename() {
+		return filename;
+	}
 }

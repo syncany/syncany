@@ -26,9 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.database.FileVersion;
-import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.WatchServer;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderRequest;

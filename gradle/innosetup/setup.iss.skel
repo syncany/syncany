@@ -45,6 +45,9 @@ Source: "*"; DestDir: "{app}"
 Source: "bin\\*"; DestDir: "{app}\\bin"; Excludes: "syncany,sy"
 Source: "lib\\*"; DestDir: "{app}\\lib"
 
+[InstallDelete]
+Type: files; Name: "{app}\\lib\\*"
+
 [Tasks]
 Name: modifypath; Description: Add Syncany to PATH environment variable (recommended)
 Name: setjavahome; Description: Set JAVA_HOME environment variable if not set (recommended)

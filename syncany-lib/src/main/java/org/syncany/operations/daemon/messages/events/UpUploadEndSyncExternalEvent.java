@@ -15,14 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.watch;
+package org.syncany.operations.daemon.messages.events;
 
-import org.syncany.operations.down.DownOperationListener;
-import org.syncany.operations.up.UpOperationListener;
-
-/**
- * @author Vincent Wiencek
- */
-public interface WatchOperationListener extends UpOperationListener, DownOperationListener {
-	// Nothing
+public class UpUploadEndSyncExternalEvent extends SyncExternalEvent {
+	public UpUploadEndSyncExternalEvent(String root) {
+		super(root);
+	}
 }

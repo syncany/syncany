@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
 import java.security.MessageDigest;
+import java.text.DecimalFormat;
 
 /**
  * A file utility class
@@ -210,5 +211,16 @@ public class FileUtil {
 		catch (InvalidPathException e) {
 			return false;
 		}
+	}
+	
+	public static String formatFileSize(long size) {
+		if (size <= 0) {
+			return "0";
+		}
+
+		final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+		int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+
+	    return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
 	}
 }

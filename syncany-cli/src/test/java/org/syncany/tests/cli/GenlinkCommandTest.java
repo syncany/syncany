@@ -55,8 +55,8 @@ public class GenlinkCommandTest {
 
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientLocalDirB.getAbsolutePath(),
-				"--no-daemon",
 				"connect",
+				"--no-daemon",
 				createdLink
 		}));
 
@@ -100,8 +100,8 @@ public class GenlinkCommandTest {
 
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientLocalDirB.getAbsolutePath(),
-				"--no-daemon",
 				"connect",
+				"--no-daemon",
 				createdLink
 		}));
 

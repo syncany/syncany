@@ -24,12 +24,22 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpIndexStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.util.FileUtil;
+
+import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
+	private long uploadedFileSize;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -103,4 +113,37 @@ public class UpCommand extends Command {
 			out.println("Sync up skipped, no local changes.");
 		}
 	}
+	
+	@Subscribe
+	public void onUpStartEventReceived(UpStartSyncExternalEvent syncEvent) {
+		out.printr("Starting indexing and upload ...");					
+	}
+	
+	@Subscribe
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
+	}
+	
+	@Subscribe
+	public void onIndexStartEventReceived(UpIndexStartSyncExternalEvent syncEvent) {
+		out.printr("Indexing " + syncEvent.getFileCount() + " new or altered file(s)...");
+	}
+	
+	@Subscribe
+	public void onUploadFileEventReceived(UpUploadFileSyncExternalEvent syncEvent) {
+		out.printr("Uploading " + syncEvent.getFilename() + " ...");
+	}
+	
+	@Subscribe
+	public void onUploadFileInTransactionEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
+		if (syncEvent.getCurrentFileIndex() <= 1) {
+			uploadedFileSize = 0;
+		}
+		
+		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
+		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100); 
+		
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total " + uploadedPercent + "%) ...");
+		uploadedFileSize += syncEvent.getCurrentFileSize();
+	}	
 }

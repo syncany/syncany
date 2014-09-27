@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersionComparator;
@@ -38,6 +39,8 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.Operation;
+import org.syncany.operations.daemon.messages.events.StatusEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
 import org.syncany.util.FileUtil;
 
 /**
@@ -54,6 +57,8 @@ public class StatusOperation extends Operation {
 	private SqlDatabase localDatabase;
 	private StatusOperationOptions options;
 	
+	private LocalEventBus eventBus;
+	
 	public StatusOperation(Config config) {
 		this(config, new StatusOperationOptions());
 	}	
@@ -64,6 +69,8 @@ public class StatusOperation extends Operation {
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.localDatabase = new SqlDatabase(config);
 		this.options = options;		
+		
+		this.eventBus = LocalEventBus.getInstance();
 	}	
 	
 	@Override
@@ -78,7 +85,8 @@ public class StatusOperation extends Operation {
 		
 		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
-
+		eventBus.post(new StatusStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
+		
 		// Path to actual file version
 		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
 
@@ -93,6 +101,8 @@ public class StatusOperation extends Operation {
 		// Return result
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(localChanges);
+		
+		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
 		
 		return statusResult;
 	}

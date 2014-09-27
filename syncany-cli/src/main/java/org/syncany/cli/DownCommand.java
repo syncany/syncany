@@ -29,10 +29,13 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
+
+import com.google.common.eventbus.Subscribe;
 
 public class DownCommand extends Command {
 	@Override
@@ -117,6 +120,14 @@ public class DownCommand extends Command {
 		else {
 			out.println("Sync down skipped, no remote changes.");
 		}
-
-	}	
+	}
+	
+	@Subscribe
+	public void onSyncEventReceived(DownDownloadFileSyncExternalEvent syncEvent) {
+		String fileDescription = syncEvent.getFileDescription();
+		int currentFileIndex = syncEvent.getCurrentFileIndex();
+		int maxFileCount = syncEvent.getMaxFileCount();
+		
+		out.printr("Downloading " + fileDescription + " "+ currentFileIndex + "/" + maxFileCount + " ...");			
+	}
 }
