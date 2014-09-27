@@ -20,6 +20,7 @@ package org.syncany.tests.plugins;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,6 +30,7 @@ import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferSettings;
@@ -158,5 +160,18 @@ public class TransferSettingsTest {
 		DummyTransferSettings settings = serializer.read(DummyTransferSettings.class, tmpFile);
 
 	}
+
+  @Test
+  public void testOrderingOfOptions() throws Exception {
+
+    final String[] expectedOrder = new String[] {"foo", "number", "baz", "nest"};
+    List<PluginSetup.Item> items = PluginSetup.forClass(DummyTransferSettings.class).asQueriableList();
+
+    int i = 0;
+    for(PluginSetup.Item item : items) {
+      assertEquals(expectedOrder[i++], item.getName());
+    }
+
+  }
 
 }

@@ -24,6 +24,7 @@ import org.syncany.plugins.annotations.PluginSettings;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPluginUtil {
+
 	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
 		PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
 
@@ -43,4 +44,5 @@ public abstract class TransferPluginUtil {
 
 		return manager.value();
 	}
+
 }

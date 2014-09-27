@@ -32,7 +32,6 @@ import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.annotations.Encrypted;
@@ -64,8 +63,6 @@ public abstract class TransferSettings implements ConnectionTO {
 	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
 		this.userInteractionListener = userInteractionListener;
 	}
-
-	public abstract PluginOptionSpecs getOptionSpecs();
 
 	public final String getType() {
 		return type;

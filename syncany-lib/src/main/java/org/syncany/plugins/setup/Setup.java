@@ -15,33 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.local;
+package org.syncany.plugins.setup;
 
-import java.io.File;
-
-import org.simpleframework.xml.Element;
-import org.syncany.plugins.setup.Setup;
-import org.syncany.plugins.transfer.TransferSettings;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The local connection represents the settings required to create to a
- * backend based on a local (or mounted network) folder. It can be used to
- * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalPlugin}.
- *
- * @author Philipp C. Heckel
+ * @author Christian Roth <christian.roth@port17.de>
  */
-public class LocalTransferSettings extends TransferSettings {
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Setup {
 
-	@Element(required = true)
-	@Setup(description = "Another local folder to sync to")
-	public File path;
+	int order() default -1;
 
-	public File getPath() {
-		return path;
-	}
+	String description() default "";
 
-	public void setPath(File path) {
-		this.path = path;
-	}
 }
