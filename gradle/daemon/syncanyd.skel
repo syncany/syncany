@@ -168,7 +168,7 @@ case "$1" in
 				daemon_force_stop
 				;; 
 			*) 
-				#JAVA_EXEC_REPLACEMENT_MARKER#
+				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
 				;;
 		esac
 		;;            
