@@ -11,12 +11,12 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
-import org.syncany.gui.command.GUIClient;
+import org.syncany.gui.command.GuiCommandManager;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
 import org.syncany.operations.daemon.DaemonOperation;
-import org.syncany.operations.daemon.LocalEventBus;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.Request;
@@ -73,7 +73,7 @@ public class MainGUI {
 		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
 
 		if (daemonRunning) {
-			GUIClient gc = new GUIClient();
+			GuiCommandManager gc = new GuiCommandManager();
 			Request req = new ListWatchesManagementRequest();
 			req.setId(Math.abs(new Random().nextInt()));
 			ListWatchesManagementResponse response = (ListWatchesManagementResponse) gc.runCommand(req);

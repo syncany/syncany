@@ -32,8 +32,6 @@ import org.syncany.gui.util.SWTResourceManager;
 public class Launcher {
 	private static final Logger log = Logger.getLogger(Launcher.class.getSimpleName());
 	
-	public static String GUI_CONFIG_FILE = "syncany-gui-config.xml";
-
 	private static MainGUI window;
 
 	static {

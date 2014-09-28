@@ -50,8 +50,8 @@ import org.syncany.operations.daemon.messages.api.Response;
  *  
  * @author Vincent Wiencek <vwiencek@gmail.com>
  */
-public class GUIClient extends Client {
-	private static final Logger logger = Logger.getLogger(GUIClient.class.getSimpleName());
+public class GuiCommandManager extends Client {
+	private static final Logger logger = Logger.getLogger(GuiCommandManager.class.getSimpleName());
 	
 	private static final String SERVER_SCHEMA = "https://";
 	private static final String SERVER_HOSTNAME = "localhost";

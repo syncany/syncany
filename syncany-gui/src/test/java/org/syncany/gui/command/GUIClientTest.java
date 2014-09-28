@@ -32,7 +32,7 @@ public class GUIClientTest {
 	
 	@Test
 	public void testGuiClient() throws Exception {
-		GUIClient gc = new GUIClient();
+		GuiCommandManager gc = new GuiCommandManager();
 		Request req = new ListWatchesManagementRequest();
 		req.setId(Math.abs(new Random().nextInt()));
 		Response response = gc.runCommand(req);
