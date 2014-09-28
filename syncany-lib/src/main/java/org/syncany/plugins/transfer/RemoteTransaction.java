@@ -18,6 +18,9 @@
 package org.syncany.plugins.transfer;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
+import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -41,10 +44,13 @@ public class RemoteTransaction {
 	private Config config;
 	private TransactionTO transactionTO;
 
+	private LocalEventBus eventBus;
+
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
 		this.transactionTO = new TransactionTO(config.getMachineName());
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	/**
@@ -139,6 +145,8 @@ public class RemoteTransaction {
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
+		eventBus.post(new UpUploadFileSyncExternalEvent(config.getLocalDir().getAbsolutePath(), remoteTransactionFile.getName()));
+
 		logger.log(Level.INFO, "- Uploading remote transaction file {0} ...", remoteTransactionFile);
 		transferManager.upload(localTransactionFile, remoteTransactionFile);
 
@@ -146,11 +154,18 @@ public class RemoteTransaction {
 	}
 
 	private void uploadAndMoveToTempLocation() throws StorageException {
+		TransactionStats stats = gatherTransactionStats();
+		int uploadFileIndex = 0;
+
 		for (ActionTO action : transactionTO.getActions()) {
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				File localFile = action.getLocalTempLocation();
+				long localFileSize = localFile.length();
+
+				eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(config.getLocalDir().getAbsolutePath(), ++uploadFileIndex,
+						stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
 
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);
@@ -167,6 +182,19 @@ public class RemoteTransaction {
 				}
 			}
 		}
+	}
+
+	private TransactionStats gatherTransactionStats() {
+		TransactionStats stats = new TransactionStats();
+
+		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				stats.totalUploadFileCount++;
+				stats.totalUploadSize += action.getLocalTempLocation().length();
+			}
+		}
+
+		return stats;
 	}
 
 	private void moveToFinalLocation() throws StorageException {
@@ -207,5 +235,10 @@ public class RemoteTransaction {
 		}
 
 		logger.log(Level.INFO, "Sucessfully deleted final files.");
+	}
+
+	private class TransactionStats {
+		private long totalUploadSize;
+		private int totalUploadFileCount;
 	}
 }

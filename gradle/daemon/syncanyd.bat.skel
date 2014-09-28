@@ -56,7 +56,7 @@ rem END OF PID FILE STUFF
 @if "%2" == "reload" goto reload
 @if "%2" == "status" goto status
 
-echo Usage: syncanyd (start/stop/reload/status)
+echo Usage: sy daemon (start/stop/reload/status/force-stop)
 goto mainEnd
 
 :stop

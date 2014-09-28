@@ -52,6 +52,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.UserTO;
@@ -64,6 +65,7 @@ import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.GetFileFolderResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.plugins.web.WebInterfacePlugin;
@@ -256,6 +258,16 @@ public class WebServer {
 	}
 
 	@Subscribe
+	public void onEvent(ExternalEvent event) {
+		try {
+			sendBroadcast(MessageFactory.toXml(event));
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Cannot send event.", e);
+		}
+	}
+	
+	@Subscribe
 	public void onResponse(Response response) {
 		try {
 			// Serialize response
@@ -283,7 +295,7 @@ public class WebServer {
 			}
 		}
 		catch (Exception e) {
-			throw new RuntimeException(e);
+			logger.log(Level.SEVERE, "Cannot send response.", e);
 		}
 	}
 	

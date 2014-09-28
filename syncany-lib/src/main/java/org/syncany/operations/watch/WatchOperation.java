@@ -74,7 +74,6 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private static final int STOP_GRACE_PERIOD = 15*1000; 
 	
 	private WatchOperationOptions options;
-	private WatchOperationListener listener;
 	
 	private SqlDatabase localDatabase;
 
@@ -91,11 +90,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private String notificationChannel;
 	private String notificationInstanceId;
 
-	public WatchOperation(Config config, WatchOperationOptions options, WatchOperationListener listener) {
+	public WatchOperation(Config config, WatchOperationOptions options) {
 		super(config);
 
 		this.options = options;
-		this.listener = listener;
 
 		this.localDatabase = new SqlDatabase(config);
 		
@@ -236,14 +234,14 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				boolean notifyChanges = false;
 				
 				// Run down
-				DownOperationResult downResult = new DownOperation(config, options.getDownOptions(), listener).execute();
+				DownOperationResult downResult = new DownOperation(config, options.getDownOptions()).execute();
 				
 				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 					// TODO [low] Do something?
 				}
 				
 				// Run up
-				UpOperationResult upOperationResult = new UpOperation(config, options.getUpOptions(), listener).execute();
+				UpOperationResult upOperationResult = new UpOperation(config, options.getUpOptions()).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
 					upCount.incrementAndGet();

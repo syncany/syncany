@@ -15,13 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.daemon.messages.api;
 
-/**
- * @author Vincent Wiencek
- */
-public interface UpOperationListener extends IndexerListener {
-	public void onUploadStart(int fileCount);
-	public void onUploadFile(String fileName, int fileNumber);
-	public void onUploadEnd();	
+import org.simpleframework.xml.Root;
+
+@Root
+public abstract class ExternalEvent extends Event {
+	// Marker
 }

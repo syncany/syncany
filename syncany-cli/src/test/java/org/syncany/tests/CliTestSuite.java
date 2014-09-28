@@ -26,7 +26,6 @@ import org.syncany.tests.cli.ConnectCommandWithEncryptionTest;
 import org.syncany.tests.cli.DownCommandTest;
 import org.syncany.tests.cli.GenlinkCommandTest;
 import org.syncany.tests.cli.InitAndConnectCommandNoEncryptionTest;
-import org.syncany.tests.cli.LogCommandTest;
 import org.syncany.tests.cli.LsCommandTest;
 import org.syncany.tests.cli.LsRemoteCommandTest;
 import org.syncany.tests.cli.PluginCommandTest;
@@ -43,7 +42,6 @@ import org.syncany.tests.cli.WatchCommandTest;
 	DownCommandTest.class,
 	GenlinkCommandTest.class,
 	InitAndConnectCommandNoEncryptionTest.class,
-	LogCommandTest.class,
 	LsCommandTest.class,
 	LsRemoteCommandTest.class,
 	PluginCommandTest.class,

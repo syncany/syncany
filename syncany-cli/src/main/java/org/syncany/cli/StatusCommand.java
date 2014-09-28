@@ -23,8 +23,11 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
+
+import com.google.common.eventbus.Subscribe;
 
 public class StatusCommand extends Command {
 	@Override
@@ -84,5 +87,10 @@ public class StatusCommand extends Command {
 		else {
 			out.println("No local changes.");
 		}
+	}
+	
+	@Subscribe
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
 	}
 }

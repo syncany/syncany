@@ -15,12 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.down;
+package org.syncany.operations.daemon.messages.events;
 
-/**
- * @author Vincent Wiencek
- */
-public interface DownOperationListener {
-	public void onDownloadStart(int fileCount);
-	public void onDownloadFile(String fileName, int fileNumber);
+public class StatusStartSyncExternalEvent extends SyncExternalEvent {
+	public StatusStartSyncExternalEvent(String root) {
+		super(root);
+	}
 }

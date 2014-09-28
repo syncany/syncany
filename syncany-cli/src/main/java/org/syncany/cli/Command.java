@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.PrintStream;
 
 import org.syncany.Client;
+import org.syncany.cli.util.CarriageReturnPrinter;
+import org.syncany.config.LocalEventBus;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
 
@@ -47,8 +49,15 @@ import org.syncany.operations.OperationResult;
 public abstract class Command {
 	protected Client client;
 	protected File localDir;
-	protected PrintStream out;
+	protected CarriageReturnPrinter out;
 
+	protected LocalEventBus eventBus;
+	
+	public Command() {
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
+	}
+	
 	/**
 	 * This method implements the command-specific option-parsing, operation calling 
 	 * and output printing. To do so, the method must read and evaluate the given 
@@ -108,6 +117,6 @@ public abstract class Command {
 	}
 
 	public void setOut(PrintStream out) {
-		this.out = out;
+		this.out = new CarriageReturnPrinter(out);
 	}
 }
