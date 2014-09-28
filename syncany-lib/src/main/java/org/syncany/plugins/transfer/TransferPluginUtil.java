@@ -17,8 +17,8 @@
  */
 package org.syncany.plugins.transfer;
 
-import org.syncany.plugins.annotations.PluginManager;
-import org.syncany.plugins.annotations.PluginSettings;
+import org.syncany.plugins.PluginManager;
+import org.syncany.plugins.PluginSettings;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>

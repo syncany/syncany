@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.setup;
+package org.syncany.plugins;
+
+import org.syncany.plugins.transfer.TransferSettings;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,13 +27,9 @@ import java.lang.annotation.Target;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-@Target(ElementType.FIELD)
+
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Setup {
-
-	int order() default -1;
-
-	String description() default "";
-
-  Class<? extends FieldGenerator> generator() default FieldGenerator.class;
+public @interface PluginSettings {
+	Class<? extends TransferSettings> value();
 }

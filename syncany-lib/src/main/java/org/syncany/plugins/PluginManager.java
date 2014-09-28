@@ -15,12 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.setup;
+package org.syncany.plugins;
+
+import org.syncany.plugins.transfer.TransferManager;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
-public interface FieldGenerator {
-	public String triggered();
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PluginManager {
+  Class<? extends TransferManager> value();
 }

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.annotations;
+package org.syncany.plugins;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,6 +27,12 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Encrypted {
-	// Empty.
+public @interface Option {
+	int order() default -1;
+
+	String description() default "";
+	
+	boolean encrypted() default false;
+
+	Class<? extends FieldCallback> callback() default FieldCallback.class;
 }

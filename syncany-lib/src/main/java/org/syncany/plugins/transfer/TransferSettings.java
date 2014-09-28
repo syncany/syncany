@@ -31,11 +31,11 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 import org.syncany.config.to.ConnectionTO;
+import org.syncany.plugins.Option;
 import org.syncany.plugins.Plugin;
+import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.annotations.Encrypted;
-import org.syncany.plugins.annotations.PluginSettings;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 
@@ -85,11 +85,11 @@ public abstract class TransferSettings implements ConnectionTO {
 	}
 
 	@Override
-	public TransferSettings setField(String key, String value) throws StorageException {
+	public void setField(String key, String value) throws StorageException {
 		try {
-			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
+			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
 
-			for (Field field : simpleXmlElementFields) {
+			for (Field field : elementFields) {
 				field.setAccessible(true);
 
 				String fieldName = field.getName();
@@ -112,14 +112,8 @@ public abstract class TransferSettings implements ConnectionTO {
 			}
 		}
 		catch (Exception e) {
-			throw new StorageException("Unable to parse key value map (1): " + e.getMessage());
+			throw new StorageException("Unable to parse key value map: " + e.getMessage(), e);
 		}
-
-		if (!isValid()) {
-			throw new StorageException("Unable to parse key value map (2): settings not valid (perhaps missing some mandatory values)");
-		}
-
-		return this;
 	}
 
 	public final boolean isValid() {
@@ -132,9 +126,12 @@ public abstract class TransferSettings implements ConnectionTO {
 			}
 		}
 		catch (InvocationTargetException | IllegalAccessException e) {
-			if (e.getCause() instanceof StorageException) {
+			logger.log(Level.SEVERE, "Unable to check if option(s) are valid.", e);
+			
+			if (e.getCause() instanceof StorageException) { // Dirty hack
 				return false;
 			}
+			
 			throw new RuntimeException("Unable to call plugin validator: ", e);
 		}
 
@@ -143,15 +140,12 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	@Validate
 	public final void validateRequiredFields() throws StorageException {
-
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, "Validating required fields");
-		}
+		logger.log(Level.FINE, "Validating required fields");
 
 		try {
-			Field[] simpleXmlElementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
+			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
 
-			for (Field field : simpleXmlElementFields) {
+			for (Field field : elementFields) {
 				field.setAccessible(true);
 
 				if (field.getAnnotation(Element.class).required() && field.get(this) == null) {
@@ -167,13 +161,20 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	@Persist
 	private void encrypt() throws Exception {
-		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
-			if (field.getType() != String.class) {
-				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
-			}
+		// TODO [high] This should be in the @Option annotation
+		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Option.class);
+		
+		for (Field field : optionFields) {
+			field.setAccessible(true);
+								
+			if (field.getAnnotation(Option.class).encrypted()) {
+				if (field.getType() != String.class) {
+					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
+				}
 
-			// TODO [medium] Do actual encryption
-			field.set(this, StringUtil.toHex(((String) field.get(this)).getBytes()));
+				// TODO [high] Do actual encryption
+				field.set(this, StringUtil.toHex(((String) field.get(this)).getBytes()));
+			}
 		}
 
 		logger.log(Level.FINE, "Encrypted transfer setting values");
@@ -181,13 +182,20 @@ public abstract class TransferSettings implements ConnectionTO {
 
 	@Commit
 	private void decrypt() throws Exception {
-		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Encrypted.class)) {
-			if (field.getType() != String.class) {
-				throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted");
-			}
+		// TODO [high] This should be in the @Option annotation
+		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Option.class);
 
-			// TODO [medium] Do actual decryption
-			field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
+		for (Field field : optionFields) {
+			field.setAccessible(true);
+			
+			if (field.getAnnotation(Option.class).encrypted()) {
+				if (field.getType() != String.class) {
+					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
+				}
+
+				// TODO [high] Do actual decryption
+				field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
+			}			
 		}
 
 		logger.log(Level.FINE, "Decrypted transfer setting values");

@@ -19,8 +19,8 @@ package org.syncany.plugins.transfer;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
+import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.annotations.PluginSettings;
 
 import java.io.File;
 import java.io.IOException;

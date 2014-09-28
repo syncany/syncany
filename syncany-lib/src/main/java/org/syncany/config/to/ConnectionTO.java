@@ -23,11 +23,10 @@ import org.syncany.plugins.transfer.StorageException;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface ConnectionTO {
-
 	public String getType();
 
 	public String getField(String key) throws StorageException;
 
-	public ConnectionTO setField(String key, String value) throws StorageException;
+	public void setField(String key, String value) throws StorageException;
 
 }

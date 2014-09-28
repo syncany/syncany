@@ -33,10 +33,11 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
+import org.syncany.plugins.FieldCallback;
+import org.syncany.plugins.PluginOption;
+import org.syncany.plugins.PluginSetup;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.plugins.setup.FieldGenerator;
-import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
@@ -129,11 +130,13 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		out.println("Connection details for " + settings.getType() + " connection:");
 
 		try {
-			for (PluginSetup.Item option : PluginSetup.forClass(settings.getClass()).asQueriableList()) {
-
-				Class<? extends FieldGenerator> optionGenerator = option.getGenerator();
-				if (optionGenerator != null) {
-					out.println(optionGenerator.newInstance().triggered());
+			List<PluginOption> pluginOptions = PluginSetup.getOrderedOptions(settings.getClass());
+			
+			for (PluginOption option : pluginOptions) {
+				Class<? extends FieldCallback> optionCallbackClass = option.getCallback();
+				
+				if (optionCallbackClass != null) {
+					out.println(optionCallbackClass.newInstance().preQueryCallback());
 				}
 
 				String optionValue = askPluginOption(settings, option);
@@ -161,7 +164,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return settings;
 	}
 
-	private String askPluginOption(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+	private String askPluginOption(TransferSettings settings, PluginOption option) throws StorageException {
 		while (true) {
 			String value;
 
@@ -180,7 +183,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			}
 
 			// Validate result
-			PluginSetup.Item.ValidationResult validationResult = option.isValid(value);
+			PluginOption.ValidationResult validationResult = option.isValid(value);
 
 			switch (validationResult) {
 			case INVALID_NOT_SET:
@@ -202,7 +205,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 	}
 
-	private String askPluginOptionNormal(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+	private String askPluginOptionNormal(TransferSettings settings, PluginOption option) throws StorageException {
 		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 
@@ -222,7 +225,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	private String askPluginOptionOptional(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+	private String askPluginOptionOptional(TransferSettings settings, PluginOption option) throws StorageException {
 		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 
@@ -242,7 +245,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	private String askPluginOptionSensitive(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+	private String askPluginOptionSensitive(TransferSettings settings, PluginOption option) throws StorageException {
 		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 		String optionalIndicator = option.isRequired() ? "" : ", optional";

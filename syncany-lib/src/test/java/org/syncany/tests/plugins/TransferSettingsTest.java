@@ -17,6 +17,12 @@
  */
 package org.syncany.tests.plugins;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,16 +36,15 @@ import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.plugins.PluginOption;
+import org.syncany.plugins.PluginSetup;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferSettings;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
-
-import static org.junit.Assert.*;
 
 public class TransferSettingsTest {
 	private File tmpFile;
@@ -163,12 +168,11 @@ public class TransferSettingsTest {
 
 	@Test
 	public void testOrderingOfOptions() throws Exception {
-
 		final String[] expectedOrder = new String[] { "foo", "number", "baz", "nest" };
-		List<PluginSetup.Item> items = PluginSetup.forClass(DummyTransferSettings.class).asQueriableList();
+		List<PluginOption> items = PluginSetup.getOrderedOptions(DummyTransferSettings.class);
 
 		int i = 0;
-		for (PluginSetup.Item item : items) {
+		for (PluginOption item : items) {
 			assertEquals(expectedOrder[i++], item.getName());
 		}
 

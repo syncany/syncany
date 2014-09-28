@@ -18,8 +18,8 @@
 package org.syncany.plugins.local;
 
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.annotations.PluginManager;
-import org.syncany.plugins.annotations.PluginSettings;
+import org.syncany.plugins.PluginManager;
+import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
