@@ -15,22 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.dummy;
+package org.syncany.plugins.setup;
 
-import org.syncany.plugins.annotations.PluginManager;
-import org.syncany.plugins.annotations.PluginSettings;
-import org.syncany.plugins.transfer.TransferPlugin;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Setup {
 
-@PluginSettings(DummyTransferSettings.class)
-@PluginManager(DummyTransferManager.class)
-public class DummyTransferPlugin extends TransferPlugin {
+	int order() default -1;
 
-	public DummyTransferPlugin() {
-		super("dummy");
-	}
+	String description() default "";
 
+  Class<? extends FieldGenerator> generator() default FieldGenerator.class;
 }

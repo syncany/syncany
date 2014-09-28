@@ -44,7 +44,7 @@ import org.syncany.util.EnvironmentUtil;
 public class PluginOperationTest {
 	private static final int EXPECTED_NUM_PLUGINS = 3;
 
-  	@Test
+	@Test
 	public void testPluginListLocalOnly() throws Exception {
 		// Setup
 		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
@@ -62,6 +62,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 		assertEquals(pluginList.size(), pluginResult.getPluginList().size());
+
 		assertEquals(EXPECTED_NUM_PLUGINS, pluginResult.getPluginList().size()); // local and unreliable_local
 
 		for (ExtendedPluginInfo pluginInfo : pluginResult.getPluginList()) {
@@ -142,19 +143,7 @@ public class PluginOperationTest {
 			return;
 		}
 
-		// Set the directory for the global config
-		Field userAppDirUnix = UserConfig.class.getDeclaredField("USER_APP_DIR_UNIX_LIKE");
-		userAppDirUnix.setAccessible(true);
-		File configDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		userAppDirUnix.set(null, configDir);
-
-		// Forget the current global config
-		Field userConfigDir = UserConfig.class.getDeclaredField("userConfigDir");
-		userConfigDir.setAccessible(true);
-		userConfigDir.set(null, null);
-
-		// Reinitialize global config
-		UserConfig.init();
+		File configDir = setupCleanConfigDir();
 
 		// Setup
 		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
@@ -217,7 +206,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 
-		// Only one file should be in here: the jar for ftp.		
+		// Only one file should be in here: the jar for ftp.
 		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
 
 		// Tear down

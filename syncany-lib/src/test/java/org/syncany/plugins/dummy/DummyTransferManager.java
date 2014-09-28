@@ -27,7 +27,6 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
- * @version 0.0.1
  */
 
 public class DummyTransferManager extends AbstractTransferManager {

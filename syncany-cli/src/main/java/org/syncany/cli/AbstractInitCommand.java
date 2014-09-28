@@ -33,11 +33,10 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.plugins.PluginOptionSpec;
-import org.syncany.plugins.PluginOptionSpec.OptionValidationResult;
-import org.syncany.plugins.PluginOptionSpecs;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.setup.FieldGenerator;
+import org.syncany.plugins.setup.PluginSetup;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
@@ -87,7 +86,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				plugin = askPlugin();
 			}
 
-			transferSettings = askPluginSettings(plugin.createEmptySettings(), false);
+			transferSettings = askPluginSettings(plugin.createEmptySettings());
 		}
 		else {
 			plugin = initPlugin(options.valueOf(optionPlugin));
@@ -98,7 +97,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected Map<String, String> parsePluginSettingsFromOptions(List<String> pluginSettingsOptList) throws Exception {
-		Map<String, String> pluginOptionValues = new HashMap<String, String>();
+		Map<String, String> pluginOptionValues = new HashMap<>();
 
 		// Fill settings map
 		for (String pluginSettingKeyValue : pluginSettingsOptList) {
@@ -124,29 +123,25 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
-	protected TransferSettings askPluginSettings(TransferSettings settings, boolean confirmKnownValues) throws StorageException {
-		PluginOptionSpecs pluginOptionSpecs = settings.getOptionSpecs();
+	protected TransferSettings askPluginSettings(TransferSettings settings) throws StorageException {
 
 		out.println();
 		out.println("Connection details for " + settings.getType() + " connection:");
 
-		for (PluginOptionSpec optionSpec : pluginOptionSpecs.values()) {
-			String knownOptionValue = settings.getField(optionSpec.getId());
-			String optionValue = null;
+		try {
+			for (PluginSetup.Item option : PluginSetup.forClass(settings.getClass()).asQueriableList()) {
 
-			if (knownOptionValue == null) {
-				optionValue = askPluginOption(optionSpec, null);
-			}
-			else {
-				if (confirmKnownValues) {
-					optionValue = askPluginOption(optionSpec, knownOptionValue);
+				Class<? extends FieldGenerator> optionGenerator = option.getGenerator();
+				if (optionGenerator != null) {
+					out.println(optionGenerator.newInstance().triggered());
 				}
-				else {
-					optionValue = knownOptionValue;
-				}
-			}
 
-			settings.setField(optionSpec.getId(), optionValue);
+				String optionValue = askPluginOption(settings, option);
+				settings.setField(option.getField().getName(), optionValue);
+			}
+		}
+		catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
 
 		validateSettingsWithException(settings); // throws error if invalid
@@ -166,26 +161,26 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return settings;
 	}
 
-	private String askPluginOption(PluginOptionSpec optionSpec, String knownOptionValue) {
+	private String askPluginOption(TransferSettings settings, PluginSetup.Item option) throws StorageException {
 		while (true) {
-			String value = null;
+			String value;
 
 			// Retrieve value
-			if (optionSpec.isSensitive()) {
+			if (option.isEncrypted()) {
 				// The option is sensitive. Could be either mandatory or optional
-				value = askPluginOptionSensitive(optionSpec, knownOptionValue);
+				value = askPluginOptionSensitive(settings, option);
 			}
-			else if (!optionSpec.isMandatory()) {
+			else if (!option.isRequired()) {
 				// The option is optional
-				value = askPluginOptionOptional(optionSpec, knownOptionValue);
+				value = askPluginOptionOptional(settings, option);
 			}
 			else {
 				// The option is mandatory, but not sensitive
-				value = askPluginOptionNormal(optionSpec, knownOptionValue);
+				value = askPluginOptionNormal(settings, option);
 			}
 
 			// Validate result
-			OptionValidationResult validationResult = optionSpec.validateInput(value);
+			PluginSetup.Item.ValidationResult validationResult = option.isValid(value);
 
 			switch (validationResult) {
 			case INVALID_NOT_SET:
@@ -199,7 +194,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				break;
 
 			case VALID:
-				return optionSpec.getValue(value);
+				return value;
 
 			default:
 				throw new RuntimeException("Invalid return type: " + validationResult);
@@ -207,15 +202,16 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 	}
 
-	private String askPluginOptionNormal(PluginOptionSpec optionSpec, String knownOptionValue) {
+	private String askPluginOptionNormal(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s: ", optionSpec.getDescription());
+			out.printf("- %s: ", option.getDescription());
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -226,15 +222,16 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	private String askPluginOptionOptional(PluginOptionSpec optionSpec, String knownOptionValue) {
+	private String askPluginOptionOptional(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (optional, default is %s): ", optionSpec.getDescription(), optionSpec.getDefaultValue());
+			out.printf("- %s (optional, default is %s): ", option.getDescription(), settings.getField(option.getField().getName()));
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", optionSpec.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -245,16 +242,17 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	private String askPluginOptionSensitive(PluginOptionSpec optionSpec, String knownOptionValue) {
+	private String askPluginOptionSensitive(TransferSettings settings, PluginSetup.Item option) throws StorageException {
+		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
-		String optionalIndicator = optionSpec.isMandatory() ? "" : ", optional";
+		String optionalIndicator = option.isRequired() ? "" : ", optional";
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
+			out.printf("- %s (not displayed%s): ", option.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}
 		else {
-			out.printf("- %s (***, not displayed%s): ", optionSpec.getDescription(), optionalIndicator);
+			out.printf("- %s (***, not displayed%s): ", option.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 
 			if ("".equals(value)) {
@@ -306,7 +304,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	protected ConnectionTO updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
 		try {
-			return askPluginSettings((TransferSettings) connectionTO, true);
+			return askPluginSettings((TransferSettings) connectionTO);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Unable to reload old plugin settings", e);

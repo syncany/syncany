@@ -15,22 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.dummy;
-
-import org.syncany.plugins.annotations.PluginManager;
-import org.syncany.plugins.annotations.PluginSettings;
-import org.syncany.plugins.transfer.TransferPlugin;
+package org.syncany.plugins.setup;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-@PluginSettings(DummyTransferSettings.class)
-@PluginManager(DummyTransferManager.class)
-public class DummyTransferPlugin extends TransferPlugin {
-
-	public DummyTransferPlugin() {
-		super("dummy");
-	}
-
+public interface FieldGenerator {
+	public String triggered();
 }
