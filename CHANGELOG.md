@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.1.11-alpha (Date: Tbd.)
+### Syncany 0.1.11-alpha (Date: 29 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + Updated, more flexible WebSocket/REST-like API (basis for GUI/web) #205
