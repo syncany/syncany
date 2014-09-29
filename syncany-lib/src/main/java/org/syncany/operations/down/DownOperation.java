@@ -331,14 +331,21 @@ public class DownOperation extends AbstractTransferOperation {
 
 			for (DatabaseVersionHeader databaseVersionHeader : localPurgeBranch.getAll()) {
 				logger.log(Level.INFO, "    * MASTER->DIRTY: "+databaseVersionHeader);
-				localDatabase.markDatabaseVersionDirty(databaseVersionHeader.getVectorClock());
-			
-				String remoteFileToPruneClientName = config.getMachineName();
-				long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
-				DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
+				localDatabase.markDatabaseVersionDirty(databaseVersionHeader.getVectorClock());			
 
-				logger.log(Level.INFO, "    * Deleting remote database file " + remoteFileToPrune + " ...");
-				transferManager.delete(remoteFileToPrune);		
+				boolean isOwnDatabaseVersionHeader = config.getMachineName().equals(databaseVersionHeader.getClient());
+				
+				if (isOwnDatabaseVersionHeader) {
+					String remoteFileToPruneClientName = config.getMachineName();
+					long remoteFileToPruneVersion = databaseVersionHeader.getVectorClock().getClock(config.getMachineName());
+					DatabaseRemoteFile remoteFileToPrune = new DatabaseRemoteFile(remoteFileToPruneClientName, remoteFileToPruneVersion);
+
+					logger.log(Level.INFO, "    * Deleting own remote database file " + remoteFileToPrune + " ...");
+					transferManager.delete(remoteFileToPrune);							
+				}
+				else {
+					logger.log(Level.INFO, "    * NOT deleting any database file remotely (not our database!)");
+				}						
 				
 				result.getDirtyDatabasesCreated().add(databaseVersionHeader);
 			}						
