@@ -30,7 +30,7 @@ public class NestedPluginOption extends PluginOption {
 	private final List<PluginOption> nestedOptions;
 
 	NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required, Class<? extends OptionCallback> callback, List<PluginOption> nestedOptions) {
-		super(field, name, description, type, encrypted, encrypted, required, callback);
+		super(field, name, description, type, encrypted, sensitive, required, callback);
 		this.nestedOptions = nestedOptions;
 	}
 
