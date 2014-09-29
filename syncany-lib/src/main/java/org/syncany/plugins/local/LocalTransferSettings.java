@@ -34,7 +34,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  */
 public class LocalTransferSettings extends TransferSettings {
 	@Element(required = true)
-	@Setup(order = 1, description = "Path to local repository", callback = TemporaryFieldCallback.class)
+	@Setup(order = 1, description = "Path to local repository", callback = PathOptionCallback.class)
 	public File path;
 
 	public File getPath() {
@@ -45,7 +45,7 @@ public class LocalTransferSettings extends TransferSettings {
 		this.path = path;
 	}
 
-	public static class TemporaryFieldCallback implements OptionCallback {
+	public static class PathOptionCallback implements OptionCallback {
 		@Override
 		public String preQueryCallback() {
 			return "The folder must exist!";

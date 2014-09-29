@@ -17,7 +17,9 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,12 +27,17 @@ import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
-import org.syncany.config.to.ConnectionTO;
+import org.syncany.config.UserConfig;
+import org.syncany.config.to.UserConfigTO;
+import org.syncany.crypto.CipherSpecs;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.plugins.Encrypted;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.PluginSettings;
@@ -50,7 +57,7 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
-public abstract class TransferSettings implements ConnectionTO {
+public abstract class TransferSettings {
 	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 	protected UserInteractionListener userInteractionListener;
 
@@ -69,8 +76,7 @@ public abstract class TransferSettings implements ConnectionTO {
 		return type;
 	}
 
-	@Override
-	public String getField(String key) throws StorageException {
+	public final String getField(String key) throws StorageException {
 		try {
 			Object fieldValueAsObject = this.getClass().getDeclaredField(key).get(this);
 
@@ -85,8 +91,7 @@ public abstract class TransferSettings implements ConnectionTO {
 		}
 	}
 
-	@Override
-	public void setField(String key, Object value) throws StorageException {
+	public final void setField(String key, Object value) throws StorageException {
 		try {
 			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
 
@@ -179,8 +184,10 @@ public abstract class TransferSettings implements ConnectionTO {
 					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 				}
 
-				// TODO [high] Do actual encryption
-				field.set(this, StringUtil.toHex(((String) field.get(this)).getBytes()));
+				InputStream plainInputStream = IOUtils.toInputStream((String) field.get(this));
+				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getPrivateKey();
+				byte[] encryptedBytes = CipherUtil.encrypt(plainInputStream, CipherSpecs.getDefaultCipherSpecs(), privateKey);
+				field.set(this, StringUtil.toHex(encryptedBytes)); // the field's now encrypted
 			}
 		}
 
@@ -200,8 +207,10 @@ public abstract class TransferSettings implements ConnectionTO {
 					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 				}
 
-				// TODO [high] Do actual decryption
-				field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
+				ByteArrayInputStream encryptedInputStream = new ByteArrayInputStream(StringUtil.fromHex((String) field.get(this)));
+				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getPrivateKey();
+				byte[] decryptedBytes = CipherUtil.decrypt(encryptedInputStream, privateKey);
+				field.set(this, new String(decryptedBytes)); // the field's now decrypted
 			}
 		}
 

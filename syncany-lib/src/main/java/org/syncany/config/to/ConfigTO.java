@@ -30,6 +30,7 @@ import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 
 /**
@@ -58,7 +59,7 @@ public class ConfigTO {
 	private SaltedSecretKey masterKey;
 
 	@Element(name = "connection", required = true)
-	private ConnectionTO connectionTO;
+	private TransferSettings transferSettings;
 
 	@Element(name = "cacheKeepBytes", required = false)
 	private Long cacheKeepBytes;
@@ -88,12 +89,12 @@ public class ConfigTO {
 		this.displayName = displayName;
 	}
 
-	public ConnectionTO getConnectionTO() {
-		return connectionTO;
+	public TransferSettings getTransferSettings() {
+		return transferSettings;
 	}
 
-	public void setConnectionTO(ConnectionTO connectionTO) {
-		this.connectionTO = connectionTO;
+	public void setTransferSettings(TransferSettings transferSettings) {
+		this.transferSettings = transferSettings;
 	}
 
 	public SaltedSecretKey getMasterKey() {

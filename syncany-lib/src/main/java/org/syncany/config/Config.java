@@ -215,15 +215,15 @@ public class Config {
 	}
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
-		if (configTO.getConnectionTO() != null) {
-			plugin = Plugins.get(configTO.getConnectionTO().getType(), TransferPlugin.class);
+		if (configTO.getTransferSettings() != null) {
+			plugin = Plugins.get(configTO.getTransferSettings().getType(), TransferPlugin.class);
 
 			if (plugin == null) {
-				throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
+				throw new ConfigException("Plugin not supported: " + configTO.getTransferSettings().getType());
 			}
 
 			try {
-				transferSettings = (TransferSettings) configTO.getConnectionTO();
+				transferSettings = (TransferSettings) configTO.getTransferSettings();
 			}
 			catch (Exception e) {
 				throw new ConfigException("Cannot initialize storage: " + e.getMessage(), e);

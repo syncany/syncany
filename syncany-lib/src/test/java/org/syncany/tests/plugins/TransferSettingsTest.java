@@ -68,7 +68,7 @@ public class TransferSettingsTest {
 		final LocalTransferSettings lts = new LocalTransferSettings();
 		final ConfigTO conf = TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO();
 
-		conf.setConnectionTO(ts);
+		conf.setTransferSettings(ts);
 
 		ts.foo = fooTest;
 		ts.baz = bazTest;
@@ -84,10 +84,10 @@ public class TransferSettingsTest {
 		System.out.println(new String(Files.readAllBytes(Paths.get(tmpFile.toURI()))));
 
 		ConfigTO confRestored = ConfigTO.load(tmpFile);
-		TransferPlugin plugin = Plugins.get(confRestored.getConnectionTO().getType(), TransferPlugin.class);
+		TransferPlugin plugin = Plugins.get(confRestored.getTransferSettings().getType(), TransferPlugin.class);
 		assertNotNull(plugin);
 
-		TransferSettings tsRestored = (TransferSettings) confRestored.getConnectionTO();
+		TransferSettings tsRestored = confRestored.getTransferSettings();
 		assertNotNull(tsRestored);
 
 		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored, config);
@@ -140,7 +140,7 @@ public class TransferSettingsTest {
 
 		ConfigTO confRestored = ConfigTO.load(tmpFile);
 
-		assertEquals(LocalTransferSettings.class, confRestored.getConnectionTO().getClass());
+		assertEquals(LocalTransferSettings.class, confRestored.getTransferSettings().getClass());
 
 	}
 

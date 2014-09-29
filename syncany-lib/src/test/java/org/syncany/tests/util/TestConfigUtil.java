@@ -197,7 +197,7 @@ public class TestConfigUtil {
 		// connectionTO.setSettings(localConnectionSettings);
 		// }
 
-		configTO.setConnectionTO(connection);
+		configTO.setTransferSettings(connection);
 
 		// Create
 		Config config = new Config(tempLocalDir, configTO, repoTO);
@@ -233,13 +233,13 @@ public class TestConfigUtil {
 		configTO.setMasterKey(masterKey);
 
 		// generic connection settings wont work anymore, because they are plugin dependent now.
-		// ConnectionTO connectionTO = new ConnectionTO();
-		// connectionTO.setType("local");
-		// connectionTO.setSettings(localConnectionSettings);
-		LocalTransferSettings connectionTO = Plugins.get("local", TransferPlugin.class).createEmptySettings();
-		connectionTO.setPath(tempRepoDir);
+		// ConnectionTO transferSettings = new ConnectionTO();
+		// transferSettings.setType("local");
+		// transferSettings.setSettings(localConnectionSettings);
+		LocalTransferSettings transferSettings = Plugins.get("local", TransferPlugin.class).createEmptySettings();
+		transferSettings.setPath(tempRepoDir);
 
-		configTO.setConnectionTO(connectionTO);
+		configTO.setTransferSettings(transferSettings);
 
 		InitOperationOptions operationOptions = new InitOperationOptions();
 
@@ -258,12 +258,12 @@ public class TestConfigUtil {
 			throws Exception {
 		InitOperationOptions initOperationOptions = createTestInitOperationOptions(machineName);
 		// createTestInitOperationOptions always returns LocalTransferSettings
-		File tempRpoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getConnectionTO()).getPath();
-		UnreliableLocalTransferSettings connectionTO = Plugins.get("unreliable_local", TransferPlugin.class).createEmptySettings();
-		connectionTO.setPath(tempRpoDir);
-		connectionTO.setFailingOperationPatterns(failingOperationPatterns);
+		File tempRpoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getTransferSettings()).getPath();
+		UnreliableLocalTransferSettings transferSettings = Plugins.get("unreliable_local", TransferPlugin.class).createEmptySettings();
+		transferSettings.setPath(tempRpoDir);
+		transferSettings.setFailingOperationPatterns(failingOperationPatterns);
 
-		initOperationOptions.getConfigTO().setConnectionTO(connectionTO);
+		initOperationOptions.getConfigTO().setTransferSettings(transferSettings);
 
 		return initOperationOptions;
 	}

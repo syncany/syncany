@@ -35,7 +35,6 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.RepoTO;
@@ -45,6 +44,7 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
@@ -144,14 +144,14 @@ public abstract class AbstractInitOperation extends Operation {
 		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
 	}
 
-	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws Exception {
+	protected String getEncryptedLink(TransferSettings transferSettings, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
-		new Persister(new Format(0)).write(connectionTO, plaintextGzipOutputStream);
+		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
 		plaintextGzipOutputStream.close();
 
 		byte[] masterKeySalt = masterKey.getSalt();
-		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(connectionTO.getType().getBytes()), cipherSpecs, masterKey);
+		byte[] encryptedPluginBytes = CipherUtil.encrypt(new ByteArrayInputStream(transferSettings.getType().getBytes()), cipherSpecs, masterKey);
 		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSpecs, masterKey);
 
 		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
@@ -161,15 +161,15 @@ public abstract class AbstractInitOperation extends Operation {
 		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedPlugin + "/" + encryptedEncodedStorage;
 	}
 
-	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
+	protected String getPlaintextLink(TransferSettings transferSettings) throws Exception {
 		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
-		new Persister(new Format(0)).write(connectionTO, plaintextGzipOutputStream);
+		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
 		plaintextGzipOutputStream.close();
 
 		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		
-		String plaintextEncodedPlugin = Base58.encode(connectionTO.getType().getBytes());
+
+		String plaintextEncodedPlugin = Base58.encode(transferSettings.getType().getBytes());
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 
 		return "syncany://storage/1/not-encrypted/" + plaintextEncodedPlugin + "/" + plaintextEncodedStorage;

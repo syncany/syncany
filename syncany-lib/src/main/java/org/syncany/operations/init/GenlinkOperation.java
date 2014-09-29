@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,30 +28,30 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 
 /**
- * This operation generates a link which can be shared among users to connect to 
+ * This operation generates a link which can be shared among users to connect to
  * a repository. The operation is used by other initializing operations, e.g. connect
- * and init.  
- * 
+ * and init.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class GenlinkOperation extends AbstractInitOperation {
-    private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());            
-    private ConfigTO configTO;
-    
-    public GenlinkOperation(Config config) {
-        super(config, null);
-    }
-    
-    public GenlinkOperation(ConfigTO configTO) {
-        super(null, null);
-        this.configTO = configTO;
-    }        
-            
-    @Override
-    public GenlinkOperationResult execute() throws Exception {
+	private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());
+	private ConfigTO configTO;
+
+	public GenlinkOperation(Config config) {
+		super(config, null);
+	}
+
+	public GenlinkOperation(ConfigTO configTO) {
+		super(null, null);
+		this.configTO = configTO;
+	}
+
+	@Override
+	public GenlinkOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'GenLink'");
-		logger.log(Level.INFO, "--------------------------------------------");                      
+		logger.log(Level.INFO, "--------------------------------------------");
 
 		if (configTO == null) {
 			configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
@@ -59,18 +59,18 @@ public class GenlinkOperation extends AbstractInitOperation {
 
 		String shareLink = null;
 		boolean shareLinkEncrypted = false;
-		
+
 		if (configTO.getMasterKey() != null) {
 			List<CipherSpec> cipherSpecs = CipherSpecs.getDefaultCipherSpecs(); // TODO [low] Shouldn't this be the same as the application?!
-			
-			shareLink = getEncryptedLink(configTO.getConnectionTO(), cipherSpecs, configTO.getMasterKey());
+
+			shareLink = getEncryptedLink(configTO.getTransferSettings(), cipherSpecs, configTO.getMasterKey());
 			shareLinkEncrypted = true;
-		}	
+		}
 		else {
-			shareLink = getPlaintextLink(configTO.getConnectionTO());
+			shareLink = getPlaintextLink(configTO.getTransferSettings());
 			shareLinkEncrypted = false;
-		}	
-		
+		}
+
 		return new GenlinkOperationResult(shareLink, shareLinkEncrypted);
-    }          
+	}
 }

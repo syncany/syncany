@@ -33,7 +33,6 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
@@ -116,9 +115,9 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
+		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		TransferSettings transferSettings = (TransferSettings) options.getConfigTO().getConnectionTO();
+		TransferSettings transferSettings = (TransferSettings) options.getConfigTO().getTransferSettings();
 		transferSettings.setUserInteractionListener(listener);
 
 		transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
@@ -289,7 +288,8 @@ public class ConnectOperation extends AbstractInitOperation {
 						ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(cipherSettingsBytes);
 
 						pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
-						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings, masterKey))));
+						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings,
+								masterKey))));
 
 						retryPassword = false;
 					}
@@ -305,7 +305,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			else {
 				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 				String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
-				
+
 				pluginId = new String(Base58.decode(encodedPlugin));
 				pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(Base58.decode(encodedSettings))));
 			}
@@ -324,9 +324,9 @@ public class ConnectOperation extends AbstractInitOperation {
 			}
 
 			Class<? extends TransferSettings> pluginTransferSettingsClass = TransferPluginUtil.getTransferSettingsClass(plugin.getClass());
-			ConnectionTO connectionTO = new Persister().read(pluginTransferSettingsClass, pluginSettings);
+			TransferSettings transferSettings = new Persister().read(pluginTransferSettingsClass, pluginSettings);
 
-			configTO.setConnectionTO(connectionTO);
+			configTO.setTransferSettings(transferSettings);
 		}
 		catch (Exception e) {
 			throw new StorageException(e);

@@ -64,7 +64,7 @@ public class ConnectOperationTest {
 		File localConnectDirB = new File(localDirB, Config.DIR_APPLICATION);
 
 		ConfigTO connectionConfigToB = initOperationOptionsA.getConfigTO();
-		connectionConfigToB.setMachineName("clientB"+ Math.abs(new Random().nextInt()));
+		connectionConfigToB.setMachineName("clientB" + Math.abs(new Random().nextInt()));
 		connectionConfigToB.setMasterKey(null);
 
 		ConnectOperationOptions connectOperationOptionsB = new ConnectOperationOptions();
@@ -84,7 +84,7 @@ public class ConnectOperationTest {
 		assertTrue(new File(localConnectDirB, Config.FILE_REPO).exists());
 		assertEquals(new File(localConnectDirB, Config.FILE_MASTER).exists(), TestConfigUtil.getCrypto());
 
-    File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getConnectionTO()).getPath();
+		File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getTransferSettings()).getPath();
 
 		// Tear down
 		TestFileUtil.deleteDirectory(repoDir);
@@ -108,8 +108,8 @@ public class ConnectOperationTest {
 		File localConnectDirB = new File(localDirB, Config.DIR_APPLICATION);
 
 		ConfigTO connectionConfigToB = initOperationOptionsA.getConfigTO();
-    ((LocalTransferSettings) connectionConfigToB.getConnectionTO()).setPath(new File("/does/not/exist")); // <<< Point to non-existing repo
-		connectionConfigToB.setMachineName("client-B"+ Math.abs(new Random().nextInt()));
+		((LocalTransferSettings) connectionConfigToB.getTransferSettings()).setPath(new File("/does/not/exist")); // <<< Point to non-existing repo
+		connectionConfigToB.setMachineName("client-B" + Math.abs(new Random().nextInt()));
 		connectionConfigToB.setMasterKey(null);
 
 		ConnectOperationOptions connectOperationOptionsB = new ConnectOperationOptions();
@@ -128,7 +128,7 @@ public class ConnectOperationTest {
 		assertFalse(new File(localConnectDirB, Config.DIR_LOG).exists());
 		assertFalse(new File(localConnectDirB, Config.FILE_REPO).exists());
 
-    File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getConnectionTO()).getPath();
+		File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getTransferSettings()).getPath();
 
 		// Tear down
 		TestFileUtil.deleteDirectory(repoDir);

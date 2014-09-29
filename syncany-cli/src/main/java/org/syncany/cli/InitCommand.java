@@ -17,8 +17,6 @@
  */
 package org.syncany.cli;
 
-import static java.util.Arrays.asList;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +26,6 @@ import java.util.Map;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
@@ -36,7 +33,6 @@ import org.syncany.chunk.GzipTransformer;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.config.to.RepoTO.ChunkerTO;
 import org.syncany.config.to.RepoTO.MultiChunkerTO;
@@ -49,14 +45,17 @@ import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
 import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
+import static java.util.Arrays.asList;
 
 public class InitCommand extends AbstractInitCommand {
 	public static final int REPO_ID_LENGTH = 32;
 
-	private InitOperationOptions operationOptions;	
-	
+	private InitOperationOptions operationOptions;
+
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.UNINITIALIZED_LOCALDIR;
@@ -66,25 +65,25 @@ public class InitCommand extends AbstractInitCommand {
 	public boolean canExecuteInDaemonScope() {
 		return false;
 	}
-	
+
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		boolean retryNeeded = true;
 		boolean performOperation = true;
-		
+
 		operationOptions = parseOptions(operationArgs);
 
 		while (retryNeeded && performOperation) {
-			InitOperationResult operationResult = client.init(operationOptions, this);			
+			InitOperationResult operationResult = client.init(operationOptions, this);
 			printResults(operationResult);
-			
+
 			retryNeeded = operationResult.getResultCode() != InitResultCode.OK;
 
 			if (retryNeeded) {
 				performOperation = isInteractive && askRetryConnection();
 
 				if (performOperation) {
-					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
+					updateTransferSettings(operationOptions.getConfigTO().getTransferSettings());
 				}
 			}
 		}
@@ -108,7 +107,7 @@ public class InitCommand extends AbstractInitCommand {
 
 		OptionSet options = parser.parse(operationArguments);
 
-		ConnectionTO connectionTO = createConnectionTOFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
+		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
 
 		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
@@ -129,7 +128,7 @@ public class InitCommand extends AbstractInitCommand {
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 
 		// Create configTO and repoTO
-		ConfigTO configTO = createConfigTO(connectionTO);
+		ConfigTO configTO = createConfigTO(transferSettings);
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
 
 		operationOptions.setLocalDir(localDir);
@@ -148,14 +147,14 @@ public class InitCommand extends AbstractInitCommand {
 	@Override
 	public void printResults(OperationResult operationResult) {
 		InitOperationResult concreteOperationResult = (InitOperationResult) operationResult;
-		
+
 		if (concreteOperationResult.getResultCode() == InitResultCode.OK) {
 			out.println();
 			out.println("Repository created, and local folder initialized. To share the same repository");
 			out.println("with others, you can share this link:");
 
 			printLink(concreteOperationResult.getGenLinkResult(), false);
-			
+
 			if (concreteOperationResult.isAddedToDaemon()) {
 				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
 				out.println();
@@ -163,8 +162,8 @@ public class InitCommand extends AbstractInitCommand {
 		}
 		else if (concreteOperationResult.getResultCode() == InitResultCode.NOK_TEST_FAILED) {
 			StorageTestResult testResult = concreteOperationResult.getTestResult();
-			out.println();			
-			
+			out.println();
+
 			if (testResult.isRepoFileExists()) {
 				out.println("ERROR: Repository cannot be initialized, because it already exists ('syncany' file");
 				out.println("       exists). Are you sure that you want to create a new repo?  Use 'sy connect'");
@@ -199,7 +198,7 @@ public class InitCommand extends AbstractInitCommand {
 		}
 		else {
 			out.println();
-			out.println("ERROR: Cannot connect to repository. Unknown error code: "+concreteOperationResult.getResultCode());
+			out.println("ERROR: Cannot connect to repository. Unknown error code: " + concreteOperationResult.getResultCode());
 			out.println();
 		}
 	}
@@ -245,7 +244,7 @@ public class InitCommand extends AbstractInitCommand {
 		out.println("Options:");
 
 		for (CipherSpec cipherSuite : availableCipherSpecs.values()) {
-			out.println(" ["+cipherSuite.getId()+"] "+cipherSuite);
+			out.println(" [" + cipherSuite.getId() + "] " + cipherSuite);
 		}
 
 		out.println();
@@ -289,7 +288,8 @@ public class InitCommand extends AbstractInitCommand {
 							CipherUtil.enableUnlimitedStrength();
 						}
 						catch (Exception e) {
-							throw new Exception("Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
+							throw new Exception(
+									"Unable to enable unlimited crypto. Check out: http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html");
 						}
 					}
 					else {
@@ -360,7 +360,7 @@ public class InitCommand extends AbstractInitCommand {
 		String cipherSuitesIdStr = StringUtil.join(cipherSpec, ",", new StringJoinListener<CipherSpec>() {
 			@Override
 			public String getString(CipherSpec cipherSpec) {
-				return ""+cipherSpec.getId();
+				return "" + cipherSpec.getId();
 			}
 		});
 

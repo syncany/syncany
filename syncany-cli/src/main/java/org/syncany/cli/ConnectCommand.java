@@ -17,22 +17,21 @@
  */
 package org.syncany.cli;
 
-import static java.util.Arrays.asList;
-
 import java.util.List;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferSettings;
+
+import static java.util.Arrays.asList;
 
 public class ConnectCommand extends AbstractInitCommand {
 	public ConnectCommand() {
@@ -67,7 +66,7 @@ public class ConnectCommand extends AbstractInitCommand {
 				performOperation = isInteractive && askRetryConnection();
 
 				if (performOperation) {
-					updateConnectionTO(operationOptions.getConfigTO().getConnectionTO());
+					updateTransferSettings(operationOptions.getConfigTO().getTransferSettings());
 				}
 			}
 		}
@@ -92,7 +91,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		isInteractive = !options.has(optionNonInteractive);
 
 		// Plugin
-		ConnectionTO connectionTO = null;
+		TransferSettings transferSettings = null;
 
 		if (nonOptionArgs.size() == 1) {
 			String connectLink = (String) nonOptionArgs.get(0);
@@ -100,19 +99,19 @@ public class ConnectCommand extends AbstractInitCommand {
 			operationOptions.setStrategy(ConnectOptionsStrategy.CONNECTION_LINK);
 			operationOptions.setConnectLink(connectLink);
 
-			connectionTO = null;
+			transferSettings = null;
 		}
 		else if (nonOptionArgs.size() == 0) {
 			operationOptions.setStrategy(ConnectOptionsStrategy.CONNECTION_TO);
 			operationOptions.setConnectLink(null);
 
-			connectionTO = createConnectionTOFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
+			transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
 		}
 		else {
 			throw new Exception("Invalid syntax.");
 		}
 
-		ConfigTO configTO = createConfigTO(connectionTO);
+		ConfigTO configTO = createConfigTO(transferSettings);
 
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
@@ -124,13 +123,13 @@ public class ConnectCommand extends AbstractInitCommand {
 	@Override
 	public void printResults(OperationResult operationResult) {
 		ConnectOperationResult concreteOperationResult = (ConnectOperationResult) operationResult;
-		
+
 		if (concreteOperationResult.getResultCode() == ConnectResultCode.OK) {
 			out.println();
 			out.println("Repository connected, and local folder initialized.");
 			out.println("You can now use the 'syncany' command to sync your files.");
 			out.println();
-			
+
 			if (concreteOperationResult.isAddedToDaemon()) {
 				out.println("To automatically sync this folder, simply restart the daemon with 'sy daemon restart'.");
 				out.println();
@@ -138,7 +137,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		}
 		else if (concreteOperationResult.getResultCode() == ConnectResultCode.NOK_TEST_FAILED) {
 			StorageTestResult testResult = concreteOperationResult.getTestResult();
-			out.println();			
+			out.println();
 
 			if (!testResult.isTargetCanConnect()) {
 				out.println("ERROR: Cannot connect to the repository, because the connection to the storage backend failed.");
@@ -162,8 +161,8 @@ public class ConnectCommand extends AbstractInitCommand {
 			}
 
 			out.println();
-			printTestResult(testResult);			
-		}		
+			printTestResult(testResult);
+		}
 		else if (concreteOperationResult.getResultCode() == ConnectResultCode.NOK_DECRYPT_ERROR) {
 			out.println();
 			out.println("ERROR: Invalid password or corrupt ciphertext.");
@@ -177,5 +176,5 @@ public class ConnectCommand extends AbstractInitCommand {
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + operationResult);
 			out.println();
 		}
-	}		
+	}
 }

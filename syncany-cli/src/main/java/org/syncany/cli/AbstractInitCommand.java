@@ -30,7 +30,6 @@ import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.OptionCallback;
@@ -61,19 +60,18 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		console = InitConsole.getInstance();
 	}
 
-	protected ConfigTO createConfigTO(ConnectionTO connectionTO) throws Exception {
+	protected ConfigTO createConfigTO(TransferSettings transferSettings) throws Exception {
 		ConfigTO configTO = new ConfigTO();
 
 		configTO.setDisplayName(getDefaultDisplayName());
 		configTO.setMachineName(getRandomMachineName());
 		configTO.setMasterKey(null);
-		configTO.setConnectionTO(connectionTO); // can be null
+		configTO.setTransferSettings(transferSettings); // can be null
 
 		return configTO;
 	}
 
-	protected ConnectionTO createConnectionTOFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts,
-			OptionSpec<Void> optionNonInteractive) throws Exception {
+	protected TransferSettings createTransferSettingsFromOptions(OptionSet options, OptionSpec<String> optionPlugin, OptionSpec<String> optionPluginOpts, OptionSpec<Void> optionNonInteractive) throws Exception {
 
 		TransferPlugin plugin;
 		TransferSettings transferSettings;
@@ -328,9 +326,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return onUserConfirm(null, "Connection failure", "Would you change the settings and retry the connection");
 	}
 
-	protected ConnectionTO updateConnectionTO(ConnectionTO connectionTO) throws StorageException {
+	protected TransferSettings updateTransferSettings(TransferSettings transferSettings) throws StorageException {
 		try {
-			return askPluginSettings((TransferSettings) connectionTO);
+			return askPluginSettings(transferSettings);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Unable to reload old plugin settings", e);

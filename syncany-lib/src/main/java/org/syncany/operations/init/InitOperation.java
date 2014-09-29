@@ -57,29 +57,29 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
-    private InitOperationOptions options;
-    private InitOperationResult result;
+	private InitOperationOptions options;
+	private InitOperationResult result;
 
-    private TransferPlugin plugin;
-    private TransferManager transferManager;
+	private TransferPlugin plugin;
+	private TransferManager transferManager;
 
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
 		super(null, listener);
 
-        this.options = options;
-        this.result = new InitOperationResult();
-    }
+		this.options = options;
+		this.result = new InitOperationResult();
+	}
 
-    @Override
-    public InitOperationResult execute() throws Exception {
+	@Override
+	public InitOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
+		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		TransferSettings connection = (TransferSettings) options.getConfigTO().getConnectionTO();
+		TransferSettings connection = (TransferSettings) options.getConfigTO().getTransferSettings();
 
 		connection.setUserInteractionListener(listener);
 
@@ -152,7 +152,7 @@ public class InitOperation extends AbstractInitOperation {
 		result.setGenLinkResult(genlinkOperationResult);
 
 		return result;
-    }
+	}
 
 	private boolean performRepoTest() {
 		boolean testCreateTarget = options.isCreateTarget();
