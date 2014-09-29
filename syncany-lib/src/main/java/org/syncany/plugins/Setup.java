@@ -27,12 +27,12 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Option {
+public @interface Setup {
 	int order() default -1;
 
 	String description() default "";
-	
-	boolean encrypted() default false;
 
-	Class<? extends FieldCallback> callback() default FieldCallback.class;
+	boolean sensitive() default false;
+
+	Class<? extends OptionCallback> callback() default OptionCallback.class;
 }

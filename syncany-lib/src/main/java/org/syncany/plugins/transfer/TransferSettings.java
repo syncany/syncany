@@ -31,10 +31,11 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 import org.syncany.config.to.ConnectionTO;
-import org.syncany.plugins.Option;
+import org.syncany.plugins.Encrypted;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.Plugins;
+import org.syncany.plugins.Setup;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
@@ -42,7 +43,7 @@ import org.syncany.util.StringUtil;
 /**
  * A connection represents the configuration settings of a storage/connection
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
- *
+ * <p/>
  * Options for a plugin specific {@link TransferSettings} can be defined using the
  * {@link Element} annotation. Furthermore some Syncany-specific annotations are available.
  *
@@ -85,7 +86,7 @@ public abstract class TransferSettings implements ConnectionTO {
 	}
 
 	@Override
-	public void setField(String key, String value) throws StorageException {
+	public void setField(String key, Object value) throws StorageException {
 		try {
 			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
 
@@ -96,23 +97,29 @@ public abstract class TransferSettings implements ConnectionTO {
 				Type fieldType = field.getType();
 
 				if (key.equalsIgnoreCase(fieldName)) {
-					if (field.getType() == Integer.TYPE) {
-						field.setInt(this, Integer.parseInt(value));
+					if (field.getType() == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
+						field.setInt(this, Integer.parseInt(String.valueOf(value)));
 					}
-					else if (fieldType == Boolean.TYPE) {
-						field.setBoolean(this, Boolean.parseBoolean(value));
+					else if (fieldType == Boolean.TYPE && (value instanceof Boolean || value instanceof String)) {
+						field.setBoolean(this, Boolean.parseBoolean(String.valueOf(value)));
 					}
-					else if (fieldType == String.class) {
+					else if (fieldType == String.class && value instanceof String) {
 						field.set(this, value);
 					}
-					else if (fieldType == File.class) {
-						field.set(this, new File(value));
+					else if (fieldType == File.class && value instanceof String) {
+						field.set(this, new File(String.valueOf(value)));
+					}
+					else if (TransferSettings.class.isAssignableFrom(value.getClass())) {
+						field.set(this, ReflectionUtil.getClassFromType(fieldType).cast(value));
+					}
+					else {
+						throw new RuntimeException("Invalid value type: " + value.getClass());
 					}
 				}
 			}
 		}
 		catch (Exception e) {
-			throw new StorageException("Unable to parse key value map: " + e.getMessage(), e);
+			throw new StorageException("Unable to parse value: " + e.getMessage(), e);
 		}
 	}
 
@@ -127,11 +134,11 @@ public abstract class TransferSettings implements ConnectionTO {
 		}
 		catch (InvocationTargetException | IllegalAccessException e) {
 			logger.log(Level.SEVERE, "Unable to check if option(s) are valid.", e);
-			
+
 			if (e.getCause() instanceof StorageException) { // Dirty hack
 				return false;
 			}
-			
+
 			throw new RuntimeException("Unable to call plugin validator: ", e);
 		}
 
@@ -162,12 +169,12 @@ public abstract class TransferSettings implements ConnectionTO {
 	@Persist
 	private void encrypt() throws Exception {
 		// TODO [high] This should be in the @Option annotation
-		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Option.class);
-		
+		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
+
 		for (Field field : optionFields) {
 			field.setAccessible(true);
-								
-			if (field.getAnnotation(Option.class).encrypted()) {
+
+			if (field.getAnnotation(Encrypted.class) != null) {
 				if (field.getType() != String.class) {
 					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 				}
@@ -183,19 +190,19 @@ public abstract class TransferSettings implements ConnectionTO {
 	@Commit
 	private void decrypt() throws Exception {
 		// TODO [high] This should be in the @Option annotation
-		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Option.class);
+		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
 
 		for (Field field : optionFields) {
 			field.setAccessible(true);
-			
-			if (field.getAnnotation(Option.class).encrypted()) {
+
+			if (field.getAnnotation(Encrypted.class) != null) {
 				if (field.getType() != String.class) {
 					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 				}
 
 				// TODO [high] Do actual decryption
 				field.set(this, new String(StringUtil.fromHex((String) field.get(this))));
-			}			
+			}
 		}
 
 		logger.log(Level.FINE, "Decrypted transfer setting values");

@@ -19,7 +19,9 @@ package org.syncany.plugins.dummy;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Validate;
-import org.syncany.plugins.Option;
+import org.syncany.plugins.Encrypted;
+import org.syncany.plugins.Setup;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferSettings;
 
@@ -29,20 +31,21 @@ import org.syncany.plugins.transfer.TransferSettings;
 public class DummyTransferSettings extends TransferSettings {
 
 	@Element(required = true)
-	@Option(order = 1, encrypted = true, description = "A foo field")
+	@Encrypted
+	@Setup(order = 1, sensitive = true, description = "A foo field")
 	public String foo;
 
 	@Element(name = "baz", required = false)
-	@Option(order = 3, description = "A baz field")
+	@Setup(order = 3, description = "A baz field")
 	public String baz;
 
 	@Element(name = "number")
-	@Option(order = 2)
+	@Setup(order = 2)
 	public int number;
 
 	@Element(name = "nest", required = false)
-	@Option(order = 4, description = "Some nested settings")
-	public DummyTransferSettings subsettings;
+	@Setup(order = 4, description = "Some nested settings")
+	public LocalTransferSettings subsettings;
 
 	@Validate
 	public void validate() throws StorageException {

@@ -17,9 +17,25 @@
  */
 package org.syncany.plugins;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.List;
+
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-public interface FieldCallback {
-	public String preQueryCallback();
+
+public class NestedPluginOption extends PluginOption {
+
+	private final List<PluginOption> nestedOptions;
+
+	NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required, Class<? extends OptionCallback> callback, List<PluginOption> nestedOptions) {
+		super(field, name, description, type, encrypted, encrypted, required, callback);
+		this.nestedOptions = nestedOptions;
+	}
+
+	public List<PluginOption> getNestedOptions() {
+		return nestedOptions;
+	}
+
 }

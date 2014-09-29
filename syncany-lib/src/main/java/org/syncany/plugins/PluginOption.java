@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public class PluginOption {
+
 	public enum ValidationResult {
 		VALID, INVALID_TYPE, INVALID_NOT_SET
 	}
@@ -31,17 +32,19 @@ public class PluginOption {
 	private final String description;
 	private final Type type;
 	private final boolean encrypted;
+	private final boolean sensitive;
 	private final boolean required;
-	private final Class<? extends FieldCallback> callback;
+	private final Class<? extends OptionCallback> callback;
 
-	public PluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean required,
-			Class<? extends FieldCallback> callback) {
-		
+	PluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
+			Class<? extends OptionCallback> callback) {
+
 		this.field = field;
 		this.name = name;
 		this.description = description;
 		this.type = type;
 		this.encrypted = encrypted;
+		this.sensitive = sensitive;
 		this.required = required;
 		this.callback = callback;
 	}
@@ -66,11 +69,15 @@ public class PluginOption {
 		return encrypted;
 	}
 
+	public boolean isSensitive() {
+		return sensitive;
+	}
+
 	public boolean isRequired() {
 		return required;
 	}
 
-	public Class<? extends FieldCallback> getCallback() {
+	public Class<? extends OptionCallback> getCallback() {
 		return callback;
 	}
 

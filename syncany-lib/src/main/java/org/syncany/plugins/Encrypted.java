@@ -15,17 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
+package org.syncany.plugins;
 
-import org.syncany.plugins.transfer.StorageException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-public interface ConnectionTO {
-	public String getType();
-
-	public String getField(String key) throws StorageException;
-
-	public void setField(String key, Object value) throws StorageException;
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Encrypted {
+  // empty
 }

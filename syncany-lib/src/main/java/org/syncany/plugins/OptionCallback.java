@@ -15,17 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
-
-import org.syncany.plugins.transfer.StorageException;
+package org.syncany.plugins;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-public interface ConnectionTO {
-	public String getType();
-
-	public String getField(String key) throws StorageException;
-
-	public void setField(String key, Object value) throws StorageException;
+public interface OptionCallback {
+	public String preQueryCallback();
 }

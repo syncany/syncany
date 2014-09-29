@@ -17,16 +17,9 @@
  */
 package org.syncany.tests.plugins;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -36,8 +29,6 @@ import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.plugins.PluginOption;
-import org.syncany.plugins.PluginSetup;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferSettings;
@@ -45,6 +36,8 @@ import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
+
+import static org.junit.Assert.*;
 
 public class TransferSettingsTest {
 	private File tmpFile;
@@ -72,7 +65,7 @@ public class TransferSettingsTest {
 		final int numberTest = 1234;
 
 		final DummyTransferSettings ts = new DummyTransferSettings();
-		final DummyTransferSettings nts = new DummyTransferSettings();
+		final LocalTransferSettings lts = new LocalTransferSettings();
 		final ConfigTO conf = TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO();
 
 		conf.setConnectionTO(ts);
@@ -80,9 +73,8 @@ public class TransferSettingsTest {
 		ts.foo = fooTest;
 		ts.baz = bazTest;
 		ts.number = numberTest;
-		nts.foo = fooTest;
-		nts.baz = bazTest;
-		ts.subsettings = nts;
+		lts.setPath(File.createTempFile("aaa", "bbb"));
+		ts.subsettings = lts;
 
 		assertTrue(ts.isValid());
 
@@ -163,18 +155,6 @@ public class TransferSettingsTest {
 
 		// boom
 		DummyTransferSettings settings = serializer.read(DummyTransferSettings.class, tmpFile);
-
-	}
-
-	@Test
-	public void testOrderingOfOptions() throws Exception {
-		final String[] expectedOrder = new String[] { "foo", "number", "baz", "nest" };
-		List<PluginOption> items = PluginSetup.getOrderedOptions(DummyTransferSettings.class);
-
-		int i = 0;
-		for (PluginOption item : items) {
-			assertEquals(expectedOrder[i++], item.getName());
-		}
 
 	}
 

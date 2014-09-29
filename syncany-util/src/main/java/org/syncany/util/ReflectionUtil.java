@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,4 +101,21 @@ public abstract class ReflectionUtil {
 
 		return null;
 	}
+
+	// java 1.7 does not support getTypeName() :(
+	public static Class<?> getClassFromType(Type type) {
+		String fullName = type.toString();
+
+		try {
+			if (fullName.startsWith("class ")) {
+				return Class.forName(fullName.substring("class ".length()));
+			}
+		}
+		catch (ClassNotFoundException e) {
+			return null;
+		}
+
+		return null;
+	}
+
 }

@@ -33,15 +33,17 @@ import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConnectionTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.plugins.FieldCallback;
+import org.syncany.plugins.OptionCallback;
+import org.syncany.plugins.NestedPluginOption;
 import org.syncany.plugins.PluginOption;
-import org.syncany.plugins.PluginSetup;
+import org.syncany.plugins.PluginOptions;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
@@ -130,17 +132,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		out.println("Connection details for " + settings.getType() + " connection:");
 
 		try {
-			List<PluginOption> pluginOptions = PluginSetup.getOrderedOptions(settings.getClass());
-			
-			for (PluginOption option : pluginOptions) {
-				Class<? extends FieldCallback> optionCallbackClass = option.getCallback();
-				
-				if (optionCallbackClass != null) {
-					out.println(optionCallbackClass.newInstance().preQueryCallback());
-				}
+			List<PluginOption> pluginOptions = PluginOptions.getOrderedOptions(settings.getClass());
 
-				String optionValue = askPluginOption(settings, option);
-				settings.setField(option.getField().getName(), optionValue);
+			for (PluginOption option : pluginOptions) {
+				askNestedPluginSettings(settings, option);
 			}
 		}
 		catch (InstantiationException | IllegalAccessException e) {
@@ -150,6 +145,34 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		validateSettingsWithException(settings); // throws error if invalid
 
 		return settings;
+	}
+
+	private void askNestedPluginSettings(TransferSettings settings, PluginOption option) throws IllegalAccessException, InstantiationException,
+			StorageException {
+
+		if (option instanceof NestedPluginOption) {
+			for (PluginOption nItem : ((NestedPluginOption) option).getNestedOptions()) {
+				if (ReflectionUtil.getClassFromType(option.getType()) == null) {
+					// this should never (!) happen
+					throw new RuntimeException("No class found for type: " + option.getType());
+				}
+
+				out.println(nItem.getDescription());
+				TransferSettings nestedSettings = (TransferSettings) ReflectionUtil.getClassFromType(option.getType()).newInstance();
+				settings.setField(nItem.getField().getName(), nestedSettings);
+				askNestedPluginSettings(nestedSettings, nItem);
+			}
+		}
+		else {
+			Class<? extends OptionCallback> optionCallbackClass = option.getCallback();
+
+			if (optionCallbackClass != null) {
+				out.println(optionCallbackClass.newInstance().preQueryCallback());
+			}
+
+			String optionValue = askPluginOption(settings, option);
+			settings.setField(option.getField().getName(), optionValue);
+		}
 	}
 
 	protected TransferSettings initPluginSettings(TransferSettings settings, Map<String, String> knownPluginOptionValues) throws StorageException {
@@ -169,7 +192,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			String value;
 
 			// Retrieve value
-			if (option.isEncrypted()) {
+			if (option.isSensitive()) {
 				// The option is sensitive. Could be either mandatory or optional
 				value = askPluginOptionSensitive(settings, option);
 			}

@@ -20,8 +20,8 @@ package org.syncany.plugins.local;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.syncany.plugins.FieldCallback;
-import org.syncany.plugins.Option;
+import org.syncany.plugins.OptionCallback;
+import org.syncany.plugins.Setup;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
@@ -34,9 +34,9 @@ import org.syncany.plugins.transfer.TransferSettings;
  */
 public class LocalTransferSettings extends TransferSettings {
 	@Element(required = true)
-	@Option(order = 1, description = "Path to local repository", callback = TemporaryFieldCallback.class)
+	@Setup(order = 1, description = "Path to local repository", callback = TemporaryFieldCallback.class)
 	public File path;
-	
+
 	public File getPath() {
 		return path;
 	}
@@ -45,7 +45,7 @@ public class LocalTransferSettings extends TransferSettings {
 		this.path = path;
 	}
 
-	public static class TemporaryFieldCallback implements FieldCallback {
+	public static class TemporaryFieldCallback implements OptionCallback {
 		@Override
 		public String preQueryCallback() {
 			return "The folder must exist!";
