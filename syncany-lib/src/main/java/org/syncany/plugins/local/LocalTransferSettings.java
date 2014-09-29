@@ -37,24 +37,12 @@ public class LocalTransferSettings extends TransferSettings {
 	@Option(order = 1, description = "Path to local repository", callback = TemporaryFieldCallback.class)
 	public File path;
 	
-	@Element(required = true)
-	@Option(order = 2, encrypted = true, description = "some")
-	public String some;
-
 	public File getPath() {
 		return path;
 	}
 
 	public void setPath(File path) {
 		this.path = path;
-	}
-
-	public String getSome() {
-		return some;
-	}
-
-	public void setSome(String some) {
-		this.some = some;
 	}
 
 	public static class TemporaryFieldCallback implements FieldCallback {
