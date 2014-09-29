@@ -246,6 +246,26 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
+	public void removeEmptyDatabaseVersionHeaders() {		
+		// Delete vector clocks
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.delete.all.removeEmptyDatabaseVersionHeadersVectorClocks.sql")) {
+			preparedStatement.executeUpdate();		
+			preparedStatement.close();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		// Delete database version headers
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.delete.all.removeEmptyDatabaseVersionHeaders.sql")) {
+			preparedStatement.executeUpdate();		
+			preparedStatement.close();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void clearCaches() {
 		chunkDao.clearCache();
 	}

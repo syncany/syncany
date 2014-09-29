@@ -163,6 +163,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		mergeRemoteFiles(didPurge);
 
 		finishOperation();
+
 		return updateResultCode(result);
 	}
 
