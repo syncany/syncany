@@ -24,10 +24,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
+import org.syncany.operations.daemon.messages.events.LsRemoteEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -47,6 +50,7 @@ public class LsRemoteOperation extends Operation {
 	
 	private TransferManager loadedTransferManager;
 	private SqlDatabase localDatabase;
+	private LocalEventBus eventBus;
 
 	public LsRemoteOperation(Config config) {
 		this(config, null);
@@ -57,6 +61,7 @@ public class LsRemoteOperation extends Operation {
 
 		this.loadedTransferManager = transferManager;
 		this.localDatabase = new SqlDatabase(config);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override
@@ -65,6 +70,8 @@ public class LsRemoteOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Remote Status' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+		
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
 				: config.getTransferPlugin().createTransferManager(config.getConnection(), config);
@@ -74,6 +81,8 @@ public class LsRemoteOperation extends Operation {
 
 		transferManager.disconnect();
 
+		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+		
 		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
 	}
 

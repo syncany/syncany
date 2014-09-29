@@ -17,28 +17,8 @@
  */
 package org.syncany.operations.daemon.messages.events;
 
-public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
-	private String fileDescription;
-	private int currentFileIndex;
-	private int maxFileCount;
-	
-	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
+public class LsRemoteStartSyncExternalEvent extends SyncExternalEvent {
+	public LsRemoteStartSyncExternalEvent(String root) {
 		super(root);
-		
-		this.fileDescription = fileDescription;
-		this.currentFileIndex = currentFileIndex;
-		this.maxFileCount = maxFileCount;
-	}
-
-	public String getFileDescription() {
-		return fileDescription;
-	}
-
-	public int getCurrentFileIndex() {
-		return currentFileIndex;
-	}
-
-	public int getMaxFileCount() {
-		return maxFileCount;
 	}
 }
