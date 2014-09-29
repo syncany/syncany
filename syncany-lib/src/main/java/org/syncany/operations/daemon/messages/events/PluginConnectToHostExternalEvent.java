@@ -17,28 +17,16 @@
  */
 package org.syncany.operations.daemon.messages.events;
 
-public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
-	private String fileDescription;
-	private int currentFileIndex;
-	private int maxFileCount;
-	
-	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
-		super(root);
-		
-		this.fileDescription = fileDescription;
-		this.currentFileIndex = currentFileIndex;
-		this.maxFileCount = maxFileCount;
-	}
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-	public String getFileDescription() {
-		return fileDescription;
-	}
+public class PluginConnectToHostExternalEvent extends ExternalEvent {
+	private String host;
 
-	public int getCurrentFileIndex() {
-		return currentFileIndex;
-	}
+	public PluginConnectToHostExternalEvent(String host) {
+		this.host = host;
+	}		
 
-	public int getMaxFileCount() {
-		return maxFileCount;
+	public String getHost() {
+		return host;
 	}
 }
