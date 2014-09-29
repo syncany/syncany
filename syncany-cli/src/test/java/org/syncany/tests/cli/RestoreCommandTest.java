@@ -59,14 +59,26 @@ public class RestoreCommandTest {
 				
 		Thread.sleep(1000);
 		
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
+			 "--localdir", clientA.get("localdir"),
+			 "ls",
+			 "--date=2s"
+		}));
+		
+		assertTrue(cliOut.length >= 1);		
+		String fileHistoryId = cliOut[0].split("\\s+")[7];
+		
+		System.out.println("filehistory id is " + fileHistoryId);
+		
 		new CommandLineClient(new String[] { 
 			 "--localdir", clientA.get("localdir"),
 			 "restore",
-			 "--date=2s",
-			 "file1"
+			 "--revision=1",
+			 "--target=restoredfile",
+			 fileHistoryId
 		}).start();
 		
-		assertTrue(new File(clientA.get("localdir"),"file1").exists());
+		assertTrue(new File(clientA.get("localdir"),"restoredfile").exists());
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 	}	
 }

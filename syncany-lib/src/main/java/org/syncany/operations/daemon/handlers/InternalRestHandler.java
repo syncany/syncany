@@ -27,11 +27,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
-import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
 
 /**
  * InteralRestHandler handles the REST requests sent to the daemon.
@@ -74,11 +74,11 @@ public class InternalRestHandler implements HttpHandler {
 			}
 		}
 		else {	
-			String message = IOUtils.toString(exchange.getInputStream());
+			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
 			logger.log(Level.INFO, "REST message received: " + message);
 	
 			try {
-				Request request = MessageFactory.createRequest(message);
+				Request request = MessageFactory.toRequest(message);
 	
 				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
 				eventBus.post(request);

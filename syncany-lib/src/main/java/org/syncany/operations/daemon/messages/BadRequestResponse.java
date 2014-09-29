@@ -19,6 +19,7 @@ package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.Response;
 
 @Root(strict = false)
 @Namespace(reference = "http://syncany.org/ws/1")

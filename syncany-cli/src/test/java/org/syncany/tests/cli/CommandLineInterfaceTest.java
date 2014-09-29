@@ -109,8 +109,8 @@ public class CommandLineInterfaceTest {
 		assertTrue("Cache folder should exist", cacheFolder.exists());
 
 		// Test output
-		assertEquals("Different number of output lines expected.", 2, cliOut.length);
-		assertEquals("A somefolder", cliOut[0]);
+		assertEquals("Different number of output lines expected.", 12, cliOut.length);
+		assertEquals("A somefolder", cliOut[10]);
 
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);

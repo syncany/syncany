@@ -1,7 +1,19 @@
 Change Log
 ==========
 
-### Syncany 0.1.10-alpha (Date: Tbd.)
+### Syncany 0.1.11-alpha (Date: 29 Sep 2014)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Updated, more flexible WebSocket/REST-like API (basis for GUI/web) #205
+  + Interactive CLI progress status while uploading/downloading #223/#237
+  + Implemented basic daemon hooks for post-sync-down event #155/#237
+- Bugfixes and other things:
+  + Amazon S3 plugin now uses proxy setitngs #228
+  + Windows/Limit: Detect 32-bit Java on 64-bit systems in installer; 
+    limit JVM memory with `<maxMemory>` tag in userconfig.xml #222
+  + Fixed usage of batch/shell scripts #238
+
+### Syncany 0.1.10-alpha (Date: 16 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - **Breaks compatiblity to 0.1.9-alpha repositories!**
 - Features and significant changes:

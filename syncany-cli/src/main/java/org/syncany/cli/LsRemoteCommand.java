@@ -19,7 +19,9 @@ package org.syncany.cli;
 
 import java.util.List;
 
-import org.syncany.operations.ls_remote.LsRemoteOperation.LsRemoteOperationResult;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
@@ -30,8 +32,27 @@ public class LsRemoteCommand extends Command {
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		List<DatabaseRemoteFile> remoteStatus = ((LsRemoteOperationResult) client.lsRemote()).getUnknownRemoteDatabases();
+		LsRemoteOperationResult operationResult = client.lsRemote();
+		printResults(operationResult);		
+		
+		return 0;
+	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {		
+		return null;
+	}
+
+	@Override
+	public void printResults(OperationResult operationResult) {
+		LsRemoteOperationResult concreteOperationResult = (LsRemoteOperationResult) operationResult;
+		List<DatabaseRemoteFile> remoteStatus = concreteOperationResult.getUnknownRemoteDatabases();
 		
 		if (remoteStatus.size() > 0) {
 			for (RemoteFile unknownRemoteFile : remoteStatus) {
@@ -41,7 +62,5 @@ public class LsRemoteCommand extends Command {
 		else {
 			out.println("No remote changes.");
 		}
-		
-		return 0;
-	}
+	}	
 }

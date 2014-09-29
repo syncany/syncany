@@ -23,17 +23,33 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpIndexStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
+import org.syncany.util.FileUtil;
+
+import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
+	private long uploadedFileSize;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
@@ -44,8 +60,8 @@ public class UpCommand extends Command {
 		return 0;
 	}
 
+	@Override
 	public UpOperationOptions parseOptions(String[] operationArgs) throws Exception {
-		// Sync up options
 		UpOperationOptions operationOptions = new UpOperationOptions();
 
 		OptionParser parser = new OptionParser();
@@ -64,17 +80,20 @@ public class UpCommand extends Command {
 		return operationOptions;
 	}
 
-	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
 		return statusCommand.parseOptions(operationArgs);
 	}
 
-	public void printResults(UpOperationResult operationResult) {
-		if (operationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		UpOperationResult concreteOperationResult = (UpOperationResult)operationResult;
+		
+		if (concreteOperationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
-		else if (operationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
-			ChangeSet changeSet = operationResult.getChangeSet();
+		else if (concreteOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED) {
+			ChangeSet changeSet = concreteOperationResult.getChangeSet();
 
 			for (String newFile : changeSet.getNewFiles()) {
 				out.println("A " + newFile);
@@ -94,4 +113,37 @@ public class UpCommand extends Command {
 			out.println("Sync up skipped, no local changes.");
 		}
 	}
+	
+	@Subscribe
+	public void onUpStartEventReceived(UpStartSyncExternalEvent syncEvent) {
+		out.printr("Starting indexing and upload ...");					
+	}
+	
+	@Subscribe
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
+	}
+	
+	@Subscribe
+	public void onIndexStartEventReceived(UpIndexStartSyncExternalEvent syncEvent) {
+		out.printr("Indexing " + syncEvent.getFileCount() + " new or altered file(s)...");
+	}
+	
+	@Subscribe
+	public void onUploadFileEventReceived(UpUploadFileSyncExternalEvent syncEvent) {
+		out.printr("Uploading " + syncEvent.getFilename() + " ...");
+	}
+	
+	@Subscribe
+	public void onUploadFileInTransactionEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
+		if (syncEvent.getCurrentFileIndex() <= 1) {
+			uploadedFileSize = 0;
+		}
+		
+		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
+		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100); 
+		
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total " + uploadedPercent + "%) ...");
+		uploadedFileSize += syncEvent.getCurrentFileSize();
+	}	
 }

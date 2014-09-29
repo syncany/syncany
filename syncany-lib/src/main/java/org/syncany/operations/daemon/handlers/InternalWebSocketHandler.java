@@ -30,11 +30,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.syncany.operations.daemon.LocalEventBus;
+import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.MessageFactory;
-import org.syncany.operations.daemon.messages.Request;
+import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
 
 /**
  * InternalWebSocketHandler handles the web socket requests 
@@ -130,7 +130,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
-			Request request = MessageFactory.createRequest(message);
+			Request request = MessageFactory.toRequest(message);
 
 			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
 			eventBus.post(request);

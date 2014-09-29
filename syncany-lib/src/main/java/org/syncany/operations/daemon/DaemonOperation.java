@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
@@ -64,7 +65,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public class DaemonOperation extends Operation {	
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
-	private static final String PID_FILE = "daemon.pid";
+	public static final String PID_FILE = "daemon.pid";
 
 	private File pidFile;
 	

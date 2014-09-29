@@ -21,6 +21,10 @@ import java.io.File;
 import java.io.PrintStream;
 
 import org.syncany.Client;
+import org.syncany.cli.util.CarriageReturnPrinter;
+import org.syncany.config.LocalEventBus;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 
 /**
  * Commands are the central part of Syncany's command line client. Each implementation 
@@ -45,8 +49,15 @@ import org.syncany.Client;
 public abstract class Command {
 	protected Client client;
 	protected File localDir;
-	protected PrintStream out;
+	protected CarriageReturnPrinter out;
 
+	protected LocalEventBus eventBus;
+	
+	public Command() {
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
+	}
+	
 	/**
 	 * This method implements the command-specific option-parsing, operation calling 
 	 * and output printing. To do so, the method must read and evaluate the given 
@@ -60,7 +71,6 @@ public abstract class Command {
 	 * @return Returns a return code
 	 * @throws Exception If the command or the corresponding operation fails 
 	 */
-	// TODO [low] Return code of commands not used right now
 	public abstract int execute(String[] operationArgs) throws Exception;
 
 	/**
@@ -75,6 +85,29 @@ public abstract class Command {
 	 */
 	public abstract CommandScope getRequiredCommandScope();
 
+	/**
+	 * Returns whether a command can be run inside the scope of the daemon. 
+	 * 
+	 * <p>If a folder is daemon-managed, the command line client passes the command
+	 * to the daemon via REST and the daemon executes this command/operation. For some
+	 * commands, this does not make sense or is dangerous. This method allows certain
+	 * commands to be daemon-enabled, and other to be daemon-disabled.
+	 */
+	public abstract boolean canExecuteInDaemonScope();
+
+	/**
+	 * A command can typically be configured using command line options. This method
+	 * parses these command line options and returns an {@link OperationOptions} object
+	 * representing the options.
+	 */
+	public abstract OperationOptions parseOptions(String[] operationArgs) throws Exception;
+	
+	/**
+	 * A command typically prints a result to the console. This method takes an
+	 * {@link OperationResult} object and formats it to be human-readable.
+	 */
+	public abstract void printResults(OperationResult result);
+		
 	public void setLocalDir(File localDir) {
 		this.localDir = localDir;
 	}
@@ -84,6 +117,6 @@ public abstract class Command {
 	}
 
 	public void setOut(PrintStream out) {
-		this.out = out;
+		this.out = new CarriageReturnPrinter(out);
 	}
 }
