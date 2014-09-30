@@ -17,11 +17,15 @@
  */
 package org.syncany.gui;
 
+import io.undertow.util.StringWriteChannelListener;
+import io.undertow.websockets.WebSocketExtension;
 import io.undertow.websockets.client.WebSocketClient;
 import io.undertow.websockets.client.WebSocketClientNegotiation;
 import io.undertow.websockets.core.AbstractReceiveListener;
 import io.undertow.websockets.core.BufferedTextMessage;
+import io.undertow.websockets.core.StreamSinkFrameChannel;
 import io.undertow.websockets.core.WebSocketChannel;
+import io.undertow.websockets.core.WebSocketFrameType;
 import io.undertow.websockets.core.WebSocketVersion;
 
 import java.io.IOException;
@@ -29,11 +33,14 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 import javax.security.sasl.Sasl;
 
+import org.apache.commons.codec.binary.Base64;
 import org.syncany.config.UserConfig;
+import org.syncany.util.StringUtil;
 import org.xnio.BufferAllocator;
 import org.xnio.ByteBufferSlicePool;
 import org.xnio.OptionMap;
@@ -62,30 +69,32 @@ public class WebSocket {
 		//DefaultServer.setRootHandler(AutobahnWebSocketServer.getRootHandler());
         Xnio xnio = Xnio.getInstance(this.getClass().getClassLoader());
         
-        SSLContext context = UserConfig.createUserSSLContext();
+        SSLContext sslContext = UserConfig.createUserSSLContext();        
         
-        List<Property> tempProperties = new ArrayList<Property>();
-        
-        tempProperties.add(Property.of(Sasl.POLICY_NOPLAINTEXT, Boolean.FALSE.toString()));
-        tempProperties.add(Property.of(Sasl.CREDENTIALS, "admin:admin"));
-        
-        OptionMap map = OptionMap.builder()
+        OptionMap workerOptions = OptionMap.builder()
 	        .set(Options.WORKER_IO_THREADS, 2)
 	        .set(Options.WORKER_TASK_CORE_THREADS, 30)
 	        .set(Options.WORKER_TASK_MAX_THREADS, 30)
-	        .set(Options.SSL_PROTOCOL, context.getProtocol())
-	        .set(Options.SSL_PROVIDER, context.getProvider().getName())
-	        .set(Options.SASL_POLICY_PASS_CREDENTIALS, Boolean.TRUE)
-	        .set(Options.SASL_PROPERTIES,  Sequence.of(tempProperties))
+	        .set(Options.SSL_PROTOCOL, sslContext.getProtocol())
+	        .set(Options.SSL_PROVIDER, sslContext.getProvider().getName())
+	        //.set(Options.SASL_POLICY_PASS_CREDENTIALS, Boolean.TRUE)
+	        //.set(Options.SASL_PROPERTIES,  Sequence.of(tempProperties))
 	        .set(Options.TCP_NODELAY, true)
 	        .set(Options.CORK, true)
 	        .getMap();
         
-        XnioWorker worker = xnio.createWorker(map);
-        XnioSsl xnioSsl = new JsseXnioSsl(xnio, OptionMap.create(Options.USE_DIRECT_BUFFERS, true), context);
-        URI uri = new URI("wss://localhost:8443/api/ws/");
+        XnioWorker worker = xnio.createWorker(workerOptions);
+        XnioSsl xnioSsl = new JsseXnioSsl(xnio, OptionMap.create(Options.USE_DIRECT_BUFFERS, true), sslContext);
+        URI uri = new URI("wss://localhost:8443/api/ws");
+        
+        WebSocketClientNegotiation neg = new WebSocketClientNegotiation(new ArrayList<String>(), new ArrayList<WebSocketExtension>()) {
+        	@Override
+        	public void beforeRequest(Map<String, String> headers) {
+        		headers.put("Authorization", "Basic " + Base64.encodeBase64String(StringUtil.toBytesUTF8("admin:admin")));
+        	}
+        };        
 
-        final WebSocketChannel webSocketChannel = WebSocketClient.connect(worker, xnioSsl, buffer, map, uri, WebSocketVersion.V13).get();
+        final WebSocketChannel webSocketChannel = WebSocketClient.connect(worker, xnioSsl, buffer, workerOptions, uri, WebSocketVersion.V13, neg).get();
 
         webSocketChannel.getReceiveSetter().set(new AbstractReceiveListener() {
             @Override
@@ -101,6 +110,9 @@ public class WebSocket {
             }
         });
         webSocketChannel.resumeReceives();
-
+        
+        System.out.println("asdasd");
+        StreamSinkFrameChannel streamSinkFrameChannel = webSocketChannel.send(WebSocketFrameType.TEXT);
+        new StringWriteChannelListener("<listWatchesManagementRequest><id>1</id></listWatchesManagementRequest>").setup(streamSinkFrameChannel);        
 	}
 }
