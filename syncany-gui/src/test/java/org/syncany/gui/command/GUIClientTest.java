@@ -1,3 +1,4 @@
+package org.syncany.gui.command;
 /*
  * Syncany, www.syncany.org
  * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
@@ -15,32 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
+import org.junit.Test;
+import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
+import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.Response;
+
+public class GUIClientTest {	
+	private static final Logger logger = Logger.getLogger(GUIClientTest.class.getSimpleName());
 	
-	public ListWatchesManagementResponse() {
-		// No arg constructor
-	}
-	
-	public ListWatchesManagementResponse(int requestId, List<File> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
+	@Test
+	public void testGuiClient() throws Exception {
+		GuiCommandManager gc = new GuiCommandManager();
+		Request req = new ListWatchesManagementRequest();
+		req.setId(Math.abs(new Random().nextInt()));
+		Response response = gc.runCommand(req);
+		logger.log(Level.FINE, response.toString());
 	}	
-	
-	/**
-	 * @return the watches
-	 */
-	public ArrayList<File> getWatches() {
-		return watches;
-	}
 }

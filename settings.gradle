@@ -1,3 +1,5 @@
 include 'syncany-lib'
 include 'syncany-cli'
 include 'syncany-util'
+include 'syncany-daemon'
+include 'syncany-gui'
