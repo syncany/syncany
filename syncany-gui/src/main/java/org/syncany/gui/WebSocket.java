@@ -18,42 +18,89 @@
 package org.syncany.gui;
 
 import io.undertow.websockets.client.WebSocketClient;
+import io.undertow.websockets.client.WebSocketClientNegotiation;
+import io.undertow.websockets.core.AbstractReceiveListener;
+import io.undertow.websockets.core.BufferedTextMessage;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSocketVersion;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.net.ssl.SSLContext;
+import javax.security.sasl.Sasl;
+
+import org.syncany.config.UserConfig;
+import org.xnio.BufferAllocator;
 import org.xnio.ByteBufferSlicePool;
-import org.xnio.IoFuture;
 import org.xnio.OptionMap;
 import org.xnio.Options;
 import org.xnio.Pool;
+import org.xnio.Property;
+import org.xnio.Sequence;
 import org.xnio.Xnio;
 import org.xnio.XnioWorker;
+import org.xnio.ssl.JsseXnioSsl;
+import org.xnio.ssl.XnioSsl;
 
 /**
  * @author vwiencek
  *
  */
 public class WebSocket {
-
-	public static void main(String[] args) throws IllegalArgumentException, IOException, URISyntaxException {
+	private final Pool<ByteBuffer> buffer = new ByteBufferSlicePool(BufferAllocator.BYTE_BUFFER_ALLOCATOR, 1024, 1024);
+	
+	public static void main(String[] args) throws Exception {
 		WebSocket ws = new WebSocket();
 		ws.start();
 	}
 	
-	public void start() throws IllegalArgumentException, IOException, URISyntaxException{
-		XnioWorker worker = Xnio.getInstance().createWorker(OptionMap.create(Options.THREAD_DAEMON, true));
-        Pool<ByteBuffer> buffers = new ByteBufferSlicePool(1024, 10240);
+	public void start() throws Exception{
+		//DefaultServer.setRootHandler(AutobahnWebSocketServer.getRootHandler());
+        Xnio xnio = Xnio.getInstance(this.getClass().getClassLoader());
         
-        URI uri = new URI("ws://admin:admin@localhost:8443/api/ws");
+        SSLContext context = UserConfig.createUserSSLContext();
         
-        IoFuture<WebSocketChannel> futureChannel = WebSocketClient.connect(worker, buffers, OptionMap.EMPTY, uri, WebSocketVersion.V13);
+        List<Property> tempProperties = new ArrayList<Property>();
         
-        WebSocketChannel channel = futureChannel.get();
+        tempProperties.add(Property.of(Sasl.POLICY_NOPLAINTEXT, Boolean.FALSE.toString()));
+        tempProperties.add(Property.of(Sasl.CREDENTIALS, "admin:admin"));
         
+        OptionMap map = OptionMap.builder()
+	        .set(Options.WORKER_IO_THREADS, 2)
+	        .set(Options.WORKER_TASK_CORE_THREADS, 30)
+	        .set(Options.WORKER_TASK_MAX_THREADS, 30)
+	        .set(Options.SSL_PROTOCOL, context.getProtocol())
+	        .set(Options.SSL_PROVIDER, context.getProvider().getName())
+	        .set(Options.SASL_POLICY_PASS_CREDENTIALS, Boolean.TRUE)
+	        .set(Options.SASL_PROPERTIES,  Sequence.of(tempProperties))
+	        .set(Options.TCP_NODELAY, true)
+	        .set(Options.CORK, true)
+	        .getMap();
+        
+        XnioWorker worker = xnio.createWorker(map);
+        XnioSsl xnioSsl = new JsseXnioSsl(xnio, OptionMap.create(Options.USE_DIRECT_BUFFERS, true), context);
+        URI uri = new URI("wss://localhost:8443/api/ws/");
+
+        final WebSocketChannel webSocketChannel = WebSocketClient.connect(worker, xnioSsl, buffer, map, uri, WebSocketVersion.V13).get();
+
+        webSocketChannel.getReceiveSetter().set(new AbstractReceiveListener() {
+            @Override
+            protected void onFullTextMessage(WebSocketChannel channel, BufferedTextMessage message) throws IOException {
+                String data = message.getData();
+                System.out.println(data);
+            }
+
+            @Override
+            protected void onError(WebSocketChannel channel, Throwable error) {
+                super.onError(channel, error);
+                error.printStackTrace();
+            }
+        });
+        webSocketChannel.resumeReceives();
+
 	}
 }
