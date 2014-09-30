@@ -18,8 +18,18 @@
 package org.syncany.plugins;
 
 /**
+ * {@link org.syncany.plugins.OptionCallback}s are called during initialization and before the corresponding setting is
+ * queried.
+ *
+ * @see org.syncany.plugins.PluginOptions
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface OptionCallback {
+	/**
+	 * Called before a setting value is queried.
+	 *
+	 * @return The message to display.
+	 */
 	public String preQueryCallback();
 }

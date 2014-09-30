@@ -29,7 +29,11 @@ import org.syncany.util.ReflectionUtil;
  * The transfer plugin is a special plugin responsible for transferring files
  * to the remote storage. Implementations must provide implementations for
  * {@link TransferPlugin} (this class), {@link TransferSettings} (connection
- * details) and {@link TransferManager} (transfer methods).
+ * details) and {@link TransferManager} (transfer methods).<br/><br/>
+ *
+ * Links between the classes can be created by annotating this class with
+ * {@link org.syncany.plugins.PluginSettings} and {@link org.syncany.plugins.PluginManager},
+ * respectively.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
@@ -40,10 +44,11 @@ public abstract class TransferPlugin extends Plugin {
 	}
 
 	/**
-	 * Creates an empty plugin-specific {@link TransferSettings} object.
+	 * Creates an empty plugin-specific {@link org.syncany.plugins.transfer.TransferSettings} instance.
 	 *
-	 * <p>The created instance must be filled with sensible connection details
-	 * and then initialized with the <tt>init()</tt> method.
+	 * @return Empty plugin-specific {@link org.syncany.plugins.transfer.TransferSettings} instance.
+	 * @throws StorageException Thrown if no {@link org.syncany.plugins.transfer.TransferSettings} are attached to a
+	 *  plugin using {@link org.syncany.plugins.PluginSettings}
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
@@ -63,11 +68,20 @@ public abstract class TransferPlugin extends Plugin {
 	}
 
 	/**
-	 * Creates an initialized {@link TransferManager} object using the given
+	 *
+
+	 /**
+	 * Creates an initialized, plugin-specific {@link org.syncany.plugins.transfer.TransferManager} object using the given
 	 * connection details.
 	 *
 	 * <p>The created instance can be used to upload/download/delete {@link RemoteFile}s
 	 * and query the remote storage for a file list.
+	 *
+	 * @param transferSettings A valid {@link org.syncany.plugins.transfer.TransferSettings} instance.
+	 * @param config A valid {@link org.syncany.config.Config} instance.
+	 * @return A initialized, plugin-specific {@link org.syncany.plugins.transfer.TransferManager} instance.
+	 * @throws StorageException Thrown if no (valid) {@link org.syncany.plugins.transfer.TransferManager} are attached to
+	*  a plugin using {@link org.syncany.plugins.PluginManager}
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferManager> T createTransferManager(TransferSettings transferSettings, Config config) throws StorageException {
@@ -81,16 +95,18 @@ public abstract class TransferPlugin extends Plugin {
 		if (transferSettingsClass == null) {
 			throw new RuntimeException("Unable to create transfer manager: No settings class attached");
 		}
-		
+
 		if (transferManagerClass == null) {
 			throw new RuntimeException("Unable to create transfer manager: No manager class attached");
 		}
 
 		try {
-			Constructor<?> potentialConstructor = ReflectionUtil.getMatchingConstructorForClass(transferManagerClass, TransferSettings.class, Config.class);
-			
+			Constructor<?> potentialConstructor = ReflectionUtil.getMatchingConstructorForClass(transferManagerClass, TransferSettings.class,
+					Config.class);
+
 			if (potentialConstructor == null) {
-				throw new RuntimeException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class + " and " + Config.class);
+				throw new RuntimeException("Invalid arguments for constructor in pluginclass -- must be 2 and subclass of " + TransferSettings.class
+						+ " and " + Config.class);
 			}
 
 			return (T) potentialConstructor.newInstance(transferSettingsClass.cast(transferSettings), config);

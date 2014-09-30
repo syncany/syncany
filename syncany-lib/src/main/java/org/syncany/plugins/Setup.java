@@ -23,16 +23,34 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * The {@link org.syncany.plugins.Setup} annotation alters the initialization process.
+ *
+ * @see org.syncany.plugins.PluginOptions
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Setup {
+
+	/**
+	 * A setting's position in the initialization process (lower comes first).<br/>
+	 * The order cannot be assured if two fields have the same order position.
+	 */
 	int order() default -1;
 
+	/**
+	 * A field description to make the meaning of a field better understandable.
+	 */
 	String description() default "";
 
+	/**
+	 * Suppress key inputs during initialization.
+	 */
 	boolean sensitive() default false;
 
+	/**
+	 * @see org.syncany.plugins.OptionCallback
+	 */
 	Class<? extends OptionCallback> callback() default OptionCallback.class;
 }

@@ -17,14 +17,17 @@
  */
 package org.syncany.plugins;
 
-import org.syncany.plugins.transfer.TransferSettings;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.syncany.plugins.transfer.TransferSettings;
+
 /**
+ * Use this annotation to link a {@link org.syncany.plugins.transfer.TransferSettings} class with
+ * a {@link org.syncany.plugins.transfer.TransferPlugin}.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 

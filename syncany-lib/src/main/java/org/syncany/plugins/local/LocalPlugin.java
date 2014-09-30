@@ -31,7 +31,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
  *
  * <p>The class implements defines the identifier, name and
  * version of the plugin. It furthermore allows the instantiation
- * of a plugin-specific {@link LocalConnection}.
+ * of a plugin-specific {@link org.syncany.plugins.local.LocalTransferSettings}.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */

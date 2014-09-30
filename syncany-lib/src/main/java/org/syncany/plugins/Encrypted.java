@@ -23,10 +23,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotating a field with {@link org.syncany.plugins.Encrypted} implies that the field's value shell be stored
+ * encrypted in the xml representation. Recommended when storing login credentials.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Encrypted {
-  // empty
+	// empty
 }

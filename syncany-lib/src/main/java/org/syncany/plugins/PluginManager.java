@@ -17,18 +17,22 @@
  */
 package org.syncany.plugins;
 
-import org.syncany.plugins.transfer.TransferManager;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.syncany.plugins.transfer.TransferManager;
+
 /**
+ * Use this annotation to link a {@link org.syncany.plugins.transfer.TransferManager} class with
+ * a {@link org.syncany.plugins.transfer.TransferPlugin}.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PluginManager {
-  Class<? extends TransferManager> value();
+	Class<? extends TransferManager> value();
 }

@@ -72,10 +72,22 @@ public abstract class TransferSettings {
 		this.userInteractionListener = userInteractionListener;
 	}
 
+	/**
+	 * Get the {@link org.syncany.plugins.transfer.TransferPlugin}'s id.
+	 *
+	 * @return A string with {@link org.syncany.plugins.transfer.TransferPlugin#getId()}
+	 */
 	public final String getType() {
 		return type;
 	}
 
+	/**
+	 * Get a setting's value.
+	 *
+	 * @param key The field name as it is used in the {@link TransferSettings}
+	 * @return The value converted to a string using {@link Class#toString()}
+	 * @throws StorageException Thrown if the field either does not exist or isn't accessible
+	 */
 	public final String getField(String key) throws StorageException {
 		try {
 			Object fieldValueAsObject = this.getClass().getDeclaredField(key).get(this);
@@ -91,6 +103,16 @@ public abstract class TransferSettings {
 		}
 	}
 
+	/**
+	 * Set a setting's value
+	 *
+	 * @param key The field name as it is used in the {@link TransferSettings}
+	 * @param value The object which should be the setting's value. The object's type must match the field type.
+	 *              {@link Integer}, {@link String}, {@link Boolean}, {@link File} and implementation of
+	 *              {@link TransferSettings} are converted.
+	 * @throws StorageException Thrown if the field either does not exist or isn't accessible or
+	 *            conversion failed due to invalid field types.
+	 */
 	public final void setField(String key, Object value) throws StorageException {
 		try {
 			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
@@ -128,6 +150,12 @@ public abstract class TransferSettings {
 		}
 	}
 
+	/**
+	 * Check if a {@link TransferSettings} instance is valid i.e. all required fields are present.
+	 * {@link TransferSettings} specific validators can be deposited by annotating a method with {@link Validate}.
+	 *
+	 * @return True if the {@link TransferSettings} instance is valid.
+	 */
 	public final boolean isValid() {
 		Method[] validationMethods = ReflectionUtil.getAllMethodsWithAnnotation(this.getClass(), Validate.class);
 
@@ -150,6 +178,11 @@ public abstract class TransferSettings {
 		return true;
 	}
 
+	/**
+	 * Validate if all required fields are present.
+	 *
+	 * @throws StorageException Thrown if the validation failed due to missing field values.
+	 */
 	@Validate
 	public final void validateRequiredFields() throws StorageException {
 		logger.log(Level.FINE, "Validating required fields");
