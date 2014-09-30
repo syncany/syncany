@@ -81,14 +81,10 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionParser parser = new OptionParser();
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
-		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 
 		OptionSet options = parser.parse(operationArgs);
 		List<?> nonOptionArgs = options.nonOptionArguments();
-
-		// --no-interaction
-		isInteractive = !options.has(optionNonInteractive);
 
 		// Plugin
 		TransferSettings transferSettings = null;
@@ -105,7 +101,7 @@ public class ConnectCommand extends AbstractInitCommand {
 			operationOptions.setStrategy(ConnectOptionsStrategy.CONNECTION_TO);
 			operationOptions.setConnectLink(null);
 
-			transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
+			transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
 		}
 		else {
 			throw new Exception("Invalid syntax.");

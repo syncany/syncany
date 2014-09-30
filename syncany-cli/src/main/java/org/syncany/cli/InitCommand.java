@@ -102,20 +102,16 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
-		OptionSpec<Void> optionNonInteractive = parser.acceptsAll(asList("I", "no-interaction"));
 		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
 
 		OptionSet options = parser.parse(operationArguments);
 
-		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts, optionNonInteractive);
+		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
 
 		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
-
-		// --no-interaction
-		isInteractive = !options.has(optionNonInteractive);
 
 		// Cipher specs: --no-encryption, --advanced
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
