@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
   + Fix integrity issue with DIRTY databases (major!) #227
+  + Make 'sy daemon stop' more reliable on Windows #230
 
 ### Syncany 0.1.11-alpha (Date: 29 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
