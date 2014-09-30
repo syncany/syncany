@@ -24,9 +24,11 @@ import io.undertow.websockets.client.WebSocketClientNegotiation;
 import io.undertow.websockets.core.AbstractReceiveListener;
 import io.undertow.websockets.core.BufferedTextMessage;
 import io.undertow.websockets.core.StreamSinkFrameChannel;
+import io.undertow.websockets.core.WebSocketCallback;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSocketFrameType;
 import io.undertow.websockets.core.WebSocketVersion;
+import io.undertow.websockets.core.WebSockets;
 
 import java.io.IOException;
 import java.net.URI;
@@ -112,7 +114,19 @@ public class WebSocket {
         webSocketChannel.resumeReceives();
         
         System.out.println("asdasd");
-        StreamSinkFrameChannel streamSinkFrameChannel = webSocketChannel.send(WebSocketFrameType.TEXT);
-        new StringWriteChannelListener("<listWatchesManagementRequest><id>1</id></listWatchesManagementRequest>").setup(streamSinkFrameChannel);        
+        WebSockets.sendText("<listWatchesManagementRequest><id>1</id></listWatchesManagementRequest>", webSocketChannel, new WebSocketCallback<Void>() {
+			
+			@Override
+			public void onError(WebSocketChannel channel, Void context, Throwable throwable) {
+				throwable.printStackTrace();
+			}
+			
+			@Override
+			public void complete(WebSocketChannel channel, Void context) {
+				System.out.println("complete");
+			}
+		});  
+        
+        WebSockets.sendTextBlocking("<listWatchesManagementRequest><id>2</id></listWatchesManagementRequest>", webSocketChannel);  
 	}
 }
