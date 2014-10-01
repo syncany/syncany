@@ -48,6 +48,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
 
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
+	private static final char NESTED_OPTIONS_SEPARATOR = '.';
 	public static final int PASSWORD_MIN_LENGTH = 10;
 	public static final int PASSWORD_WARN_LENGTH = 12;
 
@@ -156,7 +157,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				out.println(nItem.getDescription());
 				TransferSettings nestedSettings = (TransferSettings) ReflectionUtil.getClassFromType(option.getType()).newInstance();
 				settings.setField(nItem.getField().getName(), nestedSettings);
-				nestPrefix = nestPrefix + nItem.getName() + "-";
+				nestPrefix = nestPrefix + nItem.getName() + NESTED_OPTIONS_SEPARATOR;
 				askNestedPluginSettings(nestedSettings, nItem, knownPluginSettings, nestPrefix, nonInteractive);
 			}
 		}
