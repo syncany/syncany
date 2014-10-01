@@ -21,4 +21,8 @@ public class StatusStartSyncExternalEvent extends SyncExternalEvent {
 	public StatusStartSyncExternalEvent(String root) {
 		super(root);
 	}
+	
+	public StatusStartSyncExternalEvent(){
+		// no arg constructor
+	}
 }

@@ -21,4 +21,8 @@ public class LsRemoteStartSyncExternalEvent extends SyncExternalEvent {
 	public LsRemoteStartSyncExternalEvent(String root) {
 		super(root);
 	}
+	
+	public LsRemoteStartSyncExternalEvent(){
+		// no arg constructor
+	}
 }

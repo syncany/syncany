@@ -112,6 +112,10 @@ public class MessageFactory {
 	private static Class<? extends Message> getMessageClass(String requestType) throws Exception {
 		//TODO [low]: deleting .api not so nice .....
 		String thisPackage = MessageFactory.class.getPackage().getName().replaceAll(".api", "");
+		
+		if (requestType.toLowerCase().endsWith("event")){
+			thisPackage += ".events";
+		}
 		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
 		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 
