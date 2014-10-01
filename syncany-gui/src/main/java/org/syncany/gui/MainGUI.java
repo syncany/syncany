@@ -14,11 +14,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.gui.command.GuiCommandManager;
+import org.syncany.gui.messaging.websocket.WebSocket;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
 import org.syncany.operations.daemon.DaemonOperation;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.util.PidFileUtil;
 
@@ -34,6 +37,8 @@ public class MainGUI {
 	 **/
 	private static String clientId = UUID.randomUUID().toString();
 
+	private WebSocket client;
+	
 	private Shell shell;
 	private TrayIcon tray;
 
@@ -54,6 +59,13 @@ public class MainGUI {
 		this.tray = new TrayIconFactory().createTrayIcon(shell);
 
 		LocalEventBus.getInstance().register(this);
+
+		// REST Call to initialise watched folders
+		restoreWatchedFolders();
+		
+		// Websocket connection
+		client = new WebSocket(); 
+		client.init();
 	}
 
 	public void open() {
@@ -89,6 +101,17 @@ public class MainGUI {
 		
 			tray.updateFolders(folders);
 		}
+	}
+
+	@Subscribe
+	public void receiveWebsocketMessage(Message message){
+		if (message instanceof ExternalEvent){
+			handleExternalEvent((ExternalEvent)message);
+		}
+	}
+	
+	private void handleExternalEvent(ExternalEvent message) {
+		System.out.println(message.getClass());
 	}
 
 	@Subscribe

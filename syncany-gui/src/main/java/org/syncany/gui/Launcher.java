@@ -39,11 +39,11 @@ public class Launcher {
 	}
 
 	public static void main(String[] args) {
-		UserConfig.init();
 		startApplication();
 	}
 
 	private static void startApplication() {
+		UserConfig.init();
 		startGUI();
 	}
 
@@ -74,7 +74,6 @@ public class Launcher {
 		log.info("Starting Graphical User Interface");
 
 		window = new MainGUI();
-		window.restoreWatchedFolders();
 		window.open();
 	}
 }
