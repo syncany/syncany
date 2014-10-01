@@ -34,10 +34,10 @@ public class PluginOption {
 	private final boolean encrypted;
 	private final boolean sensitive;
 	private final boolean required;
-	private final Class<? extends OptionCallback> callback;
+	private final Class<? extends PluginOptionCallback> callback;
 
 	PluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
-			Class<? extends OptionCallback> callback) {
+			Class<? extends PluginOptionCallback> callback) {
 
 		this.field = field;
 		this.name = name;
@@ -77,7 +77,7 @@ public class PluginOption {
 		return required;
 	}
 
-	public Class<? extends OptionCallback> getCallback() {
+	public Class<? extends PluginOptionCallback> getCallback() {
 		return callback;
 	}
 

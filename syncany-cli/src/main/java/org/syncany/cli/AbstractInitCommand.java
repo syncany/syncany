@@ -26,15 +26,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.common.base.Strings;
+
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.NestedPluginOption;
-import org.syncany.plugins.OptionCallback;
+import org.syncany.plugins.PluginOptionCallback;
 import org.syncany.plugins.PluginOption;
+import org.syncany.plugins.PluginOption.ValidationResult;
 import org.syncany.plugins.PluginOptions;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
@@ -117,7 +120,6 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	protected TransferSettings askPluginSettings(TransferSettings settings, Map<String, String> knownPluginSettings) throws StorageException {
-
 		boolean nonInteractive = knownPluginSettings.size() > 0;
 
 		if (!nonInteractive) {
@@ -132,7 +134,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			List<PluginOption> pluginOptions = PluginOptions.getOrderedOptions(settings.getClass());
 
 			for (PluginOption option : pluginOptions) {
-				askNestedPluginSettings(settings, option, knownPluginSettings, "", nonInteractive);
+				askPluginSettings(settings, option, knownPluginSettings, "", nonInteractive);
 			}
 		}
 		catch (InstantiationException | IllegalAccessException e) {
@@ -144,40 +146,56 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return settings;
 	}
 
-	private void askNestedPluginSettings(TransferSettings settings, PluginOption option, Map<String, String> knownPluginSettings, String nestPrefix,
+	private void askPluginSettings(TransferSettings settings, PluginOption option, Map<String, String> knownPluginSettings, String nestPrefix,
 			boolean nonInteractive) throws IllegalAccessException, InstantiationException, StorageException {
 
 		if (option instanceof NestedPluginOption) {
-			for (PluginOption nItem : ((NestedPluginOption) option).getNestedOptions()) {
-				if (ReflectionUtil.getClassFromType(option.getType()) == null) {
-					// this should never (!) happen
-					throw new RuntimeException("No class found for type: " + option.getType());
-				}
-
-				out.println(nItem.getDescription());
-				TransferSettings nestedSettings = (TransferSettings) ReflectionUtil.getClassFromType(option.getType()).newInstance();
-				settings.setField(nItem.getField().getName(), nestedSettings);
-				nestPrefix = nestPrefix + nItem.getName() + NESTED_OPTIONS_SEPARATOR;
-				askNestedPluginSettings(nestedSettings, nItem, knownPluginSettings, nestPrefix, nonInteractive);
-			}
+			askNestedPluginSettings(settings, (NestedPluginOption) option, knownPluginSettings, nestPrefix, nonInteractive);			
 		}
 		else {
-			Class<? extends OptionCallback> optionCallbackClass = option.getCallback();
+			askNormalPluginSettings(settings, option, knownPluginSettings, nestPrefix, nonInteractive);
+		}
+	}
 
-			if (nonInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
-				throw new IllegalArgumentException("Missing plugin option (" + nestPrefix + option.getName() + ") in non-interactive mode.");
-			}
-			else if (knownPluginSettings.containsKey(nestPrefix + option.getName())) {
-				settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
-			}
-			else {
-				if (optionCallbackClass != null) {
-					out.println(optionCallbackClass.newInstance().preQueryCallback());
-				}
+	private void askNormalPluginSettings(TransferSettings settings, PluginOption option, Map<String, String> knownPluginSettings, String nestPrefix,
+			boolean nonInteractive) throws StorageException, InstantiationException, IllegalAccessException {		
+		
+		Class<? extends PluginOptionCallback> optionCallbackClass = option.getCallback();
 
-				String optionValue = askPluginOption(settings, option);
-				settings.setField(option.getField().getName(), optionValue);
+		if (nonInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
+			throw new IllegalArgumentException("Missing plugin option (" + nestPrefix + option.getName() + ") in non-interactive mode.");
+		}
+		else if (knownPluginSettings.containsKey(nestPrefix + option.getName())) {
+			settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
+		}
+		else {
+			if (optionCallbackClass != null) {
+				out.println(optionCallbackClass.newInstance().preQueryCallback());
 			}
+
+			String optionValue = askPluginOption(settings, option);
+			settings.setField(option.getField().getName(), optionValue);
+		}
+	}
+
+	private void askNestedPluginSettings(TransferSettings settings, NestedPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix,
+			boolean nonInteractive) throws StorageException, IllegalAccessException, InstantiationException {
+		
+		for (PluginOption nestedPluginOption : option.getNestedOptions()) {
+			Class<?> nestedTransferSettingsClass = ReflectionUtil.getClassFromType(option.getType());
+			
+			if (nestedTransferSettingsClass == null) {
+				throw new RuntimeException("No class found for type: " + option.getType());
+			}
+
+			out.println(nestedPluginOption.getDescription());
+			
+			TransferSettings nestedSettings = (TransferSettings) nestedTransferSettingsClass.newInstance();
+			
+			settings.setField(nestedPluginOption.getField().getName(), nestedSettings);
+			nestPrefix = nestPrefix + nestedPluginOption.getName() + NESTED_OPTIONS_SEPARATOR;
+			
+			askPluginSettings(nestedSettings, nestedPluginOption, knownPluginSettings, nestPrefix, nonInteractive);
 		}
 	}
 
@@ -200,7 +218,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			}
 
 			// Validate result
-			PluginOption.ValidationResult validationResult = option.isValid(value);
+			ValidationResult validationResult = option.isValid(value);
 
 			switch (validationResult) {
 			case INVALID_NOT_SET:

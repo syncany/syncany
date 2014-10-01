@@ -50,7 +50,7 @@ public @interface Setup {
 	boolean sensitive() default false;
 
 	/**
-	 * @see org.syncany.plugins.OptionCallback
+	 * @see org.syncany.plugins.PluginOptionCallback
 	 */
-	Class<? extends OptionCallback> callback() default OptionCallback.class;
+	Class<? extends PluginOptionCallback> callback() default PluginOptionCallback.class;
 }

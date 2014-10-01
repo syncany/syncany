@@ -20,23 +20,75 @@ package org.syncany.plugins;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.primitives.Ints;
 import org.simpleframework.xml.Element;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.ReflectionUtil;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.primitives.Ints;
+
 /**
+ * Helper class to read the options of a {@link TransferSettings} using the
+ * {@link Setup} and {@link Element} annotations.  
+ * 
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class PluginOptions {
+	private static final int MAX_NESTED_LEVELS = 3;
 
-	public static final int MAX_NESTED_LEVELS = 3;
+	/**
+	 * Get an ordered list of {@link PluginOption}s, given class a {@link TransferSettings} class.
+	 * 
+	 * <p>This method uses the {@link Setup} and {@link Element} annotation, and their attributes
+	 * to sort the options. If no annotation is given or no order attribute is provided, the 
+	 * option will be listed last.  
+	 */
+	public static List<PluginOption> getOrderedOptions(Class<? extends TransferSettings> transferSettingsClass) {
+		return getOrderedOptions(transferSettingsClass, 0);
+	}
 
-	public static List<Field> getOrderedFields(Class<? extends TransferSettings> transferSettingsClass) {
+	@SuppressWarnings("unchecked")
+	private static List<PluginOption> getOrderedOptions(Class<? extends TransferSettings> transferSettingsClass, int level) {
+		List<Field> fields = getOrderedFields(transferSettingsClass);
+		ImmutableList.Builder<PluginOption> options = ImmutableList.builder();
 
+		for (Field field : fields) {
+			Element elementAnnotation = field.getAnnotation(Element.class);
+			Setup setupAnnotation = field.getAnnotation(Setup.class);
+
+			boolean hasName = !elementAnnotation.name().equalsIgnoreCase("");
+			boolean hasDescription = setupAnnotation != null && !setupAnnotation.description().equalsIgnoreCase("");
+			boolean hasCallback = setupAnnotation != null && !setupAnnotation.callback().isInterface();
+
+			String name = (hasName) ? elementAnnotation.name() : field.getName();
+			String description = (hasDescription) ? setupAnnotation.description() : field.getName();
+			Class<? extends PluginOptionCallback> callback = (hasCallback) ? setupAnnotation.callback() : null;
+			boolean required = elementAnnotation.required();
+			boolean sensitive = setupAnnotation != null && setupAnnotation.sensitive();
+			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
+
+			boolean isNestedOption = TransferSettings.class.isAssignableFrom(field.getType());
+
+			if (isNestedOption) {
+				if (++level > MAX_NESTED_LEVELS) {
+					throw new RuntimeException("Plugin uses too many nested transfer settings (max allowed value: " + MAX_NESTED_LEVELS + ")");
+				}
+
+				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
+				options.add(new NestedPluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback,
+						getOrderedOptions(fieldClass)));
+			}
+			else {
+				options.add(new PluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback));
+			}
+		}
+
+		return options.build();
+	}
+
+	private static List<Field> getOrderedFields(Class<? extends TransferSettings> transferSettingsClass) {
 		Ordering<Field> byOrderAnnotation = new Ordering<Field>() {
 			@Override
 			public int compare(Field leftField, Field rightField) {
@@ -49,47 +101,5 @@ public class PluginOptions {
 
 		List<Field> fields = Lists.newArrayList(ReflectionUtil.getAllFieldsWithAnnotation(transferSettingsClass, Element.class));
 		return ImmutableList.copyOf(byOrderAnnotation.nullsLast().sortedCopy(fields));
-
 	}
-
-	public static List<PluginOption> getOrderedOptions(Class<? extends TransferSettings> transferSettingsClass) {
-		return getOrderedOptions(transferSettingsClass, 0);
-	}
-
-	private static List<PluginOption> getOrderedOptions(Class<? extends TransferSettings> transferSettingsClass, int level) {
-
-		List<Field> fields = getOrderedFields(transferSettingsClass);
-		ImmutableList.Builder<PluginOption> options = ImmutableList.builder();
-
-		for (Field field : fields) {
-			Element elementAnnotation = field.getAnnotation(Element.class);
-			Setup setupAnnotation = field.getAnnotation(Setup.class);
-
-			String fieldName = (!elementAnnotation.name().equalsIgnoreCase("")) ? elementAnnotation.name() : field.getName();
-			String fieldDesc = (setupAnnotation != null && !setupAnnotation.description().equalsIgnoreCase("")) ? setupAnnotation.description()
-					: field.getName();
-			Class<? extends OptionCallback> callback = (setupAnnotation != null && !setupAnnotation.callback().isInterface()) ? setupAnnotation
-					.callback() : null;
-			boolean required = elementAnnotation.required();
-			boolean sensitive = setupAnnotation != null && setupAnnotation.sensitive();
-			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
-
-			if (TransferSettings.class.isAssignableFrom(field.getType())) {
-				if (++level > MAX_NESTED_LEVELS) {
-					throw new RuntimeException("Plugin uses too many nested transfer settings (max allowed value: " + MAX_NESTED_LEVELS + ")");
-				}
-
-				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
-				options.add(new NestedPluginOption(field, fieldName, fieldDesc, field.getType(), encrypted, sensitive, required, callback,
-						getOrderedOptions(fieldClass)));
-			}
-			else {
-				options.add(new PluginOption(field, fieldName, fieldDesc, field.getType(), encrypted, sensitive, required, callback));
-			}
-		}
-
-		return options.build();
-
-	}
-
 }

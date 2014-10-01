@@ -24,12 +24,12 @@ import java.util.List;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public class NestedPluginOption extends PluginOption {
-
 	private final List<PluginOption> nestedOptions;
 
-	NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required, Class<? extends OptionCallback> callback, List<PluginOption> nestedOptions) {
+	NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
+			Class<? extends PluginOptionCallback> callback, List<PluginOption> nestedOptions) {
+		
 		super(field, name, description, type, encrypted, sensitive, required, callback);
 		this.nestedOptions = nestedOptions;
 	}
@@ -37,5 +37,4 @@ public class NestedPluginOption extends PluginOption {
 	public List<PluginOption> getNestedOptions() {
 		return nestedOptions;
 	}
-
 }
