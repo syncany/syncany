@@ -218,7 +218,7 @@ public abstract class TransferSettings {
 				}
 
 				InputStream plainInputStream = IOUtils.toInputStream((String) field.get(this));
-				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getPrivateKey();
+				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getConfigEncryptionKey();
 				byte[] encryptedBytes = CipherUtil.encrypt(plainInputStream, CipherSpecs.getDefaultCipherSpecs(), privateKey);
 				field.set(this, StringUtil.toHex(encryptedBytes)); // the field's now encrypted
 			}
@@ -241,7 +241,7 @@ public abstract class TransferSettings {
 				}
 
 				ByteArrayInputStream encryptedInputStream = new ByteArrayInputStream(StringUtil.fromHex((String) field.get(this)));
-				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getPrivateKey();
+				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getConfigEncryptionKey();
 				byte[] decryptedBytes = CipherUtil.decrypt(encryptedInputStream, privateKey);
 				field.set(this, new String(decryptedBytes)); // the field's now decrypted
 			}

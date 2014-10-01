@@ -64,7 +64,7 @@ public class UserConfig {
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
 	private static final String USER_TRUSTSTORE_FILE = "truststore.jks";
 	private static final String USER_KEYSTORE_FILE = "keystore.jks";
-	public static final int PRIVATE_KEY_LENGTH = 32;
+	private static final int CONFIG_ENCRYPTION_KEY_LENGTH = 32;
 
 	private static File userConfigDir;
 	private static File userPluginLibDir;
@@ -186,7 +186,7 @@ public class UserConfig {
 		userConfigTO.getSystemProperties().put("syncany.rocks", "Yes, it does!");
 
 		try {
-			userConfigTO.setPrivateKey(CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(PRIVATE_KEY_LENGTH)));
+			userConfigTO.setConfigEncryptionKey(CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(CONFIG_ENCRYPTION_KEY_LENGTH)));
 			UserConfigTO.save(userConfigTO, userConfigFile);
 		}
 		catch (Exception e) {

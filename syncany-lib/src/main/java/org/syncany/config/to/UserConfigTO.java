@@ -54,9 +54,9 @@ public class UserConfigTO {
 	@Element(name = "preventStandby", required = false)
 	private boolean preventStandby;
 
-  @Element(name = "privateKey", required = true)
-  @Convert(SaltedSecretKeyConverter.class)
-  private SaltedSecretKey privateKey;
+	@Element(name = "configEncryptionKey", required = true)
+	@Convert(SaltedSecretKeyConverter.class)
+	private SaltedSecretKey configEncryptionKey;
 
 	public UserConfigTO() {
 		this.systemProperties = new TreeMap<String, String>();
@@ -71,12 +71,12 @@ public class UserConfigTO {
 		return preventStandby;
 	}
 
-  public SaltedSecretKey getPrivateKey() {
-    return privateKey;
+  public SaltedSecretKey getConfigEncryptionKey() {
+    return configEncryptionKey;
   }
 
-  public void setPrivateKey(SaltedSecretKey privateKey) {
-    this.privateKey = privateKey;
+  public void setConfigEncryptionKey(SaltedSecretKey configEncryptionKey) {
+    this.configEncryptionKey = configEncryptionKey;
   }
 
 	public static UserConfigTO load(File file) throws ConfigException {

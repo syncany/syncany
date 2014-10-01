@@ -27,9 +27,9 @@ import java.util.List;
 public class NestedPluginOption extends PluginOption {
 	private final List<PluginOption> nestedOptions;
 
-	NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
+	public NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
 			Class<? extends PluginOptionCallback> callback, List<PluginOption> nestedOptions) {
-		
+
 		super(field, name, description, type, encrypted, sensitive, required, callback);
 		this.nestedOptions = nestedOptions;
 	}
