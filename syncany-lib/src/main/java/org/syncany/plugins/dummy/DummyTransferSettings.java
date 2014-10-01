@@ -29,7 +29,6 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class DummyTransferSettings extends TransferSettings {
-
 	@Element(required = true)
 	@Encrypted
 	@Setup(order = 1, sensitive = true, description = "A foo field")

@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public class PluginOption {
-
 	public enum ValidationResult {
 		VALID, INVALID_TYPE, INVALID_NOT_SET
 	}

@@ -59,9 +59,9 @@ public class PluginOptions {
 			Setup setupAnnotation = field.getAnnotation(Setup.class);
 
 			boolean hasName = !elementAnnotation.name().equalsIgnoreCase("");
-			boolean hasDescription = setupAnnotation != null && !setupAnnotation.description().equalsIgnoreCase("");
+			boolean hasDescription = setupAnnotation != null && !setupAnnotation.description().equals("");
 			boolean hasCallback = setupAnnotation != null && !setupAnnotation.callback().isInterface();
-
+			
 			String name = (hasName) ? elementAnnotation.name() : field.getName();
 			String description = (hasDescription) ? setupAnnotation.description() : field.getName();
 			Class<? extends PluginOptionCallback> callback = (hasCallback) ? setupAnnotation.callback() : null;
@@ -75,9 +75,9 @@ public class PluginOptions {
 				if (++level > MAX_NESTED_LEVELS) {
 					throw new RuntimeException("Plugin uses too many nested transfer settings (max allowed value: " + MAX_NESTED_LEVELS + ")");
 				}
-
+				
 				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
-				options.add(new NestedPluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback,
+				options.add(new NestedPluginOption(field, name, description, fieldClass, encrypted, sensitive, required, callback,
 						getOrderedOptions(fieldClass)));
 			}
 			else {
