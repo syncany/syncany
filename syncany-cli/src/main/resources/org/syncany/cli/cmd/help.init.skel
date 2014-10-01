@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
           [-E | --no-encryption] [-G | --no-compression]
-          [-t | --create-target] [-a | --advanced] [-N | --no-daemon]
+          [-t | --create-target] [-a | --advanced] [-n | --add-daemon]
 
 DESCRIPTION
   This command creates a new remote repository using the specified plugin, and
@@ -27,9 +27,9 @@ OPTIONS
 
   -o, --plugin-option=<key=value> (multiple options possible)
     Sets a plugin-specific setting in the form of a key/value pair. Each
-    plugin defines different mandatory and optional settings that must be
-    specified by this option. All mandatory and optional settings can be listed
-    using the 'plugin' command.
+    plugin defines different mandatory and optional settings. At least, all
+    mandatory settings must be specified by this option. All mandatory and
+    optional settings can be listed using the 'plugin' command.
 
   -E, --no-encryption
     DO NOT USE THIS OPTION. Turns off the encryption for the newly created
@@ -52,9 +52,8 @@ OPTIONS
     available symmetric ciphers and modes of operation to encrypt the
     repository with.
 
-  -N, --no-daemon
+  -n, --add-daemon
     The initialized local folder is automatically added to the daemon
-    configuration for automatic synchronization. Use this option to avoid
-    that.
+    configuration for automatic synchronization if this option is used.
 
 %RESOURCE:incl/footer.skel%

@@ -56,7 +56,6 @@ public class GenlinkCommandTest {
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientLocalDirB.getAbsolutePath(),
 				"connect",
-				"--no-daemon",
 				createdLink
 		}));
 
@@ -80,7 +79,6 @@ public class GenlinkCommandTest {
 		String[] initArgs = new String[] {
 				"--localdir", clientA.get("localdir"),
 				"init",
-				"--no-daemon",
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
 				"--no-compression"
@@ -101,7 +99,6 @@ public class GenlinkCommandTest {
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientLocalDirB.getAbsolutePath(),
 				"connect",
-				"--no-daemon",
 				createdLink
 		}));
 

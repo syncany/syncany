@@ -141,13 +141,19 @@ echo | set /p=Starting daemon: .
 start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany --log=%APP_LOG_FILE% daemon
 
 for /l %%i in (1, 1, 10) do (
-  if not exist %APP_DAEMON_PIDFILE% (
+  set "pid_and_ctrl_exists="
+  if exist %APP_DAEMON_PIDFILE% if exist %APP_DAEMON_CONTROL% set pid_and_ctrl_exists=1
+  
+  if not defined pid_and_ctrl_exists (
     echo | set /p=.
     timeout /t 1 /nobreak > NUL
   ) 
 )
 
-if not exist %APP_DAEMON_PIDFILE% (
+set "pid_and_ctrl_exists="
+if exist %APP_DAEMON_PIDFILE% if exist %APP_DAEMON_CONTROL% set pid_and_ctrl_exists=1
+  
+if not defined pid_and_ctrl_exists (
   echo  Failed. 
   exit /b 1
 ) else (

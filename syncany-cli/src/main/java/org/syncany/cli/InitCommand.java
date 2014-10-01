@@ -102,7 +102,7 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<Void> optionNoEncryption = parser.acceptsAll(asList("E", "no-encryption"));
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
-		OptionSpec<Void> optionNoDaemon = parser.acceptsAll(asList("N", "no-daemon"));
+		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
 
 		OptionSet options = parser.parse(operationArguments);
 
@@ -135,7 +135,7 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(null); // set by callback in operation
-		operationOptions.setDaemon(!options.has(optionNoDaemon));
+		operationOptions.setDaemon(options.has(optionAddDaemon));
 
 		return operationOptions;
 	}

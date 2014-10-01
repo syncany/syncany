@@ -84,7 +84,7 @@ _sy() {
 	CONNECT_OPTIONS="\
 		-P --plugin\
 		-o --plugin-option\
-		-N --no-daemon"
+		-n --add-daemon"
 
 	DOWN_CONFLICT_STRATEGIES="\
 		ask\
@@ -112,7 +112,7 @@ _sy() {
 		-G --no-compression\
 		-t --create-target\
 		-a --advanced\
-		-N --no-daemon"
+		-n --add-daemon"
 
 	LS_OPTIONS="\
 		-V --versions\
