@@ -57,7 +57,6 @@ public class TestCliUtil {
 		String[] initArgs = new String[] {
 				"--localdir", client.get("localdir"),
 				"init",
-				"--no-daemon",
 				"--plugin", "local",
 				"--plugin-option", "path=" + client.get("repopath"),
 				"--no-encryption",
@@ -79,7 +78,6 @@ public class TestCliUtil {
 		String[] connectArgs = new String[] {
 				"--localdir", client.get("localdir"),
 				"connect",
-				"--no-daemon",
 				"--plugin", "local",
 				"--plugin-option", "path=" + client.get("repopath")
 		};

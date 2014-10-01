@@ -5,7 +5,7 @@ SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
           [-E | --no-encryption] [-G | --no-compression]
           [-t | --create-target] [-a | --advanced] [-I | --no-interaction]
-          [-N | --no-daemon]
+          [-n | --add-daemon]
             
 DESCRIPTION 
   This command creates a new remote repository using the specified plugin, and
@@ -59,9 +59,8 @@ OPTIONS
     given on the command line. This option can be used to automate repository
     creation.
     
-  -N, --no-daemon             
+  -n, --add-daemon             
     The initialized local folder is automatically added to the daemon 
-    configuration for automatic synchronization. Use this option to avoid
-    that.     
+    configuration for automatic synchronization if this option is used.
                  
 %RESOURCE:incl/footer.skel%
