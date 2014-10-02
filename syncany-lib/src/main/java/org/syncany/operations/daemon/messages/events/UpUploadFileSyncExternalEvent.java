@@ -20,6 +20,10 @@ package org.syncany.operations.daemon.messages.events;
 public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
 	private String filename;
 
+	public UpUploadFileSyncExternalEvent(){
+		// no-arg constructor
+	}
+	
 	public UpUploadFileSyncExternalEvent(String root, String filename) {
 		super(root);
 		this.filename = filename;
