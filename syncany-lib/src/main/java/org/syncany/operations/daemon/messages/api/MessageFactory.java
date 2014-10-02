@@ -116,6 +116,7 @@ public class MessageFactory {
 		if (requestType.toLowerCase().endsWith("event")){
 			thisPackage += ".events";
 		}
+
 		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
 		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
 

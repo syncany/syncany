@@ -18,11 +18,11 @@
 package org.syncany.operations.daemon.messages.events;
 
 public class StatusEndSyncExternalEvent extends SyncExternalEvent {
-	public StatusEndSyncExternalEvent(String root) {
-		super(root);
+	public StatusEndSyncExternalEvent(){
+		// Required default constructor!
 	}
 	
-	public StatusEndSyncExternalEvent(){
-		// no arg constructor
+	public StatusEndSyncExternalEvent(String root) {
+		super(root);
 	}
 }
