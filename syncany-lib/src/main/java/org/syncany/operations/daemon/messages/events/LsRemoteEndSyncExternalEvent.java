@@ -18,6 +18,10 @@
 package org.syncany.operations.daemon.messages.events;
 
 public class LsRemoteEndSyncExternalEvent extends SyncExternalEvent {
+	public LsRemoteEndSyncExternalEvent(){
+		// no-args constructor
+	}
+	
 	public LsRemoteEndSyncExternalEvent(String root) {
 		super(root);
 	}
