@@ -22,6 +22,10 @@ import org.syncany.operations.daemon.messages.api.ExternalEvent;
 public class PluginConnectToHostExternalEvent extends ExternalEvent {
 	private String host;
 
+	public PluginConnectToHostExternalEvent(){
+		// no-arg constructor
+	}
+	
 	public PluginConnectToHostExternalEvent(String host) {
 		this.host = host;
 	}		

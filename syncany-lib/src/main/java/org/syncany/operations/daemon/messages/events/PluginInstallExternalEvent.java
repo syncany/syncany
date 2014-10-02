@@ -22,6 +22,10 @@ import org.syncany.operations.daemon.messages.api.ExternalEvent;
 public class PluginInstallExternalEvent extends ExternalEvent {
 	private String source;
 
+	public PluginInstallExternalEvent(){
+		// no-arg constructor
+	}
+	
 	public PluginInstallExternalEvent(String source) {
 		this.source = source;
 	}

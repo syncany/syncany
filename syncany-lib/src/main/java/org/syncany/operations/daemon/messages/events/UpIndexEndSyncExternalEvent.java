@@ -18,6 +18,10 @@
 package org.syncany.operations.daemon.messages.events;
 
 public class UpIndexEndSyncExternalEvent extends SyncExternalEvent {
+	public UpIndexEndSyncExternalEvent(){
+		// no-arg constructor
+	}
+	
 	public UpIndexEndSyncExternalEvent(String root) {
 		super(root);
 	}
