@@ -23,6 +23,10 @@ public class UpUploadFileInTransactionSyncExternalEvent extends SyncExternalEven
 	private int totalFileCount;
 	private long totalFileSize;
 	
+	public UpUploadFileInTransactionSyncExternalEvent(){
+		// no-arg constructor
+	}
+	
 	public UpUploadFileInTransactionSyncExternalEvent(String root, int currentFileIndex, int totalFileCount, long currentFileSize, long totalFileSize) {
 		super(root);
 		
