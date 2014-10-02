@@ -47,4 +47,8 @@ public class EnvironmentUtil {
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
 	}
+	
+	public static boolean isMaxOsX(){
+		return System.getProperty("os.name").toLowerCase().equals("mac os x");
+	}
 }
