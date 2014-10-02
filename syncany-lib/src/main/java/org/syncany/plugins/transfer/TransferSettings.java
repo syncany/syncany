@@ -64,6 +64,8 @@ public abstract class TransferSettings {
 	@Attribute
 	private String type = findPluginId();
 
+	private String lastValidationFailReason;
+
 	public UserInteractionListener getUserInteractionListener() {
 		return userInteractionListener;
 	}
@@ -169,6 +171,7 @@ public abstract class TransferSettings {
 			logger.log(Level.SEVERE, "Unable to check if option(s) are valid.", e);
 
 			if (e.getCause() instanceof StorageException) { // Dirty hack
+				lastValidationFailReason = e.getCause().getMessage();
 				return false;
 			}
 
@@ -176,6 +179,15 @@ public abstract class TransferSettings {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Get the reason why the validation with {@link TransferSettings#isValid()} failed.
+	 *
+	 * @return The first reason why the validation process failed
+	 */
+	public final String getReasonForLastValidationFail() {
+		return lastValidationFailReason;
 	}
 
 	/**

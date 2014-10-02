@@ -141,7 +141,12 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
 
-		validateSettingsWithException(settings); // throws error if invalid
+		if (!settings.isValid()) {
+			if (askRetryInvalidSettings(settings.getReasonForLastValidationFail())) {
+				return askPluginSettings(settings, knownPluginSettings);
+			}
+			throw new StorageException("Validation failed: " + settings.getReasonForLastValidationFail());
+		}
 
 		return settings;
 	}
@@ -157,7 +162,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 	}
 
-	private void askNormalPluginSettings(TransferSettings settings, PluginOption option, Map<String, String> knownPluginSettings, String nestPrefix) 
+	private void askNormalPluginSettings(TransferSettings settings, PluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
 			throws StorageException, InstantiationException, IllegalAccessException {
 
 		Class<? extends PluginOptionCallback> optionCallbackClass = option.getCallback();
@@ -339,6 +344,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return System.getProperty("user.name");
 	}
 
+	protected boolean askRetryInvalidSettings(String failReason) {
+		return onUserConfirm("Validation failure", failReason, "Would you change the settings");
+	}
+
 	protected boolean askRetryConnection() {
 		return onUserConfirm(null, "Connection failure", "Would you change the settings and retry the connection");
 	}
@@ -484,9 +493,4 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return password;
 	}
 
-	private void validateSettingsWithException(TransferSettings settings) throws StorageException {
-		if (!settings.isValid()) {
-			throw new StorageException("Transfer settings are not valid (maybe missing a mandatory field)");
-		}
-	}
 }
