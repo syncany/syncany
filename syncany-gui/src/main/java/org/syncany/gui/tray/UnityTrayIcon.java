@@ -22,12 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.messaging.webserver.StaticResourcesWebServer;
 import org.syncany.gui.messaging.webserver.StaticResourcesWebServer.ServerStartedListener;
+import org.syncany.operations.status.StatusOperationResult;
 
 /**
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -164,7 +166,7 @@ public class UnityTrayIcon extends TrayIcon {
 	}
 
 	@Override
-	public void updateFolders(Map<String, Map<String, String>> folders) {
+	public void updateWatchedFolders(final List<File> folders) {
 		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("action", "update_tray_menu");
 		parameters.put("folders", folders);
@@ -185,5 +187,11 @@ public class UnityTrayIcon extends TrayIcon {
 		parameters.put("action", "update_tray_icon");
 		parameters.put("imageFileName", image.getFileName());
 		sendToAll(parameters.toString());
+	}
+
+	@Override
+	public void updateWatchedFoldersStatus(StatusOperationResult result) {
+		// TODO Auto-generated method stub
+		
 	}
 }

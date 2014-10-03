@@ -19,6 +19,7 @@ package org.syncany.gui.tray;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -33,7 +34,9 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
+import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.util.SWTResourceManager;
+import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -45,6 +48,7 @@ public class DefaultTrayIcon extends TrayIcon {
 	private TrayItem trayItem;
 	private Menu menu;
 	private MenuItem statusTextItem;
+	private Map<String, MenuItem> watchedFolderMenuItems = new HashMap<String, MenuItem>();
 
 	@SuppressWarnings("serial")
 	private Map<TrayIcons, Image> images = new HashMap<TrayIcons, Image>() {
@@ -89,7 +93,7 @@ public class DefaultTrayIcon extends TrayIcon {
 		}
 	}
 
-	private void buildMenuItems(final Map<String, Map<String, String>> folders) {
+	private void buildMenuItems(final List<File> watches) {
 		boolean needSyncing = false;
 		if (menu != null) {
 			clearMenuItems();
@@ -103,6 +107,7 @@ public class DefaultTrayIcon extends TrayIcon {
 
 		new MenuItem(menu, SWT.SEPARATOR);
 
+		/**
 		MenuItem connectItem = new MenuItem(menu, SWT.PUSH);
 		connectItem.setText("New sync folder");
 		connectItem.addSelectionListener(new SelectionAdapter() {
@@ -120,53 +125,40 @@ public class DefaultTrayIcon extends TrayIcon {
 				showSettings();
 			}
 		});
+		**/
 
-		if (folders != null && folders.size() > 0) {
-			new MenuItem(menu, SWT.SEPARATOR);
-
-			for (final String key : folders.keySet()) {
-				final File folder = new File(folders.get(key).get("folder"));
-				final String status = folders.get(key).get("status");
-						
-				if (folder.exists()) {
-					MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
-					folderMenuItem.setText(folder.getName() + " [" + status + "]");
-						
-					Menu subMenu = new Menu(folderMenuItem);
-					folderMenuItem.setMenu(subMenu);
+		if (watches != null && watches.size() > 0) {
+			for (final File file : watches){
+				if (!watchedFolderMenuItems.containsKey(file.getAbsolutePath())){
+					if (file.exists()){
+						MenuItem folderMenuItem = new MenuItem(menu, SWT.CASCADE);
+						folderMenuItem.setText(file.getName());
+						folderMenuItem.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								BrowserHelper.openFile(file.getAbsolutePath());
+							}
+						});
 					
-					MenuItem pauseMI = new MenuItem(subMenu, SWT.PUSH);
-					pauseMI.setText(messages.get("tray.menuitem.pause"));
-					pauseMI.setImage(SWTResourceManager.getResizedImage("/images/tray/pause.png", 14, 14));
-					pauseMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							pause(folder);
-						}
-					});
-					
-					MenuItem resumetMI = new MenuItem(subMenu, SWT.PUSH);
-					resumetMI.setText(messages.get("tray.menuitem.resume"));
-					resumetMI.setImage(SWTResourceManager.getResizedImage("/images/tray/resume.png", 14, 14));
-					resumetMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							resume(folder);
-						}
-					});
-					
-					new MenuItem(subMenu, SWT.SEPARATOR);
-					
-					MenuItem openMI = new MenuItem(subMenu, SWT.PUSH);
-					openMI.setText(messages.get("tray.menuitem.open"));
-					openMI.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							showFolder(folder);
-						}
-					});
+						watchedFolderMenuItems.put(file.getAbsolutePath(), folderMenuItem);
+					}
 				}
 			}
+			
+			for (String filePath : watchedFolderMenuItems.keySet()){
+				boolean remove = true;
+				for (File file : watches){
+					if (file.getAbsolutePath().equals(filePath))
+						remove = false;
+				}
+				
+				if (remove){
+					watchedFolderMenuItems.get(filePath).dispose();
+					watchedFolderMenuItems.keySet().remove(filePath);
+				}
+			}
+			
+			new MenuItem(menu, SWT.SEPARATOR);
 		}
 
 		new MenuItem(menu, SWT.SEPARATOR);
@@ -215,7 +207,7 @@ public class DefaultTrayIcon extends TrayIcon {
 	}
 
 	@Override
-	public void updateFolders(final Map<String, Map<String, String>> folders) {
+	public void updateWatchedFolders(final List<File> folders) {
 		Display.getDefault().asyncExec(new Runnable() {
 			public void run() {
 				buildMenuItems(folders);
@@ -239,5 +231,11 @@ public class DefaultTrayIcon extends TrayIcon {
 				trayItem.setImage(images.get(image));
 			}
 		});
+	}
+
+	@Override
+	public void updateWatchedFoldersStatus(StatusOperationResult result) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -22,8 +22,10 @@ import io.undertow.websockets.client.WebSocketClient;
 import io.undertow.websockets.client.WebSocketClientNegotiation;
 import io.undertow.websockets.core.AbstractReceiveListener;
 import io.undertow.websockets.core.BufferedTextMessage;
+import io.undertow.websockets.core.WebSocketCallback;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSocketVersion;
+import io.undertow.websockets.core.WebSockets;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,8 +46,10 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.UserTO;
+import org.syncany.gui.Launcher;
 import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.util.StringUtil;
 import org.xnio.BufferAllocator;
 import org.xnio.ByteBufferSlicePool;
@@ -55,6 +60,8 @@ import org.xnio.Xnio;
 import org.xnio.XnioWorker;
 import org.xnio.ssl.JsseXnioSsl;
 import org.xnio.ssl.XnioSsl;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>
@@ -78,7 +85,7 @@ public class WebSocket {
 				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
 				List<UserTO> users = readWebSocketServerUsers(daemonConfig);
 				bus.register(this);
-				
+				LocalEventBus.getInstance().register(this);
 				if (users.size() > 0){
 					start(users.get(0).getUsername(), users.get(0).getPassword());
 				}
@@ -87,7 +94,7 @@ public class WebSocket {
 				logger.log(Level.WARNING, "Unable to load daemon configuration");
 			}
 			catch (Exception e) {
-				logger.log(Level.WARNING, "Unable to load daemon configuration");
+				logger.log(Level.WARNING, "Unable to start websocket");
 			}
 		}
 	}
@@ -107,7 +114,7 @@ public class WebSocket {
 		return users;
 	}
 
-	private void start(final String username, final String password) throws Exception{
+	private void start(final String username, final String password) throws Exception {
         SSLContext sslContext = UserConfig.createUserSSLContext();        
         Xnio xnio = Xnio.getInstance(this.getClass().getClassLoader());
         Pool<ByteBuffer> buffer = new ByteBufferSlicePool(BufferAllocator.BYTE_BUFFER_ALLOCATOR, 1024, 1024);
@@ -150,25 +157,50 @@ public class WebSocket {
             @Override
             protected void onError(WebSocketChannel channel, Throwable error) {
             	logger.log(Level.WARNING, "Error: "+error.getMessage());
+            	markAsDeconnected();
             }
         });
         webSocketChannel.resumeReceives();
         
 	}
-//	
-//        WebSockets.sendText("<listWatchesManagementRequest><id>1</id></listWatchesManagementRequest>", webSocketChannel, new WebSocketCallback<Void>() {
-//			
-//			@Override
-//			public void onError(WebSocketChannel channel, Void context, Throwable throwable) {
-//				throwable.printStackTrace();
-//			}
-//			
-//			@Override
-//			public void complete(WebSocketChannel channel, Void context) {
-//				System.out.println("complete");
-//			}
-//		});  
-//        
-//        WebSockets.sendTextBlocking("<listWatchesManagementRequest><id>2</id></listWatchesManagementRequest>", webSocketChannel);  
-//	}
+	
+	protected void markAsDeconnected() {
+		try {
+			Thread.sleep(5000);
+			Launcher.startDeamon();
+			init();
+		}
+		catch (IOException e) {
+			logger.log(Level.WARNING, "Unable to start daemon");
+		}
+		catch (InterruptedException e) {
+			logger.log(Level.WARNING, "Unable to start daemon");
+		}
+	}
+
+	@Subscribe
+	public void requestSubscription(Request request){
+		//String message = "<listWatchesManagementRequest><id>1</id></listWatchesManagementRequest>";
+		try{
+			postMessage(MessageFactory.toXml(request));
+		}
+		catch (Exception e){
+			logger.log(Level.WARNING, "Unable to transform request to XML");
+		}
+	}
+	
+	private void postMessage(String message){
+		WebSockets.sendText(message, webSocketChannel, new WebSocketCallback<Void>() {
+			
+			@Override
+			public void onError(WebSocketChannel channel, Void context, Throwable throwable) {
+				throwable.printStackTrace();
+			}
+			
+			@Override
+			public void complete(WebSocketChannel channel, Void context) {
+				System.out.println("complete");
+			}
+		});  
+	}
 }

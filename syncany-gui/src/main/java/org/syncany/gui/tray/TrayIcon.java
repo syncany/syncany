@@ -21,6 +21,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.syncany.gui.Launcher;
 import org.syncany.gui.util.BrowserHelper;
 import org.syncany.gui.util.I18n;
+import org.syncany.operations.status.StatusOperationResult;
 
 /**
  * @author pheckel
@@ -193,7 +195,9 @@ public abstract class TrayIcon {
 	// Abstract methods
 	protected abstract void setTrayImage(TrayIcons image);
 
-	public abstract void updateFolders(Map<String, Map<String, String>> folders);
+	public abstract void updateWatchedFolders(List<File> folders);
 
 	public abstract void updateStatusText(String statusText);
+
+	public abstract void updateWatchedFoldersStatus(StatusOperationResult result);
 }

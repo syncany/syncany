@@ -1,9 +1,5 @@
 package org.syncany.gui;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -12,20 +8,10 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.syncany.config.LocalEventBus;
-import org.syncany.config.UserConfig;
-import org.syncany.gui.command.GuiCommandManager;
+import org.syncany.gui.controller.SyncController;
 import org.syncany.gui.messaging.websocket.WebSocket;
 import org.syncany.gui.tray.TrayIcon;
 import org.syncany.gui.tray.TrayIconFactory;
-import org.syncany.operations.daemon.DaemonOperation;
-import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
-import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
-import org.syncany.operations.daemon.messages.api.ExternalEvent;
-import org.syncany.operations.daemon.messages.api.Message;
-import org.syncany.operations.daemon.messages.api.Request;
-import org.syncany.util.PidFileUtil;
-
-import com.google.common.eventbus.Subscribe;
 
 public class MainGUI {
 	private static final Logger logger = Logger.getLogger(MainGUI.class.getSimpleName());
@@ -36,7 +22,7 @@ public class MainGUI {
 	 * between client and daemon server
 	 **/
 	private static String clientId = UUID.randomUUID().toString();
-
+	
 	private WebSocket client;
 	
 	private Shell shell;
@@ -60,12 +46,12 @@ public class MainGUI {
 
 		LocalEventBus.getInstance().register(this);
 
-		// REST Call to initialise watched folders
-		restoreWatchedFolders();
-		
 		// Websocket connection
 		client = new WebSocket(); 
 		client.init();
+		
+		// REST Call to initialise watched folders
+		SyncController.getInstance().restoreWatchedFolders();
 	}
 
 	public void open() {
@@ -78,48 +64,14 @@ public class MainGUI {
 		}
 	}
 
-	public void restoreWatchedFolders() {
-		logger.info("Restoring watched folders");
-		
-		File daemonPidFile = new File(UserConfig.getUserConfigDir(), DaemonOperation.PID_FILE);
-		boolean daemonRunning = PidFileUtil.isProcessRunning(daemonPidFile);
-
-		if (daemonRunning) {
-			GuiCommandManager gc = new GuiCommandManager();
-			Request req = new ListWatchesManagementRequest();
-			req.setId(Math.abs(new Random().nextInt()));
-			ListWatchesManagementResponse response = (ListWatchesManagementResponse) gc.runCommand(req);
-			
-			Map<String, Map<String, String>> folders = new HashMap<>();
-			
-			for (File f : response.getWatches()) {
-				Map<String, String> data = new HashMap<>();
-				data.put("folder", f.getAbsolutePath());
-				data.put("status", "status");
-				folders.put(UUID.randomUUID().toString(), data);
-			}
-		
-			tray.updateFolders(folders);
-		}
-	}
-
-	@Subscribe
-	public void receiveWebsocketMessage(Message message){
-		if (message instanceof ExternalEvent){
-			handleExternalEvent((ExternalEvent)message);
-		}
-	}
-	
-	private void handleExternalEvent(ExternalEvent message) {
-		System.out.println(message.getClass());
-	}
-
-	@Subscribe
-	public void updateInterface(Object event) {
-		
-	}
-
 	public static String getClientIdentification() {
 		return clientId;
+	}
+	
+	/**
+	 * @return the tray
+	 */
+	public TrayIcon getTray() {
+		return tray;
 	}
 }
