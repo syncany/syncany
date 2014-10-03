@@ -91,7 +91,7 @@ public class Indexer {
 		this.deduper = deduper;
 		this.localDatabase = new SqlDatabase(config);
 
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	/**

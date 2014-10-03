@@ -59,7 +59,7 @@ public class WatchRunner {
 		this.portTO = portTO;
 		this.watchOperation = new WatchOperation(config, watchOperationOptions);
 
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 	}
 

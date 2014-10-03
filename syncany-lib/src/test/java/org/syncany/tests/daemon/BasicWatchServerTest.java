@@ -271,7 +271,7 @@ public class BasicWatchServerTest {
 	
 	private void registerWithBus() {
 		if (eventBus == null) {
-			eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+			eventBus = LocalEventBus.getInstance();
 			eventBus.register(this);
 		}
 	}
