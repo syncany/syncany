@@ -44,8 +44,21 @@ public class GuiOperation extends Operation {
 
 	@Override
 	public OperationResult execute() throws Exception {		
-		logger.log(Level.INFO, "Starting daemon operation ...");
-		startGui();
+		logger.log(Level.INFO, "Starting GUI operation ...");
+		
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					startGui();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		t.start();
 		return null;
 	}
 

@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
 	compile			project(':syncany-lib')
+	compile			project(':syncany-cli')
     	
 	compile			"commons-beanutils:commons-beanutils:1.9.0"
 	
