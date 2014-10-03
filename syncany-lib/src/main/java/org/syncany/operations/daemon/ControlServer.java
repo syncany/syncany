@@ -57,7 +57,7 @@ public class ControlServer implements TailerListener {
 	public ControlServer() {
 		this.controlFile = new File(UserConfig.getUserConfigDir(), CONTROL_FILE);
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
-		this.eventBus = LocalEventBus.getInstance();		
+		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);		
 	}
 
 	public void enterLoop() throws IOException, ServiceAlreadyStartedException {

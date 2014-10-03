@@ -54,7 +54,7 @@ public abstract class Command {
 	protected LocalEventBus eventBus;
 	
 	public Command() {
-		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
 		this.eventBus.register(this);
 	}
 	
