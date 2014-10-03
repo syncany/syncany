@@ -39,11 +39,9 @@ public class BrowserHelper {
 				rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
 			}
 			//TODO add mac osx env detection
-			/**
-			else if (EnvironmentUtil.isMacOS()) {
+			else if (EnvironmentUtil.isOSX()) {
 				rt.exec("open " + url);
 			}
-			**/
 			else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 				// Do a best guess on unix until we get a platform independent way
 				// Build a list of browsers to try, in this order.
