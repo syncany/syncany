@@ -61,7 +61,7 @@ public class LsRemoteOperation extends Operation {
 
 		this.loadedTransferManager = transferManager;
 		this.localDatabase = new SqlDatabase(config);
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public class GetFileFolderRequestHandler extends FolderRequestHandler {
 		super(config);		
 		
 		this.localDatabase = new SqlDatabase(config);
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override

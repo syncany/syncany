@@ -108,7 +108,7 @@ public class DownOperation extends AbstractTransferOperation {
 	public DownOperation(Config config, DownOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 		
 		this.options = options;
 		this.result = new DownOperationResult();

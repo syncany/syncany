@@ -102,7 +102,7 @@ public class PluginOperation extends Operation {
 		this.options = options;
 		this.result = new PluginOperationResult();
 		
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override

@@ -17,8 +17,6 @@
  */
 package org.syncany.config;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,24 +31,21 @@ import com.google.common.eventbus.EventBus;
  */
 public class LocalEventBus {
 	private static final Logger logger = Logger.getLogger(LocalEventBus.class.getSimpleName());
-	
-	public static final String BUS_LIB = "lib";
-	public static final String BUS_DAEMON = "daemon";
-	
-	private static Map<String, LocalEventBus> instances = new HashMap<String, LocalEventBus>();
+	private static LocalEventBus instance;
 	
 	private EventBus eventBus;
 	
-	public static LocalEventBus getInstance(String name) {
-		if (!instances.containsKey(name)){
-			instances.put(name, new LocalEventBus(name));
+	public static LocalEventBus getInstance() {
+		if (instance != null) {
+			return instance;
 		}
 		
-		return instances.get(name);
+		instance = new LocalEventBus();
+		return instance;
 	}
 	
-	private LocalEventBus(String name) {
-		this.eventBus = new EventBus(name);
+	private LocalEventBus() {
+		this.eventBus = new EventBus();
 	}
 	
 	public void register(Object object) {

@@ -99,7 +99,7 @@ public class UpOperation extends AbstractTransferOperation {
 	public UpOperation(Config config, UpOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);		
+		this.eventBus = LocalEventBus.getInstance();		
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.localDatabase = new SqlDatabase(config);

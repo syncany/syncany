@@ -45,7 +45,7 @@ public class InternalRestHandler implements HttpHandler {
 	
 	public InternalRestHandler(WebServer daemonWebServer) {
 		this.daemonWebServer = daemonWebServer;
-		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		this.eventBus = LocalEventBus.getInstance();
 	}
 	
 	@Override

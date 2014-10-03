@@ -123,7 +123,7 @@ public class DaemonOperation extends Operation {
 	// General initialization functions. These create the EventBus and control loop.	
 	
 	private void initEventBus() {
-		eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
+		eventBus = LocalEventBus.getInstance();
 		eventBus.register(this);
 	}
 
