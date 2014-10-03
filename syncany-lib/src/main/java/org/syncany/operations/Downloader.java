@@ -52,7 +52,7 @@ public class Downloader {
 	public Downloader(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
-		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
 	}
 
 	/** 

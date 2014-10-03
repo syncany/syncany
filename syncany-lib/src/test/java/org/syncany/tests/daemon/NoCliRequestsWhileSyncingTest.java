@@ -58,7 +58,7 @@ public class NoCliRequestsWhileSyncingTest {
 		daemonConfig.setPortTO(TestDaemonUtil.createPortTO(port));
 		
 		// Register to event bus			
-		LocalEventBus localEventBus = LocalEventBus.getInstance();
+		LocalEventBus localEventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
 		localEventBus.register(this);
 				
 		// Prepare CLI request

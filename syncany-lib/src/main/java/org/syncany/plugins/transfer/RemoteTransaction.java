@@ -50,7 +50,7 @@ public class RemoteTransaction {
 		this.config = config;
 		this.transferManager = transferManager;
 		this.transactionTO = new TransactionTO(config.getMachineName());
-		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance(LocalEventBus.BUS_LIB);
 	}
 
 	/**
