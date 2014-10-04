@@ -27,8 +27,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.events.PluginConnectToHostExternalEvent;
-import org.syncany.operations.daemon.messages.events.PluginInstallExternalEvent;
+import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
+import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;

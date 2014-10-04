@@ -20,7 +20,9 @@ package org.syncany.util;
 import java.io.File;
 
 public class EnvironmentUtil {
-	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
+	public enum OperatingSystem {
+		WINDOWS, UNIX_LIKE
+	};
 
 	private static OperatingSystem operatingSystem;
 	
@@ -43,6 +45,10 @@ public class EnvironmentUtil {
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean isMacOSX() {
+		return System.getProperty("os.name").toUpperCase().contains("OS X");
+	}
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
