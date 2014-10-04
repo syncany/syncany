@@ -15,18 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.daemon.messages.api.ExternalEvent;
-
-public class PluginConnectToHostExternalEvent extends ExternalEvent {
-	private String host;
-
-	public PluginConnectToHostExternalEvent(String host) {
-		this.host = host;
-	}		
-
-	public String getHost() {
-		return host;
+public class StatusStartSyncExternalEvent extends SyncExternalEvent {
+	public StatusStartSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public StatusStartSyncExternalEvent(String root) {
+		super(root);
 	}
 }
