@@ -125,9 +125,9 @@ public class UpCommandTest {
 			"down"
 		}));
 		
-		assertEquals(4, cliOut.length);
-		assertTrue(cliOut[2].contains("1 database file(s) processed"));
-		assertTrue(cliOut[3].contains("Sync down finished"));
+		assertEquals(6, cliOut.length);
+		assertTrue(cliOut[4].contains("1 database file(s) processed"));
+		assertTrue(cliOut[5].contains("Sync down finished"));
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 	}	
