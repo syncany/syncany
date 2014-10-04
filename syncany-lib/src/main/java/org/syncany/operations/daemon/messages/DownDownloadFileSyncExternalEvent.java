@@ -17,27 +17,32 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
+	private String fileDescription;
+	private int currentFileIndex;
+	private int maxFileCount;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
-
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
-	
-	public ListWatchesManagementResponse() {
+	public DownDownloadFileSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public ListWatchesManagementResponse(int requestId, List<File> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
-	}	
-	
-	public ArrayList<File> getWatches() {
-		return watches;
+	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
+		super(root);
+		
+		this.fileDescription = fileDescription;
+		this.currentFileIndex = currentFileIndex;
+		this.maxFileCount = maxFileCount;
+	}
+
+	public String getFileDescription() {
+		return fileDescription;
+	}
+
+	public int getCurrentFileIndex() {
+		return currentFileIndex;
+	}
+
+	public int getMaxFileCount() {
+		return maxFileCount;
 	}
 }

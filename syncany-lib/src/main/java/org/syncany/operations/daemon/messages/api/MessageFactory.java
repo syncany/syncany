@@ -44,7 +44,7 @@ public class MessageFactory {
 	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
-	
+
 	private static final Serializer serializer;
 	
 	static {
@@ -110,15 +110,10 @@ public class MessageFactory {
 	}
 	
 	private static Class<? extends Message> getMessageClass(String requestType) throws Exception {
-		//TODO [low]: deleting .api not so nice .....
-		String thisPackage = MessageFactory.class.getPackage().getName().replaceAll(".api", "");
-		
-		if (requestType.toLowerCase().endsWith("event")){
-			thisPackage += ".events";
-		}
-
+		String thisPackage = Message.class.getPackage().getName();
+		String parentPackage = thisPackage.substring(0, thisPackage.lastIndexOf("."));
 		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
-		String fqMessageClassName = thisPackage + "." + camelCaseMessageType;
+		String fqMessageClassName = parentPackage + "." + camelCaseMessageType;
 
 		// Try to load!
 		try {		

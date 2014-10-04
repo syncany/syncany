@@ -17,27 +17,21 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import org.syncany.operations.down.DownOperationResult;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
+public class DownEndSyncExternalEvent extends SyncExternalEvent {
+	private DownOperationResult result;
 
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
-	
-	public ListWatchesManagementResponse() {
+	public DownEndSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public ListWatchesManagementResponse(int requestId, List<File> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
-	}	
-	
-	public ArrayList<File> getWatches() {
-		return watches;
+	public DownEndSyncExternalEvent(String root, DownOperationResult result) {
+		super(root);
+		this.result = result;
+	}
+
+	public DownOperationResult getResult() {
+		return result;
 	}
 }

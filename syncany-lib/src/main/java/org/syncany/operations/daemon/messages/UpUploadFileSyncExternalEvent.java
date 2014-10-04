@@ -17,27 +17,19 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
+	private String filename;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
-
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
-	
-	public ListWatchesManagementResponse() {
+	public UpUploadFileSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public ListWatchesManagementResponse(int requestId, List<File> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
-	}	
-	
-	public ArrayList<File> getWatches() {
-		return watches;
+	public UpUploadFileSyncExternalEvent(String root, String filename) {
+		super(root);
+		this.filename = filename;
+	}
+
+	public String getFilename() {
+		return filename;
 	}
 }
