@@ -32,4 +32,8 @@ public class ListWatchesManagementResponse extends ManagementResponse {
 		super(200, requestId, null);
 		this.watches = new ArrayList<File>(watches);
 	}	
+	
+	public ArrayList<File> getWatches() {
+		return watches;
+	}
 }
