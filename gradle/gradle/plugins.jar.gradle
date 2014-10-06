@@ -39,7 +39,7 @@ processResources {
 	}
 }		
 
-task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
+task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) << {
 	if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture')) {
 		if (pluginNeedsOperatingSystemAndArchitecture && !pluginOperatingSystemAndArchitectureAvailable) {
 			throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Pos=(linux|windows|macosx) and -Parch=(x86|x86_64)");
