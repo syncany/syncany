@@ -21,13 +21,26 @@ import java.io.File;
 
 public class EnvironmentUtil {
 	public enum OperatingSystem {
-		WINDOWS, UNIX_LIKE
+		WINDOWS(false), 
+		OSX(true), 
+		UNIX_LIKE(true);
+		
+		private boolean unixLike;
+		
+		OperatingSystem(boolean unixLike){
+			this.unixLike = unixLike;
+		}
+		
+		public boolean isUnixLike() {
+			return unixLike;
+		}
 	};
 
 	private static OperatingSystem operatingSystem;
 	
 	static {
-		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : OperatingSystem.UNIX_LIKE;
+		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : 
+			(System.getProperty("os.name").toUpperCase().contains("OS X") ? OperatingSystem.OSX : OperatingSystem.UNIX_LIKE);
 	}		
 
 	public static void setOperatingSystem(OperatingSystem aOperatingSystem) {
@@ -39,7 +52,7 @@ public class EnvironmentUtil {
 	}
 	
 	public static boolean isUnixLikeOperatingSystem() {
-		return operatingSystem == OperatingSystem.UNIX_LIKE;
+		return operatingSystem.isUnixLike();
 	}
 
 	public static boolean isWindows() {
@@ -47,10 +60,22 @@ public class EnvironmentUtil {
 	}	
 	
 	public static boolean isMacOSX() {
-		return System.getProperty("os.name").toUpperCase().contains("OS X");
+		return operatingSystem == OperatingSystem.OSX;
 	}
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
+	}
+
+	/**
+	 * Returns environment running syncany
+	 * @return windows_86, windows_64, linux_86, linux_64, mac_64, mac_86
+	 */
+	public static String getEnvironmentName() {
+		String os = System.getProperty("os.name").toLowerCase().split(" ")[0]; 
+		String arch = System.getProperty("os.arch");
+		String realArch = arch.substring(arch.length()-2, arch.length());
+
+		return os + "_" + realArch;
 	}
 }
