@@ -68,14 +68,19 @@ public class EnvironmentUtil {
 	}
 
 	/**
-	 * Returns environment running syncany
-	 * @return windows_86, windows_64, linux_86, linux_64, mac_64, mac_86
+	 * @see http://lopica.sourceforge.net/os.html
+	 * @return x86, i386, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
 	 */
-	public static String getEnvironmentName() {
-		String os = System.getProperty("os.name").toLowerCase().split(" ")[0]; 
-		String arch = System.getProperty("os.arch");
-		String realArch = arch.substring(arch.length()-2, arch.length());
-
-		return os + "_" + realArch;
+	public static String getArchDescription() {
+		return System.getProperty("os.arch").toLowerCase();	
+	}
+	
+	/**
+	 * @see http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems
+	 * 
+	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
+	 */
+	public static String getOsDescription(){
+		return System.getProperty("os.name").toLowerCase().split(" ")[0]; 
 	}
 }
