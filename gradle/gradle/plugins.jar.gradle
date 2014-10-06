@@ -39,13 +39,15 @@ processResources {
 	}
 }		
 
-task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) << {
-	if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture')) {
-		if (pluginNeedsOperatingSystemAndArchitecture && !pluginOperatingSystemAndArchitectureAvailable) {
-			throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Pos=(linux|windows|macosx) and -Parch=(x86|x86_64)");
+task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
+	doFirst {
+		if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture')) {
+			if (pluginNeedsOperatingSystemAndArchitecture && !pluginOperatingSystemAndArchitectureAvailable) {
+				throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Pos=(linux|windows|macosx) and -Parch=(x86|x86_64)");
+			}
 		}
 	}
-	
+		
 	from files(sourceSets.main.output.classesDir)
 	from files(sourceSets.main.output.resourcesDir)
 	from { 
