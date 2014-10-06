@@ -55,6 +55,10 @@ before_install:
   # Line of code tool (cloc)
   - sudo apt-get install -y -q cloc
   - cloc --version
+  
+  # Speed up Gradle (enable daemon)
+  - mkdir / 2> /dev/null || true
+  - echo "org.gradle.daemon=true" > ~/.gradle/gradle.properties
 
 install:
   # Disable default travis behavior 'gradle assemble'
