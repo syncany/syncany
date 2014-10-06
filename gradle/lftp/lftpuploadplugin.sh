@@ -31,19 +31,11 @@ echo "----------------------------"
 echo "PLUGIN ID is $PLUGINID"
 
 cp $REPODIR/build/libs/*.jar $TEMPDISTDIR
-cp $REPODIR/build/resources/main/org/syncany/plugins/$PLUGINID/plugin.properties $TEMPDISTDIR
 
 PWD=`pwd`
 cd $TEMPDISTDIR
 sha256sum * 2>/dev/null 
 cd "$PWD"
-
-if [ $(ls $TEMPDISTDIR | wc -l) != "2" ]; then
-	echo "ERROR: Wrong files in $TEMPDISTDIR: "
-	ls $TEMPDISTDIR
-	
-	exit 2
-fi
 
 find $TEMPDIR
 
