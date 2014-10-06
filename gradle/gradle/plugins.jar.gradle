@@ -19,9 +19,9 @@ configurations {
 }
 
 project.ext {
-	pluginOperatingSystem = (System.properties['os']) ? System.properties['os'] : "all"
-	pluginArchitecture = (System.properties['arch']) ? System.properties['arch'] : "all"	
-	pluginOperatingSystemAndArchitectureAvailable = System.properties['os'] && System.properties['arch']
+	pluginOperatingSystem = (project.hasProperty("os")) ? project.getProperty("os") : "all"
+	pluginArchitecture = (project.hasProperty("arch")) ? project.getProperty("arch") : "all"
+	pluginOperatingSystemAndArchitectureAvailable = project.hasProperty("os") && project.hasProperty("arch")
 }
 
 processResources {	
@@ -42,7 +42,7 @@ processResources {
 task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 	if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture')) {
 		if (pluginNeedsOperatingSystemAndArchitecture && !pluginOperatingSystemAndArchitectureAvailable) {
-			throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Dos=(linux|windows|macosx) and -Darch=(x86|x86_64)");
+			throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Pos=(linux|windows|macosx) and -Parch=(x86|x86_64)");
 		}
 	}
 	
