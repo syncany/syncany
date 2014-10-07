@@ -73,7 +73,15 @@ public class EnvironmentUtil {
 	 */
 	public static String getArchDescription() {
 		String realOsStr = System.getProperty("os.arch").toLowerCase();
-		return ("i386".equals(realOsStr)) ? "x86" : realOsStr;
+		
+		switch (realOsStr) {
+		case "i386":
+			return "x86";
+		case "amd64":
+			return "x86_64";
+		default:
+			return realOsStr;
+		}
 	}
 	
 	/**
