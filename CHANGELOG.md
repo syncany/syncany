@@ -3,6 +3,8 @@ Change Log
 
 ### Syncany 0.1.12-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Allow OS/arch-dependent plugins (e.g. GUI) #245
 - Bugfixes and other things:
   + Fix integrity issue with DIRTY databases (major!) #227
   + Make 'sy daemon stop' more reliable on Windows #230
