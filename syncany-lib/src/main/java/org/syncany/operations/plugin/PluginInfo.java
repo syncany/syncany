@@ -25,36 +25,41 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.syncany.util.StringUtil;
 
-@Root(name="pluginInfo")
+@Root(name = "pluginInfo", strict = false)
 public class PluginInfo {
-	@Element(name="pluginId", required=true)
+	@Element(name = "pluginId", required = true)
 	private String pluginId;
-	
-	@Element(name="pluginName", required=false)
+
+	@Element(name = "pluginName", required = false)
 	private String pluginName;
 
-	@Element(name="pluginVersion", required=false)
+	@Element(name = "pluginVersion", required = false)
 	private String pluginVersion;
 	
-	@Element(name="pluginDate", required=false)
+	@Element(name = "pluginOperatingSystem", required = false)
+	private String pluginOperatingSystem;
+	
+	@Element(name = "pluginArchitecture", required = false)
+	private String pluginArchitecture;	
+
+	@Element(name = "pluginDate", required = false)
 	private String pluginDate;
-	
-	@Element(name="pluginAppMinVersion", required=false)
+
+	@Element(name = "pluginAppMinVersion", required = false)
 	private String pluginAppMinVersion;
-	
-	@Element(name="pluginRelease", required=false)
+
+	@Element(name = "pluginRelease", required = false)
 	private boolean pluginRelease;
 
-	@Element(name="pluginConflictsWith", required=false)
+	@Element(name = "pluginConflictsWith", required = false)
 	private String conflictingPluginIds; // command-separated
 
-	@Element(name="sha256sum", required=false)
+	@Element(name = "sha256sum", required = false)
 	private String sha256sum;
 
-	@Element(name="downloadUrl", required=false)
+	@Element(name = "downloadUrl", required = false)
 	private String downloadUrl;
-	
-	
+
 	public PluginInfo() {
 		// Nothing.
 	}
@@ -81,6 +86,22 @@ public class PluginInfo {
 
 	public void setPluginVersion(String pluginVersion) {
 		this.pluginVersion = pluginVersion;
+	}
+
+	public String getPluginOperatingSystem() {
+		return pluginOperatingSystem;
+	}
+
+	public void setPluginOperatingSystem(String pluginOperatingSystem) {
+		this.pluginOperatingSystem = pluginOperatingSystem;
+	}
+
+	public String getPluginArchitecture() {
+		return pluginArchitecture;
+	}
+
+	public void setPluginArchitecture(String pluginArchitecture) {
+		this.pluginArchitecture = pluginArchitecture;
 	}
 
 	public String getPluginDate() {
@@ -121,8 +142,8 @@ public class PluginInfo {
 
 	public void setDownloadUrl(String downloadUrl) {
 		this.downloadUrl = downloadUrl;
-	}				
-	
+	}
+
 	public List<String> getConflictingPluginIds() {
 		if (conflictingPluginIds != null) {
 			return Arrays.asList(conflictingPluginIds.split(","));
@@ -131,7 +152,7 @@ public class PluginInfo {
 			return new ArrayList<String>();
 		}
 	}
-	
+
 	public void setConflictingPluginIds(List<String> conflictingPluginIds) {
 		this.conflictingPluginIds = (conflictingPluginIds != null) ? StringUtil.join(conflictingPluginIds, ",") : null;
 	}

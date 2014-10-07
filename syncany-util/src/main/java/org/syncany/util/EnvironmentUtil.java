@@ -69,15 +69,15 @@ public class EnvironmentUtil {
 
 	/**
 	 * @see http://lopica.sourceforge.net/os.html
-	 * @return x86, i386, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
+	 * @return x86, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
 	 */
 	public static String getArchDescription() {
-		return System.getProperty("os.arch").toLowerCase();	
+		String realOsStr = System.getProperty("os.arch").toLowerCase();
+		return ("i386".equals(realOsStr)) ? "x86" : realOsStr;
 	}
 	
 	/**
 	 * @see http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems
-	 * 
 	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
 	 */
 	public static String getOsDescription(){
