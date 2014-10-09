@@ -18,22 +18,32 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 
 public class UpEndSyncExternalEvent extends SyncExternalEvent {
-	@Element(name = "result", required = true)
-	private UpOperationResult result;
+	@Element(name = "resultCode", required = true)
+	private UpResultCode resultCode;
+	
+	@Element(name = "changes", required = true)
+	private ChangeSet changes;
 	
 	public UpEndSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public UpEndSyncExternalEvent(String root, UpOperationResult result) {
+	public UpEndSyncExternalEvent(String root, UpResultCode resultCode, ChangeSet changes) {
 		super(root);
-		this.result = result;
+		
+		this.resultCode = resultCode;
+		this.changes = changes;
 	}
 	
-	public UpOperationResult getResult() {
-		return result;
+	public UpResultCode getResultCode() {
+		return resultCode;
+	}
+	
+	public ChangeSet getResult() {
+		return changes;
 	}
 }

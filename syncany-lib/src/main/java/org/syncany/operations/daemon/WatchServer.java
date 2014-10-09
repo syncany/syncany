@@ -38,7 +38,6 @@ import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.ManagementRequest;
-import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.StringUtil;
@@ -201,9 +200,8 @@ public class WatchServer {
 		if (daemonConfig.getHooks() != null) {
 			String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
 			
-			if (runAfterSyncCommand != null) {
-				DownOperationResult downOperationResult = downEndSyncEvent.getResult();
-				ChangeSet changeSet = downOperationResult.getChangeSet();
+			if (runAfterSyncCommand != null) { 
+				ChangeSet changeSet = downEndSyncEvent.getChanges();
 				
 				List<String> changeMessageParts = new ArrayList<>();
 				

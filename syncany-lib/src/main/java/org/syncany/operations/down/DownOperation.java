@@ -173,7 +173,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 	
 	private void fireEndEvent() {
-		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));
+		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
 	/**
