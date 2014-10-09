@@ -17,10 +17,19 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+
 public class UpUploadFileInTransactionSyncExternalEvent extends SyncExternalEvent {
+	@Element
 	private int currentFileIndex;
+
+	@Element
 	private long currentFileSize;
+	
+	@Element
 	private int totalFileCount;
+	
+	@Element
 	private long totalFileSize;
 	
 	public UpUploadFileInTransactionSyncExternalEvent() {

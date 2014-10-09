@@ -17,9 +17,16 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+
 public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
+	@Element
 	private String fileDescription;
+	
+	@Element
 	private int currentFileIndex;
+	
+	@Element
 	private int maxFileCount;
 	
 	public DownDownloadFileSyncExternalEvent() {

@@ -173,7 +173,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private void fireEndEvent() {
-		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));
+		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
 	private boolean checkPreconditions() throws Exception {
