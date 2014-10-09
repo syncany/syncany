@@ -17,7 +17,6 @@
  */
 package org.syncany.operations;
 
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
@@ -31,10 +30,10 @@ import java.util.TreeSet;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChangeSet {
-	private SortedSet<String> changedFiles;  
-	private SortedSet<String> newFiles;
-	private SortedSet<String> deletedFiles;
-	private SortedSet<String> unchangedFiles;
+	private TreeSet<String> changedFiles;  
+	private TreeSet<String> newFiles;
+	private TreeSet<String> deletedFiles;
+	private TreeSet<String> unchangedFiles;
 	
 	public ChangeSet() {
 		changedFiles = new TreeSet<String>();
@@ -55,19 +54,19 @@ public class ChangeSet {
 	}
 	
 	// TODO [low] This is ugly. Use unmutable lists.
-	public SortedSet<String> getChangedFiles() {
+	public TreeSet<String> getChangedFiles() {
 		return changedFiles;
 	}
 	
-	public SortedSet<String> getNewFiles() {
+	public TreeSet<String> getNewFiles() {
 		return newFiles;
 	}
 	
-	public SortedSet<String> getDeletedFiles() {
+	public TreeSet<String> getDeletedFiles() {
 		return deletedFiles;
 	}	
 	
-	public SortedSet<String> getUnchangedFiles() {
+	public TreeSet<String> getUnchangedFiles() {
 		return unchangedFiles;
 	}
 }

@@ -17,12 +17,23 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+import org.syncany.operations.up.UpOperationResult;
+
 public class UpEndSyncExternalEvent extends SyncExternalEvent {
+	@Element(name = "result", required = true)
+	private UpOperationResult result;
+	
 	public UpEndSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public UpEndSyncExternalEvent(String root) {
+	public UpEndSyncExternalEvent(String root, UpOperationResult result) {
 		super(root);
+		this.result = result;
+	}
+	
+	public UpOperationResult getResult() {
+		return result;
 	}
 }

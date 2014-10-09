@@ -17,9 +17,11 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.down.DownOperationResult;
 
 public class DownEndSyncExternalEvent extends SyncExternalEvent {
+	@Element(name = "result", required = true)
 	private DownOperationResult result;
 
 	public DownEndSyncExternalEvent() {
