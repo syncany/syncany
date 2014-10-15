@@ -13,6 +13,7 @@ task exe(dependsOn: ["installApp"]) << {
 		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
 		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")		
 		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
+		from("${rootProject.projectDir}/gradle/innosetup/code.iss")
 		into(innoSetupDir)
 	}
 
