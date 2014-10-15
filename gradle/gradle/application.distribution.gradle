@@ -50,7 +50,7 @@ startScripts {
 		// - Append daemon batch script (handle 'sy daemon')
 		def winTextTmp = ""
 		def winText = winFile.text
-		def windowsDaemonScript = new File('gradle/daemon/syncanyd.bat.skel').text		
+		def windowsDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.bat.skel").text		
 		
 		winText.readLines().each {
 			line ->
@@ -98,7 +98,7 @@ startScripts {
 		// - Append daemon batch script (handle 'sy daemon')		
 		def unixTextTmp = ""
 		def unixText = unixFile.text
-		def unixDaemonScript = new File('gradle/daemon/syncanyd.skel').text		
+		def unixDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.skel").text		
 		
 		unixText.readLines().each {
 			line ->
