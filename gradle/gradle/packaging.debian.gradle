@@ -51,7 +51,7 @@ tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 
 				exec {
 					workingDir rootProject.file("gradle/debian")
-					commandLine "./makechangelog.pl", "${debianDistribution}", "${debianApplicationVersionFull}"
+					commandLine "./makechangelog.pl", "syncany", "${debianDistribution}", "${debianApplicationVersionFull}", "../../CHANGELOG.md", "../../build/debian/syncany/debian/changelog"
 				}
 			}
 		}
