@@ -61,8 +61,12 @@ tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
 task ppaBuild { // depends on debianPrepare*
 	doLast {
 		exec {
-			workingDir rootProject.file("gradle/debian")
-			commandLine "./debuild-signed.sh"
+			commandLine(
+				rootProject.file("gradle/debian/debuild-signed.sh"), 
+				rootProject.file("gradle/debian/gpg/syncany-team.asc.aes256"),
+				rootProject.file("build"),
+				rootProject.file("build/debian/syncany/debian")
+			)
 		}
 	}
 }
