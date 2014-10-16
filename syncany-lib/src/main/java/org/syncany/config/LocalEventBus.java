@@ -17,49 +17,17 @@
  */
 package org.syncany.config;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.google.common.eventbus.EventBus;
-
 /**
- * The event bus wraps the Google EventBus service for the
- * daemon. It provides a publish/subscribe mechanism within a
- * single JVM.
+ * The local event bus is used to pass messages and events between
+ * operations and commands, as well as to replace traditional listeners.
+ * 
+ * <p>It is heavily used by the daemon to distribute requests and responses
+ * into the application; and to pass responses back to the daemon. 
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class LocalEventBus {
-	private static final Logger logger = Logger.getLogger(LocalEventBus.class.getSimpleName());
-	private static LocalEventBus instance;
-	
-	private EventBus eventBus;
-	
+public class LocalEventBus extends InternalEventBus {	
 	public static LocalEventBus getInstance() {
-		if (instance != null) {
-			return instance;
-		}
-		
-		instance = new LocalEventBus();
-		return instance;
-	}
-	
-	private LocalEventBus() {
-		this.eventBus = new EventBus();
-	}
-	
-	public void register(Object object) {
-		logger.log(Level.INFO, "Event bus: Registering " + object + " (Class: " + object.getClass().getSimpleName() + ") ...");
-		eventBus.register(object);
-	}
-	
-	public void unregister(Object object) {
-		logger.log(Level.INFO, "Event bus: Unregistering " + object + " (Class: " + object.getClass().getSimpleName() + ") ...");
-		eventBus.unregister(object);
-	}	
-	
-	public void post(Object event) {
-		logger.log(Level.INFO, "Event bus: Posting event " + event + " (Class: " + event.getClass().getSimpleName() + ") ...");
-		eventBus.post(event);
+		return InternalEventBus.getInstance(LocalEventBus.class);
 	}
 }
