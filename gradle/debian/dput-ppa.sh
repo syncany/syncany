@@ -1,32 +1,32 @@
 #!/bin/bash
 
-SCRIPTDIR="$( cd "$( dirname "$0" )" && pwd )"
-REPODIR="$SCRIPTDIR/../.."
-
 if [ -n "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
 	echo "NOTE: Skipping GPG stuff. This job is a PULL REQUEST."
 	exit 0
 fi
 
-# Choose PPA
-IS_RELEASE=$(git log -n 1 --pretty=%d HEAD | grep master)
-
-if [ -n "$IS_RELEASE" ]; then 
-	TARGET_PPA="ppa:syncany/release"
-else
-	TARGET_PPA="ppa:syncany/snapshot"
+if [ ! -f "$1" -o ! -d "$2" -o -z "$3" ]; then
+	echo "Syntax: $0 <dput-config> <deb-dir> <ppa>"
+	echo "   e.g. $0 gradle/debian/dput.cf build/debian ppa:syncany/snapshot"
+	exit 1
 fi
 
+DPUTCONFFILE="$1"
+DEBDIR="$2"
+TARGETPPA="$3"
+
 # Test files
-PPA_FILE_COUNT=$(ls $REPODIR/build/debian/*.{dsc,changes,build,tar.gz} | wc -l)
+PPA_FILE_COUNT=$(ls $DEBDIR/*.{dsc,changes,build,tar.gz} | wc -l)
 
 if [ "4" != "$PPA_FILE_COUNT" ]; then
 	echo "ERROR: Unexpected files in debian build dir."
 	
-	ls $REPODIR/build/debian/
+	ls $DEBDIR/
 	exit 1
 fi
 
 # Run dput
-cd $REPODIR/build/debian/
-dput --config $REPODIR/gradle/debian/dput.cf --force $TARGET_PPA *.changes
+echo "Uploading to $TARGETPPA ..."
+
+cd $DEBDIR/
+dput --config $DPUTCONFFILE --force $TARGETPPA *.changes
