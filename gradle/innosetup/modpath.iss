@@ -164,30 +164,6 @@ begin
 	until Length(Text)=0;
 end;
 
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
-var
-	regpath:		String;
-	regstring:		String;
-	appid:			String;
-begin
-	// only run during actual uninstall
-	if CurUninstallStep = usUninstall then begin
-		// get list of selected tasks saved in registry at install time
-		appid := '{#emit SetupSetting("AppId")}';
-		if appid = '' then appid := '{#emit SetupSetting("AppName")}';
-		regpath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\'+appid+'_is1');
-		RegQueryStringValue(HKLM, regpath, 'Inno Setup: Selected Tasks', regstring);
-		if regstring = '' then RegQueryStringValue(HKCU, regpath, 'Inno Setup: Selected Tasks', regstring);
-
-		// check each task; if matches modpath taskname, trigger patch removal
-		if regstring <> '' then begin
-      if ModPathRun then begin
-			  ModPath();
-			end;
-		end;
-	end;
-end;
-
 function NeedRestart(): Boolean;
 begin
 	if ModPathRun and not UsingWinNT() then begin

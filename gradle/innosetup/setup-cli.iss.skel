@@ -30,6 +30,12 @@ DisableProgramGroupPage=yes
 UninstallDisplayIcon={uninstallexe}
 ChangesEnvironment=yes
 
+; The CLI installer is architecture-independent (x86 and x64),
+; but the GUI installer is architecture-dependent. The install mode
+; must therefore always be x86.
+ArchitecturesAllowed=
+ArchitecturesInstallIn64BitMode=
+
 SourceDir=..\\install\\syncany
 OutputDir=..\\..\\innosetup
 OutputBaseFilename=syncany-cli-${applicationVersionFull}
