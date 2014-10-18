@@ -28,10 +28,9 @@ before_install:
   # Update APT (necessary!)
   - sudo apt-get update
 
-  # Debian and PPA 
-  - sudo apt-get install -y -q gnupg dh-make devscripts dput devscripts debhelper bash-completion
+  # Debian Build Tools 
+  - sudo apt-get install -y -q gnupg dh-make devscripts debhelper bash-completion
   - gpg --version
-  - dput -v
   - debuild --version
   - perl -v
   
@@ -57,7 +56,7 @@ before_install:
   - cloc --version
   
   # Speed up Gradle (enable daemon)
-  - mkdir / 2> /dev/null || true
+  - mkdir ~/.gradle 2> /dev/null || true
   - echo "org.gradle.daemon=true" > ~/.gradle/gradle.properties
 
 install:
@@ -71,14 +70,12 @@ script:
 after_success:
   # Line of code stats
   - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
- 
-  # Upload to PPA
-  - ./gradlew ppa -Pdist=precise
-  - ./gradlew ppa -Pdist=trusty
-  - ./gradlew ppa -Pdist=utopic
   
-  # Create distributables and JavaDoc
-  - ./gradlew installApp distTar distZip debian exe -Pdist=unstable
+  # Create distributables
+  - ./gradlew distTar
+  - ./gradlew distZip
+  - ./gradlew debian
+  - ./gradlew exe
     
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh

@@ -31,6 +31,12 @@ task exe(dependsOn: ["installApp"]) << {
 		workingDir rootProject.projectDir
 		commandLine "iscc ${innoSetupDir}/setup.iss".split()
 	}
+	
+	copy {
+		from files("${buildDir}/innosetup") 
+		include "*.exe"
+		into file("build/upload")
+	}
 }
 
 

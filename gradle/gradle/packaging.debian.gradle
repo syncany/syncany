@@ -1,10 +1,9 @@
 // Packaging ///////////////////////////////////////////////////////////////////
 
 project.ext {
-	debianDistribution = (project.hasProperty("dist")) ? project.getProperty("dist") : "unstable"
-	debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa${applicationVersionDebian}" : ""
-	debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion
-	debianTargetPpa = (applicationRelease) ? "ppa:syncany/release" : "ppa:syncany/snapshot"	
+	debianDistribution = (applicationRelease) ? "release" : "snapshot"
+	debianVersionExtension = ("snapshot".equals(debianDistribution)) ? "~${applicationVersionDebian}" : ""
+	debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianVersionExtension
 }
 
 task debianClean(type: Delete) {
@@ -37,7 +36,7 @@ task debianPrepare(dependsOn: [debianClean, installApp, debianManpages]) {
 		}
 
 		copy {
-			from rootProject.files("gradle/debian/debian") 
+			from rootProject.files("gradle/debian/debian-core") 
 			into rootProject.file("build/debian/syncany/debian")
 		}
 
@@ -53,37 +52,17 @@ task debianPrepare(dependsOn: [debianClean, installApp, debianManpages]) {
 	}
 }
 
-task ppaBuild(dependsOn: debianPrepare) { 
-	doLast {
-		exec {
-			commandLine(
-				rootProject.file("gradle/debian/debuild-signed.sh"), 
-				rootProject.file("gradle/debian/gpg/syncany-team.asc.aes256"),
-				rootProject.file("build"),
-				rootProject.file("build/debian/syncany/debian")
-			)
-		}
-	}
-}
-
-task ppa(dependsOn: ppaBuild) {
-	doLast {
-		exec {
-			commandLine(
-				rootProject.file("gradle/debian/dput-ppa.sh"), 
-				rootProject.file("gradle/debian/dput.cf"),
-				rootProject.file("${buildDir}/debian"),
-				debianTargetPpa
-			)			
-		}
-	}
-}
-
 task debian(dependsOn: debianPrepare) { 
 	doLast {
 		exec {
-			workingDir rootProject.file("build/debian/syncany")
+			workingDir rootProject.file("${buildDir}/debian/syncany")
 			commandLine "debuild -i -us -uc -b".split()
+		}
+				
+		copy {
+			from rootProject.files("${buildDir}/debian") 
+			include "*.deb"
+			into rootProject.file("${buildDir}/upload")
 		}
 	}
 }

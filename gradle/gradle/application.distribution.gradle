@@ -130,10 +130,24 @@ distTar {
 	version = "$applicationVersionFull"
 	compression = Compression.GZIP
 	extension = "tar.gz"	
+	
+	doLast {
+		copy {
+			from archivePath
+			into rootProject.file("${buildDir}/upload")
+		}	
+	}
 }
 
 distZip {
 	baseName = "syncany"
 	version = "$applicationVersionFull"
+	
+	doLast {
+		copy {
+			from archivePath
+			into rootProject.file("${buildDir}/upload")
+		}	
+	}
 }
 
