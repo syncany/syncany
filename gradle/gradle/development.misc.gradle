@@ -14,5 +14,10 @@ task cleanBuildDir(type: Delete) {
 	delete 'build'	
 }
 
+task cleanInstallDir(type: Delete) {
+	delete 'build/install'	
+}
+
 tasks["clean"].dependsOn(cleanBuildDir)
+
 
