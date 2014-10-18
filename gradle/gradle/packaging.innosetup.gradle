@@ -18,8 +18,8 @@ task exe(dependsOn: ["installApp"]) << {
 	}
 
 	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
-		rename("setup.iss.skel", "setup.iss")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-cli.iss.skel")
+		rename("setup-cli.iss.skel", "setup-cli.iss")
 		expand([
 			applicationVersion: "${applicationVersion}",
 			applicationVersionFull: "${applicationVersionFull}",			
@@ -29,7 +29,7 @@ task exe(dependsOn: ["installApp"]) << {
 
 	exec {
 		workingDir rootProject.projectDir
-		commandLine "iscc ${innoSetupDir}/setup.iss".split()
+		commandLine "iscc ${innoSetupDir}/setup-cli.iss".split()
 	}
 	
 	copy {

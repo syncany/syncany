@@ -2,10 +2,9 @@
 // 1. Set JAVA_HOME env. variable ///////////
 
 const 
-  ModPathName = 'modifypath'; 
+  ModPathRun = True; 
   ModPathType = 'user'; 
-  SetJavaHomeTaskName = 'setjavahome';
-
+  
 var
   JavaHome: String;
   JavaHomeSet: Boolean;
@@ -161,14 +160,11 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then begin
-    if IsTaskSelected(ModPathName) then begin
+    if ModPathRun then begin
       ModPath(); // In 'modpath.iss', calls 'ModPathDir()'
     end
 
-    if IsTaskSelected(SetJavaHomeTaskName) then begin
-      SetJavaHome();
-    end
-
+    SetJavaHome();
     WriteMemoryLimitFile();
   end
 end;
