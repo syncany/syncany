@@ -32,10 +32,12 @@ task exe(dependsOn: [installApp]) << {
 		commandLine "iscc ${innoSetupDir}/setup-cli.iss".split()
 	}
 	
-	copy {
-		from files("${buildDir}/innosetup") 
-		include "*.exe"
-		into file("build/upload")
+	if (!project.ext.has('exeDontCopyToUpload')) {
+		copy {
+			from files("${buildDir}/innosetup") 
+			include "*.exe"
+			into file("build/upload")
+		}
 	}
 }
 

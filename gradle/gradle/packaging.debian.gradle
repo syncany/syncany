@@ -59,10 +59,12 @@ task debian(dependsOn: debianPrepare) {
 			commandLine "debuild -i -us -uc -b".split()
 		}
 				
-		copy {
-			from rootProject.files("${buildDir}/debian") 
-			include "*.deb"
-			into rootProject.file("${buildDir}/upload")
+		if (!project.ext.has('debDontCopyToUpload')) {
+			copy {
+				from rootProject.files("${buildDir}/debian") 
+				include "*.deb"
+				into rootProject.file("${buildDir}/upload")
+			}
 		}
 	}
 }

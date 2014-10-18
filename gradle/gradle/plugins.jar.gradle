@@ -89,7 +89,7 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 	}		
 
 	doLast {
-		if (!project.ext.has('dontCopyToUpload')) {
+		if (!project.ext.has('pluginJarDontCopyToUpload')) {
 			copy {
 				from files("${buildDir}/libs") 
 				include archiveName
