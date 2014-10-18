@@ -86,5 +86,13 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
 		attributes("Plugin-Release": "${pluginRelease}")		
 		attributes("Plugin-Conflicts-With": "${pluginConflictsWith}")			
-	}						
+	}	
+	
+	doLast {
+		copy {
+			from files("${buildDir}/libs") 
+			include archiveName
+			into file("${buildDir}/upload")
+		}			
+	}		
 }

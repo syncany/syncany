@@ -30,7 +30,7 @@ echo "Gathering distributables ..."
 echo "----------------------------"
 echo "PLUGIN ID is $PLUGINID"
 
-cp $REPODIR/build/libs/*.jar $TEMPDISTDIR
+cp $REPODIR/build/upload/*.{jar,deb} $TEMPDISTDIR 2> /dev/null
 
 PWD=`pwd`
 cd $TEMPDISTDIR

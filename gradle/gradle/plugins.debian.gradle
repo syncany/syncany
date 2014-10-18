@@ -4,13 +4,13 @@
 //    apply from: 'core/gradle/gradle/plugins.debian.gradle'
 
 project.ext {
-	pluginDebianDistribution = (project.hasProperty("dist")) ? project.getProperty("dist") : "unstable"
-	pluginDebianPpaVersion = (!"unstable".equals(pluginDebianDistribution)) ? "~${pluginDebianDistribution}ppa${pluginDebianVersion}" : ""
-	pluginDebianVersionFull = "${pluginVersionFull}".replaceAll("-", ".") + pluginDebianPpaVersion
+	pluginDebianDistribution = (pluginRelease) ? "release" : "snapshot"
+	pluginDebianVersionExtension = ("snapshot".equals(pluginDebianDistribution)) ? "~${pluginDebianVersion}" : ""
+	pluginDebianVersionFull = "${pluginVersionFull}".replaceAll("-", ".") + pluginDebianVersionExtension
 	pluginDebianArchitecture = (project.ext.pluginArchitecture == "x86") ? "i386" : "amd64"
-	pluginDebianTargetPpa = (pluginRelease) ? "ppa:syncany/release" : "ppa:syncany/snapshot"	
 }
 
 task pluginDebianClean(type: Delete) {
 	delete 'build/debian'	
+	delete 'build/libs'		
 }
