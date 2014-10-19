@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.1.12-alpha (Date: Tbd.)
+### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + Working GUI plugin with Windows installer, DEB-file and 
