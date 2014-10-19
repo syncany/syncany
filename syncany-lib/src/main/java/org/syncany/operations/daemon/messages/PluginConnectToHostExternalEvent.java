@@ -15,17 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
-	private String filename;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-	public UpUploadFileSyncExternalEvent(String root, String filename) {
-		super(root);
-		this.filename = filename;
+public class PluginConnectToHostExternalEvent extends ExternalEvent {
+	private String host;
+
+	public PluginConnectToHostExternalEvent() {
+		// Nothing
 	}
+	
+	public PluginConnectToHostExternalEvent(String host) {
+		this.host = host;
+	}		
 
-	public String getFilename() {
-		return filename;
+	public String getHost() {
+		return host;
 	}
 }

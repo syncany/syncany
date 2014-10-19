@@ -21,9 +21,12 @@ import java.util.List;
 
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
+
+import com.google.common.eventbus.Subscribe;
 
 public class LsRemoteCommand extends Command {
 	@Override
@@ -63,4 +66,9 @@ public class LsRemoteCommand extends Command {
 			out.println("No remote changes.");
 		}
 	}	
+	
+	@Subscribe
+	public void onLsRemoteStartEventReceived(LsRemoteStartSyncExternalEvent syncEvent) {
+		out.printr("Checking remote changes ...");
+	}
 }

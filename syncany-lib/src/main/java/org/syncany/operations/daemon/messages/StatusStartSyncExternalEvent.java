@@ -15,31 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-
-public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
-	private String fileDescription;
-	private int currentFileIndex;
-	private int maxFileCount;
+public class StatusStartSyncExternalEvent extends SyncExternalEvent {
+	public StatusStartSyncExternalEvent() {
+		// Nothing
+	}
 	
-	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
+	public StatusStartSyncExternalEvent(String root) {
 		super(root);
-		
-		this.fileDescription = fileDescription;
-		this.currentFileIndex = currentFileIndex;
-		this.maxFileCount = maxFileCount;
-	}
-
-	public String getFileDescription() {
-		return fileDescription;
-	}
-
-	public int getCurrentFileIndex() {
-		return currentFileIndex;
-	}
-
-	public int getMaxFileCount() {
-		return maxFileCount;
 	}
 }

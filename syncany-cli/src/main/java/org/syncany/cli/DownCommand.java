@@ -29,7 +29,8 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
@@ -120,6 +121,11 @@ public class DownCommand extends Command {
 		else {
 			out.println("Sync down skipped, no remote changes.");
 		}
+	}
+	
+	@Subscribe
+	public void onLsRemoteStartEventReceived(LsRemoteStartSyncExternalEvent syncEvent) {
+		out.printr("Checking remote changes ...");
 	}
 	
 	@Subscribe

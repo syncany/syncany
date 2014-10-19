@@ -31,7 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;

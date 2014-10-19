@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Working GUI plugin with Windows installer, DEB-file and 
+    as plugin installation
+  + Allow OS/arch-dependent plugins (e.g. GUI) #245
+  + Offer Debian packages for all plugins, and an APT archive
+    for plugins and main application 
+- Bugfixes and other things:
+  + Fix integrity issue with DIRTY databases (major!) #227
+  + Make 'sy daemon stop' more reliable on Windows #230
+  + Fix permission issue with folders created on Windows #243
+
 ### Syncany 0.1.11-alpha (Date: 29 Sep 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:

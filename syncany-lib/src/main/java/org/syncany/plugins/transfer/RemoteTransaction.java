@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpUploadFileSyncExternalEvent;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;

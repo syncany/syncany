@@ -48,8 +48,7 @@ public class CommandLineInterfaceTest {
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
 				"--no-encryption",
-				"--no-compression",
-				"--no-daemon"
+				"--no-compression"
 		};
 
 		logger.log(Level.INFO, "Running syncany with argument: " + StringUtil.join(initArgs, " "));
@@ -66,8 +65,7 @@ public class CommandLineInterfaceTest {
 				"connect",
 				"--localdir", clientB.get("localdir"),
 				"--plugin", "local",
-				"--plugin-option", "path=" + clientB.get("repopath"),
-				"--no-daemon",
+				"--plugin-option", "path=" + clientB.get("repopath")
 		};
 
 		logger.log(Level.INFO, "Running syncany with argument: " + StringUtil.join(connectArgs, " "));
@@ -109,8 +107,8 @@ public class CommandLineInterfaceTest {
 		assertTrue("Cache folder should exist", cacheFolder.exists());
 
 		// Test output
-		assertEquals("Different number of output lines expected.", 12, cliOut.length);
-		assertEquals("A somefolder", cliOut[10]);
+		assertEquals("Different number of output lines expected.", 14, cliOut.length);
+		assertEquals("A somefolder", cliOut[12]);
 
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);

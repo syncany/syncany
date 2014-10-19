@@ -44,9 +44,12 @@ import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
+import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
+import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
@@ -85,17 +88,21 @@ import com.github.zafarkhaja.semver.Version;
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v1/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s";	
+	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";	
 	private static final String PURGEFILE_FILENAME = "purgefile";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
+	
+	private LocalEventBus eventBus;
 
 	public PluginOperation(Config config, PluginOperationOptions options) {
 		super(config);
 
 		this.options = options;
 		this.result = new PluginOperationResult();
+		
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override
@@ -193,6 +200,8 @@ public class PluginOperation extends Operation {
 
 		checkPluginCompatibility(pluginInfo);
 		
+		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl()));
+		
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();
 		String actualChecksum = calculateChecksum(tempPluginJarFile);
@@ -256,6 +265,8 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws Exception {
+		eventBus.post(new PluginInstallExternalEvent(pluginJarFile.getAbsolutePath()));
+		
 		PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
 
 		checkPluginNotInstalled(pluginInfo.getPluginId());
@@ -272,6 +283,8 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeInstallFromUrl(String downloadJarUrl) throws Exception {
+		eventBus.post(new PluginInstallExternalEvent(downloadJarUrl));
+		
 		File tempPluginJarFile = downloadPluginJar(downloadJarUrl);
 		PluginInfo pluginInfo = readPluginInfoFromJar(tempPluginJarFile);
 
@@ -460,13 +473,17 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private String getRemoteListStr(String pluginId) throws Exception {
+	private String getRemoteListStr(String pluginId) throws Exception {		
 		String appVersion = Client.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
-
-		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr));
+		String osStr = EnvironmentUtil.getOsDescription();
+		String archStr = EnvironmentUtil.getArchDescription();
+		
+		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
+
+		eventBus.post(new PluginConnectToHostExternalEvent(pluginListUrl.getHost()));
 
 		URLConnection urlConnection = pluginListUrl.openConnection();
 		urlConnection.setConnectTimeout(2000);

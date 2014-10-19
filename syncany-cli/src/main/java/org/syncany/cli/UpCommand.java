@@ -24,11 +24,12 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.UpIndexStartSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.UpStartSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.UpUploadFileInTransactionSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.UpUploadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpUploadFileSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
@@ -122,6 +123,11 @@ public class UpCommand extends Command {
 	@Subscribe
 	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
 		out.printr("Checking for new or altered files ...");
+	}
+	
+	@Subscribe
+	public void onLsRemoteStartEventReceived(LsRemoteStartSyncExternalEvent syncEvent) {
+		out.printr("Checking remote changes ...");
 	}
 	
 	@Subscribe

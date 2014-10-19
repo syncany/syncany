@@ -20,12 +20,27 @@ package org.syncany.util;
 import java.io.File;
 
 public class EnvironmentUtil {
-	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
+	public enum OperatingSystem {
+		WINDOWS(false), 
+		OSX(true), 
+		UNIX_LIKE(true);
+		
+		private boolean unixLike;
+		
+		OperatingSystem(boolean unixLike){
+			this.unixLike = unixLike;
+		}
+		
+		public boolean isUnixLike() {
+			return unixLike;
+		}
+	};
 
 	private static OperatingSystem operatingSystem;
 	
 	static {
-		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : OperatingSystem.UNIX_LIKE;
+		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : 
+			(System.getProperty("os.name").toUpperCase().contains("OS X") ? OperatingSystem.OSX : OperatingSystem.UNIX_LIKE);
 	}		
 
 	public static void setOperatingSystem(OperatingSystem aOperatingSystem) {
@@ -37,14 +52,43 @@ public class EnvironmentUtil {
 	}
 	
 	public static boolean isUnixLikeOperatingSystem() {
-		return operatingSystem == OperatingSystem.UNIX_LIKE;
+		return operatingSystem.isUnixLike();
 	}
 
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean isMacOSX() {
+		return operatingSystem == OperatingSystem.OSX;
+	}
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
+	}
+
+	/**
+	 * @see http://lopica.sourceforge.net/os.html
+	 * @return x86, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
+	 */
+	public static String getArchDescription() {
+		String realOsStr = System.getProperty("os.arch").toLowerCase();
+		
+		switch (realOsStr) {
+		case "i386":
+			return "x86";
+		case "amd64":
+			return "x86_64";
+		default:
+			return realOsStr;
+		}
+	}
+	
+	/**
+	 * @see http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems
+	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
+	 */
+	public static String getOsDescription(){
+		return System.getProperty("os.name").toLowerCase().split(" ")[0]; 
 	}
 }

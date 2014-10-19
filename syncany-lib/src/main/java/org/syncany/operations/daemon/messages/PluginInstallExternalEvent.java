@@ -15,17 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class UpIndexStartSyncExternalEvent extends SyncExternalEvent {
-	private int fileCount;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+
+public class PluginInstallExternalEvent extends ExternalEvent {
+	private String source;
+
+	public PluginInstallExternalEvent() {
+		// Nothing
+	}
 	
-	public UpIndexStartSyncExternalEvent(String root, int fileCount) {
-		super(root);
-		this.fileCount = fileCount;
-	}	
+	public PluginInstallExternalEvent(String source) {
+		this.source = source;
+	}
 
-	public int getFileCount() {
-		return fileCount;
+	public String getSource() {
+		return source;
 	}
 }

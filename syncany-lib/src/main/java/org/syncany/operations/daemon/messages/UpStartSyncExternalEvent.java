@@ -15,10 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class UpEndSyncExternalEvent extends SyncExternalEvent {
-	public UpEndSyncExternalEvent(String root) {
+public class UpStartSyncExternalEvent extends SyncExternalEvent {
+	public UpStartSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public UpStartSyncExternalEvent(String root) {
 		super(root);
 	}
 }

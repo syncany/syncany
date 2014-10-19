@@ -1,6 +1,6 @@
 // Windows Installer ///////////////////////////////////////////////////////////
 
-task exe(dependsOn: ["installApp"]) << {
+task exe(dependsOn: [installApp]) << {
 	def innoSetupDir = new File("${buildDir}/innosetup")
 
 	delete innoSetupDir	
@@ -13,12 +13,13 @@ task exe(dependsOn: ["installApp"]) << {
 		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
 		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")		
 		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
+		from("${rootProject.projectDir}/gradle/innosetup/code.iss")
 		into(innoSetupDir)
 	}
 
 	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup.iss.skel")
-		rename("setup.iss.skel", "setup.iss")
+		from("${rootProject.projectDir}/gradle/innosetup/setup-cli.iss.skel")
+		rename("setup-cli.iss.skel", "setup-cli.iss")
 		expand([
 			applicationVersion: "${applicationVersion}",
 			applicationVersionFull: "${applicationVersionFull}",			
@@ -28,7 +29,15 @@ task exe(dependsOn: ["installApp"]) << {
 
 	exec {
 		workingDir rootProject.projectDir
-		commandLine "iscc ${innoSetupDir}/setup.iss".split()
+		commandLine "iscc ${innoSetupDir}/setup-cli.iss".split()
+	}
+	
+	if (!project.ext.has('exeDontCopyToUpload')) {
+		copy {
+			from files("${buildDir}/innosetup") 
+			include "*.exe"
+			into file("build/upload")
+		}
 	}
 }
 

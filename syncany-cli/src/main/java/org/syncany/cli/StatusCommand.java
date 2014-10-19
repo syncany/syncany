@@ -23,7 +23,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 

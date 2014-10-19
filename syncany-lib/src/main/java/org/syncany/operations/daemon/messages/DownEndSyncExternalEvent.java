@@ -15,10 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class DownStartSyncExternalEvent extends SyncExternalEvent {
-	public DownStartSyncExternalEvent(String root) {
+import org.simpleframework.xml.Element;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
+
+public class DownEndSyncExternalEvent extends SyncExternalEvent {
+	@Element(name = "resultCode", required = true)
+	private DownResultCode resultCode;
+	
+	@Element(name = "changes", required = true)
+	private ChangeSet changes;
+
+	public DownEndSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public DownEndSyncExternalEvent(String root, DownResultCode resultCode, ChangeSet changes) {
 		super(root);
+		
+		this.resultCode = resultCode;
+		this.changes = changes;
+	}
+	
+	public DownResultCode getResultCode() {
+		return resultCode;
+	}
+	
+	public ChangeSet getChanges() {
+		return changes;
 	}
 }

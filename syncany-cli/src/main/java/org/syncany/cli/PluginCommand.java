@@ -27,6 +27,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
+import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
@@ -35,6 +37,8 @@ import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
+
+import com.google.common.eventbus.Subscribe;
 
 public class PluginCommand extends Command {
 	private PluginAction action;
@@ -288,5 +292,15 @@ public class PluginCommand extends Command {
 		}
 
 		return tableColumnWidths;
+	}	
+
+	@Subscribe
+	public void onPluginConnectToHostEventReceived(PluginConnectToHostExternalEvent event) {
+		out.printr("Connecting to " + event.getHost() + " ...");
 	}
+	
+	@Subscribe
+	public void onPluginInstallEventReceived(PluginInstallExternalEvent event) {
+		out.printr("Installing plugin from " + event.getSource() + " ...");
+	}	
 }

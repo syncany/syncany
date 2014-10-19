@@ -15,10 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class StatusEndSyncExternalEvent extends SyncExternalEvent {
-	public StatusEndSyncExternalEvent(String root) {
-		super(root);
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+
+public abstract class SyncExternalEvent extends ExternalEvent {
+	@Element(required = true)
+	private String root;
+
+	public SyncExternalEvent() {
+		// Nothing
 	}
+	
+	public SyncExternalEvent(String root) {
+		this.root = root;
+	}
+
+	public String getRoot() {
+		return root;
+	}	
 }
