@@ -346,22 +346,23 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
+		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
 
 		if (!options.isForce() && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
-					numberOfDatabaseFiles, options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size() });
+					numberOfDatabaseFiles, maxDatabaseFiles });
 			return;
 		}
+
+		// Now do the merge!
+		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
+				new Object[] { allDatabaseFilesMap.size(), maxDatabaseFiles });
 
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
 			Collections.sort(clientDatabaseFiles);
 			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
-
-			// Now do the merge!
-			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
 
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
