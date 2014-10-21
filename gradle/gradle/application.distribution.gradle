@@ -96,7 +96,7 @@ startScripts {
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
 
 		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
-		String unixDarwinFirstThreadFlagCommands = "# Add -XstartOnFirstThread (to fix SWT)\n"
+		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT)\n"
 		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"		
 		unixDarwinFirstThreadFlagCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
 		unixDarwinFirstThreadFlagCommands += "fi"
