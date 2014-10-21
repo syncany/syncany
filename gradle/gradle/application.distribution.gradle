@@ -93,8 +93,15 @@ startScripts {
 		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx\$APP_MAX_MEMORY\\\"\"\n";
 		unixMaxMemoryCommands += "fi\n";
 
+		String osxSwtThread = "#add SWT -XstartOnFirstThread\n"
+		osxSwtThread += "DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
+
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
 
+		if (System.getProperty('os.name').toLowerCase().split()[0].startsWith("mac")){	
+			unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${osxSwtThread}"))
+		}
+		
 		// - Append daemon batch script (handle 'sy daemon')		
 		def unixTextTmp = ""
 		def unixText = unixFile.text
