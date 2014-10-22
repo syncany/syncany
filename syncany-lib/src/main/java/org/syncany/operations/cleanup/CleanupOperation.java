@@ -357,7 +357,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-				new Object[] { allDatabaseFilesMap.size(), maxDatabaseFiles });
+				new Object[] { numberOfDatabaseFiles, maxDatabaseFiles });
 
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
