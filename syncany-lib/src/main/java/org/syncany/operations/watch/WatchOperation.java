@@ -43,7 +43,7 @@ import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
-import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
+import org.syncany.operations.watch.DefaultRecursiveWatcher.WatchListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -52,7 +52,7 @@ import org.syncany.util.StringUtil;
  * 
  * <p>In order to sync instantly, it offers the following strategies:
  * <ul>
- *  <li>It monitors the local file system using the {@link RecursiveWatcher}.
+ *  <li>It monitors the local file system using the {@link DefaultRecursiveWatcher}.
  *      Whenever a file or folder changes, the sync is started (after a short
  *      settlement wait period).</li>
  *  <li>It subscribes to a repo-specific channel on the Syncany pub/sub server,
@@ -84,7 +84,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private AtomicBoolean pauseRequested;
 	private AtomicInteger upCount;
 
-	private RecursiveWatcher recursiveWatcher;
+	private DefaultRecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
 
 	private String notificationChannel;
@@ -190,7 +190,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
 
-		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
+		recursiveWatcher = new DefaultRecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
 
 		try {
 			recursiveWatcher.start();
