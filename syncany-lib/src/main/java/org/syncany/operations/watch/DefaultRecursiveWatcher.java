@@ -23,7 +23,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -38,11 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The recursive file watcher monitors a folder (and its sub-folders). 
@@ -57,94 +52,43 @@ import java.util.logging.Logger;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DefaultRecursiveWatcher extends RecursiveWatcher {
-	private AtomicBoolean running;
-	
 	private WatchService watchService;
-	private Thread watchThread;
 	private Map<Path, WatchKey> watchPathKeyMap;
-
-	private Timer timer;
 
 	public DefaultRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		super(root, ignorePaths, settleDelay, listener);
-
-		this.running = new AtomicBoolean(false);
 		
 		this.watchService = null;
-		this.watchThread = null;
 		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
-
-		this.timer = null;
 	}
 
-	/**
-	 * Starts the watcher service and registers watches in all of the sub-folders of
-	 * the given root folder.
-	 * 
-	 * <p><b>Important:</b> This method returns immediately, even though the watches
-	 * might not be in place yet. For large file trees, it might take several seconds
-	 * until all directories are being monitored. For normal cases (1-100 folders), this
-	 * should not take longer than a few milliseconds. 
-	 */
-	public void start() throws IOException {
+	@Override
+	public void beforeStart() throws Exception {
 		watchService = FileSystems.getDefault().newWatchService();
-
-		watchThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				running.set(true);
-				walkTreeAndSetWatches();
-
-				while (running.get()) {
-					try {
-						WatchKey watchKey = watchService.take();
-						watchKey.pollEvents(); // Take events, but don't care what they are!
-
-						watchKey.reset();
-						resetWaitSettlementTimer();
-					}
-					catch (InterruptedException | ClosedWatchServiceException e) {
-						running.set(false);
-					}
-				}
-			}
-		}, "Watcher/" + root.toFile().getName());
-		
-		watchThread.start();
 	}
 	
-	public synchronized void stop() {
-		if (watchThread != null) {
-			try {
-				watchService.close();
-				running.set(false);
-				watchThread.interrupt();
-			}
-			catch (IOException e) {
-				// Don't care
-			}			
-		}		
+	@Override
+	protected void beforePollEventLoop() {
+		walkTreeAndSetWatches();
+	}
+	
+	@Override
+	protected void pollEvents() throws Exception {
+		WatchKey watchKey = watchService.take();
+		watchKey.pollEvents(); // Take events, but don't care what they are!
+
+		watchKey.reset();
 	}
 
-	private synchronized void resetWaitSettlementTimer() {
-		logger.log(Level.FINE, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
+	@Override
+	protected void watchEventsOccurred() {
+		walkTreeAndSetWatches();
+		unregisterStaleWatches();
+	}
 
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
-
-		timer = new Timer("FsSettleTim/" + root.toFile().getName());
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				logger.log(Level.INFO, "File system actions (on watched folders) settled. Updating watches ...");
-				walkTreeAndSetWatches();
-				unregisterStaleWatches();
-
-				fireListenerEvents();
-			}
-		}, settleDelay);
+	@Override
+	public void afterStop() throws Exception {
+		watchService.close();
 	}
 
 	private synchronized void walkTreeAndSetWatches() {
@@ -203,13 +147,6 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 		}
 	}
 
-	private synchronized void fireListenerEvents() {
-		if (listener != null) {
-			logger.log(Level.INFO, "- Firing watch event (watchEventsOccurred) ...");
-			listener.watchEventsOccurred();
-		}
-	}
-
 	private synchronized void registerWatch(Path dir) {
 		if (!watchPathKeyMap.containsKey(dir)) {
 			logger.log(Level.INFO, "- Registering " + dir);
@@ -233,9 +170,5 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 			watchKey.cancel();
 			watchPathKeyMap.remove(dir);
 		}
-	}
-
-	public interface WatchListener {
-		public void watchEventsOccurred();
 	}
 }

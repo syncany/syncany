@@ -21,156 +21,62 @@ import static name.pachler.nio.file.StandardWatchEventKind.ENTRY_CREATE;
 import static name.pachler.nio.file.StandardWatchEventKind.ENTRY_DELETE;
 import static name.pachler.nio.file.StandardWatchEventKind.ENTRY_MODIFY;
 import static name.pachler.nio.file.StandardWatchEventKind.OVERFLOW;
+import static name.pachler.nio.file.ext.ExtendedWatchEventModifier.FILE_TREE;
 
-import java.io.IOException;
-import java.nio.file.FileVisitor;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
-import name.pachler.nio.file.ClosedWatchServiceException;
 import name.pachler.nio.file.FileSystems;
 import name.pachler.nio.file.Paths;
-import name.pachler.nio.file.StandardWatchEventKind;
-import name.pachler.nio.file.WatchEvent;
 import name.pachler.nio.file.WatchEvent.Kind;
 import name.pachler.nio.file.WatchKey;
 import name.pachler.nio.file.WatchService;
-import name.pachler.nio.file.ext.ExtendedWatchEventKind;
-import name.pachler.nio.file.impl.PathWatchEventKind;
-import static name.pachler.nio.file.ext.ExtendedWatchEventModifier.FILE_TREE;
-
-import org.syncany.operations.watch.DefaultRecursiveWatcher.WatchListener;
 
 /**
  * @author Philipp
  *
  */
-public class WindowsRecursiveWatcher extends RecursiveWatcher {
-	private AtomicBoolean running;
-	
+public class WindowsRecursiveWatcher extends RecursiveWatcher {	
 	private WatchService watchService;
-	private Thread watchThread;
 	private WatchKey rootWatchKey;
 
-	private Timer timer;
-
 	public WindowsRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
-		super(root, ignorePaths, settleDelay, listener);
-	}
-	
-
-	/**
-	 * Starts the watcher service and registers watches in all of the sub-folders of
-	 * the given root folder.
-	 * 
-	 * <p><b>Important:</b> This method returns immediately, even though the watches
-	 * might not be in place yet. For large file trees, it might take several seconds
-	 * until all directories are being monitored. For normal cases (1-100 folders), this
-	 * should not take longer than a few milliseconds. 
-	 */
-	public void start() throws IOException {
-		watchService = FileSystems.getDefault().newWatchService();
-
-		watchThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				running.set(true);
-				walkTreeAndSetWatches();
-
-				while (running.get()) {
-					try {
-						WatchKey watchKey = watchService.take();
-						watchKey.pollEvents(); // Take events, but don't care what they are!
-
-						watchKey.reset();
-						resetWaitSettlementTimer();
-					}
-					catch (InterruptedException | ClosedWatchServiceException e) {
-						running.set(false);
-					}
-				}
-			}
-		}, "Watcher/" + root.toFile().getName());
+		super(root, ignorePaths, settleDelay, listener);	
 		
-		watchThread.start();
+		this.watchService = null;
+		this.rootWatchKey = null;
 	}
 	
-	public synchronized void stop() {
-		if (watchThread != null) {
-			try {
-				watchService.close();
-				running.set(false);
-				watchThread.interrupt();
-			}
-			catch (IOException e) {
-				// Don't care
-			}			
-		}		
+	@Override
+	public void beforeStart() throws Exception {
+		name.pachler.nio.file.Path translatedRootDir = Paths.get(root.toString());
+
+		watchService = FileSystems.getDefault().newWatchService();
+		rootWatchKey = translatedRootDir.register(watchService,
+				new Kind[] { ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW }, FILE_TREE);
+	}
+	
+	@Override
+	protected void beforePollEventLoop() {
+		// Nothing must happen before the event loop.		
 	}
 
-	private synchronized void resetWaitSettlementTimer() {
-		logger.log(Level.FINE, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
+	@Override
+	public void pollEvents() throws Exception {
+		WatchKey watchKey = watchService.take();
+		watchKey.pollEvents(); // Take events, but don't care what they are!
 
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
-
-		timer = new Timer("FsSettleTim/" + root.toFile().getName());
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				logger.log(Level.INFO, "File system actions (on watched folders) settled. Updating watches ...");
-				//walkTreeAndSetWatches();
-				//unregisterStaleWatches();
-
-				fireListenerEvents();
-			}
-		}, settleDelay);
+		watchKey.reset();
 	}
 
-	private synchronized void walkTreeAndSetWatches() {
-		logger.log(Level.INFO, "Registering new folders at watch service ...");
-
-		registerWatch(root);
+	@Override
+	protected void watchEventsOccurred() {
+		// This watcher monitors recursively. No need to add more watches.
 	}
 
-	private synchronized void unregisterStaleWatches() {
-		// Nothing
-	}
-
-	private synchronized void fireListenerEvents() {
-		if (listener != null) {
-			logger.log(Level.INFO, "- Firing watch event (watchEventsOccurred) ...");
-			listener.watchEventsOccurred();
-		}
-	}
-
-	private synchronized void registerWatch(Path dir) {
-		logger.log(Level.INFO, "- Registering " + dir);
-
-		try {
-			name.pachler.nio.file.Path translatedDir = Paths.get(dir.toString());
-
-			rootWatchKey = translatedDir.register(watchService,
-					new Kind[] { ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW }, FILE_TREE);
-		}
-		catch (IOException e) {
-			// Don't care!
-		}
-	}
-
-	private synchronized void unregisterWatch(Path dir) {
-		logger.log(Level.INFO, "- Cancelling " + dir);
-			
+	@Override
+	public synchronized void afterStop() throws Exception {
 		rootWatchKey.cancel();
+		watchService.close();				
 	}
-
 }

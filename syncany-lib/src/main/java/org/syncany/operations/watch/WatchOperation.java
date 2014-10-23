@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.watch;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.operations.watch.NotificationListener.NotificationListenerListener;
-import org.syncany.operations.watch.DefaultRecursiveWatcher.WatchListener;
+import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -84,7 +83,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private AtomicBoolean pauseRequested;
 	private AtomicInteger upCount;
 
-	private DefaultRecursiveWatcher recursiveWatcher;
+	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
 
 	private String notificationChannel;
@@ -190,12 +189,12 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
 
-		recursiveWatcher = new DefaultRecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
+		recursiveWatcher = RecursiveWatcher.createRecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
 
 		try {
 			recursiveWatcher.start();
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.");
 		}
 	}
@@ -210,8 +209,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 	
 	private void stopRecursiveWatcher() {
-		logger.log(Level.INFO, "Stopping recursive watcher for " + config.getLocalDir() + " ...");
-		recursiveWatcher.stop();
+		try {
+			logger.log(Level.INFO, "Stopping recursive watcher for " + config.getLocalDir() + " ...");
+			recursiveWatcher.stop();
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot stop file watcher.");
+		}
 	}
 
 	private void stopNotificationListener() {
