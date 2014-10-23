@@ -40,7 +40,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 /**
- * The recursive file watcher monitors a folder (and its sub-folders). 
+ * The default recursive file watcher monitors a folder (and its sub-folders)
+ * by registering a watch on each of the sub-folders. This class is used on
+ * Linux/Unix-based operating systems and uses the Java 7 {@link WatchService}.
  * 
  * <p>The class walks through the file tree and registers to a watch to every sub-folder.
  * For new folders, a new watch is registered, and stale watches are removed.

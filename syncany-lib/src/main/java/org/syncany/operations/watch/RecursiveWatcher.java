@@ -34,6 +34,10 @@ import org.syncany.util.EnvironmentUtil;
  * to settle. It is reset whenever a new event occurs. When the timer times out,
  * an event is thrown through the {@link WatchListener}.
  * 
+ * <p>This is an abstract class, using several template methods that are called
+ * in different lifecycle states: {@link #beforeStart()}, {@link #beforePollEventLoop()},
+ * {@link #pollEvents()}, and {@link #afterStop()}.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class RecursiveWatcher {
@@ -58,6 +62,14 @@ public abstract class RecursiveWatcher {
 		this.running = new AtomicBoolean(false);
 	}
 	
+	/**
+	 * Creates a recursive watcher for the given root path. The returned watcher
+	 * will ignore the ignore paths and fire an event through the {@link WatchListener}
+	 * as soon as the settle delay (in ms) has passed.
+	 * 
+	 * <p>The method returns a platform-specific recursive watcher: {@link WindowsRecursiveWatcher}
+	 * for Windows and {@link DefaultRecursiveWatcher} for other operating systems.
+	 */
 	public static RecursiveWatcher createRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		if (EnvironmentUtil.isWindows()) {
 			return new WindowsRecursiveWatcher(root, ignorePaths, settleDelay, listener);
@@ -66,15 +78,31 @@ public abstract class RecursiveWatcher {
 			return new DefaultRecursiveWatcher(root, ignorePaths, settleDelay, listener);
 		}
 	}
-	
+
+	/**
+	  * Starts the watcher service and registers watches in all of the sub-folders of
+	  * the given root folder.
+	  * 
+	  * <p>This method calls the {@link #beforeStart()} method before everything else.
+	  * Subclasses may execute their own commands there. Before the watch thread is started,
+	  * {@link #beforePollEventLoop()} is called. And in the watch thread loop, 
+	  * {@link #pollEvents()} is called. 
+	  *
+	  * <p><b>Important:</b> This method returns immediately, even though the watches
+	  * might not be in place yet. For large file trees, it might take several seconds
+	  * until all directories are being monitored. For normal cases (1-100 folders), this
+	  * should not take longer than a few milliseconds. 
+	  */
 	public void start() throws Exception {
+		// Call before-start hook
 		beforeStart();
 
+		// Start watcher thread
 		watchThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				running.set(true);
-				beforePollEventLoop();
+				beforePollEventLoop(); // Call before-loop hook
 				
 				while (running.get()) {
 					try {
@@ -91,12 +119,18 @@ public abstract class RecursiveWatcher {
 		watchThread.start();
 	}
 	
+	/**
+	 * Stops the watch thread by interrupting it and subsequently
+	 * calls the {@link #afterStop()} template method (to be implemented
+	 * by subclasses.
+	 */
 	public synchronized void stop() {
 		if (watchThread != null) {
 			try {
 				running.set(false);
 				watchThread.interrupt();
 				
+				// Call after-stop hook
 				afterStop();
 			}
 			catch (Exception e) {
@@ -132,10 +166,38 @@ public abstract class RecursiveWatcher {
 		}
 	}
 	
+	/**
+	 * Called before the {@link #start()} method. This method is
+	 * only called once.
+	 */
 	protected abstract void beforeStart() throws Exception;
+	
+	/**
+	 * Called in the watch service polling thread, right
+	 * before the {@link #pollEvents()} loop. This method is
+	 * only called once.
+	 */
 	protected abstract void beforePollEventLoop();
+	
+	/**
+	 * Called in the watch service polling thread, inside
+	 * of the {@link #pollEvents()} loop. This method is called
+	 * multiple times.
+	 */
 	protected abstract void pollEvents() throws Exception;	
+	
+	/**
+	 * Called in the watch service polling thread, whenever
+	 * a file system event occurs. This may be used by subclasses
+	 * to (re-)set watches on folders. This method is called
+	 * multiple times.
+	 */
 	protected abstract void watchEventsOccurred();
+	
+	/**
+	 * Called after the {@link #stop()} method. This method is
+	 * only called once.
+	 */
 	protected abstract void afterStop() throws Exception;	
 
 	public interface WatchListener {
