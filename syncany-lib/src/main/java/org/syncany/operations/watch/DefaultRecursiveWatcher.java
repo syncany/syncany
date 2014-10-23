@@ -75,11 +75,15 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	}
 	
 	@Override
-	protected void pollEvents() throws Exception {
+	protected boolean pollEvents() throws Exception {
+		// Take events, but don't care what they are!
 		WatchKey watchKey = watchService.take();
-		watchKey.pollEvents(); // Take events, but don't care what they are!
-
+		
+		watchKey.pollEvents(); 
 		watchKey.reset();
+		
+		// Events are always relevant; ignored paths are not monitored
+		return true; 
 	}
 
 	@Override

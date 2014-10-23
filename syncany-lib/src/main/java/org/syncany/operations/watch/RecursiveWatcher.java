@@ -106,8 +106,11 @@ public abstract class RecursiveWatcher {
 				
 				while (running.get()) {
 					try {
-						pollEvents();
-						resetWaitSettlementTimer();
+						boolean relevantEvents = pollEvents();
+						
+						if (relevantEvents) {
+							restartWaitSettlementTimer();
+						}
 					}
 					catch (Exception e) {
 						running.set(false);
@@ -139,7 +142,7 @@ public abstract class RecursiveWatcher {
 		}		
 	}
 
-	private synchronized void resetWaitSettlementTimer() {
+	private synchronized void restartWaitSettlementTimer() {
 		logger.log(Level.FINE, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
 
 		if (timer != null) {
@@ -184,7 +187,7 @@ public abstract class RecursiveWatcher {
 	 * of the {@link #pollEvents()} loop. This method is called
 	 * multiple times.
 	 */
-	protected abstract void pollEvents() throws Exception;	
+	protected abstract boolean pollEvents() throws Exception;	
 	
 	/**
 	 * Called in the watch service polling thread, whenever

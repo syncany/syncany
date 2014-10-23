@@ -24,12 +24,11 @@ import static name.pachler.nio.file.StandardWatchEventKind.OVERFLOW;
 import static name.pachler.nio.file.ext.ExtendedWatchEventModifier.FILE_TREE;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
-import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
-
 import name.pachler.nio.file.FileSystems;
-import name.pachler.nio.file.Paths;
+import name.pachler.nio.file.WatchEvent;
 import name.pachler.nio.file.WatchEvent.Kind;
 import name.pachler.nio.file.WatchKey;
 import name.pachler.nio.file.WatchService;
@@ -62,10 +61,10 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 
 	@Override
 	public void beforeStart() throws Exception {
-		name.pachler.nio.file.Path translatedRootDir = Paths.get(root.toString());
+		name.pachler.nio.file.Path extLibRootDir = name.pachler.nio.file.Paths.get(root.toString());
 
 		watchService = FileSystems.getDefault().newWatchService();
-		rootWatchKey = translatedRootDir.register(watchService,
+		rootWatchKey = extLibRootDir.register(watchService,
 				new Kind[] { ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW }, FILE_TREE);
 	}
 
@@ -75,11 +74,36 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public void pollEvents() throws Exception {
+	public boolean pollEvents() throws Exception {
 		WatchKey watchKey = watchService.take();
-		watchKey.pollEvents(); // Take events, but don't care what they are!
+
+		List<WatchEvent<?>> watchEvents = watchKey.pollEvents(); 
+		boolean hasRelevantEvents = false;
+		
+		// Filter ignored events
+		for (WatchEvent<?> watchEvent : watchEvents) {
+			if (watchEvent.kind() == ENTRY_CREATE || watchEvent.kind() == ENTRY_MODIFY || watchEvent.kind() == ENTRY_DELETE) {				
+				boolean ignoreEvent = false;		
+
+				name.pachler.nio.file.Path extLibFilePath = (name.pachler.nio.file.Path) watchEvent.context();
+				Path filePath = Paths.get(extLibFilePath.toString()).toAbsolutePath().normalize();
+				
+				for (Path ignorePath : ignorePaths) {
+					if (filePath.startsWith(ignorePath.toAbsolutePath().normalize())) {
+						ignoreEvent = true;
+						break;
+					}
+				}
+				
+				if (!ignoreEvent) {
+					hasRelevantEvents = true;
+					break;
+				}
+			}
+		}
 
 		watchKey.reset();
+		return hasRelevantEvents;
 	}
 
 	@Override
