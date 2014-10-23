@@ -103,6 +103,5 @@ public class Issue247ScenarioTest {
 		
 		clientUxWork.deleteTestData();
 		clientDzHome.deleteTestData();
-	}	
-	
+	}		
 }
