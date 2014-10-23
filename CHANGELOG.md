@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.1.13-alpha (Date: tbd.)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Bugfixes and other things:
+  + Fix cannot delete/rename folders on Windows #248
+
 ### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
