@@ -11,10 +11,6 @@ env:
     - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
     - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
 
-    # Syncany GPG signing stuff (SYNCANY_GPG_* environment variables)
-    - secure: "JV+cvV8BgYC9i1EUthycCDfX5rVqlptSaewW03JniEfA5fJnaiQylnDRd72Cev+vcUpgphPXMAXZDP0++hxeOaMsntJBQGgUMv3+DHJ2+JFn9rO5XjrqsIpbBMqwF7Ph89ImFzx4blk3uch3cF7O4DWU00E77AN8xoh7VkkMuDM="
-    - secure: "lhltKRuNNed9y7wNTbh5Qr1Ubs51Fp6nbNFJkYqjYyi4WOIR8/SfeAcrON6pdVVHRwQa/1/HSwXhsB7EXSdgrTnYdlxn+6t8GdHyYiQazrXmqrIJGmFEESyo0iMoXuF4jnw4kWPayH7tDC/+J6kPaLSkyND0s5/loBiHtlGXWwc="
-    
 branches:
   only:
     - master
@@ -28,10 +24,8 @@ before_install:
   # Update APT (necessary!)
   - sudo apt-get update
 
-  # Debian and PPA 
-  - sudo apt-get install -y -q gnupg dh-make devscripts dput devscripts debhelper bash-completion
-  - gpg --version
-  - dput -v
+  # Debian Build Tools 
+  - sudo apt-get install -y -q dh-make devscripts debhelper bash-completion
   - debuild --version
   - perl -v
   
@@ -43,6 +37,7 @@ before_install:
   - sudo apt-get install -y -q graphviz 
   
   # Inno Setup (for Windows executable/installer)
+  # Note: If this code is changed, also update syncany-plugin-gui/.travis.yml
   - sudo add-apt-repository --yes ppa:arx/release
   - sudo apt-get update -d
   - sudo apt-get install -y -q innoextract wine python-software-properties
@@ -55,6 +50,10 @@ before_install:
   # Line of code tool (cloc)
   - sudo apt-get install -y -q cloc
   - cloc --version
+  
+  # Speed up Gradle (enable daemon)
+  - mkdir ~/.gradle 2> /dev/null || true
+  - echo "org.gradle.daemon=true" > ~/.gradle/gradle.properties
 
 install:
   # Disable default travis behavior 'gradle assemble'
@@ -67,14 +66,12 @@ script:
 after_success:
   # Line of code stats
   - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
- 
-  # Upload to PPA
-  - ./gradlew debianPreparePrecise ppa
-  - ./gradlew debianPrepareTrusty ppa
-  - ./gradlew debianPrepareUtopic ppa
   
-  # Create distributables and JavaDoc
-  - ./gradlew installApp distTar distZip debianPrepareUnstable debian exe 
+  # Create distributables
+  - ./gradlew distTar
+  - ./gradlew distZip
+  - ./gradlew debian
+  - ./gradlew exe
     
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh

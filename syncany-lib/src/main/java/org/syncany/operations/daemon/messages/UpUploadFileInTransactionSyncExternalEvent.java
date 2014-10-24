@@ -15,30 +15,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-public class DownDownloadFileSyncExternalEvent extends SyncExternalEvent {
-	private String fileDescription;
+import org.simpleframework.xml.Element;
+
+public class UpUploadFileInTransactionSyncExternalEvent extends SyncExternalEvent {
+	@Element
 	private int currentFileIndex;
-	private int maxFileCount;
+
+	@Element
+	private long currentFileSize;
 	
-	public DownDownloadFileSyncExternalEvent(String root, String fileDescription, int currentFileIndex, int maxFileCount) {
+	@Element
+	private int totalFileCount;
+	
+	@Element
+	private long totalFileSize;
+	
+	public UpUploadFileInTransactionSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public UpUploadFileInTransactionSyncExternalEvent(String root, int currentFileIndex, int totalFileCount, long currentFileSize, long totalFileSize) {
 		super(root);
 		
-		this.fileDescription = fileDescription;
 		this.currentFileIndex = currentFileIndex;
-		this.maxFileCount = maxFileCount;
-	}
-
-	public String getFileDescription() {
-		return fileDescription;
+		this.currentFileSize = currentFileSize;
+		this.totalFileCount = totalFileCount;
+		this.totalFileSize = totalFileSize;
 	}
 
 	public int getCurrentFileIndex() {
 		return currentFileIndex;
 	}
 
-	public int getMaxFileCount() {
-		return maxFileCount;
+	public long getCurrentFileSize() {
+		return currentFileSize;
+	}
+
+	public int getTotalFileCount() {
+		return totalFileCount;
+	}
+
+	public long getTotalFileSize() {
+		return totalFileSize;
 	}
 }

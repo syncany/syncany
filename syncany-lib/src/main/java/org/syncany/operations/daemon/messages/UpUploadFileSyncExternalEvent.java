@@ -15,19 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.down.DownOperationResult;
+public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
+	private String filename;
 
-public class DownEndSyncExternalEvent extends SyncExternalEvent {
-	private DownOperationResult result;
-
-	public DownEndSyncExternalEvent(String root, DownOperationResult result) {
+	public UpUploadFileSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public UpUploadFileSyncExternalEvent(String root, String filename) {
 		super(root);
-		this.result = result;
+		this.filename = filename;
 	}
 
-	public DownOperationResult getResult() {
-		return result;
+	public String getFilename() {
+		return filename;
 	}
 }

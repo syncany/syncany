@@ -19,7 +19,6 @@ package org.syncany.operations.up;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.status.StatusOperationResult;
 
 public class UpOperationResult implements OperationResult {
@@ -29,16 +28,7 @@ public class UpOperationResult implements OperationResult {
 
 	private UpResultCode resultCode;
 	private StatusOperationResult statusResult = new StatusOperationResult();
-	private CleanupOperationResult cleanupResult = null;
 	private ChangeSet uploadChangeSet = new ChangeSet();
-
-	public CleanupOperationResult getCleanupResult() {
-		return cleanupResult;
-	}
-
-	public void setCleanupResult(CleanupOperationResult cleanupResult) {
-		this.cleanupResult = cleanupResult;
-	}
 
 	public UpResultCode getResultCode() {
 		return resultCode;

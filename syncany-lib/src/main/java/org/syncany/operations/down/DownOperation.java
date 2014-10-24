@@ -46,9 +46,9 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.daemon.messages.events.DownDownloadFileSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.DownEndSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.DownStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
+import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.DownStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
@@ -140,10 +140,9 @@ public class DownOperation extends AbstractTransferOperation {
 			return result;
 		}
 		
+		fireStartEvent();
 		startOperation();
 		
-		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));			
-
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
@@ -163,11 +162,18 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 
 		finishOperation();
-		
-		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));	
+		fireEndEvent();		
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
+	}
+
+	private void fireStartEvent() {
+		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));					
+	}
+	
+	private void fireEndEvent() {
+		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
 	/**

@@ -41,7 +41,7 @@ public class LsRemoteCommandTest {
 				"ls-remote"
 		}));
 
-		assertEquals("Different number of output lines expected.", 1, cliOut.length);
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
 
 		// Round 2: One new database expected
 		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);
@@ -57,8 +57,8 @@ public class LsRemoteCommandTest {
 				"ls-remote"
 		}));
 
-		assertEquals("Different number of output lines expected.", 1, cliOut.length);
-		assertEquals("? database-B-0000000001", cliOut[0]);
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("? database-B-0000000001", cliOut[2]);
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);

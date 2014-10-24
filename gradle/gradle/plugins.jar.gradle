@@ -8,12 +8,30 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	pluginjar
+	pluginjar_linux_x86
+	pluginjar_linux_x86_64
+	pluginjar_windows_x86
+	pluginjar_windows_x86_64
+	pluginjar_macosx_x86
+	pluginjar_macosx_x86_64
+}
+
+project.ext {
+	pluginOperatingSystem = (project.hasProperty("os")) ? project.getProperty("os") : "all"
+	pluginArchitecture = (project.hasProperty("arch")) ? project.getProperty("arch") : "all"
+	pluginOperatingSystemAndArchitectureAvailable = project.hasProperty("os") && project.hasProperty("arch")
+}
+
 processResources {	
 	from(source) {
 		include "**/*.properties", "**/*.xml"
 		filter{ String line -> line.replaceAll('%pluginId%', "${pluginId}") }        	            
 		filter{ String line -> line.replaceAll('%pluginName%', "${pluginName}") }        	            
 		filter{ String line -> line.replaceAll('%pluginVersion%', "${pluginVersionFull}") }      	            
+		filter{ String line -> line.replaceAll('%pluginOperatingSystem%', "${pluginOperatingSystem}") }  
+		filter{ String line -> line.replaceAll('%pluginArchitecture%', "${pluginArchitecture}") }  				
 		filter{ String line -> line.replaceAll('%pluginDate%', "${pluginDate}") }    	
 		filter{ String line -> line.replaceAll('%pluginAppMinVersion%', "${pluginAppMinVersion}") }    	
 		filter{ String line -> line.replaceAll('%pluginRelease%', "${pluginRelease}") }    	
@@ -22,24 +40,62 @@ processResources {
 }		
 
 task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
+	doFirst {
+		if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture')) {
+			if (pluginNeedsOperatingSystemAndArchitecture && !pluginOperatingSystemAndArchitectureAvailable) {
+				throw new Exception("Operating system / architecture dependent plugin, but OS/arch information not available; pass via -Pos=(linux|windows|macosx) and -Parch=(x86|x86_64)");
+			}
+		}
+	}
+		
 	from files(sourceSets.main.output.classesDir)
 	from files(sourceSets.main.output.resourcesDir)
-	from { configurations.pluginjar.collect { zipTree(it) } }
-	exclude "META-INF/*.RSA", "META-INF/*.SF","META-INF/*.DSA" 
+	from { 
+		configurations.pluginjar.collect { 
+			zipTree(it)
+		}
+	}
+	from {
+		if (pluginOperatingSystemAndArchitectureAvailable) {
+			configurations["pluginjar_" + pluginOperatingSystem + "_" + pluginArchitecture].collect { 
+				zipTree(it)
+			}		
+		}
+	}
+	exclude "META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA" 
 	
 	// The exclude statement ignores detached signatures from other
 	// dependencies (JARs) and leaves them out when combining to one JAR
-
-	baseName = "syncany-plugin-${pluginId}"
-	version  = "${pluginVersionFull}"
+	
+	if (pluginOperatingSystemAndArchitectureAvailable) {
+		baseName = "syncany-plugin-${pluginId}-${pluginOperatingSystem}-${pluginArchitecture}"
+		version  = "${pluginVersionFull}"
+	}
+	else {
+		baseName = "syncany-plugin-${pluginId}"
+		version  = "${pluginVersionFull}"
+	}
 	
 	manifest {
 		attributes("Plugin-Id": "${pluginId}")
 		attributes("Plugin-Name": "${pluginName}")
 		attributes("Plugin-Version": "${pluginVersionFull}")
+		attributes("Plugin-Operating-System": "${pluginOperatingSystem}")
+		attributes("Plugin-Architecture": "${pluginArchitecture}")			
 		attributes("Plugin-Date": "${pluginDate}")		
 		attributes("Plugin-App-Min-Version": "${pluginAppMinVersion}")		
 		attributes("Plugin-Release": "${pluginRelease}")		
-		attributes("Plugin-Conflicts-With": "${pluginConflictsWith}")
-	}						
+		attributes("Plugin-Conflicts-With": "${pluginConflictsWith}")			
+	}		
+
+	doLast {
+		if (!project.ext.has('pluginJarDontCopyToUpload')) {
+			copy {
+				from files("${buildDir}/libs") 
+				include archiveName
+				into file("${buildDir}/upload")
+			}
+		}		
+	}	
 }
+

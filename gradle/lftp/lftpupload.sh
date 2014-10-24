@@ -26,9 +26,7 @@ echo ""
 echo "Gathering distributables ..."
 echo "----------------------------"
 cp $REPODIR/syncany-lib/build/resources/main/application.properties $TEMPDIR
-cp $REPODIR/build/distributions/*.{zip,tar.gz} $TEMPDISTDIR
-cp $REPODIR/build/debian/*.deb $TEMPDISTDIR
-cp $REPODIR/build/innosetup/*.exe $TEMPDISTDIR
+cp $REPODIR/build/upload/*.{zip,tar.gz,deb,exe} $TEMPDISTDIR
 
 PWD=`pwd`
 cd $TEMPDISTDIR
@@ -52,10 +50,17 @@ PWD=`pwd`
 cd $REPODIR/build
 rm javadoc.tar.gz 2> /dev/null
 rm reports.tar.gz 2> /dev/null
-tar -czf javadoc.tar.gz javadoc/
-tar -czf reports.tar.gz reports/
-mv javadoc.tar.gz $TEMPDIR/
-mv reports.tar.gz $TEMPDIR/
+
+if [ -d javadoc ]; then 
+	tar -czf javadoc.tar.gz javadoc/
+	mv javadoc.tar.gz $TEMPDIR/
+fi
+
+if [ -d reports ]; then 
+	tar -czf reports.tar.gz reports/
+	mv reports.tar.gz $TEMPDIR/
+fi
+
 cd "$PWD"
 
 find $TEMPDIR

@@ -39,8 +39,8 @@ import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.Operation;
-import org.syncany.operations.daemon.messages.events.StatusEndSyncExternalEvent;
-import org.syncany.operations.daemon.messages.events.StatusStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.StatusEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
 import org.syncany.util.FileUtil;
 
 /**

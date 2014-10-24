@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
-import org.syncany.operations.watch.RecursiveWatcher;
+import org.syncany.operations.watch.DefaultRecursiveWatcher;
 import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
 import org.syncany.tests.util.TestFileUtil;
 
@@ -50,7 +50,7 @@ public class RecursiveWatcherTest {
 		// Test
 		final AtomicBoolean eventOccurred = new AtomicBoolean(false);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() {
 				eventOccurred.set(true);
@@ -84,7 +84,7 @@ public class RecursiveWatcherTest {
 		// Test
 		final AtomicBoolean eventOccurred = new AtomicBoolean(false);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() {
 				eventOccurred.set(true);
@@ -121,7 +121,7 @@ public class RecursiveWatcherTest {
 		// Test
 		final AtomicBoolean eventOccurred = new AtomicBoolean(false);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() {
 				eventOccurred.set(true);
@@ -161,7 +161,7 @@ public class RecursiveWatcherTest {
 		// Test
 		final AtomicBoolean eventOccurred = new AtomicBoolean(false);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() {
 				eventOccurred.set(true);
@@ -210,7 +210,7 @@ public class RecursiveWatcherTest {
 		final AtomicInteger watcherEventOccurredCount = new AtomicInteger(0);
 		final AtomicLong fileWrittenTime = new AtomicLong(0L);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() { 
 				watcherEventOccurredCount.addAndGet(1);
@@ -249,7 +249,7 @@ public class RecursiveWatcherTest {
 		// Test
 		final AtomicInteger watcherEventOccurredCount = new AtomicInteger(0);
 		
-		RecursiveWatcher watcher = new RecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
+		DefaultRecursiveWatcher watcher = new DefaultRecursiveWatcher(Paths.get(tempDir.getAbsolutePath()), new ArrayList<Path>(), 300, new WatchListener() {
 			@Override
 			public void watchEventsOccurred() { 
 				watcherEventOccurredCount.addAndGet(1);

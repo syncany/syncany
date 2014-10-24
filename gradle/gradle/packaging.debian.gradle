@@ -1,5 +1,11 @@
 // Packaging ///////////////////////////////////////////////////////////////////
 
+project.ext {
+	debianDistribution = (applicationRelease) ? "release" : "snapshot"
+	debianVersionExtension = ("snapshot".equals(debianDistribution)) ? "~${applicationVersionDebian}" : ""
+	debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianVersionExtension
+}
+
 task debianClean(type: Delete) {
 	delete 'build/debian'	
 }
@@ -15,72 +21,50 @@ task debianManpages(dependsOn: installApp) {
 	}
 }
 
-task debianBasic(dependsOn: [debianClean, installApp, debianManpages]) {
-	// Nothing
-}
-
-tasks.addRule("Pattern: debianPrepare<distribution>") { String taskName ->
-	if (taskName.startsWith("debianPrepare")) {
-		task(taskName, dependsOn: debianBasic){
-			String debianDistribution = (taskName - "debianPrepare").toLowerCase()
-			String debianPpaVersion = (!"unstable".equals(debianDistribution)) ? "~${debianDistribution}ppa${applicationVersionDebian}" : ""
-			String debianApplicationVersionFull = "${applicationVersionFull}".replaceAll("-", ".") + debianPpaVersion
-	
-			doLast {
-				copy {
-					from rootProject.files("build/install/syncany") 
-					into rootProject.file("build/debian/syncany")
-					exclude("**/*.bat")
-				}
-	
-				copy {
-					from rootProject.files("build/install/syncany/LICENSE.md") 
-					into rootProject.file("build/debian/syncany/debian")
-					rename("LICENSE.md", "copyright")
-				}
-
-				copy {
-					from rootProject.files("gradle/debian/debian") 
-					into rootProject.file("build/debian/syncany/debian")
-				}
-	
-				copy {
-					from rootProject.files("gradle/bash/syncany.bash-completion") 
-					into rootProject.file("build/debian/syncany/debian")
-				}
-
-				exec {
-					workingDir rootProject.file("gradle/debian")
-					commandLine "./makechangelog.pl", "${debianDistribution}", "${debianApplicationVersionFull}"
-				}
-			}
-		}
-	}
-}
-
-task ppaBuild { // depends on debianPrepare*
+task debianPrepare(dependsOn: [debianClean, installApp, debianManpages]) { 
 	doLast {
+		copy {
+			from rootProject.files("build/install/syncany") 
+			into rootProject.file("build/debian/syncany")
+			exclude("**/*.bat")
+		}
+
+		copy {
+			from rootProject.files("build/install/syncany/LICENSE.md") 
+			into rootProject.file("build/debian/syncany/debian")
+			rename("LICENSE.md", "copyright")
+		}
+
+		copy {
+			from rootProject.files("gradle/debian/debian-core") 
+			into rootProject.file("build/debian/syncany/debian")
+		}
+
+		copy {
+			from rootProject.files("gradle/bash/syncany.bash-completion") 
+			into rootProject.file("build/debian/syncany/debian")
+		}
+
 		exec {
 			workingDir rootProject.file("gradle/debian")
-			commandLine "./debuild-signed.sh"
+			commandLine "./makechangelog.pl", "syncany", "${debianDistribution}", "${debianApplicationVersionFull}", "../../CHANGELOG.md", "../../build/debian/syncany/debian/changelog"
 		}
 	}
 }
 
-task ppa(dependsOn: ppaBuild) {
+task debian(dependsOn: debianPrepare) { 
 	doLast {
 		exec {
-			workingDir rootProject.file("gradle/debian")
-			commandLine "./dput-ppa.sh"
-		}
-	}
-}
-
-task debian { // depends on debianPrepare*
-	doLast {
-		exec {
-			workingDir rootProject.file("build/debian/syncany")
+			workingDir rootProject.file("${buildDir}/debian/syncany")
 			commandLine "debuild -i -us -uc -b".split()
+		}
+				
+		if (!project.ext.has('debDontCopyToUpload')) {
+			copy {
+				from rootProject.files("${buildDir}/debian") 
+				include "*.deb"
+				into rootProject.file("${buildDir}/upload")
+			}
 		}
 	}
 }

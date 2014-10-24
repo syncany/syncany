@@ -15,13 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.events;
+package org.syncany.operations.daemon.messages;
 
 import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public class PluginInstallExternalEvent extends ExternalEvent {
 	private String source;
 
+	public PluginInstallExternalEvent() {
+		// Nothing
+	}
+	
 	public PluginInstallExternalEvent(String source) {
 		this.source = source;
 	}
