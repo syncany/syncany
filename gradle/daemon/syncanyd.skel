@@ -7,7 +7,11 @@ DAEMON_CONTROLFILE=$DAEMON_APPDIR/daemon.ctrl
 DAEMON_PIDFILE=$DAEMON_APPDIR/daemon.pid
 DAEMON_LOGDIR=$DAEMON_APPDIR/logs
 DAEMON_LOGFILE=$DAEMON_LOGDIR/daemon.log
-DAEMON_OPTS="--log=$DAEMON_LOGFILE daemon"
+DAEMON_OPTS="--log=$DAEMON_LOGFILE"
+DAEMON_CMD="daemon"
+
+GUI_LOGFILE=$DAEMON_LOGDIR/gui.log
+GUI_OPTS="--log=$GUI_LOGFILE"
 
 # Daemon functions
 daemon_get_pid() {
@@ -37,7 +41,7 @@ daemon_start() {
 	if [ $DAEMON_RUNNING -eq 1 ]; then
 		echo "$DAEMON_NAME already running (pid $DAEMON_PID)"
 	else
-		nohup "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_OPTS > /dev/null 2>&1 &
+		nohup "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_OPTS $DAEMON_CMD > /dev/null 2>&1 &
 
 		DAEMON_PID=-1
 		TRIES=10
@@ -53,7 +57,7 @@ daemon_start() {
 		
 		if [ $TRIES -eq 0 ]; then
 			echo " Failed to start process. EXITING."
-			echo "Failed command line: $ $DAEMON $DAEMON_OPTS"
+			echo "Failed command line: $ $DAEMON $DAEMON_OPTS $DAEMON_CMD"
 			exit 2
 		fi
 		
@@ -171,7 +175,12 @@ case "$1" in
 				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
 				;;
 		esac
-		;;            
+		;;  
+		          
+	gui)                       
+		#JAVA_EXEC_REPLACEMENT_MARKER# $GUI_OPTS
+		;;
+		
 	*)                       
 		#JAVA_EXEC_REPLACEMENT_MARKER#
 		;;
