@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
@@ -76,8 +75,8 @@ public class DaemonOperation extends Operation {
 	private DaemonConfigTO daemonConfig;
 	private PortTO portTO;
 
-	public DaemonOperation(Config config) {
-		super(config);		
+	public DaemonOperation() {
+		super(null);		
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);		
 	}
 
