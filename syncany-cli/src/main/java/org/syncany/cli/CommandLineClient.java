@@ -520,7 +520,11 @@ public class CommandLineClient extends Client {
 	private int showHelpAndExit() throws IOException {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			return execManPageAndExit(MAN_PAGE_MAIN);
+			int manPageReturnCode = execManPageAndExit(MAN_PAGE_MAIN);
+			
+			if (manPageReturnCode == 0) { // Success
+				return manPageReturnCode;
+			}
 		}
 
 		// Fallback (and on Windows): Display man page on STDOUT
@@ -530,8 +534,12 @@ public class CommandLineClient extends Client {
 	private int showCommandHelpAndExit(String commandName) throws IOException {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);
-			execManPageAndExit(commandManPage);
+			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);			
+			int manPageReturnCode = execManPageAndExit(commandManPage);
+			
+			if (manPageReturnCode == 0) { // Success
+				return manPageReturnCode;
+			}
 		}
 
 		// Fallback (and on Windows): Display man page on STDOUT

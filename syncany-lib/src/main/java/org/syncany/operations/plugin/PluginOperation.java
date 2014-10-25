@@ -88,7 +88,7 @@ import com.github.zafarkhaja.semver.Version;
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v1/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s";	
+	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";	
 	private static final String PURGEFILE_FILENAME = "purgefile";
 
 	private PluginOperationOptions options;
@@ -477,8 +477,10 @@ public class PluginOperation extends Operation {
 		String appVersion = Client.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
-
-		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr));
+		String osStr = EnvironmentUtil.getOsDescription();
+		String archStr = EnvironmentUtil.getArchDescription();
+		
+		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
 
 		eventBus.post(new PluginConnectToHostExternalEvent(pluginListUrl.getHost()));

@@ -140,10 +140,9 @@ public class DownOperation extends AbstractTransferOperation {
 			return result;
 		}
 		
+		fireStartEvent();
 		startOperation();
 		
-		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));			
-
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
@@ -163,11 +162,18 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 
 		finishOperation();
-		
-		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));	
+		fireEndEvent();		
 
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
+	}
+
+	private void fireStartEvent() {
+		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));					
+	}
+	
+	private void fireEndEvent() {
+		eventBus.post(new DownEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
 	/**

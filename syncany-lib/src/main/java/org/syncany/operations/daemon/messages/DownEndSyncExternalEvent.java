@@ -17,21 +17,33 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.syncany.operations.down.DownOperationResult;
+import org.simpleframework.xml.Element;
+import org.syncany.operations.ChangeSet;
+import org.syncany.operations.down.DownOperationResult.DownResultCode;
 
 public class DownEndSyncExternalEvent extends SyncExternalEvent {
-	private DownOperationResult result;
+	@Element(name = "resultCode", required = true)
+	private DownResultCode resultCode;
+	
+	@Element(name = "changes", required = true)
+	private ChangeSet changes;
 
 	public DownEndSyncExternalEvent() {
 		// Nothing
 	}
 	
-	public DownEndSyncExternalEvent(String root, DownOperationResult result) {
+	public DownEndSyncExternalEvent(String root, DownResultCode resultCode, ChangeSet changes) {
 		super(root);
-		this.result = result;
+		
+		this.resultCode = resultCode;
+		this.changes = changes;
 	}
-
-	public DownOperationResult getResult() {
-		return result;
+	
+	public DownResultCode getResultCode() {
+		return resultCode;
+	}
+	
+	public ChangeSet getChanges() {
+		return changes;
 	}
 }

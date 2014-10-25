@@ -8,7 +8,7 @@ Homepage: https://www.syncany.org
 
 Package: syncany
 Architecture: all
-Depends: ${misc:Depends}, default-jre (>= 1.7) | openjdk-7-jre-headless | openjdk-8-jre-headless
+Depends: ${misc:Depends}, openjdk-7-jre-headless | default-jre (>= 1.7) | openjdk-8-jre-headless
 Homepage: https://www.syncany.org/
 Description: Secure file sync software for arbitrary storage backends
  Syncany allows users to backup and share certain folders of their workstations

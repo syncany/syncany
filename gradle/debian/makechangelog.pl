@@ -10,25 +10,29 @@ use POSIX qw(locale_h);
 setlocale(LC_CTYPE, "en_US.UTF-8");
 setlocale(LC_TIME, "en_US.UTF-8");
 
-if ($#ARGV+1 != 2) {
-	print "Usage: makechangelog.pl DISTRIBUTION VERSION\n";
+if ($#ARGV+1 != 5) {
+	print "Usage: makechangelog.pl <package-name> <distribution> <version> <in-file> <out-file>\n";
 	exit 1;
 }
 
-open(IN, '../../CHANGELOG.md');
-open(OUT, '>', '../../build/debian/syncany/debian/changelog');
 
-my $app_distribution = $ARGV[0];
-my $app_version = $ARGV[1];
+my $app_package_name = $ARGV[0];
+my $app_distribution = $ARGV[1];
+my $app_version = $ARGV[2];
+my $file_in = $ARGV[3];
+my $file_out = $ARGV[4];
 my $last_date;
 my $last_version;
+
+open(IN, $file_in);
+open(OUT, '>', $file_out);
 
 while (<IN>) {
 	chomp;
 	
 	$_ =~ s/\s+$//g; # trim right
 	
-	if (/### Syncany ([^ ]+)\s+\(Date: ([^)]+)\)/) {		
+	if (/### .+ ([^ ]+)\s+\(Date: ([^)]+)\)/) {		
 		if ($last_version) {
 			footer($last_date, $last_version);
 
@@ -40,7 +44,7 @@ while (<IN>) {
 			$last_date = "n/a";
 		}
 
-		print OUT "syncany ($last_version) $app_distribution; urgency=low\n";
+		print OUT "$app_package_name ($last_version) $app_distribution; urgency=low\n";
 		print OUT "\n";
 	}
 	elsif (/^\s|-/) {	

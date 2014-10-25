@@ -50,7 +50,7 @@ startScripts {
 		// - Append daemon batch script (handle 'sy daemon')
 		def winTextTmp = ""
 		def winText = winFile.text
-		def windowsDaemonScript = new File('gradle/daemon/syncanyd.bat.skel').text		
+		def windowsDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.bat.skel").text		
 		
 		winText.readLines().each {
 			line ->
@@ -91,14 +91,22 @@ startScripts {
 		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx" + defaultMaxMemory + "\\\"\"\n";
 		unixMaxMemoryCommands += "else\n";
 		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx\$APP_MAX_MEMORY\\\"\"\n";
-		unixMaxMemoryCommands += "fi\n";
+		unixMaxMemoryCommands += "fi";
 
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
 
+		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
+		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT)\n"
+		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"		
+		unixDarwinFirstThreadFlagCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
+		unixDarwinFirstThreadFlagCommands += "fi"
+
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$0' + Matcher.quoteReplacement("\n\n${unixDarwinFirstThreadFlagCommands}"))		
+		
 		// - Append daemon batch script (handle 'sy daemon')		
 		def unixTextTmp = ""
 		def unixText = unixFile.text
-		def unixDaemonScript = new File('gradle/daemon/syncanyd.skel').text		
+		def unixDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.skel").text		
 		
 		unixText.readLines().each {
 			line ->
@@ -130,10 +138,24 @@ distTar {
 	version = "$applicationVersionFull"
 	compression = Compression.GZIP
 	extension = "tar.gz"	
+	
+	doLast {
+		copy {
+			from archivePath
+			into rootProject.file("${buildDir}/upload")
+		}	
+	}
 }
 
 distZip {
 	baseName = "syncany"
 	version = "$applicationVersionFull"
+	
+	doLast {
+		copy {
+			from archivePath
+			into rootProject.file("${buildDir}/upload")
+		}	
+	}
 }
 

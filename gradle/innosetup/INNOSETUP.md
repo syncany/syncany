@@ -50,7 +50,7 @@ In case innoextract is not available, use the author's repo:
 
 #### 2. Create exe-installer with the Gradle "exe" task
 
-The Gradle task "exe" first copies the skeleton input script [setup.iss.skel](setup.iss.skel)
+The Gradle task "exe" first copies the skeleton input script [setup-cli.iss.skel](setup-cli.iss.skel)
 and replaces some variables (application version). It then calls the Inno Setup
 compiler (ISCC) with this script and generates an exe-file to 
 `syncany-cli/build/innosetup`.

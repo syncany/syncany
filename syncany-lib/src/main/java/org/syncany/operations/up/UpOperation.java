@@ -111,14 +111,13 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		eventBus.post(new UpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 		
 		if (!checkPreconditions()) {
 			return result;
 		}
-
+		
 		// Upload action file (lock for cleanup)
+		fireStartEvent();
 		startOperation();
 
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
@@ -133,11 +132,13 @@ public class UpOperation extends AbstractTransferOperation {
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
-
+			
 			finishOperation();
+			fireEndEvent();
+
 			return result;
 		}
-
+		
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
 		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());		
@@ -155,15 +156,24 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
+		
 		logger.log(Level.INFO, "Sync up done.");
 		
-		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
-
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 
+		fireEndEvent();
+
 		return result;
+	}
+
+	private void fireStartEvent() {
+		eventBus.post(new UpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
+	}
+
+	private void fireEndEvent() {
+		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
 	private boolean checkPreconditions() throws Exception {

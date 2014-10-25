@@ -72,7 +72,7 @@ public class WatchCommandTest {
 		// Client A: New file, wait for it to sync it
 		TestFileUtil.createRandomFile(new File(clientA.get("localdir") + "/file2"), 20 * 1024);
 		Thread.sleep(2000);
-		assertTrue(new File(clientB.get("repopath") + "/databases/db-A-0000000001").exists());
+		assertTrue(new File(clientB.get("repopath") + "/databases/database-A-0000000001").exists());
 
 		clientThreadA.interrupt();
 

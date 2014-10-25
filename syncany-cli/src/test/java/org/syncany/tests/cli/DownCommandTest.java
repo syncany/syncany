@@ -46,7 +46,7 @@ public class DownCommandTest {
 			"down"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 1, cliOut.length);
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
 		
 		// Round 2: Only added files
 		new CommandLineClient(new String[] { 
@@ -60,10 +60,10 @@ public class DownCommandTest {
 			"down"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 8, cliOut.length);
-		assertEquals("A file1", cliOut[4]);
-		assertEquals("A file2", cliOut[5]);
-		assertEquals("A file3", cliOut[6]);		
+		assertEquals("Different number of output lines expected.", 10, cliOut.length);
+		assertEquals("A file1", cliOut[6]);
+		assertEquals("A file2", cliOut[7]);
+		assertEquals("A file3", cliOut[8]);		
 		
 		// Round 3: Modified and deleted files
 		TestFileUtil.changeRandomPartOfBinaryFile(new File(clientA.get("localdir")+"/file2"));
@@ -80,9 +80,9 @@ public class DownCommandTest {
 			"down"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 7, cliOut.length);
-		assertEquals("M file2", cliOut[4]);
-		assertEquals("D file3", cliOut[5]);
+		assertEquals("Different number of output lines expected.", 9, cliOut.length);
+		assertEquals("M file2", cliOut[6]);
+		assertEquals("D file3", cliOut[7]);
 		
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);

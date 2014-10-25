@@ -20,7 +20,7 @@ package org.syncany.config.to;
 import org.simpleframework.xml.Element;
 
 public class HooksTO {
-	@Element(name = "runAfterDown")
+	@Element(name = "runAfterDown", required = false)
 	private String runAfterDownCommand;
 
 	public String getRunAfterDownCommand() {

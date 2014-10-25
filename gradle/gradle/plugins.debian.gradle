@@ -1,0 +1,77 @@
+// This script MUST be embedded by plugins; do not embed in root project!
+
+// Can be embedded in build.gradle using 
+//    apply from: 'core/gradle/gradle/plugins.debian.gradle'
+
+project.ext {
+	pluginDebianDistribution = (pluginRelease) ? "release" : "snapshot"
+	pluginDebianVersionExtension = ("snapshot".equals(pluginDebianDistribution)) ? "~${pluginDebianVersion}" : ""
+	pluginDebianVersionFull = "${pluginVersionFull}".replaceAll("-", ".") + pluginDebianVersionExtension
+	
+	if (project.ext.has('pluginNeedsOperatingSystemAndArchitecture') && pluginNeedsOperatingSystemAndArchitecture) {
+		pluginDebianArchitecture = (pluginArchitecture == "x86") ? "i386" : "amd64"
+	}
+	else {
+		pluginDebianArchitecture = "all"
+	}
+}
+
+task pluginDebianClean(type: Delete) {
+	delete 'build/debian'	
+	delete 'build/libs'		
+}
+
+task pluginDebianPrepare(dependsOn: [pluginDebianClean, pluginJar]) {	
+	doLast {			
+		copy {
+			from rootProject.file("gradle/debian/debian-plugin") 
+			into file("build/debian/syncany-plugin-${pluginId}/debian/debian")
+		}
+		
+		copy {
+			from file("gradle/debian/syncany-plugin-${pluginId}/debian") 
+			include "control"
+			expand([
+				pluginAppMinVersion: "${pluginAppMinVersion}", 	
+				pluginDebianArchitecture: "${pluginDebianArchitecture}",
+				pluginMiscDepends: "\${misc:Depends}" // Dirty hack to keep ${misc:Depends} debian variable
+			])
+			into file("build/debian/syncany-plugin-${pluginId}/debian/debian")
+		}
+		
+		copy {
+			from files("build/libs") 
+			into file("build/debian/syncany-plugin-${pluginId}/debian/usr/share/syncany/lib")
+		}
+		
+		exec {
+			workingDir file(".")
+			commandLine(
+				rootProject.file("gradle/debian/makechangelog.pl"),
+				"syncany-plugin-${pluginId}",
+				"${pluginDebianDistribution}",
+				"${pluginDebianVersionFull}",
+				file("CHANGELOG.md"),
+				file("build/debian/syncany-plugin-${pluginId}/debian/debian/changelog")
+			)
+		}						
+	}	
+}
+
+task pluginDebianDeb(dependsOn: [pluginDebianPrepare]) {	
+	doLast {
+		String pluginDebianArchitectureArgument = (pluginDebianArchitecture != "all") ? "-a${pluginDebianArchitecture}" : ""
+	
+		exec {
+			workingDir file("build/debian/syncany-plugin-${pluginId}/debian")
+			commandLine "debuild -i -us -uc -b ${pluginDebianArchitectureArgument}".split()
+		}
+		
+		copy {
+			from files("build/debian/syncany-plugin-${pluginId}") 
+			include "*.deb"
+			into file("build/upload")
+		}
+	}
+}
+
