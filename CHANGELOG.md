@@ -3,6 +3,7 @@ Change Log
 
 ### Syncany 0.1.13-alpha (Date: tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- **Breaks compatiblity to 0.1.12-alpha local folders (if cleanup is called)!**
 - Bugfixes and other things:
   + Fix PURGE database file history entries disappear after merging #252
   + Fix database corruption issue (caused by #252) in #247
