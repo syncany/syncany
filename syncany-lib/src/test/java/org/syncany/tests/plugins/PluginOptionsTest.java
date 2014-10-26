@@ -44,8 +44,6 @@ public class PluginOptionsTest {
 		assertNotNull(dts.foo);
 		assertNotNull(dts.number);
 		assertNotNull(dts.subsettings);
-		assertNotNull(dts.subsettings.path);
-
 	}
 
 	private void askNestedPluginSettings(TransferSettings settings, PluginOption option, int wrap) throws Exception {

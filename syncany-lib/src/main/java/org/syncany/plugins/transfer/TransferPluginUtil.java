@@ -19,6 +19,7 @@ package org.syncany.plugins.transfer;
 
 import org.syncany.plugins.PluginManager;
 import org.syncany.plugins.PluginSettings;
+import org.syncany.plugins.Plugins;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -43,6 +44,16 @@ public abstract class TransferPluginUtil {
 		}
 
 		return manager.value();
+	}
+
+	public static Class<? extends TransferPlugin> getTransferPluginClass(Class<? extends TransferSettings> transferSettingsClass) {
+		for (TransferPlugin plugin : Plugins.list(TransferPlugin.class)) {
+			if (TransferPluginUtil.getTransferSettingsClass(plugin.getClass()).equals(transferSettingsClass)) {
+				return plugin.getClass();
+			}
+		}
+
+		throw new RuntimeException("There is no transfer plugin for settings (" + transferSettingsClass.getName() + ")");
 	}
 
 }

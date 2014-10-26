@@ -216,7 +216,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
 
 		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
@@ -238,8 +238,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-
-		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);		
 
 		// Remote: serialize purge database version to file and upload
 		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
@@ -357,7 +356,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-				new Object[] { allDatabaseFilesMap.size(), maxDatabaseFiles });
+				new Object[] { numberOfDatabaseFiles, maxDatabaseFiles });
 
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);

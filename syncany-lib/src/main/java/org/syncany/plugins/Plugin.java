@@ -81,7 +81,7 @@ public abstract class Plugin {
 	 */
 	private Properties loadPluginProperties(String pluginId) {
 		String pluginInfoResource = "/" + Plugin.class.getPackage().getName().replace('.', '/') + "/" + pluginId + "/plugin.properties";
-
+		
 		InputStream pluginPropertiesInputStream = Plugin.class.getResourceAsStream(pluginInfoResource);
 
 		try {

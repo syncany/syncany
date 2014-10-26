@@ -17,16 +17,7 @@
  */
 package org.syncany.plugins.transfer;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.google.common.base.Objects;
 import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -46,6 +37,16 @@ import org.syncany.plugins.Setup;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -126,7 +127,10 @@ public abstract class TransferSettings {
 				Type fieldType = field.getType();
 
 				if (key.equalsIgnoreCase(fieldName)) {
-					if (field.getType() == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
+					if (value == null) {
+						field.set(this, null);
+					}
+					else if (field.getType() == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
 						field.setInt(this, Integer.parseInt(String.valueOf(value)));
 					}
 					else if (fieldType == Boolean.TYPE && (value instanceof Boolean || value instanceof String)) {
@@ -278,5 +282,21 @@ public abstract class TransferSettings {
 			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
 			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings", e);
 		}
+	}
+
+	@Override
+	public String toString() {
+		Objects.ToStringHelper toStringHelper = Objects.toStringHelper(this);
+
+		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
+			try {
+				toStringHelper.add(field.getName(), field.get(this));
+			}
+			catch (IllegalAccessException e) {
+				toStringHelper.add(field.getName(), "**IllegalAccessException**");
+			}
+		}
+
+		return toStringHelper.toString();
 	}
 }

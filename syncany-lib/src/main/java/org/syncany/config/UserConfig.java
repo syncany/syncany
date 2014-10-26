@@ -58,7 +58,7 @@ public class UserConfig {
 	// These fields are not final to enable a PluginOperationTest
 	private static File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
 	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
-
+	private static final String USER_LOG_DIR = "logs";
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
 	private static final String USER_PLUGINS_USERDATA_DIR_FORMAT = "plugins/userdata/%s";
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
@@ -67,6 +67,7 @@ public class UserConfig {
 	private static final int CONFIG_ENCRYPTION_KEY_LENGTH = 32;
 
 	private static File userConfigDir;
+	private static File userLogDir;
 	private static File userPluginLibDir;
 	private static File userConfigFile;
 
@@ -93,6 +94,10 @@ public class UserConfig {
 
 	public static File getUserConfigDir() {
 		return userConfigDir;
+	}
+
+	public static File getUserLogDir() {
+		return userLogDir;
 	}
 
 	public static File getUserPluginLibDir() {
@@ -143,6 +148,9 @@ public class UserConfig {
 	private static void initUserAppDirs() {
 		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
 		userConfigDir.mkdirs();
+
+		userLogDir = new File(userConfigDir, USER_LOG_DIR);
+		userLogDir.mkdirs();
 
 		userPluginLibDir = new File(userConfigDir, USER_PLUGINS_LIB_DIR);
 		userPluginLibDir.mkdirs();
