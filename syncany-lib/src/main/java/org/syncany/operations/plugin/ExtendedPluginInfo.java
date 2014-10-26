@@ -21,8 +21,8 @@ public class ExtendedPluginInfo {
 	private PluginInfo localPluginInfo;
 	private PluginInfo remotePluginInfo;
 	private boolean installed;
+	private boolean canUninstall;
 	private boolean remoteAvailable;
-	private boolean upgradeAvailable;
 	
 	public PluginInfo getLocalPluginInfo() {
 		return localPluginInfo;
@@ -56,11 +56,11 @@ public class ExtendedPluginInfo {
 		this.remoteAvailable = remoteAvailable;
 	}
 
-	public boolean isUpgradeAvailable() {
-		return upgradeAvailable;
+	public boolean canUninstall() {
+		return canUninstall;
 	}
-	
-	public void setUpgradeAvailable(boolean upgradeAvailable) {
-		this.upgradeAvailable = upgradeAvailable;
+
+	public void setCanUninstall(boolean canUninstall) {
+		this.canUninstall = canUninstall;
 	}
 }
