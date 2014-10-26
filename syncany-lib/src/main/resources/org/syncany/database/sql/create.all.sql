@@ -69,6 +69,13 @@ CREATE CACHED TABLE fileversion (
   FOREIGN KEY (filecontent_checksum) REFERENCES filecontent (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE CACHED TABLE fileversion_purge (
+  filehistory_id varchar(40) NOT NULL,
+  fileversion_maxpurgeversion int NOT NULL,
+  databaseversion_id int NOT NULL,
+  PRIMARY KEY (filehistory_id, fileversion_maxpurgeversion, databaseversion_id)  
+);
+
 CREATE CACHED TABLE multichunk (
   id varchar(40) NOT NULL,
   databaseversion_id int NOT NULL,
