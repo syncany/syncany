@@ -43,8 +43,12 @@ public class DummyTransferSettings extends TransferSettings {
 	public int number;
 
 	@Element(name = "nest", required = false)
-	@Setup(order = 4, description = "Some nested settings")
-	public LocalTransferSettings subsettings;
+	@Setup(order = 4, description = "Some generic nested settings")
+	public TransferSettings subsettings;
+
+	@Element(name = "nest2", required = false)
+	@Setup(order = 5, description = "Some nested settings")
+	public LocalTransferSettings subsettings2;
 
 	@Validate
 	public void validate() throws StorageException {
