@@ -20,7 +20,6 @@ package org.syncany.plugins.local;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.syncany.plugins.PluginOptionCallback;
 import org.syncany.plugins.Setup;
 import org.syncany.plugins.transfer.TransferSettings;
 
@@ -34,7 +33,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  */
 public class LocalTransferSettings extends TransferSettings {
 	@Element(required = true)
-	@Setup(order = 1, description = "Path to local repository", callback = PathOptionCallback.class)
+	@Setup(order = 1, description = "Path to local repository")
 	public File path;
 
 	public File getPath() {
@@ -43,12 +42,5 @@ public class LocalTransferSettings extends TransferSettings {
 
 	public void setPath(File path) {
 		this.path = path;
-	}
-
-	public static class PathOptionCallback implements PluginOptionCallback {
-		@Override
-		public String preQueryCallback() {
-			return "The folder must exist!";
-		}
 	}
 }

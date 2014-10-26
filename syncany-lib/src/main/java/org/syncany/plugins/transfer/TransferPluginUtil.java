@@ -22,10 +22,18 @@ import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.Plugins;
 
 /**
+ * Helper class for {@link TransferPlugin}s, using to retrieve
+ * the required transfer plugin classes -- namely {@link TransferSettings},
+ * {@link TransferManager} and {@link TransferPlugin}. 
+ * 
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPluginUtil {
-
+	/**
+	 * Determines the {@link TransferSettings} class for a given
+	 * {@link TransferPlugin} class using the corresponding
+	 * {@link PluginSettings} annotation.
+	 */
 	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
 		PluginSettings settings = transferPluginClass.getAnnotation(PluginSettings.class);
 
@@ -36,6 +44,11 @@ public abstract class TransferPluginUtil {
 		return settings.value();
 	}
 
+	/**
+	 * Determines the {@link TransferManager} class for a given
+	 * {@link TransferPlugin} class using the corresponding
+	 * {@link PluginManager} annotation.
+	 */
 	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
 		PluginManager manager = transferPluginClass.getAnnotation(PluginManager.class);
 
@@ -46,6 +59,10 @@ public abstract class TransferPluginUtil {
 		return manager.value();
 	}
 
+	/**
+	 * Determines the {@link TransferPlugin} class for a given 
+	 * {@link TransferSettings} class.
+	 */
 	public static Class<? extends TransferPlugin> getTransferPluginClass(Class<? extends TransferSettings> transferSettingsClass) {
 		for (TransferPlugin plugin : Plugins.list(TransferPlugin.class)) {
 			if (TransferPluginUtil.getTransferSettingsClass(plugin.getClass()).equals(transferSettingsClass)) {
@@ -55,5 +72,4 @@ public abstract class TransferPluginUtil {
 
 		throw new RuntimeException("There is no transfer plugin for settings (" + transferSettingsClass.getName() + ")");
 	}
-
 }

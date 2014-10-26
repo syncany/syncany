@@ -51,12 +51,21 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * The abstract init command provides multiple shared methods for the 'init'
+ * and 'connect' command. Both commands must provide the ability to 
+ * query a user for transfer settings or parse settings from the command line 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth <christian.roth@port17.de>
+ */
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
+	
 	private static final char NESTED_OPTIONS_SEPARATOR = '.';
-	private static final String GENERIC_PLUGIN_IDENTIFIER = "tpt";
-	public static final int PASSWORD_MIN_LENGTH = 10;
-	public static final int PASSWORD_WARN_LENGTH = 12;
+	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = "-type";
+	private static final int PASSWORD_MIN_LENGTH = 10;
+	private static final int PASSWORD_WARN_LENGTH = 12;
 
 	protected InitConsole console;
 	protected boolean isInteractive;
@@ -199,34 +208,39 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		if (isInteractive) {
 			out.println();
 			out.println(option.getDescription() + ":");
-			out.println("This plugins supports different transfer plugins");
 		}
 
 		TransferPlugin childPlugin = null;
-		Class<? extends TransferPlugin> motherPluginClass = TransferPluginUtil.getTransferPluginClass(settings.getClass());
+		Class<? extends TransferPlugin> pluginClass = TransferPluginUtil.getTransferPluginClass(settings.getClass());
 
-		// perhaps there is a plugin in the knownPluginSettings (should be the case in non-interactive mode)
+		// Non-interactive: Plugin settings might be given via command line
 		try {
-			childPlugin = initPlugin(knownPluginSettings.get(nestPrefix + option.getName() + GENERIC_PLUGIN_IDENTIFIER));
+			childPlugin = initPlugin(knownPluginSettings.get(nestPrefix + option.getName() + GENERIC_PLUGIN_TYPE_IDENTIFIER));
 		}
 		catch (Exception e) {
 			if (!isInteractive) {
-				throw new IllegalArgumentException("Missing nested plugin type (" + nestPrefix + option.getName() + GENERIC_PLUGIN_IDENTIFIER
+				throw new IllegalArgumentException("Missing nested plugin type (" + nestPrefix + option.getName() + GENERIC_PLUGIN_TYPE_IDENTIFIER
 						+ ") in non-interactive mode.");
 			}
 		}
 
+		// Interactive mode: Ask for sub-plugin
 		while (childPlugin == null) {
-			childPlugin = askPlugin(motherPluginClass);
+			childPlugin = askPlugin(pluginClass);
 		}
-		out.println();
+		
+		if (isInteractive) {
+			out.println();
+		}
 
-		TransferSettings nestedSettings = childPlugin.createEmptySettings();
-		settings.setField(option.getField().getName(), nestedSettings);
+		// Create nested/child settings
+		TransferSettings childSettings = childPlugin.createEmptySettings();
+		
+		settings.setField(option.getField().getName(), childSettings);
 		nestPrefix = nestPrefix + option.getName() + NESTED_OPTIONS_SEPARATOR;
 
-		for (PluginOption nestedOption : PluginOptions.getOrderedOptions(nestedSettings.getClass())) {
-			askPluginSettings(nestedSettings, nestedOption, knownPluginSettings, nestPrefix);
+		for (PluginOption nestedOption : PluginOptions.getOrderedOptions(childSettings.getClass())) {
+			askPluginSettings(childSettings, nestedOption, knownPluginSettings, nestPrefix);
 		}
 	}
 
@@ -552,5 +566,4 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 		return password;
 	}
-
 }

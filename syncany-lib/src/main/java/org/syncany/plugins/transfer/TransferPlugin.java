@@ -31,7 +31,7 @@ import org.syncany.util.ReflectionUtil;
  * {@link TransferPlugin} (this class), {@link TransferSettings} (connection
  * details) and {@link TransferManager} (transfer methods).<br/><br/>
  *
- * Links between the classes can be created by annotating this class with
+ * <p>Links between the classes can be created by annotating this class with
  * {@link org.syncany.plugins.PluginSettings} and {@link org.syncany.plugins.PluginManager},
  * respectively.
  *
@@ -48,7 +48,7 @@ public abstract class TransferPlugin extends Plugin {
 	 *
 	 * @return Empty plugin-specific {@link org.syncany.plugins.transfer.TransferSettings} instance.
 	 * @throws StorageException Thrown if no {@link org.syncany.plugins.transfer.TransferSettings} are attached to a
-	 *  plugin using {@link org.syncany.plugins.PluginSettings}
+	 *         plugin using {@link org.syncany.plugins.PluginSettings}
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
@@ -64,11 +64,7 @@ public abstract class TransferPlugin extends Plugin {
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException("Unable to create TransferSettings: " + e.getMessage());
 		}
-
 	}
-
-	/**
-	 *
 
 	 /**
 	 * Creates an initialized, plugin-specific {@link org.syncany.plugins.transfer.TransferManager} object using the given

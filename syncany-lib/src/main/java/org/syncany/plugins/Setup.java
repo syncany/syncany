@@ -32,7 +32,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Setup {
-
 	/**
 	 * A setting's position in the initialization process (lower comes first).<br/>
 	 * The order cannot be assured if two fields have the same order position.

@@ -45,6 +45,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 		this.config = config;
 	}
 
+	/**
+	 * Returns the plugin-specific {@link TransferSettings} object for
+	 * this transfer manager.
+	 */	
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T getSettings() {
 		try {
