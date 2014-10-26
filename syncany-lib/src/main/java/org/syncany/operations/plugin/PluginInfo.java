@@ -52,7 +52,7 @@ public class PluginInfo {
 	private boolean pluginRelease;
 
 	@Element(name = "pluginConflictsWith", required = false)
-	private String conflictingPluginIds; // command-separated
+	private String conflictingPluginIds; // comma-separated
 
 	@Element(name = "sha256sum", required = false)
 	private String sha256sum;

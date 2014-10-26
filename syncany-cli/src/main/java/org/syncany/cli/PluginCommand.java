@@ -157,18 +157,16 @@ public class PluginCommand extends Command {
 	private void printResultList(PluginOperationResult operationResult) {
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
 			List<String[]> tableValues = new ArrayList<String[]>();
-			tableValues.add(new String[] { "Id", "Name", "Local Version", "Remote Version", "Inst.", "Upgr." });
+			tableValues.add(new String[] { "Id", "Name", "Local Version", "Type", "Remote Version" });
 
 			for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
 				PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
 
 				String localVersionStr = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "";
+				String installedStr = extPluginInfo.isInstalled() ? (extPluginInfo.canUninstall() ? "User" : "Global") : "";
 				String remoteVersionStr = (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "";
-				String installedStr = extPluginInfo.isInstalled() ? "yes" : "";
-				String upgradeAvailableStr = extPluginInfo.isUpgradeAvailable() ? "yes" : "";
 
-				tableValues.add(new String[] { pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, remoteVersionStr, installedStr,
-						upgradeAvailableStr });
+				tableValues.add(new String[] { pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr });
 			}
 
 			printTable(tableValues, "No plugins found.");
@@ -223,8 +221,8 @@ public class PluginCommand extends Command {
 			out.println("Plugin removal failed.");
 			out.println();
 
-			out.println("Note: Plugins shipped with the application");
-			out.println("      cannot be removed.");
+			out.println("Note: Plugins shipped with the application or additional packages");
+			out.println("      cannot be removed. These plugin are marked 'Global' in the list.");
 			out.println();
 		}
 	}

@@ -76,12 +76,10 @@ startScripts {
 		///// Linux/Unix script fixes/enhancements /////
 		def unixFile = file getUnixScript()
 		
-		// - Add lib/* to classpath
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", 'CLASSPATH=\\\$APP_HOME/lib/*:~/.config/syncany/plugins/lib/*')
-
 		// - Read max memory (-Xmx) from userconfig.xml
 		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml\n"
-		unixMaxMemoryCommands += "APP_USERCONFIG_FILE=~/.config/syncany/userconfig.xml\n";
+		unixMaxMemoryCommands += "APP_USERCONFIG_DIR=~/.config/syncany\n";
+		unixMaxMemoryCommands += "APP_USERCONFIG_FILE=\$APP_USERCONFIG_DIR/userconfig.xml\n";
 		unixMaxMemoryCommands += "\n";
 		unixMaxMemoryCommands += "if [ -f \$APP_USERCONFIG_FILE ]; then\n";
 		unixMaxMemoryCommands += "    APP_MAX_MEMORY=\$(cat \$APP_USERCONFIG_FILE | sed -n 's/.*<maxMemory>\\([^<]*\\)<\\/maxMemory>.*/\\1/p')\n";
@@ -94,6 +92,29 @@ startScripts {
 		unixMaxMemoryCommands += "fi";
 
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
+
+		// - Add lib/* to classpath
+		String unixClassPathCommands = "# Determine CLASSPATH (with user plugin JAR preference)\n"
+		unixClassPathCommands += "CLASSPATH=\"\$APP_USERCONFIG_DIR/plugins/lib/*\"\n"
+		unixClassPathCommands += "LIBS_GLOBAL=\$(ls \$APP_HOME/lib/*.jar)\n"
+		unixClassPathCommands += "LIBS_PLUGINS_GLOBAL=\$(ls \$APP_HOME/lib/syncany-plugin-*.jar 2> /dev/null)\n"
+		unixClassPathCommands += "\n"
+		unixClassPathCommands += "for LIB_GLOBAL in \$LIBS_GLOBAL; do\n"
+		unixClassPathCommands += "	LIB_GLOBAL_BASENAME=\$(basename \$LIB_GLOBAL)\n"
+		unixClassPathCommands += "\n"
+		unixClassPathCommands += "	if [[ \$LIB_GLOBAL_BASENAME == syncany-plugin-*.jar ]]; then\n"
+		unixClassPathCommands += "		PLUGIN_JAR_PREFIX=\$(expr match \"\$LIB_GLOBAL_BASENAME\" '\\(syncany-plugin-[^-]*-\\)')\n"
+		unixClassPathCommands += "		IN_USER_PLUGINS=\$(ls \$APP_USERCONFIG_DIR/plugins/lib/\$PLUGIN_JAR_PREFIX*.jar 2> /dev/null)\n"
+		unixClassPathCommands += "\n"
+		unixClassPathCommands += "		if [ -z \"\$IN_USER_PLUGINS\" ]; then\n"
+		unixClassPathCommands += "			CLASSPATH=\"\$CLASSPATH:\$LIB_GLOBAL\"\n"
+		unixClassPathCommands += "		fi\n"	
+		unixClassPathCommands += "	else\n"
+		unixClassPathCommands += "		CLASSPATH=\"\$CLASSPATH:\$LIB_GLOBAL\"\n"
+		unixClassPathCommands += "	fi\n"
+		unixClassPathCommands += "done"
+		
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", Matcher.quoteReplacement("${unixClassPathCommands}"))
 
 		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
 		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT)\n"
