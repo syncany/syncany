@@ -9,6 +9,7 @@ Change Log
   + Fix database corruption issue (caused by #252) in #247
   + Fix cannot delete/rename folders on Windows #248
   + Set default log file if no log file given #258
+  + Allow user and global plugins (Linux only) #259
 
 ### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
