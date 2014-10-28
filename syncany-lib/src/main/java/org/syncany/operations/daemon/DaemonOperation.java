@@ -33,6 +33,8 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;
+import org.syncany.operations.daemon.messages.ControlManagementRequest;
+import org.syncany.operations.daemon.messages.ControlManagementResponse;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
 
@@ -118,7 +120,13 @@ public class DaemonOperation extends Operation {
 			reloadOperation();
 			break;
 		}
-	}
+	}	
+
+	@Subscribe
+	public void onControlManagementRequest(ControlManagementRequest controlRequest) {
+		onControlCommand(controlRequest.getControlCommand());
+		eventBus.post(new ControlManagementResponse(200, controlRequest.getId(), "Command executed."));		
+	}		
 	
 	// General initialization functions. These create the EventBus and control loop.	
 	
