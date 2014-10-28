@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.ConfigException;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
@@ -157,8 +158,8 @@ public class DaemonOperation extends Operation {
 			}
 			else {
 				// Write example config to daemon-example.xml, and default config to daemon.xml
-				UserConfig.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
-				daemonConfig = UserConfig.createAndWriteDefaultDaemonConfig(daemonConfigFile);
+				DaemonConfigHelper.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
+				daemonConfig = DaemonConfigHelper.createAndWriteDefaultDaemonConfig(daemonConfigFile);
 			}
 			
 			// Add user and password for access from the CLI

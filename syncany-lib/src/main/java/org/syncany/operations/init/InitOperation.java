@@ -143,8 +143,14 @@ public class InitOperation extends AbstractInitOperation {
 
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
-			boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
-			result.setAddedToDaemon(addedToDaemonConfig);
+			try {
+				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				result.setAddedToDaemon(addedToDaemonConfig);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
+				result.setAddedToDaemon(false);
+			}
 		}
 		
 		// Make link		

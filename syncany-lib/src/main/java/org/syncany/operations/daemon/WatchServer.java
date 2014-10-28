@@ -198,14 +198,20 @@ public class WatchServer {
 		if (watchOperations.containsKey(rootFolder)) {
 			eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists."));
 		}
-		else {
-			boolean addSuccessful = DaemonConfigHelper.addToDaemonConfig(rootFolder);
-			
-			if (addSuccessful) {
-				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));				
+		else {			
+			try {
+				boolean folderAdded = DaemonConfigHelper.addToDaemonConfig(rootFolder);
+				
+				if (folderAdded) {
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));				
+				}
+				else {
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists (inactive/disabled)."));
+				}
 			}
-			else {
-				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Cannot add folder."));
+			catch (ConfigException e) {
+				logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Error adding to config: " + e.getMessage()));
 			}
 		}				
 	}
