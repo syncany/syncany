@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
@@ -196,7 +197,7 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
-			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
+			boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
 			result.setAddedToDaemon(addedToDaemonConfig);
 		}
 		

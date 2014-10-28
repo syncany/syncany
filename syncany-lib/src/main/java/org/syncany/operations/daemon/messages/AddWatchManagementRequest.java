@@ -15,29 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages;
 
-import java.util.Random;
+import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
-	
-	public Request() {
-		this.id = Math.abs(new Random().nextInt());
+public class AddWatchManagementRequest extends ManagementRequest {
+	@Element(name = "watch", required = true)
+	private File watch;
+
+	public AddWatchManagementRequest() {
+		// Nothing
 	}
 
-	public int getId() {
-		return id;
+	public AddWatchManagementRequest(File watch) {
+		this.watch = watch;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public File getWatch() {
+		return watch;
 	}
+
+	public void setWatch(File watch) {
+		this.watch = watch;
+	}		
 }

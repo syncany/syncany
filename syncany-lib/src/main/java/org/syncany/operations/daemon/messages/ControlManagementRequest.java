@@ -15,29 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
-
-import java.util.Random;
+package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.ControlServer.ControlCommand;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
 
-@Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
-	
-	public Request() {
-		this.id = Math.abs(new Random().nextInt());
+public class ControlManagementRequest extends ManagementRequest {	
+	@Element(name = "command", required = true)
+	private ControlCommand controlCommand;
+
+	public ControlManagementRequest() {
+		// Nothing
 	}
 
-	public int getId() {
-		return id;
+	public ControlManagementRequest(ControlCommand controlCommand) {
+		this.controlCommand = controlCommand;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public ControlCommand getControlCommand() {
+		return controlCommand;
+	}
+
+	public void setControlCommand(ControlCommand controlCommand) {
+		this.controlCommand = controlCommand;
 	}
 }
