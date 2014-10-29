@@ -17,12 +17,17 @@
  */
 package org.syncany.cli;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
@@ -43,13 +48,9 @@ import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -374,15 +375,18 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return value;
 	}
 
-	protected TransferPlugin askPlugin(final Class<? extends TransferPlugin>... ignores) {
+	protected TransferPlugin askPlugin() {
+		return askPlugin(null);
+	}
+	
+	protected TransferPlugin askPlugin(final Class<? extends TransferPlugin> ignoreTransferPluginClass) {
 		TransferPlugin plugin = null;
-		final List<Class<? extends TransferPlugin>> ignoresAsList = Lists.newArrayList(ignores);
 		final List<TransferPlugin> plugins = Plugins.list(TransferPlugin.class);
 
 		Iterables.removeIf(plugins, new Predicate<TransferPlugin>() {
 			@Override
-			public boolean apply(TransferPlugin input) {
-				return ignoresAsList.contains(input.getClass());
+			public boolean apply(TransferPlugin transferPlugin) {
+				return ignoreTransferPluginClass == transferPlugin.getClass();
 			}
 		});
 
@@ -400,9 +404,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			plugin = Plugins.get(pluginStr, TransferPlugin.class);
 
-			if (plugin == null || ignoresAsList.contains(plugin.getClass())) {
-				out.println("ERROR: Plugin does not exist.");
+			if (plugin == null || ignoreTransferPluginClass == plugin.getClass()) {
+				out.println("ERROR: Plugin does not exist or cannot be used.");
 				out.println();
+				
 				plugin = null;
 			}
 		}

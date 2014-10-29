@@ -17,8 +17,6 @@
  */
 package org.syncany.plugins.transfer;
 
-import org.syncany.plugins.PluginManager;
-import org.syncany.plugins.PluginSettings;
 import org.syncany.plugins.Plugins;
 
 /**

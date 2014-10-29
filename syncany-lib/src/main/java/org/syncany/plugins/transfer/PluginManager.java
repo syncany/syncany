@@ -15,17 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins;
+package org.syncany.plugins.transfer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.syncany.plugins.transfer.TransferSettings;
-
 /**
- * Use this annotation to link a {@link org.syncany.plugins.transfer.TransferSettings} class with
+ * Use this annotation to link a {@link org.syncany.plugins.transfer.TransferManager} class with
  * a {@link org.syncany.plugins.transfer.TransferPlugin}.
  *
  * @author Christian Roth <christian.roth@port17.de>
@@ -33,6 +31,6 @@ import org.syncany.plugins.transfer.TransferSettings;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PluginSettings {
-	Class<? extends TransferSettings> value();
+public @interface PluginManager {
+	Class<? extends TransferManager> value();
 }

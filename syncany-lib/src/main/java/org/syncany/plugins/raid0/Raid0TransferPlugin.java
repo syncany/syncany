@@ -17,8 +17,8 @@
  */
 package org.syncany.plugins.raid0;
 
-import org.syncany.plugins.PluginManager;
-import org.syncany.plugins.PluginSettings;
+import org.syncany.plugins.transfer.PluginManager;
+import org.syncany.plugins.transfer.PluginSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 
 /**

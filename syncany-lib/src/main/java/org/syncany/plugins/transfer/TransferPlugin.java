@@ -32,7 +32,7 @@ import org.syncany.util.ReflectionUtil;
  * details) and {@link TransferManager} (transfer methods).<br/><br/>
  *
  * <p>Links between the classes can be created by annotating this class with
- * {@link org.syncany.plugins.PluginSettings} and {@link org.syncany.plugins.PluginManager},
+ * {@link org.syncany.plugins.transfer.PluginSettings} and {@link org.syncany.plugins.transfer.PluginManager},
  * respectively.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -48,7 +48,7 @@ public abstract class TransferPlugin extends Plugin {
 	 *
 	 * @return Empty plugin-specific {@link org.syncany.plugins.transfer.TransferSettings} instance.
 	 * @throws StorageException Thrown if no {@link org.syncany.plugins.transfer.TransferSettings} are attached to a
-	 *         plugin using {@link org.syncany.plugins.PluginSettings}
+	 *         plugin using {@link org.syncany.plugins.transfer.PluginSettings}
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
@@ -77,7 +77,7 @@ public abstract class TransferPlugin extends Plugin {
 	 * @param config A valid {@link org.syncany.config.Config} instance.
 	 * @return A initialized, plugin-specific {@link org.syncany.plugins.transfer.TransferManager} instance.
 	 * @throws StorageException Thrown if no (valid) {@link org.syncany.plugins.transfer.TransferManager} are attached to
-	*  a plugin using {@link org.syncany.plugins.PluginManager}
+	*  a plugin using {@link org.syncany.plugins.transfer.PluginManager}
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferManager> T createTransferManager(TransferSettings transferSettings, Config config) throws StorageException {

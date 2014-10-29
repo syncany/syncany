@@ -71,13 +71,13 @@ public class UserConfigTO {
 		return preventStandby;
 	}
 
-  public SaltedSecretKey getConfigEncryptionKey() {
-    return configEncryptionKey;
-  }
+	public SaltedSecretKey getConfigEncryptionKey() {
+		return configEncryptionKey;
+	}
 
-  public void setConfigEncryptionKey(SaltedSecretKey configEncryptionKey) {
-    this.configEncryptionKey = configEncryptionKey;
-  }
+	public void setConfigEncryptionKey(SaltedSecretKey configEncryptionKey) {
+		this.configEncryptionKey = configEncryptionKey;
+	}
 
 	public static UserConfigTO load(File file) throws ConfigException {
 		try {
@@ -97,20 +97,17 @@ public class UserConfigTO {
 		}
 	}
 
-  public static class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
+	public static class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
+		public SaltedSecretKey read(InputNode node) throws Exception {
+			byte[] saltBytes = StringUtil.fromHex(node.getAttribute("salt").getValue());
+			byte[] keyBytes = StringUtil.fromHex(node.getAttribute("key").getValue());
 
-    public SaltedSecretKey read(InputNode node) throws Exception {
-      byte[] saltBytes = StringUtil.fromHex(node.getAttribute("salt").getValue());
-      byte[] keyBytes = StringUtil.fromHex(node.getAttribute("key").getValue());
+			return new SaltedSecretKey(new SecretKeySpec(keyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);
+		}
 
-      return new SaltedSecretKey(new SecretKeySpec(keyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);
-    }
-
-    public void write(OutputNode node, SaltedSecretKey saltedSecretKey) {
-      System.out.println("Storing: " +  StringUtil.toHex(saltedSecretKey.getSalt()) + " -- " + StringUtil.toHex(saltedSecretKey.getEncoded()));
-      node.setAttribute("salt", StringUtil.toHex(saltedSecretKey.getSalt()));
-      node.setAttribute("key",  StringUtil.toHex(saltedSecretKey.getEncoded()));
-    }
-  }
-
+		public void write(OutputNode node, SaltedSecretKey saltedSecretKey) {
+			node.setAttribute("salt", StringUtil.toHex(saltedSecretKey.getSalt()));
+			node.setAttribute("key", StringUtil.toHex(saltedSecretKey.getEncoded()));
+		}
+	}
 }
