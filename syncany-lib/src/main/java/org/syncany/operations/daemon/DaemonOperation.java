@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.ConfigException;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
@@ -32,6 +33,8 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;
+import org.syncany.operations.daemon.messages.ControlManagementRequest;
+import org.syncany.operations.daemon.messages.ControlManagementResponse;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
 
@@ -117,7 +120,13 @@ public class DaemonOperation extends Operation {
 			reloadOperation();
 			break;
 		}
-	}
+	}	
+
+	@Subscribe
+	public void onControlManagementRequest(ControlManagementRequest controlRequest) {
+		onControlCommand(controlRequest.getControlCommand());
+		eventBus.post(new ControlManagementResponse(200, controlRequest.getId(), "Command executed."));		
+	}		
 	
 	// General initialization functions. These create the EventBus and control loop.	
 	
@@ -157,8 +166,8 @@ public class DaemonOperation extends Operation {
 			}
 			else {
 				// Write example config to daemon-example.xml, and default config to daemon.xml
-				UserConfig.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
-				daemonConfig = UserConfig.createAndWriteDefaultDaemonConfig(daemonConfigFile);
+				DaemonConfigHelper.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
+				daemonConfig = DaemonConfigHelper.createAndWriteDefaultDaemonConfig(daemonConfigFile);
 			}
 			
 			// Add user and password for access from the CLI

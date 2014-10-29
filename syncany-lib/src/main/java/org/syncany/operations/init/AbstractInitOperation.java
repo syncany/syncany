@@ -23,9 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
@@ -34,9 +32,6 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.syncany.config.Config;
-import org.syncany.config.UserConfig;
-import org.syncany.config.to.DaemonConfigTO;
-import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
@@ -47,7 +42,6 @@ import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
-import org.syncany.util.FileUtil;
 
 /**
  * The abstract init operation implements common functions of the {@link InitOperation}
@@ -180,47 +174,4 @@ public abstract class AbstractInitOperation extends Operation {
 			listener.onShowMessage("\nCreating master key from password (this might take a while) ...");
 		}
 	}
-
-	protected boolean addToDaemonConfig(File localDir) {
-		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
-
-		if (daemonConfigFile.exists()) {
-			try {
-				DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
-				String localDirPath = FileUtil.getCanonicalFile(localDir).getAbsolutePath();
-
-				// Check if folder already exists
-				boolean folderExists = false;
-
-				for (FolderTO folderTO : daemonConfigTO.getFolders()) {
-					if (localDirPath.equals(folderTO.getPath())) {
-						folderExists = true;
-						break;
-					}
-				}
-
-				// Add to config if it's not already in there
-				if (!folderExists) {
-					logger.log(Level.INFO, "Adding folder to daemon config: " + localDirPath + ", and saving config at " + daemonConfigFile);
-
-					daemonConfigTO.getFolders().add(new FolderTO(localDirPath));
-					DaemonConfigTO.save(daemonConfigTO, daemonConfigFile);
-
-					return true;
-				}
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Adding folder to daemon failed. Ignoring.");
-			}
-
-			return false;
-		}
-		else {
-			FolderTO localDirFolderTO = new FolderTO(localDir.getAbsolutePath());
-			UserConfig.createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { localDirFolderTO }));
-
-			return true;
-		}
-	}
-
 }

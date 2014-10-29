@@ -32,6 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
@@ -199,8 +200,14 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
-			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
-			result.setAddedToDaemon(addedToDaemonConfig);
+			try {
+				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				result.setAddedToDaemon(addedToDaemonConfig);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
+				result.setAddedToDaemon(false);
+			}
 		}
 
 		result.setResultCode(ConnectResultCode.OK);
