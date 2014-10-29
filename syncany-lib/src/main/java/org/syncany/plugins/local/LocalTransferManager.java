@@ -41,7 +41,7 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
- * {@link LocalPlugin}.
+ * {@link LocalTransferPlugin}.
  *
  * <p>Using a {@link LocalTransferSettings}, the transfer manager is configured and uses
  * any local folder to store the Syncany repository data. While repo and

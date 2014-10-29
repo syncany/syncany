@@ -27,7 +27,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  * The local connection represents the settings required to create to a
  * backend based on a local (or mounted network) folder. It can be used to
  * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalPlugin}.
+ * the {@link LocalTransferPlugin}.
  *
  * @author Philipp C. Heckel
  */

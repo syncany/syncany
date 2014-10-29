@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * The {@link org.syncany.plugins.Setup} annotation alters the initialization process.
  *
  * @see org.syncany.plugins.PluginOptions
- *
  * @author Christian Roth <christian.roth@port17.de>
  */
 @Target(ElementType.FIELD)

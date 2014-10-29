@@ -253,7 +253,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			out.println(option.getDescription() + ":");
 		}
 
-		for (PluginOption nestedPluginOption : option.getNestedOptions()) {
+		for (PluginOption nestedPluginOption : option.getOptions()) {
 			Class<?> nestedTransferSettingsClass = ReflectionUtil.getClassFromType(option.getType());
 
 			if (nestedTransferSettingsClass == null) {

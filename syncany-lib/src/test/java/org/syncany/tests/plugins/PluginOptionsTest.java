@@ -17,8 +17,6 @@
  */
 package org.syncany.tests.plugins;
 
-import java.util.List;
-
 import org.junit.Test;
 import org.syncany.plugins.NestedPluginOption;
 import org.syncany.plugins.PluginOption;
@@ -26,6 +24,8 @@ import org.syncany.plugins.PluginOptions;
 import org.syncany.plugins.dummy.DummyTransferSettings;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.ReflectionUtil;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,7 +55,7 @@ public class PluginOptionsTest {
 			TransferSettings nestedSettings = (TransferSettings) ReflectionUtil.getClassFromType(option.getType()).newInstance();
 			settings.setField(option.getField().getName(), nestedSettings);
 
-			for (PluginOption nItem : ((NestedPluginOption) option).getNestedOptions()) {
+			for (PluginOption nItem : ((NestedPluginOption) option).getOptions()) {
 				askNestedPluginSettings(nestedSettings, nItem, ++wrap);
 			}
 		}

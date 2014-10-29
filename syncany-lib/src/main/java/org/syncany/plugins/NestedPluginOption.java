@@ -22,19 +22,21 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
+ * This class represents the a 
+ * 
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class NestedPluginOption extends PluginOption {
-	private final List<PluginOption> nestedOptions;
+	private final List<PluginOption> options;
 
 	public NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
 			Class<? extends PluginOptionCallback> callback, List<PluginOption> nestedOptions) {
 
 		super(field, name, description, type, encrypted, sensitive, required, callback);
-		this.nestedOptions = nestedOptions;
+		this.options = nestedOptions;
 	}
 
-	public List<PluginOption> getNestedOptions() {
-		return nestedOptions;
+	public List<PluginOption> getOptions() {
+		return options;
 	}
 }
