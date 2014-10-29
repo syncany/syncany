@@ -64,7 +64,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
 	
 	private static final char NESTED_OPTIONS_SEPARATOR = '.';
-	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = "-type";
+	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
 	private static final int PASSWORD_MIN_LENGTH = 10;
 	private static final int PASSWORD_WARN_LENGTH = 12;
 
