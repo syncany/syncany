@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -541,6 +540,7 @@ public class CleanupOperationTest {
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);
+		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
 
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
@@ -572,7 +572,8 @@ public class CleanupOperationTest {
 		assertEquals(6, repoDatabasesDir.listFiles().length);
 		assertEquals(6, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
-
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 		// Run cleanup, fails mid-move!
 		boolean operationFailed = false;
 
@@ -581,12 +582,16 @@ public class CleanupOperationTest {
 		}
 		catch (Exception e) {
 			operationFailed = true; // That is supposed to happen!
+			e.printStackTrace();
 		}
 
 		assertTrue(operationFailed);
 		assertEquals(1, repoTransactionsDir.list().length);
 		assertEquals(1, repoTemporaryDir.list().length);
-
+		assertEquals(6, repoDatabasesDir.listFiles().length);
+		assertEquals(6, repoMultiChunkDir.listFiles().length);
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 		// Retry
 		clientA.cleanup(options);
 
@@ -603,6 +608,8 @@ public class CleanupOperationTest {
 				return name.startsWith("temp-");
 			}
 		}).length);
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 
 		// Tear down
 		clientA.deleteTestData();

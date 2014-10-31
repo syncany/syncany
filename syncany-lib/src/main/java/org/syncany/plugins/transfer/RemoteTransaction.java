@@ -216,7 +216,7 @@ public class RemoteTransaction {
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
 
-		logger.log(Level.INFO, "Succesfully committed transaction.");
+		logger.log(Level.INFO, "END of TX.commmit(): Succesfully committed transaction.");
 	}
 
 	private void deleteTempRemoteFiles() throws StorageException {
@@ -234,7 +234,7 @@ public class RemoteTransaction {
 			}
 		}
 
-		logger.log(Level.INFO, "Sucessfully deleted final files.");
+		logger.log(Level.INFO, "END of TX.delTemp(): Sucessfully deleted final files.");
 	}
 
 	private class TransactionStats {

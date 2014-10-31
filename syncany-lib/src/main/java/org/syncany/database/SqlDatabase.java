@@ -148,7 +148,7 @@ public class SqlDatabase {
 	}
 
 	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
-		databaseVersionDao.persistPurgeDatabaseVersion(purgeDatabaseVersion);
+		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
 	}
 	
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {

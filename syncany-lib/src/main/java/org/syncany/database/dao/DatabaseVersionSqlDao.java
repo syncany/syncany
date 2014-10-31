@@ -119,14 +119,16 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public long persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
+	/**
+	 * Writes the purge database to the database, including the purge file histories.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
+	 */
+	public long writePurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
 		try {		
 			// Insert
 			long databaseVersionId = writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
 			fileHistoryDao.writePurgeFileHistories(connection, databaseVersionId, purgeDatabaseVersion.getFileHistories());
-			
-			// Commit
-			connection.commit();			
 			
 			return databaseVersionId;
 		}
