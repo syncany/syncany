@@ -42,7 +42,7 @@ import org.syncany.util.StringUtil;
  */
 public class MessageFactory {
 	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
-	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^>\\s]+)");
+	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
 	
 	private static final Serializer serializer;
