@@ -17,22 +17,21 @@
  */
 package org.syncany.plugins;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
-import org.simpleframework.xml.Element;
-import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.util.ReflectionUtil;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
+import org.simpleframework.xml.Element;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.util.ReflectionUtil;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * Helper class to read the options of a {@link TransferSettings} using the
- * {@link Setup} and {@link Element} annotations.  
- * 
+ * {@link Setup} and {@link Element} annotations.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class PluginOptions {
@@ -40,10 +39,10 @@ public class PluginOptions {
 
 	/**
 	 * Get an ordered list of {@link PluginOption}s, given class a {@link TransferSettings} class.
-	 * 
+	 *
 	 * <p>This method uses the {@link Setup} and {@link Element} annotation, and their attributes
-	 * to sort the options. If no annotation is given or no order attribute is provided, the 
-	 * option will be listed last.  
+	 * to sort the options. If no annotation is given or no order attribute is provided, the
+	 * option will be listed last.
 	 */
 	public static List<PluginOption> getOrderedOptions(Class<? extends TransferSettings> transferSettingsClass) {
 		return getOrderedOptions(transferSettingsClass, 0);
@@ -61,10 +60,12 @@ public class PluginOptions {
 			boolean hasName = !elementAnnotation.name().equalsIgnoreCase("");
 			boolean hasDescription = setupAnnotation != null && !setupAnnotation.description().equals("");
 			boolean hasCallback = setupAnnotation != null && !setupAnnotation.callback().isInterface();
-			
+			boolean hasConverter = setupAnnotation != null && !setupAnnotation.converter().isInterface();
+
 			String name = (hasName) ? elementAnnotation.name() : field.getName();
 			String description = (hasDescription) ? setupAnnotation.description() : field.getName();
 			Class<? extends PluginOptionCallback> callback = (hasCallback) ? setupAnnotation.callback() : null;
+			Class<? extends PluginOptionConverter> converter = (hasConverter) ? setupAnnotation.converter() : null;
 			boolean required = elementAnnotation.required();
 			boolean sensitive = setupAnnotation != null && setupAnnotation.sensitive();
 			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
@@ -75,13 +76,13 @@ public class PluginOptions {
 				if (++level > MAX_NESTED_LEVELS) {
 					throw new RuntimeException("Plugin uses too many nested transfer settings (max allowed value: " + MAX_NESTED_LEVELS + ")");
 				}
-				
+
 				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
-				options.add(new NestedPluginOption(field, name, description, fieldClass, encrypted, sensitive, required, callback,
+				options.add(new NestedPluginOption(field, name, description, fieldClass, encrypted, sensitive, required, callback, converter,
 						getOrderedOptions(fieldClass)));
 			}
 			else {
-				options.add(new PluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback));
+				options.add(new PluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback, converter));
 			}
 		}
 

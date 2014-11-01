@@ -51,4 +51,9 @@ public @interface Setup {
 	 * @see org.syncany.plugins.PluginOptionCallback
 	 */
 	Class<? extends PluginOptionCallback> callback() default PluginOptionCallback.class;
+
+	/**
+	 * @see org.syncany.plugins.PluginOptionConverter
+	 */
+	Class<? extends PluginOptionConverter> converter() default PluginOptionConverter.class;
 }

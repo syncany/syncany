@@ -17,17 +17,11 @@
  */
 package org.syncany.cli;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
@@ -36,6 +30,7 @@ import org.syncany.plugins.NestedPluginOption;
 import org.syncany.plugins.PluginOption;
 import org.syncany.plugins.PluginOption.ValidationResult;
 import org.syncany.plugins.PluginOptionCallback;
+import org.syncany.plugins.PluginOptionConverter;
 import org.syncany.plugins.PluginOptions;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
@@ -48,21 +43,25 @@ import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
- * and 'connect' command. Both commands must provide the ability to 
- * query a user for transfer settings or parse settings from the command line 
- * 
+ * and 'connect' command. Both commands must provide the ability to
+ * query a user for transfer settings or parse settings from the command line
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
-	
+
 	private static final char NESTED_OPTIONS_SEPARATOR = '.';
 	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
 	private static final int PASSWORD_MIN_LENGTH = 10;
@@ -186,6 +185,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			throws StorageException, InstantiationException, IllegalAccessException {
 
 		Class<? extends PluginOptionCallback> optionCallbackClass = option.getCallback();
+		Class<? extends PluginOptionConverter> optionConverterClass = option.getConverter();
 
 		if (!isInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
 			throw new IllegalArgumentException("Missing plugin option (" + nestPrefix + option.getName() + ") in non-interactive mode.");
@@ -199,7 +199,16 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			}
 
 			String optionValue = askPluginOption(settings, option);
+
+			if (optionConverterClass != null) {
+				optionValue = optionConverterClass.newInstance().convert(optionValue);
+			}
+
 			settings.setField(option.getField().getName(), optionValue);
+
+			if (optionCallbackClass != null) {
+				out.println(optionCallbackClass.newInstance().postQueryCallback());
+			}
 		}
 	}
 
@@ -229,14 +238,14 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		while (childPlugin == null) {
 			childPlugin = askPlugin(pluginClass);
 		}
-		
+
 		if (isInteractive) {
 			out.println();
 		}
 
 		// Create nested/child settings
 		TransferSettings childSettings = childPlugin.createEmptySettings();
-		
+
 		settings.setField(option.getField().getName(), childSettings);
 		nestPrefix = nestPrefix + option.getName() + NESTED_OPTIONS_SEPARATOR;
 
@@ -378,7 +387,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	protected TransferPlugin askPlugin() {
 		return askPlugin(null);
 	}
-	
+
 	protected TransferPlugin askPlugin(final Class<? extends TransferPlugin> ignoreTransferPluginClass) {
 		TransferPlugin plugin = null;
 		final List<TransferPlugin> plugins = Plugins.list(TransferPlugin.class);
@@ -407,7 +416,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			if (plugin == null || ignoreTransferPluginClass == plugin.getClass()) {
 				out.println("ERROR: Plugin does not exist or cannot be used.");
 				out.println();
-				
+
 				plugin = null;
 			}
 		}

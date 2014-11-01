@@ -17,21 +17,22 @@
  */
 package org.syncany.plugins;
 
+import org.syncany.plugins.transfer.TransferSettings;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
-import org.syncany.plugins.transfer.TransferSettings;
-
 /**
  * A plugin option represents a single setting of a transfer plugin
  * within the corresponding {@link TransferSettings} class. A plugin option
- * is created during the initialization from the {@link Setup} annotation 
- * to aid the guided repository setup (init and connect). 
- * 
+ * is created during the initialization from the {@link Setup} annotation
+ * to aid the guided repository setup (init and connect).
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class PluginOption {
+
 	public enum ValidationResult {
 		VALID, INVALID_TYPE, INVALID_NOT_SET
 	}
@@ -44,9 +45,10 @@ public class PluginOption {
 	private final boolean sensitive;
 	private final boolean required;
 	private final Class<? extends PluginOptionCallback> callback;
+	private final Class<? extends PluginOptionConverter> converter;
 
 	public PluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
-			Class<? extends PluginOptionCallback> callback) {
+			Class<? extends PluginOptionCallback> callback, Class<? extends PluginOptionConverter> converter) {
 
 		this.field = field;
 		this.name = name;
@@ -56,6 +58,7 @@ public class PluginOption {
 		this.sensitive = sensitive;
 		this.required = required;
 		this.callback = callback;
+		this.converter = converter;
 	}
 
 	public Field getField() {
@@ -88,6 +91,10 @@ public class PluginOption {
 
 	public Class<? extends PluginOptionCallback> getCallback() {
 		return callback;
+	}
+
+	public Class<? extends PluginOptionConverter> getConverter() {
+		return converter;
 	}
 
 	public PluginOption.ValidationResult isValid(String value) {

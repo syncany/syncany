@@ -22,17 +22,17 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * This class represents the a 
- * 
+ * This class represents the a
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class NestedPluginOption extends PluginOption {
 	private final List<PluginOption> options;
 
 	public NestedPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean required,
-			Class<? extends PluginOptionCallback> callback, List<PluginOption> nestedOptions) {
+			Class<? extends PluginOptionCallback> callback, Class<? extends PluginOptionConverter> converter, List<PluginOption> nestedOptions) {
 
-		super(field, name, description, type, encrypted, sensitive, required, callback);
+		super(field, name, description, type, encrypted, sensitive, required, callback, converter);
 		this.options = nestedOptions;
 	}
 

@@ -18,24 +18,20 @@
 package org.syncany.plugins;
 
 /**
- * Option callbacks are called during initialization before and after the
- * corresponding setting is queried.
+ * Option convert is called during initialization and can be used to
+ * convert a user input before setting it.
  *
  * @see org.syncany.plugins.PluginOptions
  * @author Christian Roth <christian.roth@port17.de>
  */
-public interface PluginOptionCallback {
-	/**
-	 * Called before a setting value is queried.
-	 *
-	 * @return The message to display.
-	 */
-	public String preQueryCallback();
+
+public interface PluginOptionConverter {
 
 	/**
-	 * Called after a setting value is queried.
+	 * Converter a user input
 	 *
-	 * @return The message to display.
+	 * @param input The value as it is entered by the user
+	 * @return Converted value as a (raw) string
 	 */
-	public String postQueryCallback();
+	public String convert(String input);
 }
