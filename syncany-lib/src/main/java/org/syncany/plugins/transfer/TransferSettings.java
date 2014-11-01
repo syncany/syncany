@@ -18,7 +18,6 @@
 package org.syncany.plugins.transfer;
 
 import com.google.common.base.Objects;
-
 import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -32,7 +31,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.plugins.Encrypted;
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.Setup;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
@@ -267,13 +265,11 @@ public abstract class TransferSettings {
 	}
 
 	private String findPluginId() {
-		try {
-			for (Plugin plugin : Plugins.list()) {
-				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
+		Class<? extends TransferPlugin> motherPlugin = TransferPluginUtil.getTransferPluginClass(this.getClass());
 
-				if (pluginSettings == null || pluginSettings.value().equals(this.getClass())) {
-					return plugin.getClass().newInstance().getId();
-				}
+		try {
+			if (motherPlugin != null) {
+				return motherPlugin.newInstance().getId();
 			}
 
 			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");
