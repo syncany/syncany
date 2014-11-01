@@ -35,7 +35,8 @@ public interface PluginOptionCallback {
 	/**
 	 * Called after a setting value is queried.
 	 *
+	 * @param optionValue The value of the field
 	 * @return The message to display.
 	 */
-	public String postQueryCallback();
+	public String postQueryCallback(String optionValue);
 }

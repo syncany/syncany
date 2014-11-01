@@ -150,6 +150,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			}
 		}
 		catch (InstantiationException | IllegalAccessException e) {
+			logger.log(Level.SEVERE, "Unable to execute option generator", e);
 			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
 
@@ -207,7 +208,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			settings.setField(option.getField().getName(), optionValue);
 
 			if (optionCallbackClass != null) {
-				out.println(optionCallbackClass.newInstance().postQueryCallback());
+				out.println(optionCallbackClass.newInstance().postQueryCallback(optionValue));
 			}
 		}
 	}
