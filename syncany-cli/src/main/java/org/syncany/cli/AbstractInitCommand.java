@@ -186,6 +186,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			throws StorageException, InstantiationException, IllegalAccessException {
 
 		Class<? extends PluginOptionCallback> optionCallbackClass = option.getCallback();
+		PluginOptionCallback optionClassBackInstance = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
 		Class<? extends PluginOptionConverter> optionConverterClass = option.getConverter();
 
 		if (!isInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
@@ -195,8 +196,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
 		}
 		else {
-			if (optionCallbackClass != null) {
-				out.println(optionCallbackClass.newInstance().preQueryCallback());
+			if (optionClassBackInstance != null) {
+				out.println(optionClassBackInstance.preQueryCallback());
 			}
 
 			String optionValue = askPluginOption(settings, option);
@@ -207,8 +208,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			settings.setField(option.getField().getName(), optionValue);
 
-			if (optionCallbackClass != null) {
-				out.println(optionCallbackClass.newInstance().postQueryCallback(optionValue));
+			if (optionClassBackInstance != null) {
+				out.println(optionClassBackInstance.postQueryCallback(optionValue));
 			}
 		}
 	}
