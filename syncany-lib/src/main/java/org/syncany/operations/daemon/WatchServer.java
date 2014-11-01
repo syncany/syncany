@@ -33,6 +33,7 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.daemon.Watch.SyncStatus;
 import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
 import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
@@ -196,7 +197,16 @@ public class WatchServer {
 	
 	@Subscribe
 	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
-		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+		ArrayList<Watch> watchList = new ArrayList<>();
+		
+		for (File watchFolder : watchOperations.keySet()) {
+			boolean syncRunning = watchOperations.get(watchFolder).isSyncRunning();
+			SyncStatus syncStatus = (syncRunning) ? SyncStatus.SYNCING : SyncStatus.IN_SYNC;
+			
+			watchList.add(new Watch(watchFolder, syncStatus));
+		}
+		
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), watchList));
 	}
 	
 	@Subscribe

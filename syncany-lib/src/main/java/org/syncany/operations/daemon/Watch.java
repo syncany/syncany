@@ -15,29 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.Watch;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
+import org.simpleframework.xml.Element;
 
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<Watch> watches;	
-	
-	public ListWatchesManagementResponse() {
-		// Nothing
+public class Watch {
+	public enum SyncStatus {
+		IN_SYNC, SYNCING
 	}
 	
-	public ListWatchesManagementResponse(int requestId, List<Watch> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<Watch>(watches);
-	}	
+	@Element(name = "folder", required = true)
+	private File folder;
 	
-	public ArrayList<Watch> getWatches() {
-		return watches;
+	@Element(name = "status", required = true)
+	private SyncStatus status;
+
+	public Watch() {
+		// Nothing.
+	}
+	
+	public Watch(File folder, SyncStatus status) {
+		this.folder = folder;
+		this.status = status;
+	}
+
+	public File getFolder() {
+		return folder;
+	}
+
+	public SyncStatus getStatus() {
+		return status;
 	}
 }
