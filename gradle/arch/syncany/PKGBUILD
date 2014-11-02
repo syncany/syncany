@@ -1,7 +1,7 @@
 # Maintainer: Pim Otte <otte dot pim at gmail dot com>
 pkgname=syncany
-pkgver=0.1.11_alpha
-_realver=0.1.11-alpha
+pkgver=0.1.12_alpha
+_realver=0.1.12-alpha
 pkgrel=1
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
@@ -11,9 +11,9 @@ depends=('java-runtime>=7' 'bash-completion')
 source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
         syncany
         syncany.bash-completion)
-sha256sums=('9edc2373090e8e109b360392a9512a4265943d723dde523c9254b489e0197500'
+sha256sums=('ffadd227f61d96708fd6fa6744592b33af22266f4dc7eb5b120a436992e048e0'
             'ef07ec9a971243b45ec216c3fa4c4acfdd3ef7e165ae2773c4124123fd2463d0'
-            'fdff0efc01b7fc98be6de723d51be0c31f182b75bd0ec94191776058f60415cf')
+            '043bdc2bb47fad48a5d8ca6cd612faf5b8d00bd66677f4cea99dde84c129e209')
 
 package() {
     install -Dm755 syncany "${pkgdir}/usr/bin/syncany"
@@ -23,4 +23,7 @@ package() {
     do
         install -Dm644 "$jar" "${pkgdir}/usr/share/java/${pkgname}/$jar"
     done
+
+    #Optional: symlink sy
+    #ln -s ${pkgdir}/usr/bin/syncany /usr/bin/sy
 }
