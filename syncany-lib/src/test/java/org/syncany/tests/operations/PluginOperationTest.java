@@ -42,7 +42,6 @@ import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.EnvironmentUtil;
 
 public class PluginOperationTest {
-
 	@Test
 	public void testPluginListLocalOnly() throws Exception {
 		// Setup

@@ -165,7 +165,7 @@ public class PluginOperation extends Operation {
 	
 	private boolean canUninstall(File pluginJarFile) {
 		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
-		boolean canUninstall = pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
+		boolean canUninstall = pluginJarFile != null && pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
 		
 		return canUninstall;
 	}
@@ -175,15 +175,20 @@ public class PluginOperation extends Operation {
 		URL pluginClassLocation = pluginClass.getResource('/' + pluginClass.getName().replace('.', '/') + ".class");
 		String pluginClassLocationStr = pluginClassLocation.toString();
 		
-		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocation);
+		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocationStr);
 
-		int indexStartAfterSchema = "jar:file:".length();
-		int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
-		File pluginJarFile = new File(pluginClassLocationStr.substring(indexStartAfterSchema, indexEndAtExclamationPoint));
-		
-		logger.log(Level.INFO, "Plugin is in JAR at " + pluginJarFile);
-
-		return pluginJarFile;
+		if (pluginClassLocationStr.startsWith("jar:file:")) {
+			int indexStartAfterSchema = "jar:file:".length();
+			int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
+			File pluginJarFile = new File(pluginClassLocationStr.substring(indexStartAfterSchema, indexEndAtExclamationPoint));
+			
+			logger.log(Level.INFO, "Plugin is in JAR at " + pluginJarFile);	
+			return pluginJarFile;
+		}
+		else {
+			logger.log(Level.INFO, "Plugin is not in a JAR file. Probably in test environment.");	
+			return null;
+		}
 	}
 
 	private PluginOperationResult executeInstall() throws Exception {
