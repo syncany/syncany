@@ -20,7 +20,7 @@ startScripts {
 		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
 		
 		// - Read max memory (-Xmx) from userconfig.xml 
-		String winMaxMemoryCommands = "@rem Read max memory from userconfig.xml\r\n"
+		String winMaxMemoryCommands = "@rem Read max memory from userconfig.xml #SYNCANY_INCL_1#\r\n"
 		winMaxMemoryCommands += "set APP_USERCONFIG_FILE=%AppData%\\\\Syncany\\\\userconfig.xml\r\n";
 		winMaxMemoryCommands += "\r\n";
 		winMaxMemoryCommands += "if exist \"%APP_USERCONFIG_FILE%\" (\r\n";
@@ -38,7 +38,7 @@ startScripts {
 		winFile.text = winFile.text.replaceAll("(set DEFAULT_JVM_OPTS.+)", '$1' + Matcher.quoteReplacement("\r\n\r\n${winMaxMemoryCommands}"))
 		
 		// - Post Java process commands: Delayed plugin JAR file deletion (Windows only)
-		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs\r\n"
+		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs #SYNCANY_INCL_2#\r\n"
 		winPurgeFileDeletionCommands += "SET PURGEFILE=%AppData%\\\\Syncany\\\\purgefile\r\n";
 		winPurgeFileDeletionCommands += "if exist %PURGEFILE% (\r\n";
 		winPurgeFileDeletionCommands += "  @for /f %%b in (%PURGEFILE%) do del /q \"%%b\" 2>NUL\r\n";
@@ -47,7 +47,7 @@ startScripts {
 		
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
 		
-		// - Append daemon batch script (handle 'sy daemon')
+		// - Append daemon batch script (handle 'sy daemon'); contains #SYNCANY_INCL_3#
 		def winTextTmp = ""
 		def winText = winFile.text
 		def windowsDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.bat.skel").text		
@@ -73,11 +73,19 @@ startScripts {
 		
 		winFile.text = winTextTmp
 		
+		// - Double check that all replaces were successful
+		if (!winFile.text.contains("#SYNCANY_INCL_1#") || !winFile.text.contains("#SYNCANY_INCL_2#") || 
+		    !winFile.text.contains("#SYNCANY_INCL_3#")) {			
+		    
+			throw new RuntimeException("Windows shell script creation failed.");
+		}
+		
+		
 		///// Linux/Unix script fixes/enhancements /////
 		def unixFile = file getUnixScript()
 		
 		// - Read max memory (-Xmx) from userconfig.xml
-		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml\n"
+		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml #SYNCANY_INCL_1#\n"
 		unixMaxMemoryCommands += "APP_USERCONFIG_DIR=~/.config/syncany\n";
 		unixMaxMemoryCommands += "APP_USERCONFIG_FILE=\$APP_USERCONFIG_DIR/userconfig.xml\n";
 		unixMaxMemoryCommands += "\n";
@@ -93,8 +101,16 @@ startScripts {
 
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
 
+		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
+		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT) #SYNCANY_INCL_2#\n"
+		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"		
+		unixDarwinFirstThreadFlagCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
+		unixDarwinFirstThreadFlagCommands += "fi"
+
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$0' + Matcher.quoteReplacement("\n\n${unixDarwinFirstThreadFlagCommands}"))		
+
 		// - Add lib/* to classpath
-		String unixClassPathCommands = "# Determine CLASSPATH (with user plugin JAR preference)\n"
+		String unixClassPathCommands = "# Determine CLASSPATH (with user plugin JAR preference) #SYNCANY_INCL_3#\n"
 		unixClassPathCommands += "CLASSPATH=\"\$APP_USERCONFIG_DIR/plugins/lib/*\"\n"
 		unixClassPathCommands += "LIBS_GLOBAL=\$(ls \$APP_HOME/lib/*.jar)\n"
 		unixClassPathCommands += "LIBS_PLUGINS_GLOBAL=\$(ls \$APP_HOME/lib/syncany-plugin-*.jar 2> /dev/null)\n"
@@ -115,16 +131,8 @@ startScripts {
 		unixClassPathCommands += "done"
 		
 		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", Matcher.quoteReplacement("${unixClassPathCommands}"))
-
-		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
-		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT)\n"
-		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"		
-		unixDarwinFirstThreadFlagCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
-		unixDarwinFirstThreadFlagCommands += "fi"
-
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$0' + Matcher.quoteReplacement("\n\n${unixDarwinFirstThreadFlagCommands}"))		
 		
-		// - Append daemon batch script (handle 'sy daemon')		
+		// - Append daemon batch script (handle 'sy daemon'); contains #SYNCANY_INCL_4#	
 		def unixTextTmp = ""
 		def unixText = unixFile.text
 		def unixDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.skel").text		
@@ -140,6 +148,13 @@ startScripts {
 		}
 		
 		unixFile.text = unixTextTmp
+		
+		// - Double check that all replaces were successful
+		if (!unixFile.text.contains("#SYNCANY_INCL_1#") || !unixFile.text.contains("#SYNCANY_INCL_2#") || 
+		    !unixFile.text.contains("#SYNCANY_INCL_3#") || !unixFile.text.contains("#SYNCANY_INCL_4#")) {			
+		    
+			throw new RuntimeException("Unix/Linux shell script creation failed.");
+		}
 	}
 }
 
