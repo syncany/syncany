@@ -17,27 +17,8 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-import org.simpleframework.xml.ElementList;
-import org.syncany.operations.daemon.Watch;
-import org.syncany.operations.daemon.messages.api.ManagementResponse;
-
-public class ListWatchesManagementResponse extends ManagementResponse {
-	@ElementList(required = true, entry="watch")
-	private ArrayList<Watch> watches;	
-	
-	public ListWatchesManagementResponse() {
-		// Nothing
-	}
-	
-	public ListWatchesManagementResponse(int requestId, List<Watch> watches) {
-		super(200, requestId, null);
-		this.watches = new ArrayList<Watch>(watches);
-	}	
-	
-	public ArrayList<Watch> getWatches() {
-		return watches;
-	}
+public class DaemonReloadedExternalEvent extends ExternalEvent {
+	// Nothing here
 }

@@ -63,11 +63,17 @@ public class RestoreOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		// Find file version
+		// Find file history
 		FileHistoryId restoreFileHistoryId = findFileHistoryId();
+
+		if (restoreFileHistoryId == null) {
+			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
+		}
+		
+		// Find file version
 		FileVersion restoreFileVersion = findRestoreFileVersion(restoreFileHistoryId);
 
-		if (restoreFileHistoryId == null || restoreFileVersion == null) {
+		if (restoreFileVersion == null) {
 			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
 		}
 		else if (restoreFileVersion.getType() == FileType.FOLDER) {

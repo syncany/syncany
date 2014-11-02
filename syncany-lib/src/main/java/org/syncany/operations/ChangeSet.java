@@ -19,6 +19,8 @@ package org.syncany.operations;
 
 import java.util.TreeSet;
 
+import org.simpleframework.xml.ElementList;
+
 /**
  * A change set represents the result of a comparison of two file trees, either 
  * by comparing a local file tree with the local database, or by comparing the remote
@@ -30,9 +32,16 @@ import java.util.TreeSet;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChangeSet {
+	@ElementList(name = "changedFiles", entry = "file", required = false)
 	private TreeSet<String> changedFiles;  
+
+	@ElementList(name = "newFiles", entry = "file", required = false)
 	private TreeSet<String> newFiles;
+	
+	@ElementList(name = "deletedFiles", entry = "file", required = false)
 	private TreeSet<String> deletedFiles;
+	
+	@ElementList(name = "unchangedFiles", entry = "file", required = false)
 	private TreeSet<String> unchangedFiles;
 	
 	public ChangeSet() {

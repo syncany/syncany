@@ -195,7 +195,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			recursiveWatcher.start();
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.");
+			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.", e);
 		}
 	}
 
@@ -214,7 +214,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			recursiveWatcher.stop();
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "Cannot stop file watcher.");
+			logger.log(Level.WARNING, "Cannot stop file watcher.", e);
 		}
 	}
 

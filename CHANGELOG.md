@@ -5,11 +5,13 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - **Breaks compatiblity to 0.1.12-alpha local folders (if cleanup is called)!**
 - Bugfixes and other things:
-  + Fix PURGE database file history entries disappear after merging #252
+  + Fix PURGE database file history entries disappear after merging (major!) #252
   + Fix database corruption issue (caused by #252) in #247
   + Fix cannot delete/rename folders on Windows #248
   + Set default log file if no log file given #258
   + Allow user and global plugins (Linux only) #259
+  + Fix FTP plugin `testRepoFileExists()` with some FTP servers #262
+  + Fix inconsistent DB after cleanup rollback (no issue ID)
 
 ### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

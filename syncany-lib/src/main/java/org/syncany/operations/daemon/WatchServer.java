@@ -33,9 +33,11 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.daemon.Watch.SyncStatus;
 import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
 import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
@@ -86,6 +88,8 @@ public class WatchServer {
 			
 			stopAllWatchOperations();
 			startWatchOperations(watchedFolders);
+			
+			fireDaemonReloadedEvent();
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
@@ -177,6 +181,11 @@ public class WatchServer {
 		return watchedFolderTOs;
 	}
 
+	private void fireDaemonReloadedEvent() {		
+		logger.log(Level.INFO, "Firing daemon-reloaded event ...");		
+		eventBus.post(new DaemonReloadedExternalEvent());
+	}
+	
 	@Subscribe
 	public void onFolderRequestReceived(FolderRequest folderRequest) {
 		File rootFolder = new File(folderRequest.getRoot());
@@ -188,7 +197,16 @@ public class WatchServer {
 	
 	@Subscribe
 	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
-		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+		ArrayList<Watch> watchList = new ArrayList<>();
+		
+		for (File watchFolder : watchOperations.keySet()) {
+			boolean syncRunning = watchOperations.get(watchFolder).isSyncRunning();
+			SyncStatus syncStatus = (syncRunning) ? SyncStatus.SYNCING : SyncStatus.IN_SYNC;
+			
+			watchList.add(new Watch(watchFolder, syncStatus));
+		}
+		
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), watchList));
 	}
 	
 	@Subscribe

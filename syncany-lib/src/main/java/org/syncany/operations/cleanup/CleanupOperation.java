@@ -212,8 +212,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
+		logger.log(Level.INFO, "START TX removeOldVersions() ...");
 
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
@@ -248,13 +249,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		try {
+			logger.log(Level.INFO, "COMMITTING TX removeOldVersions() ...");
+
 			remoteTransaction.commit();
 			localDatabase.commit();
 		}
 		catch (StorageException e) {
+			logger.log(Level.INFO, "FAILED TO COMMIT TX removeOldVersions(). Rolling back ...");
+
 			localDatabase.rollback();
-			throw (e);
+			throw e;
 		}
+
+		logger.log(Level.INFO, "SUCCESS COMMITTING TX removeOldVersions().");
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
