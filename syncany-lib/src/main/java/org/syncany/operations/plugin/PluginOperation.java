@@ -501,7 +501,7 @@ public class PluginOperation extends Operation {
 		String appVersion = Client.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
-		String osStr = EnvironmentUtil.getOsDescription();
+		String osStr = EnvironmentUtil.getOperatingSystemDescription();
 		String archStr = EnvironmentUtil.getArchDescription();
 		
 		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
@@ -512,16 +512,16 @@ public class PluginOperation extends Operation {
 		URLConnection urlConnection = pluginListUrl.openConnection();
 		urlConnection.setConnectTimeout(2000);
 		urlConnection.setReadTimeout(2000);
-		BufferedReader breader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-
-		StringBuilder stringBuilder = new StringBuilder();
+		
+		BufferedReader urlStreamReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+		StringBuilder responseStringBuilder = new StringBuilder();
 
 		String line;
-		while ((line = breader.readLine()) != null) {
-			stringBuilder.append(line);
+		while ((line = urlStreamReader.readLine()) != null) {
+			responseStringBuilder.append(line);
 		}
 
-		String responseStr = stringBuilder.toString();
+		String responseStr = responseStringBuilder.toString();
 		logger.log(Level.INFO, "Response from api.syncany.org: " + responseStr);
 
 		return responseStr;
