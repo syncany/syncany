@@ -17,14 +17,12 @@
  */
 package org.syncany.plugins.transfer;
 
-import org.syncany.config.Config;
-import org.syncany.plugins.Plugin;
-import org.syncany.plugins.Plugins;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.syncany.config.Config;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -42,29 +40,6 @@ public abstract class AbstractTransferManager implements TransferManager {
 	public AbstractTransferManager(TransferSettings settings, Config config) {
 		this.settings = settings;
 		this.config = config;
-	}
-
-	/**
-	 * Returns the plugin-specific {@link TransferSettings} object for
-	 * this transfer manager.
-	 */	
-	@SuppressWarnings("unchecked")
-	public final <T extends TransferSettings> T getSettings() {
-		try {
-			for (Plugin plugin : Plugins.list()) {
-				PluginSettings pluginSettings = plugin.getClass().getAnnotation(PluginSettings.class);
-				
-				if (pluginSettings == null || pluginSettings.value().equals(settings.getClass())) {
-					return (T) pluginSettings.value().cast(settings);
-				}
-			}
-			
-			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "Unable to read type: No TransferPlugin is defined for these settings", e);
-			throw e;
-		}		
 	}
 
 	/**

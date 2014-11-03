@@ -17,8 +17,6 @@
  */
 package org.syncany.plugins.unreliable_local;
 
-import org.syncany.plugins.transfer.PluginManager;
-import org.syncany.plugins.transfer.PluginSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
@@ -29,13 +27,8 @@ import org.syncany.plugins.transfer.TransferPlugin;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-
-@PluginSettings(UnreliableLocalTransferSettings.class)
-@PluginManager(UnreliableLocalTransferManager.class)
 public class UnreliableLocalPlugin extends TransferPlugin {
-
 	public UnreliableLocalPlugin() {
 		super("unreliable_local");
 	}
-  
 }

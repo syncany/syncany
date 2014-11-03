@@ -18,6 +18,7 @@
 package org.syncany.plugins.transfer;
 
 import com.google.common.base.Objects;
+
 import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -29,9 +30,7 @@ import org.syncany.config.to.UserConfigTO;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.plugins.Encrypted;
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.Setup;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
@@ -58,12 +57,12 @@ import java.util.logging.Logger;
  */
 public abstract class TransferSettings {
 	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
-	protected UserInteractionListener userInteractionListener;
 
 	@Attribute
 	private String type = findPluginId();
 
 	private String lastValidationFailReason;
+	private UserInteractionListener userInteractionListener;
 
 	public UserInteractionListener getUserInteractionListener() {
 		return userInteractionListener;
@@ -72,12 +71,7 @@ public abstract class TransferSettings {
 	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
 		this.userInteractionListener = userInteractionListener;
 	}
-
-	/**
-	 * Get the {@link org.syncany.plugins.transfer.TransferPlugin}'s id.
-	 *
-	 * @return A string with {@link org.syncany.plugins.transfer.TransferPlugin#getId()}
-	 */
+	
 	public final String getType() {
 		return type;
 	}

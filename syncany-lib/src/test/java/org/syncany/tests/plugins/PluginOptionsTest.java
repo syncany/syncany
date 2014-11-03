@@ -18,10 +18,10 @@
 package org.syncany.tests.plugins;
 
 import org.junit.Test;
-import org.syncany.plugins.NestedPluginOption;
-import org.syncany.plugins.PluginOption;
-import org.syncany.plugins.PluginOptions;
 import org.syncany.plugins.dummy.DummyTransferSettings;
+import org.syncany.plugins.transfer.NestedTransferPluginOption;
+import org.syncany.plugins.transfer.TransferPluginOptions;
+import org.syncany.plugins.transfer.TransferPluginOption;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.ReflectionUtil;
 
@@ -36,7 +36,7 @@ public class PluginOptionsTest {
 	public void nestedSettingsTest() throws Exception {
 		DummyTransferSettings dts = new DummyTransferSettings();
 
-		for (PluginOption option : PluginOptions.getOrderedOptions(DummyTransferSettings.class)) {
+		for (TransferPluginOption option : TransferPluginOptions.getOrderedOptions(DummyTransferSettings.class)) {
 			askNestedPluginSettings(dts, option, 0);
 		}
 
@@ -46,16 +46,16 @@ public class PluginOptionsTest {
 		assertNotNull(dts.subsettings);
 	}
 
-	private void askNestedPluginSettings(TransferSettings settings, PluginOption option, int wrap) throws Exception {
+	private void askNestedPluginSettings(TransferSettings settings, TransferPluginOption option, int wrap) throws Exception {
 
-		if (option instanceof NestedPluginOption) {
+		if (option instanceof NestedTransferPluginOption) {
 			assertNotNull(ReflectionUtil.getClassFromType(option.getType()));
 			System.out.println(new String(new char[wrap]).replace("\0", "\t") + ReflectionUtil.getClassFromType(option.getType()) + "#"
 					+ option.getField().getName() + " (nested)");
 			TransferSettings nestedSettings = (TransferSettings) ReflectionUtil.getClassFromType(option.getType()).newInstance();
 			settings.setField(option.getField().getName(), nestedSettings);
 
-			for (PluginOption nItem : ((NestedPluginOption) option).getOptions()) {
+			for (TransferPluginOption nItem : ((NestedTransferPluginOption) option).getOptions()) {
 				askNestedPluginSettings(nestedSettings, nItem, ++wrap);
 			}
 		}
@@ -68,10 +68,10 @@ public class PluginOptionsTest {
 	@Test
 	public void testOrderingOfOptions() throws Exception {
 		final String[] expectedOrder = new String[] { "foo", "number", "baz", "nest" };
-		List<PluginOption> items = PluginOptions.getOrderedOptions(DummyTransferSettings.class);
+		List<TransferPluginOption> items = TransferPluginOptions.getOrderedOptions(DummyTransferSettings.class);
 
 		int i = 0;
-		for (PluginOption item : items) {
+		for (TransferPluginOption item : items) {
 			assertEquals(expectedOrder[i++], item.getName());
 		}
 	}

@@ -20,7 +20,7 @@ package org.syncany.plugins.local;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.syncany.plugins.Setup;
+import org.syncany.plugins.transfer.Setup;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
