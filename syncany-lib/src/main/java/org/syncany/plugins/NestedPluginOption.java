@@ -22,7 +22,11 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * This class represents the a
+ * A nested plugin option is a special {@link PluginOption} -- namely an
+ * option that contains a complex object rather than just a simple value.
+ *
+ * <p>Nested plugin options are typically used to represent/use sub-plugins
+ * within a certain plugin, e.g. to allow building a RAID0/1 plugin.
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
