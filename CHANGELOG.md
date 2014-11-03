@@ -12,6 +12,7 @@ Change Log
   + Allow user and global plugins (Linux only) #259
   + Fix FTP plugin `testRepoFileExists()` with some FTP servers #262
   + Fix inconsistent DB after cleanup rollback (no issue ID)
+  + Harmonize Plugin API OS description calls #264/#253
 
 ### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)

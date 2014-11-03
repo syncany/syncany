@@ -158,7 +158,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 
-		// Only one file should be in here: the jar for ftp.		
+		// Only one file should be in here: the jar for ftp.
 		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
 
 		// Tear down
