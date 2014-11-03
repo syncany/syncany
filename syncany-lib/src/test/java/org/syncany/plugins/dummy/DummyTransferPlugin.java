@@ -15,32 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.local;
+package org.syncany.plugins.dummy;
 
-import java.io.File;
-
-import org.simpleframework.xml.Element;
-import org.syncany.plugins.transfer.Setup;
-import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
- * The local connection represents the settings required to create to a
- * backend based on a local (or mounted network) folder. It can be used to
- * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalTransferPlugin}.
- *
- * @author Philipp C. Heckel
+ * @author Christian Roth <christian.roth@port17.de>
  */
-public class LocalTransferSettings extends TransferSettings {
-	@Element(required = true)
-	@Setup(order = 1, description = "Path to local repository")
-	public File path;	
-
-	public File getPath() {
-		return path;
-	}
-
-	public void setPath(File path) {
-		this.path = path;
+public class DummyTransferPlugin extends TransferPlugin {
+	public DummyTransferPlugin() {
+		super("dummy");
 	}
 }

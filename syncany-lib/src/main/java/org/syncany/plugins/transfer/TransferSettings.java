@@ -17,24 +17,6 @@
  */
 package org.syncany.plugins.transfer;
 
-import com.google.common.base.Objects;
-
-import org.apache.commons.io.IOUtils;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
-import org.simpleframework.xml.core.Validate;
-import org.syncany.config.UserConfig;
-import org.syncany.config.to.UserConfigTO;
-import org.syncany.crypto.CipherSpecs;
-import org.syncany.crypto.CipherUtil;
-import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.plugins.Plugin;
-import org.syncany.plugins.UserInteractionListener;
-import org.syncany.util.ReflectionUtil;
-import org.syncany.util.StringUtil;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -44,6 +26,22 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.IOUtils;
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Validate;
+import org.syncany.config.UserConfig;
+import org.syncany.crypto.CipherSpecs;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.plugins.Plugin;
+import org.syncany.plugins.UserInteractionListener;
+import org.syncany.util.ReflectionUtil;
+import org.syncany.util.StringUtil;
+
+import com.google.common.base.Objects;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -213,57 +211,65 @@ public abstract class TransferSettings {
 	}
 
 	@Persist
-	private void encrypt() throws Exception {
-		// TODO [high] This should be in the @Option annotation
+	private void onPersist() throws Exception {
 		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
 
 		for (Field field : optionFields) {
 			field.setAccessible(true);
 
 			if (field.getAnnotation(Encrypted.class) != null) {
-				if (field.getType() != String.class) {
-					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
-				}
-
-				InputStream plainInputStream = IOUtils.toInputStream((String) field.get(this));
-				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getConfigEncryptionKey();
-				byte[] encryptedBytes = CipherUtil.encrypt(plainInputStream, CipherSpecs.getDefaultCipherSpecs(), privateKey);
-				field.set(this, StringUtil.toHex(encryptedBytes)); // the field's now encrypted
+				encryptField(field);				
 			}
 		}
+	}
 
-		logger.log(Level.FINE, "Encrypted transfer setting values");
+	private void encryptField(Field field) throws Exception {
+		logger.log(Level.INFO, "Encrypting field " + field + " ...");
+		
+		if (field.getType() != String.class) {
+			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
+		}
+
+		String fieldPlaintextStr = (String) field.get(this);		
+		InputStream fieldPlaintextInputStream = IOUtils.toInputStream(fieldPlaintextStr);
+		byte[] fieldEncryptedBytes = CipherUtil.encrypt(fieldPlaintextInputStream, CipherSpecs.getDefaultCipherSpecs(), UserConfig.getConfigEncryptionKey());
+		
+		field.set(this, StringUtil.toHex(fieldEncryptedBytes)); // The field is now encrypted
 	}
 
 	@Commit
-	private void decrypt() throws Exception {
-		// TODO [high] This should be in the @Option annotation
+	private void onCommit() throws Exception {
 		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
 
 		for (Field field : optionFields) {
 			field.setAccessible(true);
 
 			if (field.getAnnotation(Encrypted.class) != null) {
-				if (field.getType() != String.class) {
-					throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
-				}
-
-				ByteArrayInputStream encryptedInputStream = new ByteArrayInputStream(StringUtil.fromHex((String) field.get(this)));
-				SaltedSecretKey privateKey = UserConfigTO.load(UserConfig.getUserConfigFile()).getConfigEncryptionKey();
-				byte[] decryptedBytes = CipherUtil.decrypt(encryptedInputStream, privateKey);
-				field.set(this, new String(decryptedBytes)); // the field's now decrypted
+				decryptField(field);				
 			}
 		}
+	}
 
-		logger.log(Level.FINE, "Decrypted transfer setting values");
+	private void decryptField(Field field) throws Exception {
+		logger.log(Level.INFO, "Decrypting field " + field + " ...");
+		
+		if (field.getType() != String.class) {
+			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
+		}
+
+		String fieldEncryptedHexStr = (String) field.get(this);
+		byte[] fieldEncryptedBytes = StringUtil.fromHex(fieldEncryptedHexStr);				
+		byte[] fieldDecryptedBytes = CipherUtil.decrypt(new ByteArrayInputStream(fieldEncryptedBytes), UserConfig.getConfigEncryptionKey());
+		
+		field.set(this, new String(fieldDecryptedBytes)); // The field is now decrypted
 	}
 
 	private String findPluginId() {
-		Class<? extends TransferPlugin> motherPlugin = TransferPluginUtil.getTransferPluginClass(this.getClass());
+		Class<? extends TransferPlugin> transferPluginClass = TransferPluginUtil.getTransferPluginClass(this.getClass());
 
 		try {
-			if (motherPlugin != null) {
-				return motherPlugin.newInstance().getId();
+			if (transferPluginClass != null) {
+				return transferPluginClass.newInstance().getId();
 			}
 
 			throw new RuntimeException("Unable to read type: No TransferPlugin is defined for these settings");

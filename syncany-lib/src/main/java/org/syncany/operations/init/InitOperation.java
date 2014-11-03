@@ -80,11 +80,10 @@ public class InitOperation extends AbstractInitOperation {
 		// Init plugin and transfer manager
 		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		TransferSettings connection = (TransferSettings) options.getConfigTO().getTransferSettings();
+		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
+		transferSettings.setUserInteractionListener(listener);
 
-		connection.setUserInteractionListener(listener);
-
-		transferManager = plugin.createTransferManager(connection, config);
+		transferManager = plugin.createTransferManager(transferSettings, config);
 
 		// Test the repo
 		if (!performRepoTest()) {

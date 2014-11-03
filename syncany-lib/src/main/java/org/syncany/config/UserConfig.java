@@ -74,6 +74,7 @@ public class UserConfig {
 	private static KeyStore userKeyStore;
 
 	private static boolean preventStandby;
+	private static SaltedSecretKey configEncryptionKey;
 
 	static {
 		init();
@@ -113,6 +114,10 @@ public class UserConfig {
 
 	public static boolean preventStandbyEnabled() {
 		return preventStandby;
+	}
+	
+	public static SaltedSecretKey getConfigEncryptionKey() {
+		return configEncryptionKey;
 	}
 
 	public static KeyStore getUserTrustStore() {
@@ -160,6 +165,7 @@ public class UserConfig {
 		}
 		else {
 			writeExampleUserConfigFile(userConfigFile);
+			loadAndInitUserConfigFile(userConfigFile);
 		}
 	}
 
@@ -174,6 +180,7 @@ public class UserConfig {
 
 			// Other options
 			preventStandby = userConfigTO.preventStandbyEnabled();
+			configEncryptionKey = userConfigTO.getConfigEncryptionKey();
 		}
 		catch (ConfigException e) {
 			System.err.println("ERROR: " + e.getMessage());

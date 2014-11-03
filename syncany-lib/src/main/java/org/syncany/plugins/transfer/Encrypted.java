@@ -15,32 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.local;
+package org.syncany.plugins.transfer;
 
-import java.io.File;
-
-import org.simpleframework.xml.Element;
-import org.syncany.plugins.transfer.Setup;
-import org.syncany.plugins.transfer.TransferSettings;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The local connection represents the settings required to create to a
- * backend based on a local (or mounted network) folder. It can be used to
- * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalTransferPlugin}.
+ * Annotating a field with {@link org.syncany.plugins.transfer.Encrypted} implies that the field's value shell be stored
+ * encrypted in the XML representation. Recommended when storing login credentials.
  *
- * @author Philipp C. Heckel
+ * @author Christian Roth <christian.roth@port17.de>
  */
-public class LocalTransferSettings extends TransferSettings {
-	@Element(required = true)
-	@Setup(order = 1, description = "Path to local repository")
-	public File path;	
-
-	public File getPath() {
-		return path;
-	}
-
-	public void setPath(File path) {
-		this.path = path;
-	}
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Encrypted {
+	// empty
 }

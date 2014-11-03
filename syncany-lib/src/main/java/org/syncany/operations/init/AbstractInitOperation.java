@@ -122,7 +122,7 @@ public abstract class AbstractInitOperation extends Operation {
 		}
 	}
 
-	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException,
+	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws IOException,
 			CipherException {
 
 		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
@@ -135,7 +135,7 @@ public abstract class AbstractInitOperation extends Operation {
 			throw new IOException(e);
 		}
 
-		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
+		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSpecs, masterKey);
 	}
 
 	protected String getEncryptedLink(TransferSettings transferSettings, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws Exception {

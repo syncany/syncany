@@ -160,6 +160,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			if (askRetryInvalidSettings(settings.getReasonForLastValidationFail())) {
 				return askPluginSettings(settings, knownPluginSettings);
 			}
+			
 			throw new StorageException("Validation failed: " + settings.getReasonForLastValidationFail());
 		}
 
@@ -188,7 +189,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			throws StorageException, InstantiationException, IllegalAccessException {
 
 		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
-		TransferPluginOptionCallback optionClassBackInstance = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
+		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
 		Class<? extends TransferPluginOptionConverter> optionConverterClass = option.getConverter();
 
 		if (!isInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
@@ -198,8 +199,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
 		}
 		else {
-			if (optionClassBackInstance != null) {
-				out.println(optionClassBackInstance.preQueryCallback());
+			if (optionCallback != null) {
+				out.println(optionCallback.preQueryCallback());
 			}
 
 			String optionValue = askPluginOption(settings, option);
@@ -210,8 +211,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			settings.setField(option.getField().getName(), optionValue);
 
-			if (optionClassBackInstance != null) {
-				out.println(optionClassBackInstance.postQueryCallback(optionValue));
+			if (optionCallback != null) {
+				out.println(optionCallback.postQueryCallback(optionValue));
 			}
 		}
 	}

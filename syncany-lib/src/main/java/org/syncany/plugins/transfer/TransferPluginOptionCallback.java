@@ -15,32 +15,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.local;
-
-import java.io.File;
-
-import org.simpleframework.xml.Element;
-import org.syncany.plugins.transfer.Setup;
-import org.syncany.plugins.transfer.TransferSettings;
+package org.syncany.plugins.transfer;
 
 /**
- * The local connection represents the settings required to create to a
- * backend based on a local (or mounted network) folder. It can be used to
- * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalTransferPlugin}.
+ * Option callbacks are called during initialization before and after the
+ * corresponding setting is queried.
  *
- * @author Philipp C. Heckel
+ * @see org.syncany.plugins.transfer.TransferPluginOptions
+ * @author Christian Roth <christian.roth@port17.de>
  */
-public class LocalTransferSettings extends TransferSettings {
-	@Element(required = true)
-	@Setup(order = 1, description = "Path to local repository")
-	public File path;	
+public interface TransferPluginOptionCallback {
+	/**
+	 * Called before a setting value is queried.
+	 *
+	 * @return The message to display.
+	 */
+	public String preQueryCallback();
 
-	public File getPath() {
-		return path;
-	}
-
-	public void setPath(File path) {
-		this.path = path;
-	}
+	/**
+	 * Called after a setting value is queried.
+	 *
+	 * @param optionValue The value of the field
+	 * @return The message to display.
+	 */
+	public String postQueryCallback(String optionValue);
 }
