@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.google.common.collect.Lists;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -46,8 +45,9 @@ import org.syncany.plugins.Plugins;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
+import com.google.common.collect.Lists;
 
 public class TestConfigUtil {
 	private static final String RUNDATE = new SimpleDateFormat("yyMMddHHmmssSSS").format(new Date());
@@ -282,7 +282,7 @@ public class TestConfigUtil {
 	}
 
 	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnection(List<String> failingOperationPatterns) throws Exception {
-		UnreliableLocalPlugin unreliableLocalPlugin = new UnreliableLocalPlugin();
+		UnreliableLocalTransferPlugin unreliableLocalPlugin = new UnreliableLocalTransferPlugin();
 		UnreliableLocalTransferSettings unreliableLocalConnection = createTestUnreliableLocalConnectionWithoutInit(unreliableLocalPlugin,
 				failingOperationPatterns);
 
@@ -291,7 +291,7 @@ public class TestConfigUtil {
 		return unreliableLocalConnection;
 	}
 
-	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalPlugin unreliableLocalPlugin,
+	public static UnreliableLocalTransferSettings createTestUnreliableLocalConnectionWithoutInit(UnreliableLocalTransferPlugin unreliableLocalPlugin,
 			List<String> failingOperationPatterns) throws Exception {
 		UnreliableLocalTransferSettings unreliableLocalConnection = unreliableLocalPlugin.createEmptySettings();
 

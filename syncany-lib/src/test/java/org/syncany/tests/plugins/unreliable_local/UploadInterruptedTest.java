@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
-import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -143,12 +143,12 @@ public class UploadInterruptedTest {
 	public void testUnreliableUpload_Test3_FailsAtDatabaseFile() throws Exception {
 		/*
 		 * This test fails when trying to upload the first database file, but succeeds on retry
-		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 
-		 * 2. upload(transaction-123, transactions/transaction-123) 
-		 * 3. upload(multichunk-1, temp-1) 
-		 * 5. upload(database-123, temp-2) <<< FAILS HERE 
-		 * 6. move(temp-1, multichunks/multichunk-1) 
+		 *
+		 * 1. upload(action-up-987, actions/action-up-987)
+		 * 2. upload(transaction-123, transactions/transaction-123)
+		 * 3. upload(multichunk-1, temp-1)
+		 * 5. upload(database-123, temp-2) <<< FAILS HERE
+		 * 6. move(temp-1, multichunks/multichunk-1)
 		 * 8. move(temp-2, databases/database-123)
 		 */
 
@@ -210,13 +210,13 @@ public class UploadInterruptedTest {
 	public void testUnreliableUpload_Test4_1_FailsAtSecondMultiChunkUpload() throws Exception {
 		/*
 		 * This test fails when trying to upload the second multichunk, but succeeds on retry
-		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 
-		 * 2. upload(transaction-123, transactions/transaction-123) 
-		 * 3. upload(multichunk-1, temp-1) 
-		 * 4. upload(multichunk-2, temp-2) <<< FAILS HERE 
-		 * 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1) 
-		 * 7. move(temp-2, multichunks/multichunk-2) 
+		 *
+		 * 1. upload(action-up-987, actions/action-up-987)
+		 * 2. upload(transaction-123, transactions/transaction-123)
+		 * 3. upload(multichunk-1, temp-1)
+		 * 4. upload(multichunk-2, temp-2) <<< FAILS HERE
+		 * 5. upload(database-123, temp-3) 6. move(temp-1, multichunks/multichunk-1)
+		 * 7. move(temp-2, multichunks/multichunk-2)
 		 * 8. move(temp-3, databases/database-123)
 		 */
 
@@ -282,19 +282,19 @@ public class UploadInterruptedTest {
 		/*
 		 * First run "Client A": This test fails when trying to execute the TX.commit() when moving the second multichunk. So the first multichunk was
 		 * moved successfully.
-		 * 
+		 *
 		 * Double check by "Client B": Client B should not see this multichunk on TM.list()
-		 * 
+		 *
 		 * Second run "Client A": The second up() from Client A should revert the transaction. To verify this, we let the second run fail at the
 		 * transaction file upload
-		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 
-		 * 2. upload(transaction-123, transactions/transaction-123) <<< FAILS HERE (second run) 
-		 * 3. upload(multichunk-1, temp-1) 
-		 * 4. upload(multichunk-2, temp-2) 
-		 * 5. upload(database-123, temp-3) 
-		 * 6. move(temp-1, multichunks/multichunk-1) 
-		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run) 
+		 *
+		 * 1. upload(action-up-987, actions/action-up-987)
+		 * 2. upload(transaction-123, transactions/transaction-123) <<< FAILS HERE (second run)
+		 * 3. upload(multichunk-1, temp-1)
+		 * 4. upload(multichunk-2, temp-2)
+		 * 5. upload(database-123, temp-3)
+		 * 6. move(temp-1, multichunks/multichunk-1)
+		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run)
 		 * 8. move(temp-3, databases/database-123)
 		 */
 
@@ -345,7 +345,7 @@ public class UploadInterruptedTest {
 
 		// 2. Double check if list() does not return the multichunk
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 
@@ -379,29 +379,29 @@ public class UploadInterruptedTest {
 	@Test
 	public void testUnreliableUpload_Test4_3_FailsAtTXCommitDuring2ndMultiChunkMoveAndDuringTXRollback() throws Exception {
 		/*
-		 * 1. upload(action-up-987, actions/action-up-987) 
-		 * 2. upload(transaction-123, transactions/transaction-123) 
-		 * 3. upload(multichunk-1, temp-1) 
-		 * 4. upload(multichunk-2, temp-2) 
-		 * 5. upload(database-123, temp-3) 
-		 * 6. move(temp-1, multichunks/multichunk-1) 
-		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run) 
+		 * 1. upload(action-up-987, actions/action-up-987)
+		 * 2. upload(transaction-123, transactions/transaction-123)
+		 * 3. upload(multichunk-1, temp-1)
+		 * 4. upload(multichunk-2, temp-2)
+		 * 5. upload(database-123, temp-3)
+		 * 6. move(temp-1, multichunks/multichunk-1)
+		 * 7. move(temp-2, multichunks/multichunk-2) <<< FAILS HERE (first run)
 		 * 8. move(temp-3, databases/database-123)
-		 * 
-		 * 1. upload(action-up-987, actions/action-up-987) 
-		 * 2. list(databases/*) 
-		 * 3. list(transactions/*) 
-		 * 4. upload(transaction-345, transactions/transaction-345) (rollback TX) 
-		 * 5. move(multichunks/multichunk-1, temp-80) 
-		 * 6. move(temp-1, temp-81) (silently fails, b/c temp-1 does not exist) 
-		 * 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c multichunk-2 does not exist) 
-		 * 8. move(temp-2, temp-83) 
-		 * 9. move(databases/database-123, temp-84) (silently fails, b/c database-123 does not exist) 
-		 * 10. move(temp-3, temp-85) 
+		 *
+		 * 1. upload(action-up-987, actions/action-up-987)
+		 * 2. list(databases/*)
+		 * 3. list(transactions/*)
+		 * 4. upload(transaction-345, transactions/transaction-345) (rollback TX)
+		 * 5. move(multichunks/multichunk-1, temp-80)
+		 * 6. move(temp-1, temp-81) (silently fails, b/c temp-1 does not exist)
+		 * 7. move(multichunks/multichunk-2, temp-82) (silently fails, b/c multichunk-2 does not exist)
+		 * 8. move(temp-2, temp-83)
+		 * 9. move(databases/database-123, temp-84) (silently fails, b/c database-123 does not exist)
+		 * 10. move(temp-3, temp-85)
 		 * 10 move(transactions-345, temp-86)
-		 * 11. delete(temp-80) 
+		 * 11. delete(temp-80)
 		 * 12. delete(temp-83) <<< FAILS HERE (second run)
-		 * 
+		 *
 		 * Expected: temp-(83,85,86)
 		 */
 
@@ -452,7 +452,7 @@ public class UploadInterruptedTest {
 
 		// 2. Double check if list() does not return the multichunk
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 

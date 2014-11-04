@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -80,7 +80,7 @@ public class CleanupInterruptedTest {
 
 		assertTrue(cleanupFailed);
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
@@ -135,7 +135,7 @@ public class CleanupInterruptedTest {
 
 		assertTrue(cleanupFailed);
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
@@ -204,7 +204,7 @@ public class CleanupInterruptedTest {
 		}
 
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 
 		assertTrue(cleanupFailed);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());

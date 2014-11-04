@@ -27,8 +27,8 @@ import org.syncany.plugins.transfer.TransferPlugin;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class UnreliableLocalPlugin extends TransferPlugin {
-	public UnreliableLocalPlugin() {
+public class UnreliableLocalTransferPlugin extends TransferPlugin {
+	public UnreliableLocalTransferPlugin() {
 		super("unreliable_local");
 	}
 }

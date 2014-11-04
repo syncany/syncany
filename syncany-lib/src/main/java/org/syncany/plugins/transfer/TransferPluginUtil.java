@@ -21,6 +21,8 @@ import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.CaseFormat;
+
 /**
  * Helper class for {@link TransferPlugin}s, using to retrieve
  * the required transfer plugin classes -- namely {@link TransferSettings},
@@ -43,20 +45,21 @@ public abstract class TransferPluginUtil {
 	 * {@link TransferPlugin} class.
 	 */
 	public static Class<? extends TransferSettings> getTransferSettingsClass(Class<? extends TransferPlugin> transferPluginClass) {
-		String fullyQualifiedPackageName = TransferPluginUtil.getPluginPackageName(transferPluginClass);
+		String pluginNameIdentifier = TransferPluginUtil.getPluginPackageName(transferPluginClass);
 
-		if (fullyQualifiedPackageName == null) {
+		if (pluginNameIdentifier == null) {
 			throw new RuntimeException("There are no valid transfer settings attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 		else {
 			try {
-				String transferSettingsClassName = MessageFormat.format(PLUGIN_TRANSFER_SETTINGS_CLASS_NAME, fullyQualifiedPackageName.toLowerCase(), fullyQualifiedPackageName);
+				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
+				String transferSettingsClassName = MessageFormat.format(PLUGIN_TRANSFER_SETTINGS_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
 				return Class.forName(transferSettingsClassName).asSubclass(TransferSettings.class);
 			}
 			catch (Exception e) {
 				throw new RuntimeException("Cannot find matching transfer settings class for plugin (" + transferPluginClass.getName() + ")");
 			}
-		}		
+		}
 	}
 
 	/**
@@ -64,20 +67,21 @@ public abstract class TransferPluginUtil {
 	 * {@link TransferPlugin} class.
 	 */
 	public static Class<? extends TransferManager> getTransferManagerClass(Class<? extends TransferPlugin> transferPluginClass) {
-		String fullyQualifiedPackageName = TransferPluginUtil.getPluginPackageName(transferPluginClass);
+		String pluginNameIdentifier = TransferPluginUtil.getPluginPackageName(transferPluginClass);
 
-		if (fullyQualifiedPackageName == null) {
+		if (pluginNameIdentifier == null) {
 			throw new RuntimeException("There are no valid transfer manager attached to that plugin (" + transferPluginClass.getName() + ")");
 		}
 		else {
 			try {
-				String transferManagerClassName = MessageFormat.format(PLUGIN_TRANSFER_MANAGER_CLASS_NAME, fullyQualifiedPackageName.toLowerCase(), fullyQualifiedPackageName);
+				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
+				String transferManagerClassName = MessageFormat.format(PLUGIN_TRANSFER_MANAGER_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
 				return Class.forName(transferManagerClassName).asSubclass(TransferManager.class);
 			}
 			catch (Exception e) {
 				throw new RuntimeException("Cannot find matching transfer manager class for plugin (" + transferPluginClass.getName() + ")");
 			}
-		}		
+		}
 	}
 
 	/**
@@ -85,20 +89,21 @@ public abstract class TransferPluginUtil {
 	 * {@link TransferSettings} class.
 	 */
 	public static Class<? extends TransferPlugin> getTransferPluginClass(Class<? extends TransferSettings> transferSettingsClass) {
-		String fullyQualifiedPackageName = TransferPluginUtil.getPluginPackageName(transferSettingsClass);
+		String pluginNameIdentifier = TransferPluginUtil.getPluginPackageName(transferSettingsClass);
 
-		if (fullyQualifiedPackageName == null) {
+		if (pluginNameIdentifier == null) {
 			throw new RuntimeException("The transfer settings are orphan (" + transferSettingsClass.getName() + ")");
 		}
 		else {
 			try {
-				String transferPluginClassName = MessageFormat.format(PLUGIN_TRANSFER_PLUGIN_CLASS_NAME, fullyQualifiedPackageName.toLowerCase(), fullyQualifiedPackageName);
+				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
+				String transferPluginClassName = MessageFormat.format(PLUGIN_TRANSFER_PLUGIN_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
 				return Class.forName(transferPluginClassName).asSubclass(TransferPlugin.class);
 			}
 			catch (Exception e) {
 				throw new RuntimeException("Cannot find matching transfer plugin class for plugin settings (" + transferSettingsClass.getName() + ")");
 			}
-		}		
+		}
 	}
 
 	private static String getPluginPackageName(Class<?> clazz) {
@@ -106,7 +111,7 @@ public abstract class TransferPluginUtil {
 
 		if (matcher.matches()) {
 			String pluginPackageName = matcher.group(1);
-			return Character.toUpperCase(pluginPackageName.charAt(0)) + pluginPackageName.substring(1);
+			return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, pluginPackageName);
 		}
 
 		return null;
