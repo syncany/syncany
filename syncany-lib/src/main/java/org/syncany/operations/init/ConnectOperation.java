@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -53,6 +54,7 @@ import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.util.Base58;
+import com.google.common.primitives.Ints;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -73,13 +75,11 @@ import org.syncany.util.Base58;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());
 
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)([^/]+)/(.+)|([^/]+)/([^/]+)/(.+))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)([^/]+)/(.+)|([^/]+)/([^/]+))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED = 2;
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED = 3;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 4;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED = 5;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED = 6;
 
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
@@ -269,15 +269,12 @@ public class ConnectOperation extends AbstractInitOperation {
 			if (isEncryptedLink) {
 				String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
 				String cipherPluginStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
-				String cipherSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_SETTINGS_ENCODED);
 
 				logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
-				logger.log(Level.INFO, "- Encrypted plugin ID: " + cipherPluginStr);
-				logger.log(Level.INFO, "- Encrypted plugin settings: " + cipherSettingsStr);
+				logger.log(Level.INFO, "- Encrypted plugin settings: " + cipherPluginStr);
 
 				byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
 				byte[] cipherPluginBytes = Base58.decode(cipherPluginStr);
-				byte[] cipherSettingsBytes = Base58.decode(cipherSettingsStr);
 
 				boolean retryPassword = true;
 
@@ -291,12 +288,12 @@ public class ConnectOperation extends AbstractInitOperation {
 
 					// Decrypt config
 					try {
-						ByteArrayInputStream encryptedPlugin = new ByteArrayInputStream(cipherPluginBytes);
-						ByteArrayInputStream encryptedSettings = new ByteArrayInputStream(cipherSettingsBytes);
+						byte[] pluginBytes = CipherUtil.decrypt(new ByteArrayInputStream(cipherPluginBytes), masterKey);
 
-						pluginId = new String(CipherUtil.decrypt(encryptedPlugin, masterKey));
-						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(CipherUtil.decrypt(encryptedSettings,
-								masterKey))));
+						int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, Integer.BYTES));
+						pluginId = IOUtils.toString(Arrays.copyOfRange(pluginBytes, Integer.BYTES, Integer.BYTES + pluginIdentifierLength));
+						byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, Integer.BYTES + pluginIdentifierLength, pluginBytes.length);
+						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 
 						retryPassword = false;
 					}
@@ -311,10 +308,12 @@ public class ConnectOperation extends AbstractInitOperation {
 			}
 			else {
 				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
-				String encodedSettings = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_SETTINGS_ENCODED);
+				byte[] pluginBytes = Base58.decode(encodedPlugin);
 
-				pluginId = new String(Base58.decode(encodedPlugin));
-				pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(Base58.decode(encodedSettings))));
+				int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, Integer.BYTES));
+				pluginId = IOUtils.toString(Arrays.copyOfRange(pluginBytes, Integer.BYTES, Integer.BYTES + pluginIdentifierLength));
+				byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, Integer.BYTES + pluginIdentifierLength, pluginBytes.length);
+				pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 			}
 
 			logger.log(Level.INFO, "(Decrypted) link contains: " + pluginId + " -- " + pluginSettings);
