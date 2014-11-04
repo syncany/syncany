@@ -54,6 +54,7 @@ import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.util.Base58;
+
 import com.google.common.primitives.Ints;
 
 /**
@@ -81,6 +82,7 @@ public class ConnectOperation extends AbstractInitOperation {
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 4;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED = 5;
 
+	private static final int INTEGER_BYTES = 4;
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
 
@@ -290,9 +292,9 @@ public class ConnectOperation extends AbstractInitOperation {
 					try {
 						byte[] pluginBytes = CipherUtil.decrypt(new ByteArrayInputStream(cipherPluginBytes), masterKey);
 
-						int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, Integer.BYTES));
-						pluginId = IOUtils.toString(Arrays.copyOfRange(pluginBytes, Integer.BYTES, Integer.BYTES + pluginIdentifierLength));
-						byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, Integer.BYTES + pluginIdentifierLength, pluginBytes.length);
+						int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, INTEGER_BYTES));
+						pluginId = new String(Arrays.copyOfRange(pluginBytes, INTEGER_BYTES, INTEGER_BYTES + pluginIdentifierLength));
+						byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, INTEGER_BYTES + pluginIdentifierLength, pluginBytes.length);
 						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 
 						retryPassword = false;
@@ -310,9 +312,9 @@ public class ConnectOperation extends AbstractInitOperation {
 				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 				byte[] pluginBytes = Base58.decode(encodedPlugin);
 
-				int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, Integer.BYTES));
-				pluginId = IOUtils.toString(Arrays.copyOfRange(pluginBytes, Integer.BYTES, Integer.BYTES + pluginIdentifierLength));
-				byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, Integer.BYTES + pluginIdentifierLength, pluginBytes.length);
+				int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, INTEGER_BYTES));
+				pluginId = new String(Arrays.copyOfRange(pluginBytes, INTEGER_BYTES, INTEGER_BYTES + pluginIdentifierLength));
+				byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, INTEGER_BYTES + pluginIdentifierLength, pluginBytes.length);
 				pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 			}
 
