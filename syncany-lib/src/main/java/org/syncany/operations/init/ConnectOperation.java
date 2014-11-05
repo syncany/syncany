@@ -17,19 +17,12 @@
  */
 package org.syncany.operations.init;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
@@ -48,14 +41,10 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
-import org.syncany.util.Base58;
-
-import com.google.common.primitives.Ints;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -76,13 +65,6 @@ import com.google.common.primitives.Ints;
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());
 
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)([^/]+)/(.+)|([^/]+)/([^/]+))$");
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED = 2;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 4;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED = 5;
-
-	private static final int INTEGER_BYTES = 4;
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
 
@@ -255,29 +237,10 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws StorageException, CipherException {
-		Matcher linkMatcher = LINK_PATTERN.matcher(link);
-
-		if (!linkMatcher.matches()) {
-			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
-		}
-
-		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
-
-		boolean isEncryptedLink = notEncryptedFlag == null;
-		String pluginId = null;
-		String pluginSettings = null;
+		ApplicationLink applicationLink = new ApplicationLink(link);
 
 		try {
-			if (isEncryptedLink) {
-				String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-				String cipherPluginStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
-
-				logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
-				logger.log(Level.INFO, "- Encrypted plugin settings: " + cipherPluginStr);
-
-				byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
-				byte[] cipherPluginBytes = Base58.decode(cipherPluginStr);
-
+			if (applicationLink.isEncrypted()) {
 				boolean retryPassword = true;
 
 				while (retryPassword) {
@@ -285,18 +248,14 @@ public class ConnectOperation extends AbstractInitOperation {
 					String masterPassword = getOrAskPassword();
 
 					// Generate master key
-					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, masterKeySalt);
+					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
 					configTO.setMasterKey(masterKey);
 
 					// Decrypt config
 					try {
-						byte[] pluginBytes = CipherUtil.decrypt(new ByteArrayInputStream(cipherPluginBytes), masterKey);
-
-						int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, INTEGER_BYTES));
-						pluginId = new String(Arrays.copyOfRange(pluginBytes, INTEGER_BYTES, INTEGER_BYTES + pluginIdentifierLength));
-						byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, INTEGER_BYTES + pluginIdentifierLength, pluginBytes.length);
-						pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
-
+						TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
+						configTO.setTransferSettings(transferSettings);
+						
 						retryPassword = false;
 					}
 					catch (CipherException e) {
@@ -304,40 +263,17 @@ public class ConnectOperation extends AbstractInitOperation {
 					}
 				}
 
-				if (pluginId == null || pluginSettings == null) {
+				if (configTO.getTransferSettings() == null) {
 					throw new CipherException("Unable to decrypt link.");
 				}
 			}
 			else {
-				String encodedPlugin = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
-				byte[] pluginBytes = Base58.decode(encodedPlugin);
-
-				int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(pluginBytes, 0, INTEGER_BYTES));
-				pluginId = new String(Arrays.copyOfRange(pluginBytes, INTEGER_BYTES, INTEGER_BYTES + pluginIdentifierLength));
-				byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(pluginBytes, INTEGER_BYTES + pluginIdentifierLength, pluginBytes.length);
-				pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
+				TransferSettings transferSettings = applicationLink.createTransferSettings();
+				configTO.setTransferSettings(transferSettings);
 			}
-
-			logger.log(Level.INFO, "(Decrypted) link contains: " + pluginId + " -- " + pluginSettings);
-		}
-		catch (IOException e) {
-			throw new StorageException("Unable to decompress connection settings: " + e.getMessage());
-		}
-
-		try {
-			TransferPlugin plugin = Plugins.get(pluginId, TransferPlugin.class);
-
-			if (plugin == null) {
-				throw new StorageException("Link contains unknown connection type '" + pluginId + "'. Corresponding plugin not found.");
-			}
-
-			Class<? extends TransferSettings> pluginTransferSettingsClass = TransferPluginUtil.getTransferSettingsClass(plugin.getClass());
-			TransferSettings transferSettings = new Persister().read(pluginTransferSettingsClass, pluginSettings);
-
-			configTO.setTransferSettings(transferSettings);
 		}
 		catch (Exception e) {
-			throw new StorageException(e);
+			throw new StorageException("Unable to extract connection settings: " + e.getMessage(), e);
 		}
 
 		return configTO;
