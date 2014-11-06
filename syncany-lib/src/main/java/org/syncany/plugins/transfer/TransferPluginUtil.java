@@ -33,7 +33,7 @@ import com.google.common.base.CaseFormat;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPluginUtil {
-	private static final Pattern PLUGIN_PACKAGE_NAME_PATTERN = Pattern.compile("^org\\.syncany\\.plugins\\.([a-z_]+)$");
+	private static final Pattern PLUGIN_PACKAGE_NAME_PATTERN = Pattern.compile("^org\\.syncany\\.plugins\\.([a-z0-9_]+)$");
 
 	private static final String PLUGIN_PACKAGE_NAME = "org.syncany.plugins.{0}.";
 	private static final String PLUGIN_TRANSFER_SETTINGS_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}TransferSettings";
