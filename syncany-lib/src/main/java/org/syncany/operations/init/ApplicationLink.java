@@ -20,6 +20,7 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -33,10 +34,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.syncany.crypto.CipherSpec;
@@ -70,71 +75,74 @@ import com.google.common.primitives.Ints;
 public class ApplicationLink {
 	private static final Logger logger = Logger.getLogger(ApplicationLink.class.getSimpleName());
 	
-	private static final Pattern LINK_HTTP_PATTERN = Pattern.compile("https?://.+");
-	private static final int LINK_HTTP_MAX_REDIRECT_COUNT = 5;
-
 	private static final String LINK_FORMAT_NOT_ENCRYPTED = "syncany://2/not-encrypted/%s";
 	private static final String LINK_FORMAT_ENCRYPTED = "syncany://2/%s/%s";
 
-	private static final Pattern LINK_SHORT_PATTERN = Pattern.compile("syncany://?s/(.+)$");
-	private static final String LINK_SHORT_TRANSLATE_URL_FORMAT = "https://api.syncany.org/v2/links/?l=%s";
-	private static final int LINK_SHORT_TRANSLATE_URL_PATTERN_GROUP_SHORTLINK = 1;
-	
 	private static final Pattern LINK_PATTERN = Pattern.compile("syncany://?2/(?:(not-encrypted/)(.+)|([^/]+)/([^/]+))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED = 4;
 
+	private static final Pattern LINK_SHORT_URL_PATTERN = Pattern.compile("syncany://?s/(.+)$");
+	private static final int LINK_SHORT_URL_PATTERN_GROUP_SHORTLINK = 1;
+	private static final String LINK_SHORT_URL_FORMAT = "syncany://s/%s";
+	private static final String LINK_SHORT_API_URL_GET_FORMAT = "https://api.syncany.org/v2/links/?l=%s";
+	private static final String LINK_SHORT_API_URL_ADD = "https://api.syncany.org/v2/links/add";
+
+	private static final Pattern LINK_HTTP_PATTERN = Pattern.compile("https?://.+");
+	private static final int LINK_HTTP_MAX_REDIRECT_COUNT = 5;
+
 	private static final int INTEGER_BYTES = 4;
 
 	private TransferSettings transferSettings;
-	
-	private Matcher linkMatcher;
-	private boolean encrypted;	
+	private boolean shortUrl;
+
+	private boolean encrypted;
 	private byte[] masterKeySalt;
 	private byte[] encryptedSettingsBytes;
 	private byte[] plaintextSettingsBytes;
-	
-	public ApplicationLink(TransferSettings transferSettings) {
+
+	public ApplicationLink(TransferSettings transferSettings, boolean shortUrl) {
 		this.transferSettings = transferSettings;
+		this.shortUrl = shortUrl;
 	}
-	
+
 	public ApplicationLink(String applicationLink) throws StorageException {
-		if (LINK_SHORT_PATTERN.matcher(applicationLink).matches()) {
+		if (LINK_SHORT_URL_PATTERN.matcher(applicationLink).matches()) {
 			applicationLink = expandLink(applicationLink);
 		}
 
 		if (LINK_HTTP_PATTERN.matcher(applicationLink).matches()) {
 			applicationLink = resolveLink(applicationLink, 0);
 		}
-		
-		parseLink(applicationLink);		
-	}	
+
+		parseLink(applicationLink);
+	}
 
 	public boolean isEncrypted() {
 		return encrypted;
 	}
-	
+
 	public byte[] getMasterKeySalt() {
 		return masterKeySalt;
 	}
 
 	public TransferSettings createTransferSettings(SaltedSecretKey masterKey) throws Exception {
 		if (!encrypted || encryptedSettingsBytes == null) {
-			throw new IllegalArgumentException("Link is not encrypted. Cannot call this method.");			
-		}
-		
-		byte[] plaintextPluginSettingsBytes = CipherUtil.decrypt(new ByteArrayInputStream(encryptedSettingsBytes), masterKey);
-		return createTransferSettings(plaintextPluginSettingsBytes);			
-	}
-	
-	public TransferSettings createTransferSettings() throws Exception {
-		if (encrypted || plaintextSettingsBytes == null) {
-			throw new IllegalArgumentException("Link is encrypted. Cannot call this method.");			
+			throw new IllegalArgumentException("Link is not encrypted. Cannot call this method.");
 		}
 
-		return createTransferSettings(plaintextSettingsBytes);		
+		byte[] plaintextPluginSettingsBytes = CipherUtil.decrypt(new ByteArrayInputStream(encryptedSettingsBytes), masterKey);
+		return createTransferSettings(plaintextPluginSettingsBytes);
+	}
+
+	public TransferSettings createTransferSettings() throws Exception {
+		if (encrypted || plaintextSettingsBytes == null) {
+			throw new IllegalArgumentException("Link is encrypted. Cannot call this method.");
+		}
+
+		return createTransferSettings(plaintextSettingsBytes);
 	}
 
 	public String createEncryptedLink(SaltedSecretKey masterKey) throws Exception {
@@ -147,7 +155,14 @@ public class ApplicationLink {
 		String masterKeySaltEncodedStr = Base58.encode(masterKeySalt);
 		String encryptedEncodedPlugin = Base58.encode(encryptedPluginBytes);
 
-		return String.format(LINK_FORMAT_ENCRYPTED, masterKeySaltEncodedStr, encryptedEncodedPlugin);
+		String applicationLink = String.format(LINK_FORMAT_ENCRYPTED, masterKeySaltEncodedStr, encryptedEncodedPlugin);
+
+		if (shortUrl) {
+			return shortenLink(applicationLink);
+		}
+		else {
+			return applicationLink;
+		}
 	}
 
 	public String createPlaintextLink() throws Exception {
@@ -155,72 +170,99 @@ public class ApplicationLink {
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 
 		return String.format(LINK_FORMAT_NOT_ENCRYPTED, plaintextEncodedStorage);
-	}		
+	}
 
 	private String expandLink(String applicationLink) {
-		Matcher shortLinkMatcher = LINK_SHORT_PATTERN.matcher(applicationLink);
-		
+		Matcher shortLinkMatcher = LINK_SHORT_URL_PATTERN.matcher(applicationLink);
+
 		if (!shortLinkMatcher.matches()) {
 			throw new IllegalArgumentException("Method may only be called with application shortlink.");
 		}
-		
-		String shortLinkId = shortLinkMatcher.group(LINK_SHORT_TRANSLATE_URL_PATTERN_GROUP_SHORTLINK);
-		return String.format(LINK_SHORT_TRANSLATE_URL_FORMAT, shortLinkId);
+
+		String shortLinkId = shortLinkMatcher.group(LINK_SHORT_URL_PATTERN_GROUP_SHORTLINK);
+		return String.format(LINK_SHORT_API_URL_GET_FORMAT, shortLinkId);
 	}
-	
+
 	private String resolveLink(String httpApplicationLink, int redirectCount) throws StorageException {
 		if (redirectCount >= LINK_HTTP_MAX_REDIRECT_COUNT) {
 			throw new StorageException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Canot find syncany:// link.");
 		}
-		
-		try {
-			logger.log(Level.INFO, "- Retrieving HTTP HEAD for " + httpApplicationLink + " ...");	
 
-			HttpHead headMethod = null;					
-			headMethod = new HttpHead(httpApplicationLink);
-							
-			RequestConfig requestConfig = RequestConfig.custom()
-					.setSocketTimeout(2000)
-					.setConnectTimeout(2000)
-					.setRedirectsEnabled(false)
-					.build();
-			
-			CloseableHttpClient httpClient = HttpClientBuilder
-					.create()
-					.setDefaultRequestConfig(requestConfig)
-					.build();
-	
-			HttpResponse httpResponse = httpClient.execute(headMethod);				 
-			headMethod.releaseConnection();
-			
+		try {
+			logger.log(Level.INFO, "- Retrieving HTTP HEAD for " + httpApplicationLink + " ...");
+
+			HttpHead headMethod = new HttpHead(httpApplicationLink);
+			HttpResponse httpResponse = createHttpClient().execute(headMethod);
+
 			// Find syncany:// link
-			Header locationHeader = httpResponse.getFirstHeader("Location");
-			
+			Header locationHeader = httpResponse.getLastHeader("Location");
+
 			if (locationHeader == null) {
 				throw new Exception("Link does not redirect to a syncany:// link.");
 			}
-			
+
 			String locationHeaderUrl = locationHeader.getValue();
 			Matcher locationHeaderMatcher = LINK_PATTERN.matcher(locationHeaderUrl);
 			boolean isApplicationLink = locationHeaderMatcher.find();
-			
+
 			if (isApplicationLink) {
 				String applicationLink = locationHeaderMatcher.group(0);
 				logger.log(Level.INFO, "Resolved application link is: " + applicationLink);
-				
+
 				return applicationLink;
 			}
 			else {
-				return resolveLink(locationHeaderUrl, ++redirectCount);	
+				return resolveLink(locationHeaderUrl, ++redirectCount);
 			}
 		}
 		catch (Exception e) {
-			throw new StorageException(e);
+			throw new StorageException(e.getMessage(), e);
 		}
-	}	
+	}
+
+	private String shortenLink(String applicationLink) {
+		if (!LINK_PATTERN.matcher(applicationLink).matches()) {
+			throw new IllegalArgumentException("Invalid link provided, must start with syncany:// and match link pattern.");
+		}
+
+		try {
+			logger.log(Level.INFO, "Shortining link " + applicationLink + " via " + LINK_SHORT_API_URL_ADD + " ...");
+
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+			nameValuePairs.add(new BasicNameValuePair("l", applicationLink));
+
+			HttpPost postMethod = new HttpPost(LINK_SHORT_API_URL_ADD);
+			postMethod.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+			HttpResponse httpResponse = createHttpClient().execute(postMethod);
+			ApplicationLinkShortenerResponse shortenerResponse = new Persister().read(ApplicationLinkShortenerResponse.class, httpResponse
+					.getEntity().getContent());
+			
+			return String.format(LINK_SHORT_URL_FORMAT, shortenerResponse.getShortLinkId());
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot shorten URL. Using long URL.", e);
+			return applicationLink;
+		}
+	}
+	
+	private CloseableHttpClient createHttpClient() {
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setSocketTimeout(2000)
+				.setConnectTimeout(2000)
+				.setRedirectsEnabled(false)
+				.build();
+
+		CloseableHttpClient httpClient = HttpClientBuilder
+				.create()
+				.setDefaultRequestConfig(requestConfig)
+				.build();
+		
+		return httpClient;
+	}
 
 	private void parseLink(String applicationLink) throws StorageException {
-		linkMatcher = LINK_PATTERN.matcher(applicationLink);
+		Matcher linkMatcher = LINK_PATTERN.matcher(applicationLink);
 
 		if (!linkMatcher.matches()) {
 			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
@@ -241,7 +283,7 @@ public class ApplicationLink {
 		}
 		else {
 			String plaintextEncodedSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
-			
+
 			masterKeySalt = null;
 			encryptedSettingsBytes = null;
 			plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
@@ -252,7 +294,8 @@ public class ApplicationLink {
 		// Find plugin ID and settings XML
 		int pluginIdentifierLength = Ints.fromByteArray(Arrays.copyOfRange(plaintextPluginSettingsBytes, 0, INTEGER_BYTES));
 		String pluginId = new String(Arrays.copyOfRange(plaintextPluginSettingsBytes, INTEGER_BYTES, INTEGER_BYTES + pluginIdentifierLength));
-		byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(plaintextPluginSettingsBytes, INTEGER_BYTES + pluginIdentifierLength, plaintextPluginSettingsBytes.length);
+		byte[] gzippedPluginSettingsByteArray = Arrays.copyOfRange(plaintextPluginSettingsBytes, INTEGER_BYTES + pluginIdentifierLength,
+				plaintextPluginSettingsBytes.length);
 		String pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 
 		// Create transfer settings object 
@@ -274,7 +317,7 @@ public class ApplicationLink {
 			throw new StorageException(e);
 		}
 	}
-	
+
 	private byte[] getPlaintextStorageXml() throws Exception {
 		ByteArrayOutputStream plaintextByteArrayOutputStream = new ByteArrayOutputStream();
 		DataOutputStream plaintextOutputStream = new DataOutputStream(plaintextByteArrayOutputStream);
@@ -285,6 +328,6 @@ public class ApplicationLink {
 		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
 		plaintextGzipOutputStream.close();
 
-		return plaintextByteArrayOutputStream.toByteArray();		
+		return plaintextByteArrayOutputStream.toByteArray();
 	}
 }

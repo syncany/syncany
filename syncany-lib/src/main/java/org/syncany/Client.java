@@ -40,6 +40,7 @@ import org.syncany.operations.init.ConnectOperation;
 import org.syncany.operations.init.ConnectOperationOptions;
 import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.GenlinkOperation;
+import org.syncany.operations.init.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
@@ -145,8 +146,8 @@ public class Client {
 		new WatchOperation(config, options).execute();		
 	}	
 
-	public GenlinkOperationResult genlink() throws Exception {
-		return new GenlinkOperation(config).execute();
+	public GenlinkOperationResult genlink(GenlinkOperationOptions options) throws Exception {
+		return new GenlinkOperation(config, options).execute();
 	}
 
 	public InitOperationResult init(InitOperationOptions options) throws Exception {

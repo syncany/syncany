@@ -206,7 +206,7 @@ public class InitOperation extends AbstractInitOperation {
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
-		return new GenlinkOperation(options.getConfigTO()).execute();
+		return new GenlinkOperation(options.getConfigTO(), options.getGenlinkOptions()).execute();
 	}
 
 	private String getOrAskPassword() throws Exception {

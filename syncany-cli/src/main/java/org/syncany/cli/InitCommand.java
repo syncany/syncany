@@ -26,6 +26,7 @@ import java.util.Map;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
@@ -41,6 +42,7 @@ import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.init.GenlinkOperationOptions;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
@@ -103,6 +105,7 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
+		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));		
 
 		OptionSet options = parser.parse(operationArguments);
 
@@ -123,6 +126,10 @@ public class InitCommand extends AbstractInitCommand {
 		// Compression: --no-compression
 		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
 
+		// Genlink options: --short
+		GenlinkOperationOptions genlinkOptions = new GenlinkOperationOptions();
+		genlinkOptions.setShortUrl(options.has(optionShortUrl));
+		
 		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(transferSettings);
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
@@ -136,7 +143,8 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setPassword(null); // set by callback in operation
 		operationOptions.setDaemon(options.has(optionAddDaemon));
-
+		operationOptions.setGenlinkOptions(genlinkOptions);
+		
 		return operationOptions;
 	}
 

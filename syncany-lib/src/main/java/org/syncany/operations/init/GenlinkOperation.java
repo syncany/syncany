@@ -33,14 +33,17 @@ import org.syncany.config.to.ConfigTO;
  */
 public class GenlinkOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());
+	
+	private GenlinkOperationOptions options;
 	private ConfigTO configTO;
 
-	public GenlinkOperation(Config config) {
+	public GenlinkOperation(Config config, GenlinkOperationOptions options) {
 		super(config, null);
+		this.options = options;
 	}
 
-	public GenlinkOperation(ConfigTO configTO) {
-		super(null, null);
+	public GenlinkOperation(ConfigTO configTO, GenlinkOperationOptions options) {
+		this((Config) null, options);
 		this.configTO = configTO;
 	}
 
@@ -54,7 +57,7 @@ public class GenlinkOperation extends AbstractInitOperation {
 			configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
 		}
 
-		ApplicationLink applicationLink = new ApplicationLink(configTO.getTransferSettings());
+		ApplicationLink applicationLink = new ApplicationLink(configTO.getTransferSettings(), options.isShortUrl());
 
 		if (configTO.getMasterKey() != null) {	
 			String encryptedLinkStr = applicationLink.createEncryptedLink(configTO.getMasterKey());
