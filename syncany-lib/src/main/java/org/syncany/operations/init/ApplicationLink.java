@@ -31,6 +31,12 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
 import org.syncany.crypto.CipherSpec;
@@ -64,10 +70,17 @@ import com.google.common.primitives.Ints;
 public class ApplicationLink {
 	private static final Logger logger = Logger.getLogger(ApplicationLink.class.getSimpleName());
 	
+	private static final Pattern LINK_HTTP_PATTERN = Pattern.compile("https?://.+");
+	private static final int LINK_HTTP_MAX_REDIRECT_COUNT = 5;
+
 	private static final String LINK_FORMAT_NOT_ENCRYPTED = "syncany://2/not-encrypted/%s";
 	private static final String LINK_FORMAT_ENCRYPTED = "syncany://2/%s/%s";
+
+	private static final Pattern LINK_SHORT_PATTERN = Pattern.compile("syncany://?s/(.+)$");
+	private static final String LINK_SHORT_TRANSLATE_URL_FORMAT = "https://api.syncany.org/v2/links/?l=%s";
+	private static final int LINK_SHORT_TRANSLATE_URL_PATTERN_GROUP_SHORTLINK = 1;
 	
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://2/(?:(not-encrypted/)(.+)|([^/]+)/([^/]+))$");
+	private static final Pattern LINK_PATTERN = Pattern.compile("syncany://?2/(?:(not-encrypted/)(.+)|([^/]+)/([^/]+))$");
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
 	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED = 2;
 	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
@@ -88,34 +101,17 @@ public class ApplicationLink {
 	}
 	
 	public ApplicationLink(String applicationLink) throws StorageException {
-		this.linkMatcher = LINK_PATTERN.matcher(applicationLink);
-
-		if (!linkMatcher.matches()) {
-			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
+		if (LINK_SHORT_PATTERN.matcher(applicationLink).matches()) {
+			applicationLink = expandLink(applicationLink);
 		}
 
-		this.encrypted = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG) == null;
-
-		if (this.encrypted) {
-			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-			String encryptedPluginSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
-
-			logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
-			logger.log(Level.INFO, "- Encrypted plugin settings: " + encryptedPluginSettingsStr);
-
-			this.masterKeySalt = Base58.decode(masterKeySaltStr);
-			this.encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
-			this.plaintextSettingsBytes = null;
+		if (LINK_HTTP_PATTERN.matcher(applicationLink).matches()) {
+			applicationLink = resolveLink(applicationLink, 0);
 		}
-		else {
-			String plaintextEncodedSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
-			
-			this.masterKeySalt = null;
-			this.encryptedSettingsBytes = null;
-			this.plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
-		}
+		
+		parseLink(applicationLink);		
 	}	
-	
+
 	public boolean isEncrypted() {
 		return encrypted;
 	}
@@ -159,7 +155,98 @@ public class ApplicationLink {
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 
 		return String.format(LINK_FORMAT_NOT_ENCRYPTED, plaintextEncodedStorage);
+	}		
+
+	private String expandLink(String applicationLink) {
+		Matcher shortLinkMatcher = LINK_SHORT_PATTERN.matcher(applicationLink);
+		
+		if (!shortLinkMatcher.matches()) {
+			throw new IllegalArgumentException("Method may only be called with application shortlink.");
+		}
+		
+		String shortLinkId = shortLinkMatcher.group(LINK_SHORT_TRANSLATE_URL_PATTERN_GROUP_SHORTLINK);
+		return String.format(LINK_SHORT_TRANSLATE_URL_FORMAT, shortLinkId);
+	}
+	
+	private String resolveLink(String httpApplicationLink, int redirectCount) throws StorageException {
+		if (redirectCount >= LINK_HTTP_MAX_REDIRECT_COUNT) {
+			throw new StorageException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Canot find syncany:// link.");
+		}
+		
+		try {
+			logger.log(Level.INFO, "- Retrieving HTTP HEAD for " + httpApplicationLink + " ...");	
+
+			HttpHead headMethod = null;					
+			headMethod = new HttpHead(httpApplicationLink);
+							
+			RequestConfig requestConfig = RequestConfig.custom()
+					.setSocketTimeout(2000)
+					.setConnectTimeout(2000)
+					.setRedirectsEnabled(false)
+					.build();
+			
+			CloseableHttpClient httpClient = HttpClientBuilder
+					.create()
+					.setDefaultRequestConfig(requestConfig)
+					.build();
+	
+			HttpResponse httpResponse = httpClient.execute(headMethod);				 
+			headMethod.releaseConnection();
+			
+			// Find syncany:// link
+			Header locationHeader = httpResponse.getFirstHeader("Location");
+			
+			if (locationHeader == null) {
+				throw new Exception("Link does not redirect to a syncany:// link.");
+			}
+			
+			String locationHeaderUrl = locationHeader.getValue();
+			Matcher locationHeaderMatcher = LINK_PATTERN.matcher(locationHeaderUrl);
+			boolean isApplicationLink = locationHeaderMatcher.find();
+			
+			if (isApplicationLink) {
+				String applicationLink = locationHeaderMatcher.group(0);
+				logger.log(Level.INFO, "Resolved application link is: " + applicationLink);
+				
+				return applicationLink;
+			}
+			else {
+				return resolveLink(locationHeaderUrl, ++redirectCount);	
+			}
+		}
+		catch (Exception e) {
+			throw new StorageException(e);
+		}
 	}	
+
+	private void parseLink(String applicationLink) throws StorageException {
+		linkMatcher = LINK_PATTERN.matcher(applicationLink);
+
+		if (!linkMatcher.matches()) {
+			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
+		}
+
+		encrypted = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG) == null;
+
+		if (encrypted) {
+			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
+			String encryptedPluginSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_PLUGIN_ENCODED);
+
+			logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
+			logger.log(Level.INFO, "- Encrypted plugin settings: " + encryptedPluginSettingsStr);
+
+			masterKeySalt = Base58.decode(masterKeySaltStr);
+			encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
+			plaintextSettingsBytes = null;
+		}
+		else {
+			String plaintextEncodedSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
+			
+			masterKeySalt = null;
+			encryptedSettingsBytes = null;
+			plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
+		}
+	}
 
 	private TransferSettings createTransferSettings(byte[] plaintextPluginSettingsBytes) throws StorageException, IOException {
 		// Find plugin ID and settings XML
