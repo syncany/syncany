@@ -173,11 +173,14 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			throws IllegalAccessException, InstantiationException, StorageException {
 
 		if (option instanceof NestedTransferPluginOption) {
-			if (ReflectionUtil.getClassFromType(option.getType()).equals(TransferSettings.class)) {
-				askGenericPluginSettings(settings, option, knownPluginSettings, nestPrefix);
+			Class<?> childPluginTransferSettingsClass = ReflectionUtil.getClassFromType(option.getType());
+			boolean isGenericChildPlugin = TransferSettings.class.equals(childPluginTransferSettingsClass);
+			
+			if (isGenericChildPlugin) {
+				askGenericChildPluginSettings(settings, option, knownPluginSettings, nestPrefix);
 			}
 			else {
-				askNestedPluginSettings(settings, (NestedTransferPluginOption) option, knownPluginSettings, nestPrefix);
+				askConreteChildPluginSettings(settings, (NestedTransferPluginOption) option, knownPluginSettings, nestPrefix);
 			}
 		}
 		else {
@@ -199,9 +202,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
 		}
 		else {
-			if (optionCallback != null) {
-				out.println(optionCallback.preQueryCallback());
-			}
+			callAndPrintPreQueryCallback(optionCallback);
 
 			String optionValue = askPluginOption(settings, option);
 
@@ -211,18 +212,28 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			settings.setField(option.getField().getName(), optionValue);
 
-			if (optionCallback != null) {
-				out.println(optionCallback.postQueryCallback(optionValue));
-			}
+			callAndPrintPostQueryCallback(optionCallback, optionValue);
 		}
 	}
 
-	private void askGenericPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
+	/**
+	 * Queries the user for a plugin (which plugin to use?) and then
+	 * asks for all of the plugin's settings.
+	 * 
+	 * <p>This case is triggered by a field looking like this:
+	 * <tt>private TransferSettings childPluginSettings;</tt> 
+	 */
+	private void askGenericChildPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
 			throws StorageException, IllegalAccessException, InstantiationException {
 
+		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
+		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
+
 		if (isInteractive) {
+			callAndPrintPreQueryCallback(optionCallback);		
+
 			out.println();
-			out.println(option.getDescription() + ":");
+			out.println(option.getDescription() + ":");			
 		}
 
 		TransferPlugin childPlugin = null;
@@ -257,14 +268,29 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		for (TransferPluginOption nestedOption : TransferPluginOptions.getOrderedOptions(childSettings.getClass())) {
 			askPluginSettings(childSettings, nestedOption, knownPluginSettings, nestPrefix);
 		}
+		
+		if (isInteractive) {
+			callAndPrintPostQueryCallback(optionCallback, null);		
+		}
 	}
 
-	private void askNestedPluginSettings(TransferSettings settings, NestedTransferPluginOption option, Map<String, String> knownPluginSettings,
+	/**
+	 * Asks the user for all of the child plugin's settings.
+	 * 
+	 * <p>This case is triggered by a field looking like this:
+	 * <tt>private LocalTransferSettings localChildPluginSettings;</tt> 
+	 */
+	private void askConreteChildPluginSettings(TransferSettings settings, NestedTransferPluginOption option, Map<String, String> knownPluginSettings,
 			String nestPrefix) throws StorageException, IllegalAccessException, InstantiationException {
+		
+		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
+		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
 
 		if (isInteractive) {
+			callAndPrintPreQueryCallback(optionCallback);		
+
 			out.println();
-			out.println(option.getDescription() + ":");
+			out.println(option.getDescription() + ":");			
 		}
 
 		for (TransferPluginOption nestedPluginOption : option.getOptions()) {
@@ -280,6 +306,30 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			nestPrefix = nestPrefix + option.getName() + NESTED_OPTIONS_SEPARATOR;
 
 			askPluginSettings(nestedSettings, nestedPluginOption, knownPluginSettings, nestPrefix);
+		}
+		
+		if (isInteractive) {
+			callAndPrintPostQueryCallback(optionCallback, null);		
+		}
+	}
+	
+	private void callAndPrintPreQueryCallback(TransferPluginOptionCallback optionCallback) {
+		if (optionCallback != null) {
+			String preQueryMessage = optionCallback.preQueryCallback();
+			
+			if (preQueryMessage != null) {
+				out.println(preQueryMessage);
+			}
+		}
+	}
+	
+	private void callAndPrintPostQueryCallback(TransferPluginOptionCallback optionCallback, String optionValue) {
+		if (optionCallback != null) {
+			String postQueryMessage = optionCallback.postQueryCallback(optionValue);
+			
+			if (postQueryMessage != null) {
+				out.println(postQueryMessage);
+			}
 		}
 	}
 
