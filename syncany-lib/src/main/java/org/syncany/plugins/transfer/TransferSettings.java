@@ -34,6 +34,7 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 import org.syncany.config.UserConfig;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.plugins.Plugin;
@@ -69,7 +70,7 @@ public abstract class TransferSettings {
 	public void setUserInteractionListener(UserInteractionListener userInteractionListener) {
 		this.userInteractionListener = userInteractionListener;
 	}
-	
+
 	public final String getType() {
 		return type;
 	}
@@ -218,23 +219,20 @@ public abstract class TransferSettings {
 			field.setAccessible(true);
 
 			if (field.getAnnotation(Encrypted.class) != null) {
-				encryptField(field);				
+				encryptField(field);
 			}
 		}
 	}
 
 	private void encryptField(Field field) throws Exception {
 		logger.log(Level.INFO, "Encrypting field " + field + " ...");
-		
+
 		if (field.getType() != String.class) {
 			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 		}
 
-		String fieldPlaintextStr = (String) field.get(this);		
-		InputStream fieldPlaintextInputStream = IOUtils.toInputStream(fieldPlaintextStr);
-		byte[] fieldEncryptedBytes = CipherUtil.encrypt(fieldPlaintextInputStream, CipherSpecs.getDefaultCipherSpecs(), UserConfig.getConfigEncryptionKey());
-		
-		field.set(this, StringUtil.toHex(fieldEncryptedBytes)); // The field is now encrypted
+		String fieldPlaintextStr = (String) field.get(this);
+		field.set(this, TransferSettings.encrypt(fieldPlaintextStr)); // The field is now encrypted
 	}
 
 	@Commit
@@ -245,23 +243,20 @@ public abstract class TransferSettings {
 			field.setAccessible(true);
 
 			if (field.getAnnotation(Encrypted.class) != null) {
-				decryptField(field);				
+				decryptField(field);
 			}
 		}
 	}
 
 	private void decryptField(Field field) throws Exception {
 		logger.log(Level.INFO, "Decrypting field " + field + " ...");
-		
+
 		if (field.getType() != String.class) {
 			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
 		}
 
 		String fieldEncryptedHexStr = (String) field.get(this);
-		byte[] fieldEncryptedBytes = StringUtil.fromHex(fieldEncryptedHexStr);				
-		byte[] fieldDecryptedBytes = CipherUtil.decrypt(new ByteArrayInputStream(fieldEncryptedBytes), UserConfig.getConfigEncryptionKey());
-		
-		field.set(this, new String(fieldDecryptedBytes)); // The field is now decrypted
+		field.set(this, TransferSettings.decrypt(fieldEncryptedHexStr)); // The field is now decrypted
 	}
 
 	private String findPluginId() {
@@ -294,5 +289,17 @@ public abstract class TransferSettings {
 		}
 
 		return toStringHelper.toString();
+	}
+
+	public static String decrypt(String encryptedHexString) throws CipherException {
+		byte[] encryptedBytes = StringUtil.fromHex(encryptedHexString);
+		byte[] decryptedBytes = CipherUtil.decrypt(new ByteArrayInputStream(encryptedBytes), UserConfig.getConfigEncryptionKey());
+		return new String(decryptedBytes);
+	}
+
+	public static String encrypt(String decryptedPlainString) throws CipherException {
+		InputStream plaintextInputStream = IOUtils.toInputStream(decryptedPlainString);
+		byte[] encryptedBytes = CipherUtil.encrypt(plaintextInputStream, CipherSpecs.getDefaultCipherSpecs(), UserConfig.getConfigEncryptionKey());
+		return StringUtil.toHex(encryptedBytes);
 	}
 }

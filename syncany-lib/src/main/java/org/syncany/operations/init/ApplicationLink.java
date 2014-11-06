@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,39 +43,48 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.convert.Registry;
+import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.Strategy;
 import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.plugins.Plugins;
+import org.syncany.plugins.transfer.Encrypted;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.Base58;
-
+import org.syncany.util.ReflectionUtil;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
 /**
  * The application link class represents a <tt>syncany://</tt> link. It allowed creating
- * and parsing a link. The class has two modes of operation: 
- * 
- * <p>To create a new application link from an existing repository, call the {@link #ApplicationLink(TransferSettings)}
- * constructor and subsequently either call {@link #createPlaintextLink()} or {@link #createEncryptedLink(SaltedSecretKey)}.
+ * and parsing a link. The class has two modes of operation:
+ *
+ * <p>To create a new application link from an existing repository, call the
+ * {@link #ApplicationLink(org.syncany.plugins.transfer.TransferSettings, boolean)} constructor and subsequently either
+ * call {@link #createPlaintextLink()} or {@link #createEncryptedLink(SaltedSecretKey)}.
  * This method will typically be called during the 'init' or 'genlink' process.
- * 
- * <p>To parse an existing application link and return the relevant {@link TransferSettings}, call the 
+ *
+ * <p>To parse an existing application link and return the relevant {@link TransferSettings}, call the
  * {@link #ApplicationLink(String)} constructor and subsequently call {@link #createTransferSettings()}
  * or {@link #createTransferSettings(SaltedSecretKey)}. This method will typically be called during the 'connect' process.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class ApplicationLink {
 	private static final Logger logger = Logger.getLogger(ApplicationLink.class.getSimpleName());
-	
+
 	private static final String LINK_FORMAT_NOT_ENCRYPTED = "syncany://2/not-encrypted/%s";
 	private static final String LINK_FORMAT_ENCRYPTED = "syncany://2/%s/%s";
 
@@ -237,7 +247,7 @@ public class ApplicationLink {
 			HttpResponse httpResponse = createHttpClient().execute(postMethod);
 			ApplicationLinkShortenerResponse shortenerResponse = new Persister().read(ApplicationLinkShortenerResponse.class, httpResponse
 					.getEntity().getContent());
-			
+
 			return String.format(LINK_SHORT_URL_FORMAT, shortenerResponse.getShortLinkId());
 		}
 		catch (Exception e) {
@@ -245,7 +255,7 @@ public class ApplicationLink {
 			return applicationLink;
 		}
 	}
-	
+
 	private CloseableHttpClient createHttpClient() {
 		RequestConfig requestConfig = RequestConfig.custom()
 				.setSocketTimeout(2000)
@@ -257,7 +267,7 @@ public class ApplicationLink {
 				.create()
 				.setDefaultRequestConfig(requestConfig)
 				.build();
-		
+
 		return httpClient;
 	}
 
@@ -298,7 +308,7 @@ public class ApplicationLink {
 				plaintextPluginSettingsBytes.length);
 		String pluginSettings = IOUtils.toString(new GZIPInputStream(new ByteArrayInputStream(gzippedPluginSettingsByteArray)));
 
-		// Create transfer settings object 
+		// Create transfer settings object
 		try {
 			TransferPlugin plugin = Plugins.get(pluginId, TransferPlugin.class);
 
@@ -307,7 +317,11 @@ public class ApplicationLink {
 			}
 
 			Class<? extends TransferSettings> pluginTransferSettingsClass = TransferPluginUtil.getTransferSettingsClass(plugin.getClass());
-			TransferSettings transferSettings = new Persister().read(pluginTransferSettingsClass, pluginSettings);
+
+			Registry registry = new Registry();
+			Strategy strategy = new RegistryStrategy(registry);
+			registry.bind(String.class, new EncryptedTransferSettingsConverter(pluginTransferSettingsClass));
+			TransferSettings transferSettings = new Persister(strategy).read(pluginTransferSettingsClass, pluginSettings);
 
 			logger.log(Level.INFO, "(Decrypted) link contains: " + pluginId + " -- " + pluginSettings);
 
@@ -325,9 +339,59 @@ public class ApplicationLink {
 		plaintextOutputStream.write(transferSettings.getType().getBytes());
 
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
-		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
+
+		Registry registry = new Registry();
+		Strategy strategy = new RegistryStrategy(registry);
+		registry.bind(String.class, new EncryptedTransferSettingsConverter(transferSettings));
+		new Persister(strategy, new Format(0)).write(transferSettings, plaintextGzipOutputStream);
+		new Persister(strategy, new Format(0)).write(transferSettings, System.out);
 		plaintextGzipOutputStream.close();
 
 		return plaintextByteArrayOutputStream.toByteArray();
+	}
+
+	public static class EncryptedTransferSettingsConverter implements Converter<String> {
+
+		private Class<? extends TransferSettings> transferSettingsClass;
+		private TransferSettings transferSettings;
+		private List<String> encryptedFields;
+
+		public EncryptedTransferSettingsConverter(Class<? extends TransferSettings> transferSettingsClass) {
+			this.transferSettingsClass = transferSettingsClass;
+			encryptedFields = getEncryptedFields(transferSettingsClass);
+		}
+
+		public EncryptedTransferSettingsConverter(TransferSettings transferSettings) {
+			this.transferSettings = transferSettings;
+			encryptedFields = getEncryptedFields(transferSettings.getClass());
+		}
+
+		@Override
+		public String read(InputNode node) throws Exception {
+			if (!encryptedFields.contains(node.getName())) {
+				return node.getValue();
+			}
+
+			return TransferSettings.encrypt(node.getValue());
+		}
+
+		@Override
+		public void write(OutputNode node, String raw) throws Exception {
+			if (!encryptedFields.contains(node.getName())) {
+				node.setValue(raw) ;
+				return;
+			}
+
+			node.setValue(TransferSettings.decrypt(transferSettings.getField(node.getName())));
+		}
+
+		private List<String> getEncryptedFields(Class<? extends TransferSettings> clazz) {
+			List<String> encryptedFields = Lists.newArrayList();
+			for(Field field : ReflectionUtil.getAllFieldsWithAnnotation(clazz, Encrypted.class)) {
+				encryptedFields.add(field.getName());
+			}
+			return encryptedFields;
+		}
+
 	}
 }
