@@ -83,7 +83,10 @@ public abstract class TransferSettings {
 	 */
 	public final String getField(String key) throws StorageException {
 		try {
-			Object fieldValueAsObject = this.getClass().getDeclaredField(key).get(this);
+			Field field = this.getClass().getDeclaredField(key);
+			field.setAccessible(true);
+			
+			Object fieldValueAsObject = field.get(this);
 
 			if (fieldValueAsObject == null) {
 				return null;
