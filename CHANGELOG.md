@@ -7,8 +7,8 @@ Change Log
   From now on, breaking releases will always increase the minor version number.
 - Features and significant changes:
   + Allow plugin nesting and interaction via SimpleXML-ification (major!) #192/#240
-  + Implement Dropbox plugin (use Dropbox-provided storage) #226
-  + Implement RAID0 plugin (use two other plugins to extend storage) #191
+  + Implement [Dropbox plugin](https://github.com/syncany/syncany-plugin-dropbox) (use Dropbox-provided storage) #226
+  + Implement [RAID0 plugin](https://github.com/syncany/syncany-plugin-raid0) (use two other plugins to extend storage) #191
   + Encrypt plugin credentials in config.xml #168
   + New syncany://-link format, support for short syncany://-links (with 
     Syncany link shortener service), support for arbitrary link shorteners.
