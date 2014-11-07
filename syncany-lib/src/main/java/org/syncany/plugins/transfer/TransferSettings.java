@@ -30,8 +30,6 @@ import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Validate;
 import org.syncany.config.UserConfig;
 import org.syncany.crypto.CipherException;
@@ -41,7 +39,6 @@ import org.syncany.plugins.Plugin;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
-
 import com.google.common.base.Objects;
 
 /**
@@ -57,15 +54,10 @@ import com.google.common.base.Objects;
 public abstract class TransferSettings {
 	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 
-	private enum LAST_PERSISTER_ACTION {
-		ENCRYPT, DECRYPT
-	}
-
 	@Attribute
 	private String type = findPluginId();
 
 	private String lastValidationFailReason;
-	private LAST_PERSISTER_ACTION lastPersisterAction = null;
 	private UserInteractionListener userInteractionListener;
 
 	public UserInteractionListener getUserInteractionListener() {
@@ -217,70 +209,6 @@ public abstract class TransferSettings {
 		catch (IllegalAccessException e) {
 			throw new RuntimeException("IllegalAccessException when validating required fields: ", e);
 		}
-	}
-
-	@Persist
-	private void onPersist() throws Exception {
-		if (lastPersisterAction == LAST_PERSISTER_ACTION.ENCRYPT) {
-			if (logger.isLoggable(Level.FINE)) {
-				logger.log(Level.FINE, "@Encrypted values are already encrypted, skipping...");
-			}
-			return;
-		}
-		lastPersisterAction = LAST_PERSISTER_ACTION.ENCRYPT;
-
-		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
-
-		for (Field field : optionFields) {
-			field.setAccessible(true);
-
-			if (field.getAnnotation(Encrypted.class) != null) {
-				encryptField(field);
-			}
-		}
-	}
-
-	private void encryptField(Field field) throws Exception {
-		logger.log(Level.INFO, "Encrypting field " + field + " ...");
-
-		if (field.getType() != String.class) {
-			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
-		}
-
-		String fieldPlaintextStr = (String) field.get(this);
-		field.set(this, TransferSettings.encrypt(fieldPlaintextStr)); // The field is now encrypted
-	}
-
-	@Commit
-	private void onCommit() throws Exception {
-		if (lastPersisterAction == LAST_PERSISTER_ACTION.DECRYPT) {
-			if (logger.isLoggable(Level.FINE)) {
-				logger.log(Level.FINE, "@Encrypted values are already decrypted, skipping...");
-			}
-			return;
-		}
-		lastPersisterAction = LAST_PERSISTER_ACTION.DECRYPT;
-
-		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
-
-		for (Field field : optionFields) {
-			field.setAccessible(true);
-
-			if (field.getAnnotation(Encrypted.class) != null) {
-				decryptField(field);
-			}
-		}
-	}
-
-	private void decryptField(Field field) throws Exception {
-		logger.log(Level.INFO, "Decrypting field " + field + " ...");
-
-		if (field.getType() != String.class) {
-			throw new StorageException("Invalid use of Encrypted annotation: Only strings can be encrypted/decrypted");
-		}
-
-		String fieldEncryptedHexStr = (String) field.get(this);
-		field.set(this, TransferSettings.decrypt(fieldEncryptedHexStr)); // The field is now decrypted
 	}
 
 	private String findPluginId() {

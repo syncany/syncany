@@ -17,7 +17,6 @@
  */
 package org.syncany.config.to;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,14 +26,10 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.convert.Convert;
-import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.InputNode;
-import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.config.ConfigException;
-import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.StringUtil;
+import org.syncany.util.SaltedSecretKeyConverter;
 
 /**
  * The user config transfer object is a helper data structure that allows storing
@@ -94,20 +89,6 @@ public class UserConfigTO {
 		}
 		catch (Exception e) {
 			throw new ConfigException("Cannot write user config to file " + file, e);
-		}
-	}
-
-	public static class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
-		public SaltedSecretKey read(InputNode node) throws Exception {
-			byte[] saltBytes = StringUtil.fromHex(node.getAttribute("salt").getValue());
-			byte[] keyBytes = StringUtil.fromHex(node.getAttribute("key").getValue());
-
-			return new SaltedSecretKey(new SecretKeySpec(keyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);
-		}
-
-		public void write(OutputNode node, SaltedSecretKey saltedSecretKey) {
-			node.setAttribute("salt", StringUtil.toHex(saltedSecretKey.getSalt()));
-			node.setAttribute("key", StringUtil.toHex(saltedSecretKey.getEncoded()));
 		}
 	}
 }

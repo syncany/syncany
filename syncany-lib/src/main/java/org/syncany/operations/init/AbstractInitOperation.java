@@ -108,6 +108,9 @@ public abstract class AbstractInitOperation extends Operation {
 		appDir.delete();
 	}
 
+	/**
+	 * @deprecated Every *TO should define its own save operation
+	 */
 	protected void writeXmlFile(Object source, File file) throws IOException {
 		try {
 			Serializer serializer = new Persister();

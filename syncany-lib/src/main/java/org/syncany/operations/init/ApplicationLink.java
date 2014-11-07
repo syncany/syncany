@@ -20,7 +20,6 @@ package org.syncany.operations.init;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,27 +42,18 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.simpleframework.xml.convert.Converter;
-import org.simpleframework.xml.convert.Registry;
-import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.strategy.Strategy;
 import org.simpleframework.xml.stream.Format;
-import org.simpleframework.xml.stream.InputNode;
-import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.transfer.Encrypted;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.Base58;
-import org.syncany.util.ReflectionUtil;
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
 /**
@@ -317,11 +307,7 @@ public class ApplicationLink {
 			}
 
 			Class<? extends TransferSettings> pluginTransferSettingsClass = TransferPluginUtil.getTransferSettingsClass(plugin.getClass());
-
-			Registry registry = new Registry();
-			Strategy strategy = new RegistryStrategy(registry);
-			registry.bind(String.class, new EncryptedTransferSettingsConverter(pluginTransferSettingsClass));
-			TransferSettings transferSettings = new Persister(strategy).read(pluginTransferSettingsClass, pluginSettings);
+			TransferSettings transferSettings = new Persister().read(pluginTransferSettingsClass, pluginSettings);
 
 			logger.log(Level.INFO, "(Decrypted) link contains: " + pluginId + " -- " + pluginSettings);
 
@@ -339,52 +325,9 @@ public class ApplicationLink {
 		plaintextOutputStream.write(transferSettings.getType().getBytes());
 
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
-
-		Registry registry = new Registry();
-		Strategy strategy = new RegistryStrategy(registry);
-		registry.bind(String.class, new EncryptedTransferSettingsConverter(transferSettings.getClass()));
-		new Persister(strategy, new Format(0)).write(transferSettings, plaintextGzipOutputStream);
+		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
 		plaintextGzipOutputStream.close();
 
 		return plaintextByteArrayOutputStream.toByteArray();
-	}
-
-	public static class EncryptedTransferSettingsConverter implements Converter<String> {
-
-		private Class<? extends TransferSettings> transferSettingsClass;
-		private List<String> encryptedFields;
-
-		public EncryptedTransferSettingsConverter(Class<? extends TransferSettings> transferSettingsClass) {
-			this.transferSettingsClass = transferSettingsClass;
-			encryptedFields = getEncryptedFields(transferSettingsClass);
-		}
-
-		@Override
-		public String read(InputNode node) throws Exception {
-			if (!encryptedFields.contains(node.getName())) {
-				return node.getValue();
-			}
-
-			return TransferSettings.encrypt(node.getValue());
-		}
-
-		@Override
-		public void write(OutputNode node, String raw) throws Exception {
-			if (!encryptedFields.contains(node.getName())) {
-				node.setValue(raw) ;
-				return;
-			}
-
-			node.setValue(TransferSettings.decrypt(raw));
-		}
-
-		private List<String> getEncryptedFields(Class<? extends TransferSettings> clazz) {
-			List<String> encryptedFields = Lists.newArrayList();
-			for(Field field : ReflectionUtil.getAllFieldsWithAnnotation(clazz, Encrypted.class)) {
-				encryptedFields.add(field.getName());
-			}
-			return encryptedFields;
-		}
-
 	}
 }

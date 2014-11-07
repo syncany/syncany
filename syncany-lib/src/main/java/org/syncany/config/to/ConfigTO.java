@@ -17,21 +17,21 @@
  */
 package org.syncany.config.to;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Complete;
-import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.convert.Convert;
+import org.simpleframework.xml.convert.Registry;
+import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.Strategy;
 import org.syncany.config.ConfigException;
-import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.plugins.transfer.EncryptedTransferSettingsConverter;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.util.StringUtil;
+import org.syncany.util.SaltedSecretKeyConverter;
 
 /**
  * The config transfer object is used to create and load the local config
@@ -55,7 +55,7 @@ public class ConfigTO {
 	private String displayName;
 
 	@Element(name = "masterkey", required = false)
-	private String masterKeyEncoded;
+	@Convert(SaltedSecretKeyConverter.class)
 	private SaltedSecretKey masterKey;
 
 	@Element(name = "connection", required = true)
@@ -66,10 +66,29 @@ public class ConfigTO {
 
 	public static ConfigTO load(File file) throws ConfigException {
 		try {
-			return new Persister().read(ConfigTO.class, file);
+			Registry registry = new Registry();
+			Strategy strategy = new RegistryStrategy(registry);
+			registry.bind(SaltedSecretKey.class, new SaltedSecretKeyConverter());
+			registry.bind(String.class, new EncryptedTransferSettingsConverter());
+
+			return new Persister(strategy).read(ConfigTO.class, file);
 		}
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
+		}
+	}
+
+	public void save(File file) throws ConfigException {
+		try {
+			Registry registry = new Registry();
+			Strategy strategy = new RegistryStrategy(registry);
+			registry.bind(SaltedSecretKey.class, new SaltedSecretKeyConverter());
+			registry.bind(String.class, new EncryptedTransferSettingsConverter(transferSettings.getClass()));
+
+			new Persister(strategy).write(this, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot write config to file " + file, e);
 		}
 	}
 
@@ -111,36 +130,6 @@ public class ConfigTO {
 
 	public void setCacheKeepBytes(Long cacheKeepBytes) {
 		this.cacheKeepBytes = cacheKeepBytes;
-	}
-
-	@Persist
-	public void prepare() {
-		if (masterKey != null) {
-			masterKeyEncoded = StringUtil.toHex(masterKey.getSalt()) + "/" + StringUtil.toHex(masterKey.getEncoded());
-		}
-		else {
-			masterKeyEncoded = null;
-		}
-	}
-
-	@Complete
-	public void release() {
-		masterKeyEncoded = null;
-	}
-
-	@Commit
-	public void commit() {
-		if (masterKeyEncoded != null && !"".equals(masterKeyEncoded)) {
-			String[] masterKeyEncodedParts = masterKeyEncoded.split("/");
-
-			byte[] saltBytes = StringUtil.fromHex(masterKeyEncodedParts[0]);
-			byte[] masterKeyBytes = StringUtil.fromHex(masterKeyEncodedParts[1]);
-
-			masterKey = new SaltedSecretKey(new SecretKeySpec(masterKeyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);
-		}
-		else {
-			masterKey = null;
-		}
 	}
 
 }
