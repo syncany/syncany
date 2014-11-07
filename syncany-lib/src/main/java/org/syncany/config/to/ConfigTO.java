@@ -48,13 +48,13 @@ import org.syncany.util.SaltedSecretKeyConverter;
 @Root(name = "config", strict = false)
 @Namespace(reference = "http://syncany.org/config/1")
 public class ConfigTO {
-	@Element(name = "machinename", required = true)
+	@Element(name = "machineName", required = true)
 	private String machineName;
 
-	@Element(name = "displayname", required = false)
+	@Element(name = "displayName", required = false)
 	private String displayName;
 
-	@Element(name = "masterkey", required = false)
+	@Element(name = "masterKey", required = false)
 	@Convert(SaltedSecretKeyConverter.class)
 	private SaltedSecretKey masterKey;
 
