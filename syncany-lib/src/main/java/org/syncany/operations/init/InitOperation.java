@@ -119,7 +119,6 @@ public class InitOperation extends AbstractInitOperation {
 		}
 
 		options.getConfigTO().save(configFile);
-		//writeXmlFile(options.getConfigTO(), configFile);
 
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository");
