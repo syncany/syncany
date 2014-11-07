@@ -30,7 +30,6 @@ import java.lang.reflect.Type;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class TransferPluginOption {
-
 	public enum ValidationResult {
 		VALID, INVALID_TYPE, INVALID_NOT_SET
 	}
@@ -46,8 +45,9 @@ public class TransferPluginOption {
 	private final Class<? extends TransferPluginOptionCallback> callback;
 	private final Class<? extends TransferPluginOptionConverter> converter;
 
-	public TransferPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean singular, boolean required,
-	                            Class<? extends TransferPluginOptionCallback> callback, Class<? extends TransferPluginOptionConverter> converter) {
+	public TransferPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive, boolean singular,
+			boolean required,
+			Class<? extends TransferPluginOptionCallback> callback, Class<? extends TransferPluginOptionConverter> converter) {
 
 		this.field = field;
 		this.name = name;
@@ -120,23 +120,29 @@ public class TransferPluginOption {
 	private boolean validateInputType(String value) {
 		if (type == String.class) {
 			return true;
-		} else if (type == Integer.TYPE) {
+		}
+		else if (type == Integer.TYPE) {
 			try {
 				Integer.toString(Integer.parseInt(value));
 				return true;
-			} catch (NumberFormatException e) {
+			}
+			catch (NumberFormatException e) {
 				return false;
 			}
-		} else if (type == Boolean.TYPE) {
+		}
+		else if (type == Boolean.TYPE) {
 			return true;
-		} else if (type == File.class) {
+		}
+		else if (type == File.class) {
 			try {
 				new File(value);
 				return true;
-			} catch (NullPointerException e) {
+			}
+			catch (NullPointerException e) {
 				return false;
 			}
-		} else {
+		}
+		else {
 			throw new RuntimeException("Unknown type: " + type);
 		}
 	}

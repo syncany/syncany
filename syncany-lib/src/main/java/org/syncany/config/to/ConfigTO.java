@@ -29,9 +29,9 @@ import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.strategy.Strategy;
 import org.syncany.config.ConfigException;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.crypto.SaltedSecretKeyConverter;
 import org.syncany.plugins.transfer.EncryptedTransferSettingsConverter;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.util.SaltedSecretKeyConverter;
 
 /**
  * The config transfer object is used to create and load the local config

@@ -15,21 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util;
+package org.syncany.crypto;
 
 import javax.crypto.spec.SecretKeySpec;
 
 import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
-import org.syncany.crypto.CipherParams;
-import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.util.StringUtil;
 
 /**
+ * Converter to properly encode a {@link SaltedSecretKey} when writing 
+ * an XML. Salt and key are serialized as attributes.
+ * 
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
-
 	public SaltedSecretKey read(InputNode node) throws Exception {
 		byte[] saltBytes = StringUtil.fromHex(node.getAttribute("salt").getValue());
 		byte[] keyBytes = StringUtil.fromHex(node.getAttribute("key").getValue());

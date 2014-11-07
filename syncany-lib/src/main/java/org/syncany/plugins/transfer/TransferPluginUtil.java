@@ -21,6 +21,8 @@ import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.syncany.plugins.Plugin;
+
 import com.google.common.base.CaseFormat;
 
 /**
@@ -33,12 +35,13 @@ import com.google.common.base.CaseFormat;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class TransferPluginUtil {
-	private static final Pattern PLUGIN_PACKAGE_NAME_PATTERN = Pattern.compile("^org\\.syncany\\.plugins\\.([a-z0-9_]+)$");
+	private static final String PLUGIN_PACKAGE_NAME_REGEX = "^" + Plugin.class.getPackage().getName().replace(".", "\\.") + "\\.([a-z0-9_]+)$";
+	private static final Pattern PLUGIN_PACKAGE_NAME_PATTERN = Pattern.compile(PLUGIN_PACKAGE_NAME_REGEX);
 
-	private static final String PLUGIN_PACKAGE_NAME = "org.syncany.plugins.{0}.";
-	private static final String PLUGIN_TRANSFER_SETTINGS_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}TransferSettings";
-	private static final String PLUGIN_TRANSFER_MANAGER_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}TransferManager";
-	private static final String PLUGIN_TRANSFER_PLUGIN_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}TransferPlugin";
+	private static final String PLUGIN_PACKAGE_NAME = Plugin.class.getPackage().getName() + ".{0}.";
+	private static final String PLUGIN_TRANSFER_SETTINGS_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}" + TransferSettings.class.getSimpleName();
+	private static final String PLUGIN_TRANSFER_MANAGER_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}" + TransferManager.class.getSimpleName();
+	private static final String PLUGIN_TRANSFER_PLUGIN_CLASS_NAME = PLUGIN_PACKAGE_NAME + "{1}" + TransferPlugin.class.getSimpleName();
 
 	/**
 	 * Determines the {@link TransferSettings} class for a given
@@ -53,7 +56,8 @@ public abstract class TransferPluginUtil {
 		else {
 			try {
 				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
-				String transferSettingsClassName = MessageFormat.format(PLUGIN_TRANSFER_SETTINGS_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
+				String transferSettingsClassName = MessageFormat.format(PLUGIN_TRANSFER_SETTINGS_CLASS_NAME, pluginPackageIdentifier,
+						pluginNameIdentifier);
 				return Class.forName(transferSettingsClassName).asSubclass(TransferSettings.class);
 			}
 			catch (Exception e) {
@@ -75,7 +79,8 @@ public abstract class TransferPluginUtil {
 		else {
 			try {
 				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
-				String transferManagerClassName = MessageFormat.format(PLUGIN_TRANSFER_MANAGER_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
+				String transferManagerClassName = MessageFormat.format(PLUGIN_TRANSFER_MANAGER_CLASS_NAME, pluginPackageIdentifier,
+						pluginNameIdentifier);
 				return Class.forName(transferManagerClassName).asSubclass(TransferManager.class);
 			}
 			catch (Exception e) {
@@ -97,7 +102,8 @@ public abstract class TransferPluginUtil {
 		else {
 			try {
 				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
-				String transferPluginClassName = MessageFormat.format(PLUGIN_TRANSFER_PLUGIN_CLASS_NAME, pluginPackageIdentifier, pluginNameIdentifier);
+				String transferPluginClassName = MessageFormat.format(PLUGIN_TRANSFER_PLUGIN_CLASS_NAME, pluginPackageIdentifier,
+						pluginNameIdentifier);
 				return Class.forName(transferPluginClassName).asSubclass(TransferPlugin.class);
 			}
 			catch (Exception e) {

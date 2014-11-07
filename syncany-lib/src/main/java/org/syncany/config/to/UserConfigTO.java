@@ -29,7 +29,7 @@ import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 import org.syncany.crypto.SaltedSecretKey;
-import org.syncany.util.SaltedSecretKeyConverter;
+import org.syncany.crypto.SaltedSecretKeyConverter;
 
 /**
  * The user config transfer object is a helper data structure that allows storing

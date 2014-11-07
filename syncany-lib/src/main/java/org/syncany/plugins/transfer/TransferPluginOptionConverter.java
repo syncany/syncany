@@ -25,7 +25,6 @@ package org.syncany.plugins.transfer;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface TransferPluginOptionConverter {
-
 	/**
 	 * Converter a user input
 	 *

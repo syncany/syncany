@@ -98,14 +98,14 @@ public abstract class TransferSettings {
 	}
 
 	/**
-	 * Set a setting's value
+	 * Set the value of a field in the settings class.
 	 *
 	 * @param key The field name as it is used in the {@link TransferSettings}
 	 * @param value The object which should be the setting's value. The object's type must match the field type.
 	 *              {@link Integer}, {@link String}, {@link Boolean}, {@link File} and implementation of
 	 *              {@link TransferSettings} are converted.
 	 * @throws StorageException Thrown if the field either does not exist or isn't accessible or
-	 *            conversion failed due to invalid field types.
+	 *         conversion failed due to invalid field types.
 	 */
 	public final void setField(String key, Object value) throws StorageException {
 		try {
@@ -246,12 +246,14 @@ public abstract class TransferSettings {
 	public static String decrypt(String encryptedHexString) throws CipherException {
 		byte[] encryptedBytes = StringUtil.fromHex(encryptedHexString);
 		byte[] decryptedBytes = CipherUtil.decrypt(new ByteArrayInputStream(encryptedBytes), UserConfig.getConfigEncryptionKey());
+		
 		return new String(decryptedBytes);
 	}
 
 	public static String encrypt(String decryptedPlainString) throws CipherException {
 		InputStream plaintextInputStream = IOUtils.toInputStream(decryptedPlainString);
 		byte[] encryptedBytes = CipherUtil.encrypt(plaintextInputStream, CipherSpecs.getDefaultCipherSpecs(), UserConfig.getConfigEncryptionKey());
+		
 		return StringUtil.toHex(encryptedBytes);
 	}
 }

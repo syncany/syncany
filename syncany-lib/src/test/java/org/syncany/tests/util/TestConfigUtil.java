@@ -183,20 +183,6 @@ public class TestConfigUtil {
 		Map<String, String> localConnectionSettings = new HashMap<String, String>();
 		localConnectionSettings.put("path", localConnection.getPath().getAbsolutePath());
 
-		// if (connection instanceof UnreliableLocalTransferSettings) { // Dirty hack
-		// UnreliableLocalTransferSettings unreliableConnection = (UnreliableLocalTransferSettings) connection;
-		// String failingPatterns = StringUtil.join(unreliableConnection.getFailingOperationPatterns(), ",");
-		//
-		// localConnectionSettings.put("patterns", failingPatterns);
-		//
-		// connectionTO.setType("unreliable_local");
-		// connectionTO.setSettings(localConnectionSettings);
-		// }
-		// else {
-		// connectionTO.setType("local");
-		// connectionTO.setSettings(localConnectionSettings);
-		// }
-
 		configTO.setTransferSettings(connection);
 
 		// Create
@@ -232,10 +218,7 @@ public class TestConfigUtil {
 		SaltedSecretKey masterKey = getMasterKey();
 		configTO.setMasterKey(masterKey);
 
-		// generic connection settings wont work anymore, because they are plugin dependent now.
-		// ConnectionTO transferSettings = new ConnectionTO();
-		// transferSettings.setType("local");
-		// transferSettings.setSettings(localConnectionSettings);
+		// Generic connection settings wont work anymore, because they are plugin dependent now.
 		LocalTransferSettings transferSettings = Plugins.get("local", TransferPlugin.class).createEmptySettings();
 		transferSettings.setPath(tempRepoDir);
 

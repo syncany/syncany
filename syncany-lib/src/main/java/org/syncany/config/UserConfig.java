@@ -60,7 +60,7 @@ public class UserConfig {
 	private static final String USER_CONFIG_FILE = "userconfig.xml";
 	private static final String USER_TRUSTSTORE_FILE = "truststore.jks";
 	private static final String USER_KEYSTORE_FILE = "keystore.jks";
-	private static final int CONFIG_ENCRYPTION_KEY_LENGTH = 32;
+	private static final int USER_CONFIG_ENCRYPTION_KEY_LENGTH = 32;
 
 	private static File userConfigDir;
 	private static File userLogDir;
@@ -197,7 +197,7 @@ public class UserConfig {
 
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
-			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(CONFIG_ENCRYPTION_KEY_LENGTH));
+			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
 			
 			userConfigTO.setConfigEncryptionKey(configEncryptionKey);
 			UserConfigTO.save(userConfigTO, userConfigFile);
