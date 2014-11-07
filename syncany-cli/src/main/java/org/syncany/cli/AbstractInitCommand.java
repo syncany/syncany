@@ -17,12 +17,13 @@
  */
 package org.syncany.cli;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
@@ -31,27 +32,24 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.NestedTransferPluginOption;
-import org.syncany.plugins.transfer.TransferPluginOptionCallback;
-import org.syncany.plugins.transfer.TransferPluginOptionConverter;
-import org.syncany.plugins.transfer.TransferPluginOptions;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginOption;
+import org.syncany.plugins.transfer.TransferPluginOption.ValidationResult;
+import org.syncany.plugins.transfer.TransferPluginOptionCallback;
+import org.syncany.plugins.transfer.TransferPluginOptionConverter;
+import org.syncany.plugins.transfer.TransferPluginOptions;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.transfer.TransferPluginOption.ValidationResult;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
-
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -160,7 +158,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			if (askRetryInvalidSettings(settings.getReasonForLastValidationFail())) {
 				return askPluginSettings(settings, knownPluginSettings);
 			}
-			
+
 			throw new StorageException("Validation failed: " + settings.getReasonForLastValidationFail());
 		}
 
@@ -175,7 +173,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		if (option instanceof NestedTransferPluginOption) {
 			Class<?> childPluginTransferSettingsClass = ReflectionUtil.getClassFromType(option.getType());
 			boolean isGenericChildPlugin = TransferSettings.class.equals(childPluginTransferSettingsClass);
-			
+
 			if (isGenericChildPlugin) {
 				askGenericChildPluginSettings(settings, option, knownPluginSettings, nestPrefix);
 			}
@@ -219,9 +217,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	/**
 	 * Queries the user for a plugin (which plugin to use?) and then
 	 * asks for all of the plugin's settings.
-	 * 
+	 *
 	 * <p>This case is triggered by a field looking like this:
-	 * <tt>private TransferSettings childPluginSettings;</tt> 
+	 * <tt>private TransferSettings childPluginSettings;</tt>
 	 */
 	private void askGenericChildPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
 			throws StorageException, IllegalAccessException, InstantiationException {
@@ -230,10 +228,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
 
 		if (isInteractive) {
-			callAndPrintPreQueryCallback(optionCallback);		
+			callAndPrintPreQueryCallback(optionCallback);
 
 			out.println();
-			out.println(option.getDescription() + ":");			
+			out.println(option.getDescription() + ":");
 		}
 
 		TransferPlugin childPlugin = null;
@@ -268,29 +266,29 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		for (TransferPluginOption nestedOption : TransferPluginOptions.getOrderedOptions(childSettings.getClass())) {
 			askPluginSettings(childSettings, nestedOption, knownPluginSettings, nestPrefix);
 		}
-		
+
 		if (isInteractive) {
-			callAndPrintPostQueryCallback(optionCallback, null);		
+			callAndPrintPostQueryCallback(optionCallback, null);
 		}
 	}
 
 	/**
 	 * Asks the user for all of the child plugin's settings.
-	 * 
+	 *
 	 * <p>This case is triggered by a field looking like this:
-	 * <tt>private LocalTransferSettings localChildPluginSettings;</tt> 
+	 * <tt>private LocalTransferSettings localChildPluginSettings;</tt>
 	 */
 	private void askConreteChildPluginSettings(TransferSettings settings, NestedTransferPluginOption option, Map<String, String> knownPluginSettings,
 			String nestPrefix) throws StorageException, IllegalAccessException, InstantiationException {
-		
+
 		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
 		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
 
 		if (isInteractive) {
-			callAndPrintPreQueryCallback(optionCallback);		
+			callAndPrintPreQueryCallback(optionCallback);
 
 			out.println();
-			out.println(option.getDescription() + ":");			
+			out.println(option.getDescription() + ":");
 		}
 
 		for (TransferPluginOption nestedPluginOption : option.getOptions()) {
@@ -307,26 +305,26 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			askPluginSettings(nestedSettings, nestedPluginOption, knownPluginSettings, nestPrefix);
 		}
-		
+
 		if (isInteractive) {
-			callAndPrintPostQueryCallback(optionCallback, null);		
+			callAndPrintPostQueryCallback(optionCallback, null);
 		}
 	}
-	
+
 	private void callAndPrintPreQueryCallback(TransferPluginOptionCallback optionCallback) {
 		if (optionCallback != null) {
 			String preQueryMessage = optionCallback.preQueryCallback();
-			
+
 			if (preQueryMessage != null) {
 				out.println(preQueryMessage);
 			}
 		}
 	}
-	
+
 	private void callAndPrintPostQueryCallback(TransferPluginOptionCallback optionCallback, String optionValue) {
 		if (optionCallback != null) {
 			String postQueryMessage = optionCallback.postQueryCallback(optionValue);
-			
+
 			if (postQueryMessage != null) {
 				out.println(postQueryMessage);
 			}
@@ -382,7 +380,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String knownOptionValue = settings.getField(option.getField().getName());
 		String value = knownOptionValue;
 
-		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
 			out.printf("- %s: ", option.getDescription());
 			value = console.readLine();
 		}
@@ -423,7 +421,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String value = knownOptionValue;
 		String optionalIndicator = option.isRequired() ? "" : ", optional";
 
-		if (knownOptionValue == null || "".equals(knownOptionValue)) {
+		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
 			out.printf("- %s (not displayed%s): ", option.getDescription(), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}

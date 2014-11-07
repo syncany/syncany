@@ -342,9 +342,8 @@ public class ApplicationLink {
 
 		Registry registry = new Registry();
 		Strategy strategy = new RegistryStrategy(registry);
-		registry.bind(String.class, new EncryptedTransferSettingsConverter(transferSettings));
+		registry.bind(String.class, new EncryptedTransferSettingsConverter(transferSettings.getClass()));
 		new Persister(strategy, new Format(0)).write(transferSettings, plaintextGzipOutputStream);
-		new Persister(strategy, new Format(0)).write(transferSettings, System.out);
 		plaintextGzipOutputStream.close();
 
 		return plaintextByteArrayOutputStream.toByteArray();
@@ -353,17 +352,11 @@ public class ApplicationLink {
 	public static class EncryptedTransferSettingsConverter implements Converter<String> {
 
 		private Class<? extends TransferSettings> transferSettingsClass;
-		private TransferSettings transferSettings;
 		private List<String> encryptedFields;
 
 		public EncryptedTransferSettingsConverter(Class<? extends TransferSettings> transferSettingsClass) {
 			this.transferSettingsClass = transferSettingsClass;
 			encryptedFields = getEncryptedFields(transferSettingsClass);
-		}
-
-		public EncryptedTransferSettingsConverter(TransferSettings transferSettings) {
-			this.transferSettings = transferSettings;
-			encryptedFields = getEncryptedFields(transferSettings.getClass());
 		}
 
 		@Override
@@ -382,7 +375,7 @@ public class ApplicationLink {
 				return;
 			}
 
-			node.setValue(TransferSettings.decrypt(transferSettings.getField(node.getName())));
+			node.setValue(TransferSettings.decrypt(raw));
 		}
 
 		private List<String> getEncryptedFields(Class<? extends TransferSettings> clazz) {

@@ -17,16 +17,15 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
+import org.simpleframework.xml.Element;
+import org.syncany.util.ReflectionUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
-
-import org.simpleframework.xml.Element;
-import org.syncany.util.ReflectionUtil;
-
-import java.lang.reflect.Field;
-import java.util.List;
 
 /**
  * Helper class to read the options of a {@link TransferSettings} using the
@@ -68,6 +67,7 @@ public class TransferPluginOptions {
 			Class<? extends TransferPluginOptionConverter> converter = (hasConverter) ? setupAnnotation.converter() : null;
 			boolean required = elementAnnotation.required();
 			boolean sensitive = setupAnnotation != null && setupAnnotation.sensitive();
+			boolean singular = setupAnnotation != null && setupAnnotation.singular();
 			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
 
 			boolean isNestedOption = TransferSettings.class.isAssignableFrom(field.getType());
@@ -78,11 +78,11 @@ public class TransferPluginOptions {
 				}
 
 				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
-				options.add(new NestedTransferPluginOption(field, name, description, fieldClass, encrypted, sensitive, required, callback, converter,
+				options.add(new NestedTransferPluginOption(field, name, description, fieldClass, encrypted, sensitive, singular, required, callback, converter,
 						getOrderedOptions(fieldClass)));
 			}
 			else {
-				options.add(new TransferPluginOption(field, name, description, field.getType(), encrypted, sensitive, required, callback, converter));
+				options.add(new TransferPluginOption(field, name, description, field.getType(), encrypted, sensitive, singular, required, callback, converter));
 			}
 		}
 

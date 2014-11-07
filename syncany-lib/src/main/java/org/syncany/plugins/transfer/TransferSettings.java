@@ -57,10 +57,15 @@ import com.google.common.base.Objects;
 public abstract class TransferSettings {
 	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());
 
+	private enum LAST_PERSISTER_ACTION {
+		ENCRYPT, DECRYPT
+	}
+
 	@Attribute
 	private String type = findPluginId();
 
 	private String lastValidationFailReason;
+	private LAST_PERSISTER_ACTION lastPersisterAction = null;
 	private UserInteractionListener userInteractionListener;
 
 	public UserInteractionListener getUserInteractionListener() {
@@ -86,7 +91,7 @@ public abstract class TransferSettings {
 		try {
 			Field field = this.getClass().getDeclaredField(key);
 			field.setAccessible(true);
-			
+
 			Object fieldValueAsObject = field.get(this);
 
 			if (fieldValueAsObject == null) {
@@ -216,6 +221,14 @@ public abstract class TransferSettings {
 
 	@Persist
 	private void onPersist() throws Exception {
+		if (lastPersisterAction == LAST_PERSISTER_ACTION.ENCRYPT) {
+			if (logger.isLoggable(Level.FINE)) {
+				logger.log(Level.FINE, "@Encrypted values are already encrypted, skipping...");
+			}
+			return;
+		}
+		lastPersisterAction = LAST_PERSISTER_ACTION.ENCRYPT;
+
 		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
 
 		for (Field field : optionFields) {
@@ -240,6 +253,14 @@ public abstract class TransferSettings {
 
 	@Commit
 	private void onCommit() throws Exception {
+		if (lastPersisterAction == LAST_PERSISTER_ACTION.DECRYPT) {
+			if (logger.isLoggable(Level.FINE)) {
+				logger.log(Level.FINE, "@Encrypted values are already decrypted, skipping...");
+			}
+			return;
+		}
+		lastPersisterAction = LAST_PERSISTER_ACTION.DECRYPT;
+
 		Field[] optionFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Setup.class);
 
 		for (Field field : optionFields) {

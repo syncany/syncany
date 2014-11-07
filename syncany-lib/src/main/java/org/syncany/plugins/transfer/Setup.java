@@ -48,6 +48,11 @@ public @interface Setup {
 	boolean sensitive() default false;
 
 	/**
+	 * Singular values have to be inserted again when a user wants to changes values
+	 */
+	boolean singular() default false;
+
+	/**
 	 * @see org.syncany.plugins.transfer.TransferPluginOptionCallback
 	 */
 	Class<? extends TransferPluginOptionCallback> callback() default TransferPluginOptionCallback.class;
