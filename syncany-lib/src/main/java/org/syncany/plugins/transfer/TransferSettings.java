@@ -232,6 +232,8 @@ public abstract class TransferSettings {
 		Objects.ToStringHelper toStringHelper = Objects.toStringHelper(this);
 
 		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
+			field.setAccessible(true);
+			
 			try {
 				toStringHelper.add(field.getName(), field.get(this));
 			}
