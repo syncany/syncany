@@ -77,8 +77,8 @@ public class DoSameActionAtTwoClientsTest {
 		assertEquals(false, downResultA.getChangeSet().hasChanges());
 
 		// For peaking (does NOT affect the test)
-		FileUtils.copyFile(new File(testConnection.getRepositoryPath(), "databases/database-B-0000000001"),
-				new File(testConnection.getRepositoryPath(), "databases/TEMP_db-B-0000000001"));
+		FileUtils.copyFile(new File(testConnection.getPath(), "databases/database-B-0000000001"),
+				new File(testConnection.getPath(), "databases/TEMP_db-B-0000000001"));
 
 		DownOperationResult downResultB = clientB.down(); // creates DIRTY; deletes (B1)
 		assertEquals(DownResultCode.OK_WITH_REMOTE_CHANGES, downResultB.getResultCode());

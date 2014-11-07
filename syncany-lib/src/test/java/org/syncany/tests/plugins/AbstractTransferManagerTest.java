@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,7 @@
  */
 package org.syncany.tests.plugins;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.After;
@@ -42,6 +37,10 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractTransferManagerTest {
 	private File tempLocalSourceDir;
@@ -83,14 +82,11 @@ public abstract class AbstractTransferManagerTest {
 	public void testConnectWithInvalidSettings() throws StorageException {
 		TransferPlugin plugin = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		Map<String, String> invalidEmptyPluginSettings = new HashMap<String, String>();
-
-		TransferSettings connection = plugin.createSettings();
-		connection.init(invalidEmptyPluginSettings);
-
-		TransferManager transferManager = plugin.createTransferManager(connection, null);
+		TransferSettings connection = plugin.createEmptySettings();
 
 		// This should cause a Storage exception, because the path does not exist
+		TransferManager transferManager = plugin.createTransferManager(connection, null);
+
 		transferManager.connect();
 	}
 
@@ -110,24 +106,18 @@ public abstract class AbstractTransferManagerTest {
 		cleanTestLocation(transferManager);
 
 		// Run!
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class, new SyncanyRemoteFile[] {
-				new SyncanyRemoteFile()
-		});
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, SyncanyRemoteFile.class,
+				new SyncanyRemoteFile[] { new SyncanyRemoteFile() });
 
-		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] {
-				new MasterRemoteFile()
-		});
+		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MasterRemoteFile.class, new MasterRemoteFile[] { new MasterRemoteFile() });
 
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, DatabaseRemoteFile.class, new DatabaseRemoteFile[] {
-				new DatabaseRemoteFile("database-A-0001"),
-				new DatabaseRemoteFile("database-B-0002")
-		});
+				new DatabaseRemoteFile("database-A-0001"), new DatabaseRemoteFile("database-B-0002") });
 
 		uploadDownloadListDelete(transferManager, tempFromDir, tempToDir, MultichunkRemoteFile.class, new MultichunkRemoteFile[] {
 				new MultichunkRemoteFile("multichunk-84f7e2b31440aaef9b73de3cadcf4e449aeb55a1"),
 				new MultichunkRemoteFile("multichunk-beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"),
-				new MultichunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-		});
+				new MultichunkRemoteFile("multichunk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") });
 
 		// Clear up previous test (if test location is reused)
 		cleanTestLocation(transferManager);
@@ -196,8 +186,10 @@ public abstract class AbstractTransferManagerTest {
 	private TransferManager loadPluginAndCreateTransferManager() throws StorageException {
 		TransferPlugin pluginInfo = Plugins.get(getPluginId(), TransferPlugin.class);
 
-		TransferSettings connection = pluginInfo.createSettings();
-		connection.init(createPluginSettings());
+		TransferSettings connection = pluginInfo.createEmptySettings();
+		for (Map.Entry<String, String> pair : createPluginSettings().entrySet()) {
+			connection.setField(pair.getKey(), pair.getValue());
+		}
 
 		return new TransactionAwareTransferManager(pluginInfo.createTransferManager(connection, null), null);
 	}

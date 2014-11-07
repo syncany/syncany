@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
@@ -38,26 +37,25 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
-import org.syncany.util.Base58;
 import org.syncany.util.EnvironmentUtil;
 
 /**
  * The abstract init operation implements common functions of the {@link InitOperation}
  * and the {@link ConnectOperation}. Its sole purpose is to avoid duplicate code in these
  * similar operations.
- *   
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractInitOperation extends Operation {
-    protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
-    
-    protected UserInteractionListener listener;
+	protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
+
+	protected UserInteractionListener listener;
 
 	public AbstractInitOperation(Config config, UserInteractionListener listener) {
 		super(config);
 		this.listener = listener;
 	}
-	
+
 	protected File createAppDirs(File localDir) throws IOException {
 		if (localDir == null) {
 			throw new RuntimeException("Unable to create app dir, local dir is null.");
@@ -120,9 +118,9 @@ public abstract class AbstractInitOperation extends Operation {
 		}
 	}
 
-	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws IOException,
+	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws IOException,
 			CipherException {
-		
+
 		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
 
 		try {
@@ -133,32 +131,7 @@ public abstract class AbstractInitOperation extends Operation {
 			throw new IOException(e);
 		}
 
-		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSuites, masterKey);
-	}
-
-	protected String getEncryptedLink(ConnectionTO connectionTO, List<CipherSpec> cipherSuites, SaltedSecretKey masterKey) throws Exception {
-		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
-
-		byte[] masterKeySalt = masterKey.getSalt();
-		String masterKeySaltEncodedStr = new String(Base58.encode(masterKeySalt));
-
-		byte[] encryptedConnectionBytes = CipherUtil.encrypt(new ByteArrayInputStream(plaintextOutputStream.toByteArray()), cipherSuites, masterKey);
-		String encryptedEncodedStorageXml = new String(Base58.encode(encryptedConnectionBytes));
-
-		return "syncany://storage/1/" + masterKeySaltEncodedStr + "/" + encryptedEncodedStorageXml;
-	}
-
-	protected String getPlaintextLink(ConnectionTO connectionTO) throws Exception {
-		ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-		Serializer serializer = new Persister();
-		serializer.write(connectionTO, plaintextOutputStream);
-
-		byte[] plaintextStorageXml = plaintextOutputStream.toByteArray();
-		String plaintextEncodedStorageXml = new String(Base58.encode(plaintextStorageXml));
-
-		return "syncany://storage/1/not-encrypted/" + plaintextEncodedStorageXml;
+		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSpecs, masterKey);
 	}
 
 	protected void fireNotifyCreateMaster() {

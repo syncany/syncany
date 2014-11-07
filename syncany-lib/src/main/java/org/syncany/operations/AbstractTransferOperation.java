@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,13 +31,13 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
 /**
- * Represents and is inherited by a transfer operation. Transfer operations are operations 
+ * Represents and is inherited by a transfer operation. Transfer operations are operations
  * that modify the repository and/or are relevant for the consistency of the local directory
- * or the remote repository. 
- * 
+ * or the remote repository.
+ *
  * <p>This abstract class offers convenience methods to handle {@link ActionRemoteFile} as well
  * as to handle the connection and local cache.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class AbstractTransferOperation extends Operation {
@@ -45,9 +45,9 @@ public abstract class AbstractTransferOperation extends Operation {
 
 	/**
 	 * Defines the time after which old/outdated action files from other clients are
-	 * deleted. This time must be significantly larger than the time action files are 
+	 * deleted. This time must be significantly larger than the time action files are
 	 * renewed by the {@link ActionFileHandler}.
-	 * 
+	 *
 	 * @see ActionFileHandler#ACTION_RENEWAL_INTERVAL
 	 */
 	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
@@ -60,17 +60,22 @@ public abstract class AbstractTransferOperation extends Operation {
 
 		// Do NOT reuse TransferManager for action file renewal; see #140
 
-		this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
-		this.transferManager = createReliableTransferManager(config);
+		try {
+			this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
+			this.transferManager = createReliableTransferManager(config);
+		}
+		catch (StorageException e) {
+			logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
+			throw new RuntimeException("Unable to create AbstractTransferOperation: Unable to create TransferManager: " + e.getMessage());
+		}
 	}
 
-	private TransactionAwareTransferManager createReliableTransferManager(Config config) {
+	private TransactionAwareTransferManager createReliableTransferManager(Config config) throws StorageException {
 		return new TransactionAwareTransferManager(createRetriableTransferManager(config), config);
 	}
 
-	private TransferManager createRetriableTransferManager(Config config) {
-		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(
-				config.getConnection(), config));
+	private TransferManager createRetriableTransferManager(Config config) throws StorageException {
+		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection(), config));
 	}
 
 	protected void startOperation() throws Exception {

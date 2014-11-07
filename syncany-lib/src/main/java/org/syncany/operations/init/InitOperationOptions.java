@@ -34,7 +34,12 @@ public class InitOperationOptions implements OperationOptions {
 	private List<CipherSpec> cipherSpecs;
 	private String password;
 	private boolean daemon;
+	private GenlinkOperationOptions genlinkOptions;
 
+	public InitOperationOptions() {
+		this.genlinkOptions = new GenlinkOperationOptions();
+	}
+	
 	public boolean isCreateTarget() {
 		return createTarget;
 	}
@@ -97,5 +102,13 @@ public class InitOperationOptions implements OperationOptions {
 
 	public void setDaemon(boolean daemon) {
 		this.daemon = daemon;
+	}
+
+	public GenlinkOperationOptions getGenlinkOptions() {
+		return genlinkOptions;
+	}
+
+	public void setGenlinkOptions(GenlinkOperationOptions genlinkOptions) {
+		this.genlinkOptions = genlinkOptions;
 	}
 }

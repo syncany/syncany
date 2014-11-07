@@ -46,7 +46,7 @@ public class AssemblerTest {
 		clientA.upWithForceChecksum();
 		
 		// Read chunk from original multichunk
-		File repoMultiChunksFolder = new File(testConnection.getRepositoryPath(), "multichunks");
+		File repoMultiChunksFolder = new File(testConnection.getPath(), "multichunks");
 		File multiChunkFile = repoMultiChunksFolder.listFiles()[0];
 		
 		MultiChunk multiChunk = clientA.getConfig().getMultiChunker().createMultiChunk(

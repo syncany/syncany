@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
-import org.syncany.plugins.unreliable_local.UnreliableLocalPlugin;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -80,25 +80,25 @@ public class CleanupInterruptedTest {
 
 		assertTrue(cleanupFailed);
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "databases").list().length);
 		assertEquals(1, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "actions").list().length);
 
 		clientA.cleanup(cleanupOptions);
 		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(3, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(3, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(3, new File(testConnection.getPath(), "databases").list().length);
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
 
 		clientA.deleteTestData();
 	}
@@ -135,20 +135,20 @@ public class CleanupInterruptedTest {
 
 		assertTrue(cleanupFailed);
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		// Note that the list here differs from the actual files, because the transaction fails
 		// while deletions have been done
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "databases").list().length);
 
 		assertEquals(1, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "transactions").list().length);
 
 		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "actions").list().length);
 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		File tempFile = File.createTempFile("multichunk", "", tempDir);
@@ -161,16 +161,16 @@ public class CleanupInterruptedTest {
 		clientA.cleanup(cleanupOptions);
 
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
 
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
 	}
 
 	@Test
@@ -204,32 +204,32 @@ public class CleanupInterruptedTest {
 		}
 
 		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalPlugin().createTransferManager(testConnection, null), null);
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 
 		assertTrue(cleanupFailed);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "multichunks").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
 
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "transactions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 
 		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "actions").list().length);
 
 		// Two temporary files left (first deletion failed)
 		assertEquals(2, transferManager.list(TempRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getRepositoryPath(), "temporary").list().length);
+		assertEquals(2, new File(testConnection.getPath(), "temporary").list().length);
 
 		clientA.cleanup(cleanupOptions);
 
 		// Functional cleanup results in removal of action file and unreferenced files
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "actions").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
 
 		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getRepositoryPath(), "temporary").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
 	}
 }

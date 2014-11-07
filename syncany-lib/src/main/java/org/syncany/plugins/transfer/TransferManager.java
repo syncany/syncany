@@ -47,7 +47,6 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface TransferManager {
-
 	/**
 	 * Establish a connection with the remote storage. 
 	 * 

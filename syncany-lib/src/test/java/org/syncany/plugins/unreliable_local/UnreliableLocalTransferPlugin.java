@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,31 +17,18 @@
  */
 package org.syncany.plugins.unreliable_local;
 
-import org.syncany.config.Config;
-import org.syncany.plugins.local.LocalPlugin;
-import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
  * The unreliable local plugin can be used for test purposes to
  * test connection issues with the backend storage. Each operation of the
  * plugin (e.g upload, download, ...) can be failed on purpose through
- * regular expressions on the operation signature. 
+ * regular expressions on the operation signature.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class UnreliableLocalPlugin extends LocalPlugin {
-	public UnreliableLocalPlugin() {
+public class UnreliableLocalTransferPlugin extends TransferPlugin {
+	public UnreliableLocalTransferPlugin() {
 		super("unreliable_local");
-	}
-
-	@Override
-	public TransferSettings createSettings() {
-		return new UnreliableLocalTransferSettings();
-	}
-
-	@Override
-	public TransferManager createTransferManager(TransferSettings connection, Config config) {
-		return new UnreliableLocalTransferManager((UnreliableLocalTransferSettings) connection, config);
 	}
 }

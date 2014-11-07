@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,20 @@ import java.util.TreeMap;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
+import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.crypto.SaltedSecretKeyConverter;
 
 /**
  * The user config transfer object is a helper data structure that allows storing
  * a user's global system settings such as system properties.
- * 
+ *
  * <p>It uses the Simple framework for XML serialization, and its corresponding
- * annotation-based configuration.  
- *  
+ * annotation-based configuration.
+ *
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -44,6 +48,10 @@ public class UserConfigTO {
 
 	@Element(name = "preventStandby", required = false)
 	private boolean preventStandby;
+
+	@Element(name = "configEncryptionKey", required = true)
+	@Convert(SaltedSecretKeyConverter.class)
+	private SaltedSecretKey configEncryptionKey;
 
 	public UserConfigTO() {
 		this.systemProperties = new TreeMap<String, String>();
@@ -58,9 +66,17 @@ public class UserConfigTO {
 		return preventStandby;
 	}
 
+	public SaltedSecretKey getConfigEncryptionKey() {
+		return configEncryptionKey;
+	}
+
+	public void setConfigEncryptionKey(SaltedSecretKey configEncryptionKey) {
+		this.configEncryptionKey = configEncryptionKey;
+	}
+
 	public static UserConfigTO load(File file) throws ConfigException {
 		try {
-			return new Persister().read(UserConfigTO.class, file);
+			return new Persister(new AnnotationStrategy()).read(UserConfigTO.class, file);
 		}
 		catch (Exception e) {
 			throw new ConfigException("User config file cannot be read or is invalid: " + file, e);
@@ -69,7 +85,7 @@ public class UserConfigTO {
 
 	public static void save(UserConfigTO userConfigTO, File file) throws ConfigException {
 		try {
-			new Persister().write(userConfigTO, file);
+			new Persister(new AnnotationStrategy()).write(userConfigTO, file);
 		}
 		catch (Exception e) {
 			throw new ConfigException("Cannot write user config to file " + file, e);
