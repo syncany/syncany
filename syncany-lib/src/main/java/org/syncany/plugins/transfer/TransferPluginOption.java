@@ -134,12 +134,17 @@ public class TransferPluginOption {
 			return true;
 		}
 		else if (type == File.class) {
-			try {
-				new File(value);
-				return true;
+			if (isRequired()) {
+				try {
+					new File(value);
+					return true;
+				}
+				catch (NullPointerException e) {
+					return false;
+				}
 			}
-			catch (NullPointerException e) {
-				return false;
+			else {
+				return true;
 			}
 		}
 		else {

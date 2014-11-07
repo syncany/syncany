@@ -401,7 +401,13 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String value = knownOptionValue;
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (optional, default is %s): ", option.getDescription(), settings.getField(option.getField().getName()));
+			String defaultValueDescription = settings.getField(option.getField().getName());
+			
+			if (defaultValueDescription == null) {
+				defaultValueDescription = "none";
+			}
+			
+			out.printf("- %s (optional, default is %s): ", option.getDescription(), defaultValueDescription);
 			value = console.readLine();
 		}
 		else {
