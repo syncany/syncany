@@ -3,64 +3,62 @@ NAME
 
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
-          [-E | --no-encryption] [-G | --no-compression]
-          [-t | --create-target] [-a | --advanced] [-I | --no-interaction]
-          [-n | --add-daemon]
-            
-DESCRIPTION 
+          [-E | --no-encryption] [-G | --no-compression] [-s | --short]
+          [-t | --create-target] [-a | --advanced] [-n | --add-daemon]
+
+DESCRIPTION
   This command creates a new remote repository using the specified plugin, and
-  initializes the local directory. Unless -I is set, the command is
-  interactive and queries the user for input.  
-                 
+  initializes the local directory. Unless -o is set, the command is
+  interactive and queries the user for input.
+
   Depending on the chosen plugin chosen (with -P or interactively), different
-  plugin-specific options are required or optional. 
- 
-  Once the 'init' command was successfully executed, the initialized local 
-  folder can be synced with the newly created repository. The commands 
+  plugin-specific options are required or optional.
+
+  Once the 'init' command was successfully executed, the initialized local
+  folder can be synced with the newly created repository. The commands
   'up', 'down', 'watch', etc. can be used. Other clients can then be connected
   using the 'connect' command.
-  
+
 OPTIONS
-  -P, --plugin=<plugin>            
+  -P, --plugin=<plugin>
     Selects a plugin to use for the repository. Local files will be synced via
-    the storage specified by this plugin. Any of the following available 
+    the storage specified by this plugin. Any of the following available
     plugins can be used: %PLUGINS%
-     
-  -o, --plugin-option=<key=value> (multiple options possible) 
-    Sets a plugin-specific setting in the form of a key/value pair. Each 
-    plugin defines different mandatory and optional settings that must/can
-    either be specified by this option, or interactively. All mandatory and
-    optional settings can be listed using the 'plugin' command. 
-    
-  -E, --no-encryption              
+
+  -o, --plugin-option=<key=value> (multiple options possible)
+    Sets a plugin-specific setting in the form of a key/value pair. Each
+    plugin defines different mandatory and optional settings. At least, all
+    mandatory settings must be specified by this option. All mandatory and
+    optional settings can be listed using the 'plugin' command.
+
+  -E, --no-encryption
     DO NOT USE THIS OPTION. Turns off the encryption for the newly created
     remote repository. All files are stored in plaintext. No password is
-    needed for either syncany:// link, multichunk or metadata. 
-    
-  -G, --no-compression             
+    needed for either syncany:// link, multichunk or metadata.
+
+  -G, --no-compression
     Turns off Gzip compression for the newly created remote repository. All
     files are stored in uncompressed form. Can increase indexing performance,
     but will also increase transfer times and remote storage space.
-    
-  -t, --create-target              
+
+  -t, --create-target
     If not existent, creates the target path on the remote storage. If this
     option is not given, the command will fail if the target folder/path does
-    not exist. 
-    
-  -a, --advanced                   
+    not exist.
+
+  -a, --advanced
     Runs the interactive setup in an advanced mode, querying the user for more
     detailed encryption options. In particular, it is possible to select the
-    available symmetric ciphers and modes of operation to encrypt the 
+    available symmetric ciphers and modes of operation to encrypt the
     repository with.
-    
-  -I, --no-interaction             
-    Runs the command in a non-interactive mode. The user will not be queried 
-    for any input. The command will fail if not all mandatory options are 
-    given on the command line. This option can be used to automate repository
-    creation.
-    
-  -n, --add-daemon             
-    The initialized local folder is automatically added to the daemon 
+
+  -n, --add-daemon
+    The initialized local folder is automatically added to the daemon
     configuration for automatic synchronization if this option is used.
-                 
+    
+  -s, --short
+    The syncany:// link printed after the initialization will be shortened
+    using the Syncany link shortener service. This option stores the encrypted
+    link on the Syncany servers. The option does not work if -E is enabled.
+
 %RESOURCE:incl/footer.skel%

@@ -1,38 +1,38 @@
 #!bash
-# 
+#
 # Syncany Bash Completion
 # =======================
-# 
+#
 # Bash completion support for [Syncany](https://www.syncany.org/).
-# 
-# The script is inspired by the BZR/Bazaar bash completion script 
+#
+# The script is inspired by the BZR/Bazaar bash completion script
 # available at https://launchpad.net/bzr-bash-completion
-# 
+#
 # Installation
 # ------------
-# 
+#
 # 1. Place it in a `bash-completion.d` folder:
-# 
+#
 #   * /etc/bash-completion.d
 #   * /usr/local/etc/bash-completion.d
 #   * ~/bash-completion.d
-# 
+#
 # 2. Open new bash, and type `sy [TAB][TAB]`
-# 
+#
 # Documentation
 # -------------
-# The script is called by bash whenever [TAB] or [TAB][TAB] is pressed after 
+# The script is called by bash whenever [TAB] or [TAB][TAB] is pressed after
 # 'sy (..)'. By reading entered command line parameters, it determines possible
-# bash completions and writes them to the COMPREPLY variable. Bash then 
+# bash completions and writes them to the COMPREPLY variable. Bash then
 # completes the user input if only one entry is listed in the variable or
 # shows the options if more than one is listed in COMPREPLY.
 #
-# The script first determines the current parameter ($cur), the previous 
+# The script first determines the current parameter ($cur), the previous
 # parameter ($prev), the first word ($firstword) and the last word ($lastword).
-# Using the $firstword variable (= the command) and a giant switch/case, 
-# completions are written to $complete_words and $complete_options. 
+# Using the $firstword variable (= the command) and a giant switch/case,
+# completions are written to $complete_words and $complete_options.
 #
-# If the current user input ($cur) starts with '-', only $command_options are 
+# If the current user input ($cur) starts with '-', only $command_options are
 # displayed/completed, otherwise only $command_words.
 #
 
@@ -84,7 +84,6 @@ _sy() {
 	CONNECT_OPTIONS="\
 		-P --plugin\
 		-o --plugin-option\
-		-I --no-interaction\
 		-n --add-daemon"
 
 	DOWN_CONFLICT_STRATEGIES="\
@@ -113,7 +112,6 @@ _sy() {
 		-G --no-compression\
 		-t --create-target\
 		-a --advanced\
-		-I --no-interaction\
 		-n --add-daemon"
 
 	LS_OPTIONS="\
@@ -223,7 +221,7 @@ _sy() {
 
 	connect)
 		case "${prev}" in
-			--plugin|-P) 
+			--plugin|-P)
 				complete_words="$PLUGIN_IDS"
 				;;
 
@@ -245,13 +243,13 @@ _sy() {
 
 	down)
 		case "${prev}" in
-			--conflict-strategy|-C) 
+			--conflict-strategy|-C)
 				complete_words="$DOWN_CONFLICT_STRATEGIES"
 				;;
 
 			*)
 				complete_options="$DOWN_OPTIONS"
-				;;	
+				;;
 		esac
 		;;
 
@@ -259,7 +257,7 @@ _sy() {
 		case "${lastword}" in
 			force-stop|reload|restart|start|status|stop)
 				;;
-			
+
 			*)
 				complete_words="$DAEMON_COMMANDS"
 				;;
@@ -272,7 +270,7 @@ _sy() {
 
 	init)
 		case "${prev}" in
-			--plugin|-P) 
+			--plugin|-P)
 				complete_words="$PLUGIN_IDS"
 				;;
 
@@ -291,10 +289,10 @@ _sy() {
 				;;
 		esac
 		;;
-		
+
 	ls)
 		case "${prev}" in
-			--types|-t) 
+			--types|-t)
 				complete_words="$LS_TYPES"
 				;;
 
@@ -309,26 +307,26 @@ _sy() {
 
 	plugin)
 		case "${lastword}" in
-		list) 
+		list)
 			complete_options="$PLUGIN_LIST_OPTIONS"
 
 			;;
-		install) 
+		install)
 			complete_words="$PLUGIN_IDS"
 			complete_options="$PLUGIN_INSTALL_OPTIONS"
 
 			;;
 
-		remove) 
+		remove)
 			complete_words="$PLUGIN_IDS"
 			;;
 
-		*) 
+		*)
 			complete_words="$PLUGIN_COMMANDS"
 			;;
 		esac
 		;;
-	
+
 	restore)
 		case "${prev}" in
 			--target|-t)
@@ -354,7 +352,7 @@ _sy() {
 
 	watch)
 		case "${prev}" in
-			--conflict-strategy|-C) 
+			--conflict-strategy|-C)
 				complete_words="$DOWN_CONFLICT_STRATEGIES"
 				;;
 
@@ -362,8 +360,8 @@ _sy() {
 				complete_options="$WATCH_OPTIONS"
 				;;
 		esac
-		;;			
-	
+		;;
+
 	*)
 		case "${prev}" in
 			--log|--localdir|-l)
@@ -387,11 +385,11 @@ _sy() {
 		;;
 	esac
 
-	# Either display words or options, depending on the user input	
+	# Either display words or options, depending on the user input
 	if [[ $cur == -* ]]; then
 		COMPREPLY=( $( compgen -W "$complete_options" -- $cur ))
-	
-	else 
+
+	else
 		COMPREPLY=( $( compgen -W "$complete_words" -- $cur ))
 	fi
 

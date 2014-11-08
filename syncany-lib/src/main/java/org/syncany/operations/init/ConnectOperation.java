@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,20 +17,17 @@
  */
 package org.syncany.operations.init;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
-import org.syncany.config.to.ConfigTO.ConnectionTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
@@ -48,32 +45,25 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
-import org.syncany.util.Base58;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
  * location. Its responsibilities include:
- * 
+ *
  * <ul>
  *   <li>Downloading of the repo file. If it is encrypted, also downloading the master
  *       file to allow decrypting the repo file.</li>
  *   <li>If encrypted: Querying the user for the password and creating the master key using
  *       the password and the master salt.</li>
  *   <li>If encrypted: Decrypting and verifying the repo file.</li>
- *   <li>Creating the local Syncany folder structure in the local directory (.syncany 
+ *   <li>Creating the local Syncany folder structure in the local directory (.syncany
  *       folder and the sub-structure) and copying the repo/master file to it.</li>
- * </ul> 
- *   
+ * </ul>
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ConnectOperation extends AbstractInitOperation {
-	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());		
-	
-	private static final Pattern LINK_PATTERN = Pattern.compile("^syncany://storage/1/(?:(not-encrypted/)(.+)|([^-]+)/(.+))$");
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG = 1;
-	private static final int LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED = 2;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT = 3;
-	private static final int LINK_PATTERN_GROUP_ENCRYPTED_ENCODED = 4;
+	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());
 
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
@@ -110,14 +100,12 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
+		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		TransferSettings connection = plugin.createSettings();
+		TransferSettings transferSettings = (TransferSettings) options.getConfigTO().getTransferSettings();
+		transferSettings.setUserInteractionListener(listener);
 
-		connection.init(options.getConfigTO().getConnectionTO().getSettings());
-		connection.setUserInteractionListener(listener);
-
-		transferManager = plugin.createTransferManager(connection, null);
+		transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
 
 		// Test the repo
 		if (!performRepoTest(transferManager)) {
@@ -178,7 +166,7 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Write file 'config.xml'
 		File configFile = new File(appDir, Config.FILE_CONFIG);
-		writeXmlFile(configTO, configFile);
+		configTO.save(configFile);
 
 		// Write file 'syncany'
 		File repoFile = new File(appDir, Config.FILE_REPO);
@@ -196,13 +184,19 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
-			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
-			result.setAddedToDaemon(addedToDaemonConfig);
+			try {
+				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				result.setAddedToDaemon(addedToDaemonConfig);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
+				result.setAddedToDaemon(false);
+			}
 		}
-		
+
 		result.setResultCode(ConnectResultCode.OK);
 		return result;
-	}		
+	}
 
 	private boolean decryptAndVerifyRepoFile(File tmpRepoFile, SaltedSecretKey masterKey) throws StorageException {
 		try {
@@ -243,69 +237,43 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws StorageException, CipherException {
-		Matcher linkMatcher = LINK_PATTERN.matcher(link);
-
-		if (!linkMatcher.matches()) {
-			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
-		}
-
-		String notEncryptedFlag = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG);
-
-		String plaintext = null;
-		boolean isEncryptedLink = notEncryptedFlag == null;
-
-		if (isEncryptedLink) {
-			String masterKeySaltStr = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_MASTER_KEY_SALT);
-			String ciphertext = linkMatcher.group(LINK_PATTERN_GROUP_ENCRYPTED_ENCODED);
-			
-			byte[] masterKeySalt = Base58.decode(masterKeySaltStr);
-			byte[] ciphertextBytes = Base58.decode(ciphertext);
-
-			boolean retryPassword = true;
-
-			while (retryPassword) {
-				// Ask password
-				String masterPassword = getOrAskPassword();
-
-				// Generate master key
-				SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, masterKeySalt);
-				configTO.setMasterKey(masterKey);
-
-				// Decrypt config
-				try {
-					ByteArrayInputStream encryptedStorageConfig = new ByteArrayInputStream(ciphertextBytes);
-					plaintext = new String(CipherUtil.decrypt(encryptedStorageConfig, masterKey));
-
-					retryPassword = false;
-				}
-				catch (CipherException e) {
-					retryPassword = askRetryPassword();
-				}
-			}
-
-			if (plaintext == null) {
-				throw new CipherException("Unable to decrypt link.");
-			}
-		}
-		else {
-			String encodedPlaintext = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_ENCODED);
-			plaintext = new String(Base58.decode(encodedPlaintext));
-		}
+		ApplicationLink applicationLink = new ApplicationLink(link);
 
 		try {
-			Serializer serializer = new Persister();
-			ConnectionTO connectionTO = serializer.read(ConnectionTO.class, plaintext);
+			if (applicationLink.isEncrypted()) {
+				boolean retryPassword = true;
 
-			TransferPlugin plugin = Plugins.get(connectionTO.getType(), TransferPlugin.class);
+				while (retryPassword) {
+					// Ask password
+					String masterPassword = getOrAskPassword();
 
-			if (plugin == null) {
-				throw new StorageException("Link contains unknown connection type '" + connectionTO.getType() + "'. Corresponding plugin not found.");
+					// Generate master key
+					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
+					configTO.setMasterKey(masterKey);
+
+					// Decrypt config
+					try {
+						TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
+						configTO.setTransferSettings(transferSettings);
+
+						retryPassword = false;
+					}
+					catch (CipherException e) {
+						retryPassword = askRetryPassword();
+					}
+				}
+
+				if (configTO.getTransferSettings() == null) {
+					throw new CipherException("Unable to decrypt link.");
+				}
 			}
-
-			configTO.setConnectionTO(connectionTO);
+			else {
+				TransferSettings transferSettings = applicationLink.createTransferSettings();
+				configTO.setTransferSettings(transferSettings);
+			}
 		}
 		catch (Exception e) {
-			throw new StorageException(e);
+			throw new StorageException("Unable to extract connection settings: " + e.getMessage(), e);
 		}
 
 		return configTO;
@@ -322,10 +290,10 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 		else {
 			logger.log(Level.INFO, "--> NOT OKAY: Invalid target/repo state. Operation cannot be continued.");
-			
+
 			result.setResultCode(ConnectResultCode.NOK_TEST_FAILED);
 			result.setTestResult(testResult);
-			
+
 			return false;
 		}
 	}

@@ -120,6 +120,25 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	/**
+	 * Writes the purge database to the database, including the purge file histories.
+	 * 
+	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
+	 */
+	public long writePurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
+		try {		
+			// Insert
+			long databaseVersionId = writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+			fileHistoryDao.writePurgeFileHistories(connection, databaseVersionId, purgeDatabaseVersion.getFileHistories());
+			
+			return databaseVersionId;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "SQL Error: ", e);
+			throw new RuntimeException("Cannot persist database.", e);
+		}		
+	}
+	
+	/**
 	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
 	 * contained {@link VectorClock}. Be aware that the method writes the header independent
 	 * of whether or not a corresponding database version actually exists.
@@ -140,7 +159,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 	
 	private long writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
-		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader()); // TODO [low] Use writeDatabaseVersion()?
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
 		
 		chunkDao.writeChunks(connection, databaseVersionId, databaseVersion.getChunks());
@@ -331,11 +350,23 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet) throws SQLException {
-		DatabaseVersion databaseVersion = new DatabaseVersion();
-
 		DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
-		databaseVersion.setHeader(databaseVersionHeader);
+		
+		if (databaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
+			return createDatabaseVersionFromRowDefault(databaseVersionHeader, resultSet);
+		}
+		else if (databaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
+			return createDatabaseVersionFromRowPurge(databaseVersionHeader, resultSet);
+		}
+		else {
+			throw new RuntimeException("Unexpected database version type: " + databaseVersionHeader.getType());
+		}			
+	}
 
+	private DatabaseVersion createDatabaseVersionFromRowDefault(DatabaseVersionHeader databaseVersionHeader, ResultSet resultSet) {
+		DatabaseVersion databaseVersion = new DatabaseVersion();
+		databaseVersion.setHeader(databaseVersionHeader);
+		
 		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
 		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
 		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
@@ -358,6 +389,19 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 
 		return databaseVersion;
+	}
+	
+	private DatabaseVersion createDatabaseVersionFromRowPurge(DatabaseVersionHeader databaseVersionHeader, ResultSet resultSet) {
+		DatabaseVersion purgeDatabaseVersion = new DatabaseVersion();
+		purgeDatabaseVersion.setHeader(databaseVersionHeader);
+		
+		List<PartialFileHistory> purgeFileHistories = fileHistoryDao.getPurgeFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
+		
+		for (PartialFileHistory fileHistory : purgeFileHistories) {
+			purgeDatabaseVersion.addFileHistory(fileHistory);
+		}
+
+		return purgeDatabaseVersion;
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {

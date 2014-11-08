@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,41 +17,24 @@
  */
 package org.syncany.plugins.local;
 
-import org.syncany.config.Config;
 import org.syncany.plugins.Plugin;
-import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * Identifies the local storage {@link Plugin} for Syncany.
- * 
+ *
  * <p>This plugin can be used for testing or to point to a repository
- * on a mounted remote device or network storage such as an NFS or a 
+ * on a mounted remote device or network storage such as an NFS or a
  * Samba/NetBIOS share.
- * 
- * <p>The class implements defines the identifier, name and 
- * version of the plugin. It furthermore allows the instantiation 
- * of a plugin-specific {@link LocalTransferSettings}. 
- * 
+ *
+ * <p>The class implements defines the identifier, name and
+ * version of the plugin. It furthermore allows the instantiation
+ * of a plugin-specific {@link org.syncany.plugins.local.LocalTransferSettings}.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class LocalPlugin extends TransferPlugin {
-	public LocalPlugin() {
+public class LocalTransferPlugin extends TransferPlugin {
+	public LocalTransferPlugin() {
 		super("local");
-	}
-
-	protected LocalPlugin(String pluginId) {
-		super(pluginId);
-	}
-
-	@Override
-	public TransferSettings createSettings() {
-		return new LocalTransferSettings();
-	}
-
-	@Override
-	public TransferManager createTransferManager(TransferSettings connection, Config config) {
-		return new LocalTransferManager((LocalTransferSettings) connection, config);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
  */
 package org.syncany.tests.cli;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,30 +26,35 @@ import org.junit.Test;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 public class CliPluginsTest {
 	@Test
 	public void testPluginsList() {
-		Collection<Plugin> pluginList = Plugins.list();		
-		
-		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "unreliable_local" });
+		Collection<Plugin> pluginList = Plugins.list();
+
+		List<String> expectedPluginIds = Arrays.asList(new String[] { "local", "unreliable_local", "dummy" });
 		List<String> actualPluginIds = new ArrayList<String>();
-		
+
 		for (Plugin plugin : pluginList) {
 			actualPluginIds.add(plugin.getId());
 		}
-		
+
 		assertTrue(expectedPluginIds.containsAll(actualPluginIds));
 		assertTrue(actualPluginIds.containsAll(expectedPluginIds));
 	}
-	
+
 	@Test
 	public void testNonExistingPlugin() {
 		assertNull(Plugins.get("non-existing"));
 	}
-	
+
 	@Test
 	public void testExistingPlugin() {
 		assertNotNull(Plugins.get("local"));
 		assertNotNull(Plugins.get("unreliable_local"));
+    assertNotNull(Plugins.get("dummy"));
 	}
 }

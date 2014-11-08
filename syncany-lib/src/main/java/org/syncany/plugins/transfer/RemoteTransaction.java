@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
  */
 package org.syncany.plugins.transfer;
 
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
@@ -31,10 +27,14 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * This class represents a transaction in a remote system. It will keep track of
  * what files are to be added and ensures atomic operation.
- * 
+ *
  * @author Pim Otte
  */
 public class RemoteTransaction {
@@ -64,7 +64,7 @@ public class RemoteTransaction {
 	 * Adds a file to this transaction. Generates a temporary file to store it.
 	 */
 	public void upload(File localFile, RemoteFile remoteFile) throws StorageException {
-		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
+		TempRemoteFile temporaryRemoteFile = new TempRemoteFile(remoteFile);
 
 		logger.log(Level.INFO, "- Adding file to TX for UPLOAD: " + localFile + " -> Temp. remote file: " + temporaryRemoteFile
 				+ ", final location: " + remoteFile);
@@ -83,7 +83,7 @@ public class RemoteTransaction {
 	 * to store it while the transaction is being finalized.
 	 */
 	public void delete(RemoteFile remoteFile) throws StorageException {
-		TempRemoteFile temporaryRemoteFile = new TempRemoteFile();
+		TempRemoteFile temporaryRemoteFile = new TempRemoteFile(remoteFile);
 
 		logger.log(Level.INFO, "- Adding file to TX for DELETE: " + remoteFile + "-> Temp. remote file: " + temporaryRemoteFile);
 
@@ -100,13 +100,13 @@ public class RemoteTransaction {
 	 * delete operations. The method first moves all files to the temporary
 	 * remote location. If no errors occur, all files are moved to their
 	 * final location.
-	 * 
+	 *
 	 * <p>The method first writes a {@link TransactionRemoteFile} containing
 	 * all actions to be performed and then uploads this file. Then it uploads
 	 * new files (added by {@link #upload(File, RemoteFile) upload()} and moves
 	 * deleted files to a temporary location (deleted by {@link #delete(RemoteFile) delete()}.
-	 * 
-	 * <p>If this was successful, the transaction file is deleted and the 
+	 *
+	 * <p>If this was successful, the transaction file is deleted and the
 	 * temporary files. After deleting the transaction file, the transaction
 	 * is successfully committed.
 	 */
@@ -216,7 +216,7 @@ public class RemoteTransaction {
 		transferManager.delete(remoteTransactionFile);
 		localTransactionFile.delete();
 
-		logger.log(Level.INFO, "Succesfully committed transaction.");
+		logger.log(Level.INFO, "END of TX.commmit(): Succesfully committed transaction.");
 	}
 
 	private void deleteTempRemoteFiles() throws StorageException {
@@ -234,7 +234,7 @@ public class RemoteTransaction {
 			}
 		}
 
-		logger.log(Level.INFO, "Sucessfully deleted final files.");
+		logger.log(Level.INFO, "END of TX.delTemp(): Sucessfully deleted final files.");
 	}
 
 	private class TransactionStats {

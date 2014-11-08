@@ -1,13 +1,11 @@
-### Daemon script begin ##########################################################
+### Daemon script begin #########################################SYNCANY_INCL_4#
 
 # Daemon variables
 DAEMON_NAME=syncanyd
 DAEMON_APPDIR=~/.config/syncany
 DAEMON_CONTROLFILE=$DAEMON_APPDIR/daemon.ctrl
 DAEMON_PIDFILE=$DAEMON_APPDIR/daemon.pid
-DAEMON_LOGDIR=$DAEMON_APPDIR/logs
-DAEMON_LOGFILE=$DAEMON_LOGDIR/daemon.log
-DAEMON_OPTS="--log=$DAEMON_LOGFILE daemon"
+DAEMON_CMD="daemon"
 
 # Daemon functions
 daemon_get_pid() {
@@ -37,7 +35,7 @@ daemon_start() {
 	if [ $DAEMON_RUNNING -eq 1 ]; then
 		echo "$DAEMON_NAME already running (pid $DAEMON_PID)"
 	else
-		nohup "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_OPTS > /dev/null 2>&1 &
+		nohup "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_CMD > /dev/null 2>&1 &
 
 		DAEMON_PID=-1
 		TRIES=10
@@ -53,7 +51,7 @@ daemon_start() {
 		
 		if [ $TRIES -eq 0 ]; then
 			echo " Failed to start process. EXITING."
-			echo "Failed command line: $ $DAEMON $DAEMON_OPTS"
+			echo "Failed command line: $ $DAEMON $DAEMON_CMD"
 			exit 2
 		fi
 		
@@ -141,8 +139,6 @@ daemon_reload() {
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 mkdir -p $DAEMON_APPDIR
-mkdir -p $DAEMON_LOGDIR
-
 DAEMON_PID=$(daemon_get_pid)
 
 case "$1" in                 
@@ -171,7 +167,8 @@ case "$1" in
 				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
 				;;
 		esac
-		;;            
+		;;  
+	
 	*)                       
 		#JAVA_EXEC_REPLACEMENT_MARKER#
 		;;

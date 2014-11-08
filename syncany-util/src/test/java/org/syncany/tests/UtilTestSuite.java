@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,17 +26,19 @@ import org.syncany.tests.util.FileUtilTest;
 import org.syncany.tests.util.LimitedDosFileAttributesTest;
 import org.syncany.tests.util.NormalizedPathTest;
 import org.syncany.tests.util.PidFileUtilTest;
+import org.syncany.tests.util.ReflectionUtilTest;
 import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({	
+@SuiteClasses({
 	Base58Test.class,
 	CollectionUtilTest.class,
 	FileUtilTest.class,
 	LimitedDosFileAttributesTest.class,
 	NormalizedPathTest.class,
 	PidFileUtilTest.class,
-	StringUtilTest.class	
+	StringUtilTest.class,
+	ReflectionUtilTest.class
 })
 public class UtilTestSuite {
 	// This class executes all tests

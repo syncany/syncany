@@ -119,4 +119,8 @@ public abstract class Command {
 	public void setOut(PrintStream out) {
 		this.out = new CarriageReturnPrinter(out);
 	}
+	
+	public void setOut(CarriageReturnPrinter out) {
+		this.out = out;
+	}
 }

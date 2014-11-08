@@ -56,7 +56,7 @@ Type: files; Name: "{app}\\lib\\*"
 
 [Icons]
 Name: "{group}\\Syncany Quick How-To"; Filename: "https://www.syncany.org/r/howto"
-Name: "{group}\\Syncany User Guide and Wiki"; Filename: "https://www.syncany.org/r/wiki"
+Name: "{group}\\Syncany User Guide and Wiki"; Filename: "https://www.syncany.org/r/guide"
 Name: "{group}\\Uninstall Syncany CLI"; Filename: "{uninstallexe}"
 
 [Code]

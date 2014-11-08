@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,20 +32,10 @@ import org.syncany.tests.crypto.CipherSessionTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
-import org.syncany.tests.operations.CleanupOperationTest;
-import org.syncany.tests.operations.ConnectOperationTest;
-import org.syncany.tests.operations.FileSystemActionComparatorTest;
-import org.syncany.tests.operations.FileSystemActionReconciliatorTest;
-import org.syncany.tests.operations.IndexerTest;
-import org.syncany.tests.operations.InitOperationTest;
-import org.syncany.tests.operations.NotificationListenerTest;
-import org.syncany.tests.operations.OperationPerformanceTest;
-import org.syncany.tests.operations.PluginOperationTest;
-import org.syncany.tests.operations.RecursiveWatcherTest;
-import org.syncany.tests.operations.StatusOperationTest;
-import org.syncany.tests.operations.SyncUpOperationTest;
-import org.syncany.tests.plugins.PluginOptionSpecTest;
+import org.syncany.tests.operations.*;
+import org.syncany.tests.plugins.PluginOptionsTest;
 import org.syncany.tests.plugins.PluginsTest;
+import org.syncany.tests.plugins.TransferSettingsTest;
 import org.syncany.tests.plugins.local.LocalTransferManagerPluginTest;
 import org.syncany.tests.plugins.unreliable_local.CleanupInterruptedTest;
 import org.syncany.tests.plugins.unreliable_local.UploadInterruptedTest;
@@ -56,7 +46,7 @@ import org.syncany.tests.util.SqlRunnerTest;
 		// Util
 		SqlRunnerTest.class,
 
-		// Crypto	
+		// Crypto
 		CipherSpecsTest.class,
 		CipherUtilTest.class,
 		MultiCipherStreamsTest.class,
@@ -71,10 +61,11 @@ import org.syncany.tests.util.SqlRunnerTest;
 
 		// Connection
 		PluginsTest.class,
-		PluginOptionSpecTest.class,
 		LocalTransferManagerPluginTest.class,
 		UploadInterruptedTest.class,
 		CleanupInterruptedTest.class,
+		TransferSettingsTest.class,
+		PluginOptionsTest.class,
 
 		// Operations
 		CleanupOperationTest.class,

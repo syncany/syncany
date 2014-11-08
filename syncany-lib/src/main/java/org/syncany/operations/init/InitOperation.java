@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
@@ -42,49 +43,47 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 /**
  * The init operation initializes a new repository at a given remote storage
  * location. Its responsibilities include:
- * 
+ *
  * <ul>
  *   <li>Generating a master key from the user password (if encryption is enabled)
  *       using the {@link CipherUtil#createMasterKey(String) createMasterKey()} method</li>
- *   <li>Creating the local Syncany folder structure in the local directory (.syncany 
+ *   <li>Creating the local Syncany folder structure in the local directory (.syncany
  *       folder and the sub-structure).</li>
  *   <li>Initializing the remote storage (creating folder-structure, if necessary)
  *       using the transfer manager's {@link TransferManager#init()} method.</li>
  *   <li>Creating a new repo and master file using {@link RepoTO} and {@link MasterTO},
  *       saving them locally and uploading them to the remote repository.</li>
- * </ul> 
- *   
+ * </ul>
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
-    private InitOperationOptions options;
-    private InitOperationResult result;
-    
-    private TransferPlugin plugin;
-    private TransferManager transferManager;
-    
+	private InitOperationOptions options;
+	private InitOperationResult result;
+
+	private TransferPlugin plugin;
+	private TransferManager transferManager;
+
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
 		super(null, listener);
-        
-        this.options = options;
-        this.result = new InitOperationResult();
-    }        
-            
-    @Override
-    public InitOperationResult execute() throws Exception {
+
+		this.options = options;
+		this.result = new InitOperationResult();
+	}
+
+	@Override
+	public InitOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getConnectionTO().getType(), TransferPlugin.class);
+		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		TransferSettings connection = plugin.createSettings();
+		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
+		transferSettings.setUserInteractionListener(listener);
 
-		connection.init(options.getConfigTO().getConnectionTO().getSettings());
-		connection.setUserInteractionListener(listener);
-
-		transferManager = plugin.createTransferManager(connection, config);
+		transferManager = plugin.createTransferManager(transferSettings, config);
 
 		// Test the repo
 		if (!performRepoTest()) {
@@ -119,7 +118,7 @@ public class InitOperation extends AbstractInitOperation {
 			writeXmlFile(options.getRepoTO(), repoFile);
 		}
 
-		writeXmlFile(options.getConfigTO(), configFile);
+		options.getConfigTO().save(configFile);
 
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository");
@@ -142,18 +141,24 @@ public class InitOperation extends AbstractInitOperation {
 
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
-			boolean addedToDaemonConfig = addToDaemonConfig(options.getLocalDir());
-			result.setAddedToDaemon(addedToDaemonConfig);
+			try {
+				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				result.setAddedToDaemon(addedToDaemonConfig);
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
+				result.setAddedToDaemon(false);
+			}
 		}
-		
-		// Make link		
+
+		// Make link
 		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-					
+
 		result.setResultCode(InitResultCode.OK);
 		result.setGenLinkResult(genlinkOperationResult);
-		
+
 		return result;
-    }             	
+	}
 
 	private boolean performRepoTest() {
 		boolean testCreateTarget = options.isCreateTarget();
@@ -174,7 +179,7 @@ public class InitOperation extends AbstractInitOperation {
 
 			result.setResultCode(InitResultCode.NOK_TEST_FAILED);
 			result.setTestResult(testResult);
-			
+
 			return false;
 		}
 	}
@@ -197,12 +202,11 @@ public class InitOperation extends AbstractInitOperation {
 			throw new StorageException("Couldn't upload to remote repo. Cleanup failed. There may be local directories left");
 		}
 
-		// TODO [low] This throws construction is odd and the error message doesn't tell me anything. 
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 
 	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
-		return new GenlinkOperation(options.getConfigTO()).execute();
+		return new GenlinkOperation(options.getConfigTO(), options.getGenlinkOptions()).execute();
 	}
 
 	private String getOrAskPassword() throws Exception {

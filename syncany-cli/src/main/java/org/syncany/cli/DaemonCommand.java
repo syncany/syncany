@@ -34,7 +34,7 @@ public class DaemonCommand extends Command {
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		new DaemonOperation(client.getConfig()).execute();		
+		new DaemonOperation().execute();		
 		return 0;
 	}
 

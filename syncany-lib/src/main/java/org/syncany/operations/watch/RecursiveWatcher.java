@@ -17,103 +17,102 @@
  */
 package org.syncany.operations.watch;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
-
-import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.util.EnvironmentUtil;
+
 /**
  * The recursive file watcher monitors a folder (and its sub-folders). 
- * 
- * <p>The class walks through the file tree and registers to a watch to every sub-folder.
- * For new folders, a new watch is registered, and stale watches are removed.
  * 
  * <p>When a file event occurs, a timer is started to wait for the file operations
  * to settle. It is reset whenever a new event occurs. When the timer times out,
  * an event is thrown through the {@link WatchListener}.
  * 
+ * <p>This is an abstract class, using several template methods that are called
+ * in different lifecycle states: {@link #beforeStart()}, {@link #beforePollEventLoop()},
+ * {@link #pollEvents()}, and {@link #afterStop()}.
+ * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RecursiveWatcher {
-	private static final Logger logger = Logger.getLogger(RecursiveWatcher.class.getSimpleName());
+public abstract class RecursiveWatcher {
+	protected static final Logger logger = Logger.getLogger(RecursiveWatcher.class.getSimpleName());
 
-	private Path root;
-	private List<Path> ignorePaths;
+	protected Path root;
+	protected List<Path> ignorePaths;
 	private int settleDelay;
 	private WatchListener listener;
 
 	private AtomicBoolean running;
-	
-	private WatchService watchService;
-	private Thread watchThread;
-	private Map<Path, WatchKey> watchPathKeyMap;
 
+	private Thread watchThread;	
 	private Timer timer;
-
+	
 	public RecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		this.root = root;
 		this.ignorePaths = ignorePaths;
 		this.settleDelay = settleDelay;
-		this.listener = listener;
-
-		this.running = new AtomicBoolean(false);
+		this.listener = listener;		
 		
-		this.watchService = null;
-		this.watchThread = null;
-		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
-
-		this.timer = null;
+		this.running = new AtomicBoolean(false);
+	}
+	
+	/**
+	 * Creates a recursive watcher for the given root path. The returned watcher
+	 * will ignore the ignore paths and fire an event through the {@link WatchListener}
+	 * as soon as the settle delay (in ms) has passed.
+	 * 
+	 * <p>The method returns a platform-specific recursive watcher: {@link WindowsRecursiveWatcher}
+	 * for Windows and {@link DefaultRecursiveWatcher} for other operating systems.
+	 */
+	public static RecursiveWatcher createRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
+		if (EnvironmentUtil.isWindows()) {
+			return new WindowsRecursiveWatcher(root, ignorePaths, settleDelay, listener);
+		}
+		else {
+			return new DefaultRecursiveWatcher(root, ignorePaths, settleDelay, listener);
+		}
 	}
 
 	/**
-	 * Starts the watcher service and registers watches in all of the sub-folders of
-	 * the given root folder.
-	 * 
-	 * <p><b>Important:</b> This method returns immediately, even though the watches
-	 * might not be in place yet. For large file trees, it might take several seconds
-	 * until all directories are being monitored. For normal cases (1-100 folders), this
-	 * should not take longer than a few milliseconds. 
-	 */
-	public void start() throws IOException {
-		watchService = FileSystems.getDefault().newWatchService();
+	  * Starts the watcher service and registers watches in all of the sub-folders of
+	  * the given root folder.
+	  * 
+	  * <p>This method calls the {@link #beforeStart()} method before everything else.
+	  * Subclasses may execute their own commands there. Before the watch thread is started,
+	  * {@link #beforePollEventLoop()} is called. And in the watch thread loop, 
+	  * {@link #pollEvents()} is called. 
+	  *
+	  * <p><b>Important:</b> This method returns immediately, even though the watches
+	  * might not be in place yet. For large file trees, it might take several seconds
+	  * until all directories are being monitored. For normal cases (1-100 folders), this
+	  * should not take longer than a few milliseconds. 
+	  */
+	public void start() throws Exception {
+		// Call before-start hook
+		beforeStart();
 
+		// Start watcher thread
 		watchThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				running.set(true);
-				walkTreeAndSetWatches();
-
+				beforePollEventLoop(); // Call before-loop hook
+				
 				while (running.get()) {
 					try {
-						WatchKey watchKey = watchService.take();
-						watchKey.pollEvents(); // Take events, but don't care what they are!
-
-						watchKey.reset();
-						resetWaitSettlementTimer();
+						boolean relevantEvents = pollEvents();
+						
+						if (relevantEvents) {
+							restartWaitSettlementTimer();
+						}
 					}
-					catch (InterruptedException | ClosedWatchServiceException e) {
+					catch (Exception e) {
 						running.set(false);
 					}
 				}
@@ -123,20 +122,27 @@ public class RecursiveWatcher {
 		watchThread.start();
 	}
 	
+	/**
+	 * Stops the watch thread by interrupting it and subsequently
+	 * calls the {@link #afterStop()} template method (to be implemented
+	 * by subclasses.
+	 */
 	public synchronized void stop() {
 		if (watchThread != null) {
 			try {
-				watchService.close();
 				running.set(false);
 				watchThread.interrupt();
+				
+				// Call after-stop hook
+				afterStop();
 			}
-			catch (IOException e) {
+			catch (Exception e) {
 				// Don't care
 			}			
 		}		
 	}
 
-	private synchronized void resetWaitSettlementTimer() {
+	private synchronized void restartWaitSettlementTimer() {
 		logger.log(Level.FINE, "File system events registered. Waiting " + settleDelay + "ms for settlement ....");
 
 		if (timer != null) {
@@ -149,101 +155,53 @@ public class RecursiveWatcher {
 			@Override
 			public void run() {
 				logger.log(Level.INFO, "File system actions (on watched folders) settled. Updating watches ...");
-				walkTreeAndSetWatches();
-				unregisterStaleWatches();
-
+				
+				watchEventsOccurred();				
 				fireListenerEvents();
 			}
 		}, settleDelay);
 	}
-
-	private synchronized void walkTreeAndSetWatches() {
-		logger.log(Level.INFO, "Registering new folders at watch service ...");
-
-		try {
-			Files.walkFileTree(root, new FileVisitor<Path>() {
-				@Override
-				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-					if (ignorePaths.contains(dir)) {
-						return FileVisitResult.SKIP_SUBTREE;
-					}
-					else {
-						registerWatch(dir);
-						return FileVisitResult.CONTINUE;
-					}
-				}
-
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-					return FileVisitResult.CONTINUE;
-				}
-			});
-		}
-		catch (IOException e) {
-			// Don't care
-		}
-	}
-
-	private synchronized void unregisterStaleWatches() {
-		Set<Path> paths = new HashSet<Path>(watchPathKeyMap.keySet());
-		Set<Path> stalePaths = new HashSet<Path>();
-		
-		for (Path path : paths) {
-			if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-				stalePaths.add(path);
-			}
-		}
-		
-		if (stalePaths.size() > 0) {
-			logger.log(Level.INFO, "Cancelling stale path watches ...");
-			
-			for (Path stalePath : stalePaths) {
-				unregisterWatch(stalePath);
-			}
-		}
-	}
-
+	
 	private synchronized void fireListenerEvents() {
 		if (listener != null) {
 			logger.log(Level.INFO, "- Firing watch event (watchEventsOccurred) ...");
 			listener.watchEventsOccurred();
 		}
 	}
-
-	private synchronized void registerWatch(Path dir) {
-		if (!watchPathKeyMap.containsKey(dir)) {
-			logger.log(Level.INFO, "- Registering " + dir);
-
-			try {
-				WatchKey watchKey = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW);
-				watchPathKeyMap.put(dir, watchKey);
-			}
-			catch (IOException e) {
-				// Don't care!
-			}
-		}
-	}
-
-	private synchronized void unregisterWatch(Path dir) {
-		WatchKey watchKey = watchPathKeyMap.get(dir);
-
-		if (watchKey != null) {
-			logger.log(Level.INFO, "- Cancelling " + dir);
-			
-			watchKey.cancel();
-			watchPathKeyMap.remove(dir);
-		}
-	}
+	
+	/**
+	 * Called before the {@link #start()} method. This method is
+	 * only called once.
+	 */
+	protected abstract void beforeStart() throws Exception;
+	
+	/**
+	 * Called in the watch service polling thread, right
+	 * before the {@link #pollEvents()} loop. This method is
+	 * only called once.
+	 */
+	protected abstract void beforePollEventLoop();
+	
+	/**
+	 * Called in the watch service polling thread, inside
+	 * of the {@link #pollEvents()} loop. This method is called
+	 * multiple times.
+	 */
+	protected abstract boolean pollEvents() throws Exception;	
+	
+	/**
+	 * Called in the watch service polling thread, whenever
+	 * a file system event occurs. This may be used by subclasses
+	 * to (re-)set watches on folders. This method is called
+	 * multiple times.
+	 */
+	protected abstract void watchEventsOccurred();
+	
+	/**
+	 * Called after the {@link #stop()} method. This method is
+	 * only called once.
+	 */
+	protected abstract void afterStop() throws Exception;	
 
 	public interface WatchListener {
 		public void watchEventsOccurred();

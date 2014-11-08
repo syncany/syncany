@@ -17,27 +17,27 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.simpleframework.xml.ElementList;
+import org.syncany.operations.daemon.Watch;
 import org.syncany.operations.daemon.messages.api.ManagementResponse;
 
 public class ListWatchesManagementResponse extends ManagementResponse {
 	@ElementList(required = true, entry="watch")
-	private ArrayList<File> watches;	
+	private ArrayList<Watch> watches;	
 	
 	public ListWatchesManagementResponse() {
 		// Nothing
 	}
 	
-	public ListWatchesManagementResponse(int requestId, List<File> watches) {
+	public ListWatchesManagementResponse(int requestId, List<Watch> watches) {
 		super(200, requestId, null);
-		this.watches = new ArrayList<File>(watches);
+		this.watches = new ArrayList<Watch>(watches);
 	}	
 	
-	public ArrayList<File> getWatches() {
+	public ArrayList<Watch> getWatches() {
 		return watches;
 	}
 }

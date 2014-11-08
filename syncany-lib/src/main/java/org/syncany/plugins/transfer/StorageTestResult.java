@@ -17,7 +17,6 @@
  */
 package org.syncany.plugins.transfer;
 
-
 /**
  * Represents the return structure of the tests performed by by {@link TransferManager#test(boolean)}
  * method.

@@ -2,7 +2,7 @@ NAME
   sy-genlink - generate Syncany link for initialized local directory
     
 SYNOPSIS
-  sy genlink [-s | --short] 
+  sy genlink [-s | --short] [-m | --machine-readable]
   
 DESCRIPTION 
   This command creates a Syncany link (syncany://..) from an existing local
@@ -15,7 +15,12 @@ DESCRIPTION
   to the other users. 
     
 OPTIONS
-  -S, --short
+  -s, --short
+    The generated syncany:// link will be shortened using the Syncany link
+    shortener service. This option stores the encrypted link on the Syncany
+    servers. The option does not work if the repository is not encrypted.
+    
+  -m, --machine-readable
     Only prints the link and leaves out any explanatory text. Useful if the
     link is used in a script.
     

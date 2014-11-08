@@ -1,13 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-import java.io.File;
-
 dependencies {
 	compile			project(":syncany-lib")
 	compile			project(":syncany-util")
 	compile			"net.sf.jopt-simple:jopt-simple:4.5"      
-	compile			"org.apache.httpcomponents:httpclient:4.3.4"
 	
 	testCompile		"com.github.stefanbirkner:system-rules:1.5.0"            
       	

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.VectorClock;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.FileUtil;
@@ -42,12 +41,12 @@ import org.syncany.util.StringUtil;
 
 /**
  * The config class is the central point to configure a Syncany instance. It is mainly
- * used in the operations, but parts of it are also used in other parts of the 
+ * used in the operations, but parts of it are also used in other parts of the
  * application -- especially file locations and names.
- * 
- * <p>An instance of the <tt>Config</tt> class must be created through the transfer 
- * objects {@link ConfigTO} and {@link RepoTO}. 
- * 
+ *
+ * <p>An instance of the <tt>Config</tt> class must be created through the transfer
+ * objects {@link ConfigTO} and {@link RepoTO}.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Config {
@@ -86,7 +85,7 @@ public class Config {
 
 	private Cache cache;
 	private TransferPlugin plugin;
-	private TransferSettings connection;
+	private TransferSettings transferSettings;
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
@@ -216,18 +215,17 @@ public class Config {
 	}
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
-		if (configTO.getConnectionTO() != null) {
-			plugin = Plugins.get(configTO.getConnectionTO().getType(), TransferPlugin.class);
+		if (configTO.getTransferSettings() != null) {
+			plugin = Plugins.get(configTO.getTransferSettings().getType(), TransferPlugin.class);
 
 			if (plugin == null) {
-				throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
+				throw new ConfigException("Plugin not supported: " + configTO.getTransferSettings().getType());
 			}
 
 			try {
-				connection = plugin.createSettings();
-				connection.init(configTO.getConnectionTO().getSettings());
+				transferSettings = (TransferSettings) configTO.getTransferSettings();
 			}
-			catch (StorageException e) {
+			catch (Exception e) {
 				throw new ConfigException("Cannot initialize storage: " + e.getMessage(), e);
 			}
 		}
@@ -270,11 +268,11 @@ public class Config {
 	}
 
 	public TransferSettings getConnection() {
-		return connection;
+		return transferSettings;
 	}
 
 	public void setConnection(TransferSettings connection) {
-		this.connection = connection;
+		this.transferSettings = connection;
 	}
 
 	public byte[] getRepoId() {

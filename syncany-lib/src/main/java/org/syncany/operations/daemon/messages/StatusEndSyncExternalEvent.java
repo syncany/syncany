@@ -17,12 +17,22 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+
 public class StatusEndSyncExternalEvent extends SyncExternalEvent {
+	@Element(name = "hasChanges", required = true)
+	private boolean hasChanges;
+	
 	public StatusEndSyncExternalEvent() {
-		// Nothing
+		this.hasChanges = false;
 	}
 	
-	public StatusEndSyncExternalEvent(String root) {
+	public StatusEndSyncExternalEvent(String root, boolean hasChanges) {
 		super(root);
+		this.hasChanges = hasChanges;
+	}
+	
+	public boolean hasChanges() {
+		return hasChanges;
 	}
 }

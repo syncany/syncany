@@ -1,15 +1,12 @@
-rem Embedded Daemon script begins ##########################################################
+rem Embedded Daemon script begins ################################SYNCANY_INCL_3#
 
 set APP_NAME=syncanyd
 set APP_USER_DIR=%AppData%\Syncany
 set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
 set APP_DAEMON_PIDFILE=%APP_USER_DIR%\daemon.pid
 set APP_DAEMON_PIDFILE_TMP=%APP_USER_DIR%\daemon.pid.tmp
-set APP_LOG_DIR=%APP_USER_DIR%\logs
-set APP_LOG_FILE=%APP_LOG_DIR%\daemon.log
 
 if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%" 
-if not exist "%APP_LOG_DIR%" mkdir "%APP_LOG_DIR%"
 
 rem  Checks if the process is already running using a PID file
 rem
@@ -138,7 +135,7 @@ if %RUNNING% == 1 (
 set CLASSPATH=%APP_HOME%\lib\*;%AppData%\Syncany\plugins\lib\*
 
 echo | set /p=Starting daemon: .
-start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany --log=%APP_LOG_FILE% daemon
+start "" /b "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% -classpath "%CLASSPATH%" org.syncany.Syncany daemon
 
 for /l %%i in (1, 1, 10) do (
   set "pid_and_ctrl_exists="

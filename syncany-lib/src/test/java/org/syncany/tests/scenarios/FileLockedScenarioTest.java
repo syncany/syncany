@@ -129,7 +129,7 @@ public class FileLockedScenarioTest {
 		assertNotNull("There should be a new database version, because files should have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalTransferSettings) connection).getRepositoryPath();
+		File repoPath = ((LocalTransferSettings) connection).getPath();
 		assertEquals("Repository should contain any files.", 5, repoPath.list().length);
 	}
 
@@ -148,7 +148,7 @@ public class FileLockedScenarioTest {
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
-		File repoPath = ((LocalTransferSettings) connection).getRepositoryPath();
+		File repoPath = ((LocalTransferSettings) connection).getPath();
 		String[] repoFileList = repoPath.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {

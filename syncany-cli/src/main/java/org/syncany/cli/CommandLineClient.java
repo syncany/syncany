@@ -243,7 +243,8 @@ public class CommandLineClient extends Client {
 	}
 
 	/**
-	 * Initializaes configuration if required. Returns non-zero if something goes wrong.
+	 * Initializes configuration if required. 
+	 * Returns non-zero if something goes wrong.
 	 */
 	private int initConfigIfRequired(CommandScope requiredCommandScope, File localDir) throws ConfigException {
 		switch (requiredCommandScope) {
@@ -277,6 +278,7 @@ public class CommandLineClient extends Client {
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint,
 			OptionSpec<Void> optionDebug) throws SecurityException, IOException {
+		
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);
 		initLogLevel(options, optionDebug, optionLogLevel);
 	}
@@ -318,6 +320,7 @@ public class CommandLineClient extends Client {
 
 	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug)
 			throws SecurityException, IOException {
+		
 		// --log=<file>
 		String logFilePattern = null;
 
@@ -328,6 +331,9 @@ public class CommandLineClient extends Client {
 		}
 		else if (config != null && config.getLogDir().exists()) {
 			logFilePattern = config.getLogDir() + File.separator + LOG_FILE_PATTERN;
+		}
+		else {
+			logFilePattern = UserConfig.getUserLogDir() + File.separator + LOG_FILE_PATTERN;
 		}
 
 		if (logFilePattern != null) {
@@ -520,7 +526,11 @@ public class CommandLineClient extends Client {
 	private int showHelpAndExit() throws IOException {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			return execManPageAndExit(MAN_PAGE_MAIN);
+			int manPageReturnCode = execManPageAndExit(MAN_PAGE_MAIN);
+			
+			if (manPageReturnCode == 0) { // Success
+				return manPageReturnCode;
+			}
 		}
 
 		// Fallback (and on Windows): Display man page on STDOUT
@@ -530,8 +540,12 @@ public class CommandLineClient extends Client {
 	private int showCommandHelpAndExit(String commandName) throws IOException {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);
-			execManPageAndExit(commandManPage);
+			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);			
+			int manPageReturnCode = execManPageAndExit(commandManPage);
+			
+			if (manPageReturnCode == 0) { // Success
+				return manPageReturnCode;
+			}
 		}
 
 		// Fallback (and on Windows): Display man page on STDOUT

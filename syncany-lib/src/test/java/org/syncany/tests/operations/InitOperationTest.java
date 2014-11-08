@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,23 +17,27 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
+import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test goes through the creation of a local repo and verifies
@@ -49,7 +53,7 @@ public class InitOperationTest {
 		InitOperationOptions operationOptions = TestConfigUtil.createTestInitOperationOptions("A");
 		InitOperation op = new InitOperation(operationOptions, null);
 		InitOperationResult res = op.execute();
-		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
+		File repoDir = ((LocalTransferSettings) operationOptions.getConfigTO().getTransferSettings()).getPath();
 		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
 
 		// Test the repository
@@ -77,10 +81,11 @@ public class InitOperationTest {
 	@Test
 	public void testFaultyInitOperation() throws Exception {
 		// Create an unreliable connection
-		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", "rel=1.*op=upload");
+		List<String> failingOperationsPattern = Lists.newArrayList("rel=1.*op=upload");
+		InitOperationOptions operationOptions = TestConfigUtil.createTestUnreliableInitOperationOptions("A", failingOperationsPattern);
 		InitOperation op = new InitOperation(operationOptions, null);
 
-		File repoDir = new File(operationOptions.getConfigTO().getConnectionTO().getSettings().get("path"));
+		File repoDir = ((UnreliableLocalTransferSettings) operationOptions.getConfigTO().getTransferSettings()).getPath();
 		File localDir = new File(operationOptions.getLocalDir(), ".syncany");
 
 		try {
