@@ -223,10 +223,13 @@ _sy() {
 		$DOWN_OPTIONS"
 
 	CLEANUP_OPTIONS="\
+		-F --force\
 		-M --no-database-merge\
 		-V --no-version-removal\
 		-T --no-temp-removal\
 		-k --keep-versions\
+		-t --time-between-cleanups\
+		-x --max-database-files\
 		$STATUS_OPTIONS"
 
 	# Un-comment this for debug purposes:
