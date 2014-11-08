@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +29,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunk;
@@ -37,8 +38,6 @@ import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
 import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
@@ -46,7 +45,6 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
@@ -58,6 +56,7 @@ import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -284,6 +283,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return;
 		}
 
+		updateCleanupFileInTransaction();
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files ...");
 
@@ -393,10 +393,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void setLastTimeCleaned(long lastTimeCleaned) {
-		CleanupTO cleanupTO = new CleanupTO();
-		cleanupTO.setLastTimeCleaned(lastTimeCleaned);
-
 		try {
+			CleanupTO cleanupTO;
+			if (config.getCleanupFile().exists()) {
+				cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
+			}
+			else {
+				cleanupTO = new CleanupTO();
+			}
+			cleanupTO.setLastTimeCleaned(lastTimeCleaned);
 			logger.log(Level.INFO, "Writing cleanup.xml");
 			(new Persister()).write(cleanupTO, config.getCleanupFile());
 		}
@@ -405,20 +410,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
 		}
 
-	}
-
-	private DatabaseVersion createDummyDatabaseVersion(VectorClock vectorClock) {
-
-		DatabaseVersionHeader dummyDatabaseVersionHeader = new DatabaseVersionHeader();
-		dummyDatabaseVersionHeader.setType(DatabaseVersionType.DEFAULT);
-		dummyDatabaseVersionHeader.setDate(new Date());
-		dummyDatabaseVersionHeader.setClient(config.getMachineName());
-		dummyDatabaseVersionHeader.setVectorClock(vectorClock);
-
-		DatabaseVersion dummyDatabaseVersion = new DatabaseVersion();
-		dummyDatabaseVersion.setHeader(dummyDatabaseVersionHeader);
-
-		return dummyDatabaseVersion;
 	}
 
 	private long getHighestDatabaseFileVersion(String client) {
@@ -433,4 +424,25 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return clientVersion;
 	}
 
+	private void updateCleanupFileInTransaction() throws StorageException, IOException {
+		// Find all existing cleanup files
+		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
+
+		Pattern cleanupFilePattern = Pattern.compile("cleanup-([0-9]+)");
+
+		// First number is 1
+		int cleanupNumber = 1;
+		// Find the number of the last cleanup
+		for (String filename : cleanupFiles.keySet()) {
+			Matcher matcher = cleanupFilePattern.matcher(filename);
+			cleanupNumber = Math.max(cleanupNumber, Integer.parseInt(matcher.group(1)));
+
+			// Schedule any existing cleanup files for deletion
+			remoteTransaction.delete(cleanupFiles.get(filename));
+		}
+
+		// Upload a new cleanup file that indicates changes
+		File cleanupFile = config.getCache().createTempFile("cleanup");
+		remoteTransaction.upload(cleanupFile, new CleanupRemoteFile(cleanupNumber + 1));
+	}
 }
