@@ -85,7 +85,7 @@ _sy() {
 		-P --plugin\
 		-o --plugin-option\
 		-I --no-interaction\
-		-N --no-daemon"
+		-n --add-daemon"
 
 	DOWN_CONFLICT_STRATEGIES="\
 		ask\
@@ -114,7 +114,7 @@ _sy() {
 		-t --create-target\
 		-a --advanced\
 		-I --no-interaction\
-		-N --no-daemon"
+		-n --add-daemon"
 
 	LS_OPTIONS="\
 		-V --versions\

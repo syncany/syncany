@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.EnvironmentUtil;
 
 public class PluginOperationTest {
+	private static final int EXPECTED_NUM_PLUGINS = 3;
 
 	@Test
 	public void testPluginListLocalOnly() throws Exception {
@@ -61,7 +62,8 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 		assertEquals(pluginList.size(), pluginResult.getPluginList().size());
-		assertEquals(2, pluginResult.getPluginList().size()); // local and unreliable_local
+
+		assertEquals(EXPECTED_NUM_PLUGINS, pluginResult.getPluginList().size()); // local and unreliable_local
 
 		for (ExtendedPluginInfo pluginInfo : pluginResult.getPluginList()) {
 			assertNull(pluginInfo.getRemotePluginInfo());
@@ -83,7 +85,7 @@ public class PluginOperationTest {
 
 	@Test
 	public void testPluginListRemoteOnlyReleasesOnly() throws Exception {
-		// Tests which plugin releases are available. This is difficult because 
+		// Tests which plugin releases are available. This is difficult because
 		// that will change. So we can only test the bare minimum.
 
 		// Setup
@@ -106,7 +108,7 @@ public class PluginOperationTest {
 
 	@Test
 	public void testPluginListRemoteOnlyIncludingSnapshots() throws Exception {
-		// Tests which plugin snapshots are available. This is difficult because 
+		// Tests which plugin snapshots are available. This is difficult because
 		// that will change. So we can only test the bare minimum.
 
 		// Setup
@@ -156,7 +158,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 
-		// Only one file should be in here: the jar for ftp.		
+		// Only one file should be in here: the jar for ftp.
 		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
 
 		// Tear down
@@ -204,7 +206,7 @@ public class PluginOperationTest {
 		assertNotNull(pluginResult);
 		assertEquals(PluginResultCode.OK, pluginResult.getResultCode());
 
-		// Only one file should be in here: the jar for ftp.		
+		// Only one file should be in here: the jar for ftp.
 		assertEquals(1, (new File(configDir, "plugins/lib/")).list().length);
 
 		// Tear down

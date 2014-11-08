@@ -11,19 +11,19 @@ repositories {
 
 dependencies {
 	compile			project(':syncany-util')
-	
-	compile			"commons-io:commons-io:2.4"	
-	compile			"org.bouncycastle:bcprov-jdk15on:1.51"            
-	compile			"org.bouncycastle:bcpkix-jdk15on:1.51"            
+
+	compile			"commons-io:commons-io:2.4"
+	compile			"org.bouncycastle:bcprov-jdk15on:1.51"
+	compile			"org.bouncycastle:bcpkix-jdk15on:1.51"
 	compile			"org.simpleframework:simple-xml:2.7.1"
 	compile			"com.google.guava:guava:15.0"
-	compile			"commons-codec:commons-codec:1.8"            
+	compile			"commons-codec:commons-codec:1.8"
 	compile			"org.hsqldb:hsqldb:2.3.1"
 	compile			"com.github.zafarkhaja:java-semver:0.7.2"
-
+	compile			"org.apache.httpcomponents:httpclient:4.3.4"
 	compile			"io.undertow:undertow-servlet:1.1.0.CR3"
 	compile			"io.undertow:undertow-websockets-jsr:1.1.0.CR3"
-	compile 		"commons-io:commons-io:2.4"	
+	compile			"net.sf.jpathwatch:jpathwatch:0.95"
 
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
 	testCompile		"junit:junit:4.9"

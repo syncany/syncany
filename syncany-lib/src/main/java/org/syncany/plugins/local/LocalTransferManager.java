@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,22 +41,22 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 
 /**
  * Implements a {@link TransferManager} based on a local storage backend for the
- * {@link LocalPlugin}. 
- * 
- * <p>Using a {@link LocalTransferSettings}, the transfer manager is configured and uses 
+ * {@link LocalTransferPlugin}.
+ *
+ * <p>Using a {@link LocalTransferSettings}, the transfer manager is configured and uses
  * any local folder to store the Syncany repository data. While repo and
  * master file are stored in the given folder, databases and multichunks are stored
  * in special sub-folders:
- * 
+ *
  * <ul>
  *   <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
  *   <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultichunkRemoteFile}s</li>
  * </ul>
- * 
+ *
  * <p>This plugin can be used for testing or to point to a repository
- * on a mounted remote device or network storage such as an NFS or a 
+ * on a mounted remote device or network storage such as an NFS or a
  * Samba/NetBIOS share.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalTransferManager extends AbstractTransferManager {
@@ -72,12 +72,12 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public LocalTransferManager(LocalTransferSettings connection, Config config) {
 		super(connection, config);
 
-		this.repoPath = connection.getRepositoryPath().getAbsoluteFile(); // absolute file to get abs. path!
-		this.multichunksPath = new File(connection.getRepositoryPath().getAbsolutePath(), "multichunks");
-		this.databasesPath = new File(connection.getRepositoryPath().getAbsolutePath(), "databases");
-		this.actionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "actions");
-		this.transactionsPath = new File(connection.getRepositoryPath().getAbsolutePath(), "transactions");
-		this.temporaryPath = new File(connection.getRepositoryPath().getAbsolutePath(), "temporary");
+		this.repoPath = connection.getPath().getAbsoluteFile(); // absolute file to get abs. path!
+		this.multichunksPath = new File(connection.getPath().getAbsolutePath(), "multichunks");
+		this.databasesPath = new File(connection.getPath().getAbsolutePath(), "databases");
+		this.actionsPath = new File(connection.getPath().getAbsolutePath(), "actions");
+		this.transactionsPath = new File(connection.getPath().getAbsolutePath(), "transactions");
+		this.temporaryPath = new File(connection.getPath().getAbsolutePath(), "temporary");
 	}
 
 	@Override

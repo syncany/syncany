@@ -1,6 +1,27 @@
 Change Log
 ==========
 
+### Syncany 0.2.0-alpha (Date: 8 Nov 2014)
+- Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- **Breaks compatiblity to 0.1.12-alpha local folders!**
+  From now on, breaking releases will always increase the minor version number.
+- Features and significant changes:
+  + Allow plugin nesting and interaction via SimpleXML-ification (major!) #192/#240
+  + Implement [Dropbox plugin](https://github.com/syncany/syncany-plugin-dropbox) (use Dropbox-provided storage) #226
+  + Implement [RAID0 plugin](https://github.com/syncany/syncany-plugin-raid0) (use two other plugins to extend storage) #191
+  + Encrypt plugin credentials in config.xml #168
+  + New syncany://-link format, support for short syncany://-links (with 
+    Syncany link shortener service), support for arbitrary link shorteners.
+- Bugfixes and other things:
+  + Fix PURGE database file history entries disappear after merging (major!) #252
+  + Fix database corruption issue (caused by #252) in #247
+  + Fix cannot delete/rename folders on Windows #248
+  + Set default log file if no log file given #258
+  + Allow user and global plugins (Linux only) #259
+  + Fix FTP plugin `testRepoFileExists()` with some FTP servers #262
+  + Fix inconsistent DB after cleanup rollback (no issue ID)
+  + Harmonize Plugin API OS description calls #264/#253
+
 ### Syncany 0.1.12-alpha (Date: 19 Oct 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:

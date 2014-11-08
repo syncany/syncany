@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,26 +17,28 @@
  */
 package org.syncany.plugins.unreliable_local;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.simpleframework.xml.ElementList;
 import org.syncany.plugins.local.LocalTransferSettings;
 
 public class UnreliableLocalTransferSettings extends LocalTransferSettings {
+
+  @ElementList(required = false)
+  private List<String> failingOperationPatterns;
+
 	private int totalOperationCounter;
 	private Map<String, Integer> typeOperationCounters;
-	private List<String> failingOperationPatterns;	
 
 	public UnreliableLocalTransferSettings() {
 		super();
-		
-        this.totalOperationCounter = 0;
-        this.typeOperationCounters = new HashMap<String, Integer>();
-        this.failingOperationPatterns = new ArrayList<String>();
+
+		this.totalOperationCounter = 0;
+		this.typeOperationCounters = new HashMap<String, Integer>();
+		this.failingOperationPatterns = new ArrayList<String>();
 	}
 
 	public List<String> getFailingOperationPatterns() {
@@ -62,16 +64,8 @@ public class UnreliableLocalTransferSettings extends LocalTransferSettings {
 	public void setTypeOperationCounters(Map<String, Integer> typeOperationCounters) {
 		this.typeOperationCounters = typeOperationCounters;
 	}
-	
+
 	public void increaseTotalOperationCounter() {
 		totalOperationCounter++;
-	}		
-	
-	@Override
-	public void init(Map<String, String> optionValues) {
-		// Skip validation, because we actually don't use an OptionSpec here
-		
-		repositoryPath = new File(optionValues.get("path"));
-		failingOperationPatterns = new ArrayList<String>(Arrays.asList(optionValues.get("patterns").split(",")));
 	}
 }

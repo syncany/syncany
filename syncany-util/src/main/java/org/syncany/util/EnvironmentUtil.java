@@ -27,7 +27,7 @@ public class EnvironmentUtil {
 		
 		private boolean unixLike;
 		
-		OperatingSystem(boolean unixLike){
+		OperatingSystem(boolean unixLike) {
 			this.unixLike = unixLike;
 		}
 		
@@ -39,8 +39,15 @@ public class EnvironmentUtil {
 	private static OperatingSystem operatingSystem;
 	
 	static {
-		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : 
-			(System.getProperty("os.name").toUpperCase().contains("OS X") ? OperatingSystem.OSX : OperatingSystem.UNIX_LIKE);
+		if (File.separatorChar == '\\') {
+			operatingSystem = OperatingSystem.WINDOWS;
+		}
+		else if (System.getProperty("os.name").toUpperCase().contains("OS X")) {
+			operatingSystem = OperatingSystem.OSX;
+		}
+		else {
+			operatingSystem = OperatingSystem.UNIX_LIKE;
+		}
 	}		
 
 	public static void setOperatingSystem(OperatingSystem aOperatingSystem) {
@@ -72,15 +79,15 @@ public class EnvironmentUtil {
 	 * @return x86, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
 	 */
 	public static String getArchDescription() {
-		String realOsStr = System.getProperty("os.arch").toLowerCase();
+		String realArchDescription = System.getProperty("os.arch").toLowerCase();
 		
-		switch (realOsStr) {
+		switch (realArchDescription) {
 		case "i386":
 			return "x86";
 		case "amd64":
 			return "x86_64";
 		default:
-			return realOsStr;
+			return realArchDescription;
 		}
 	}
 	
@@ -88,7 +95,25 @@ public class EnvironmentUtil {
 	 * @see http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems
 	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
 	 */
-	public static String getOsDescription(){
-		return System.getProperty("os.name").toLowerCase().split(" ")[0]; 
+	public static String getOperatingSystemDescription() {
+		String realOperatingSystemDescription = System.getProperty("os.name").toLowerCase().split(" ")[0];
+		
+		switch (realOperatingSystemDescription) {
+		case "linux":
+		case "solaris":
+		case "freebsd":
+		case "aix":
+			return "linux";
+			
+		case "mac":
+		case "macosx":
+			return "macosx";
+			
+		case "windows":
+			return "windows";
+			
+		default:
+			return realOperatingSystemDescription;
+		}
 	}
 }

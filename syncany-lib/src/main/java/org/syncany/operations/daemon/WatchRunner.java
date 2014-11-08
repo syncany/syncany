@@ -101,7 +101,11 @@ public class WatchRunner {
 	}
 
 	public boolean hasStopped() {
-		return (watchOperationResult != null);
+		return watchOperationResult != null;
+	}
+	
+	public boolean isSyncRunning() {
+		return watchOperation.isSyncRunning();
 	}
 
 	@Subscribe

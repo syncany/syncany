@@ -147,6 +147,10 @@ public class SqlDatabase {
 		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
 	}
 
+	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
+		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
+	}
+	
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
@@ -219,8 +223,8 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistory(fileHistoryId);
 	}
 
-	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
-		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMaxPurgeVersion(int keepVersionsCount) {
+		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
 	}
 
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {

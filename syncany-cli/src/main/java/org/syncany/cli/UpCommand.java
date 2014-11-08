@@ -83,6 +83,8 @@ public class UpCommand extends Command {
 
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
+		statusCommand.setOut(out);
+		
 		return statusCommand.parseOptions(operationArgs);
 	}
 

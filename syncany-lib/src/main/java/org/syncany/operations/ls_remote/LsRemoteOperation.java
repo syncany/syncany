@@ -81,7 +81,8 @@ public class LsRemoteOperation extends Operation {
 
 		transferManager.disconnect();
 
-		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+		boolean hasChanges = unknownRemoteDatabases.size() > 0;
+		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));
 		
 		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
 	}

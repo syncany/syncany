@@ -166,11 +166,12 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		// Execute transaction (if it isn't empty)
 		if (!rollbackTransaction.isEmpty()) {
-			logger.log(Level.INFO, "Clean TX: Committing rollback transaction ...");
+			logger.log(Level.INFO, "CLEAN TX: Committing rollback transaction ...");
 			rollbackTransaction.commit();
+			logger.log(Level.INFO, "END OF CLEAN TX: Rollback transaction done.");
 		}
 		else {
-			logger.log(Level.INFO, "Clean TX: No stale transactions found. No cleansing necessary.");
+			logger.log(Level.INFO, "CLEAN TX: No stale transactions found. No cleansing necessary.");
 		}
 	}
 

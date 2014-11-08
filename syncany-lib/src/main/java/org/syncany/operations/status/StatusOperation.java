@@ -102,7 +102,7 @@ public class StatusOperation extends Operation {
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(localChanges);
 		
-		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
+		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), localChanges.hasChanges()));		
 		
 		return statusResult;
 	}

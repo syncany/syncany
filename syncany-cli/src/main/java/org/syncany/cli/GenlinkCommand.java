@@ -22,12 +22,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.init.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
-	private boolean shortOutput;
+	private boolean machineReadableOutput;
 	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
@@ -41,8 +41,8 @@ public class GenlinkCommand extends AbstractInitCommand {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		parseOptions(operationArgs);		
-		GenlinkOperationResult operationResult = client.genlink();		
+		GenlinkOperationOptions operationOptions = parseOptions(operationArgs);		
+		GenlinkOperationResult operationResult = client.genlink(operationOptions);		
 		
 		printResults(operationResult);
 		
@@ -50,28 +50,34 @@ public class GenlinkCommand extends AbstractInitCommand {
 	}
 	
 	@Override
-	public OperationOptions parseOptions(String[] operationArgs) {
+	public GenlinkOperationOptions parseOptions(String[] operationArgs) {
+		GenlinkOperationOptions operationOptions = new GenlinkOperationOptions();
+		
 		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionMachineReadable = parser.acceptsAll(asList("m", "machine-readable"));		
 		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));		
 
 		parser.allowsUnrecognizedOptions();		
 		OptionSet options = parser.parse(operationArgs);
 
-		// --short
-		shortOutput = options.has(optionShort);
+		// --machine-readable, -m
+		machineReadableOutput = options.has(optionMachineReadable);
 		
-		return null;
+		// --short, -s
+		operationOptions.setShortUrl(options.has(optionShort));
+
+		return operationOptions;
 	}
 	
 	@Override
 	public void printResults(OperationResult operationResult) {
 		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
 		
-		if (!shortOutput) {
+		if (!machineReadableOutput) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(concreteOperationResult, shortOutput);			
+		printLink(concreteOperationResult, machineReadableOutput);			
 	}	
 }

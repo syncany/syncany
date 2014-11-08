@@ -17,7 +17,6 @@
  */
 package org.syncany.operations.watch;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ import org.syncany.util.StringUtil;
  * 
  * <p>In order to sync instantly, it offers the following strategies:
  * <ul>
- *  <li>It monitors the local file system using the {@link RecursiveWatcher}.
+ *  <li>It monitors the local file system using the {@link DefaultRecursiveWatcher}.
  *      Whenever a file or folder changes, the sync is started (after a short
  *      settlement wait period).</li>
  *  <li>It subscribes to a repo-specific channel on the Syncany pub/sub server,
@@ -190,13 +189,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		ignorePaths.add(Paths.get(config.getDatabaseDir().getAbsolutePath()));
 		ignorePaths.add(Paths.get(config.getLogDir().getAbsolutePath()));
 
-		recursiveWatcher = new RecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
+		recursiveWatcher = RecursiveWatcher.createRecursiveWatcher(localDir, ignorePaths, options.getSettleDelay(), this);
 
 		try {
 			recursiveWatcher.start();
 		}
-		catch (IOException e) {
-			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.");
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot initiate file watcher. Relying on regular tree walks.", e);
 		}
 	}
 
@@ -210,8 +209,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 	
 	private void stopRecursiveWatcher() {
-		logger.log(Level.INFO, "Stopping recursive watcher for " + config.getLocalDir() + " ...");
-		recursiveWatcher.stop();
+		try {
+			logger.log(Level.INFO, "Stopping recursive watcher for " + config.getLocalDir() + " ...");
+			recursiveWatcher.stop();
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot stop file watcher.", e);
+		}
 	}
 
 	private void stopNotificationListener() {

@@ -24,6 +24,7 @@ import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.init.GenlinkOperation;
+import org.syncany.operations.init.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkFolderRequestHandler extends FolderRequestHandler {
@@ -34,7 +35,7 @@ public class GenlinkFolderRequestHandler extends FolderRequestHandler {
 	@Override
 	public Response handleRequest(FolderRequest request) {
 		try {
-			GenlinkOperation operation = new GenlinkOperation(config);
+			GenlinkOperation operation = new GenlinkOperation(config, new GenlinkOperationOptions());
 			GenlinkOperationResult operationResult = operation.execute();
 			GenlinkFolderResponse response = new GenlinkFolderResponse(operationResult, request.getId());
 		

@@ -17,8 +17,7 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -124,8 +123,8 @@ public class CleanupOperationTest {
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(distinct id) from filehistory", databaseConnectionA));
 
 		// Test the repo
-		assertEquals(5, new File(testConnection.getRepositoryPath() + "/multichunks/").list().length);
-		assertEquals(12, new File(testConnection.getRepositoryPath() + "/databases/").list().length);
+		assertEquals(5, new File(testConnection.getPath() + "/multichunks/").list().length);
+		assertEquals(12, new File(testConnection.getPath() + "/databases/").list().length);
 
 		// B: Sync down cleanup
 		clientB.down();
@@ -392,8 +391,8 @@ public class CleanupOperationTest {
 			operationFailed = true; // That is supposed to happen!
 		}
 
-		File repoMultiChunkDir = new File(testConnection.getRepositoryPath() + "/multichunks");
-		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
+		File repoMultiChunkDir = new File(testConnection.getPath() + "/multichunks");
+		File repoActionsDir = new File(testConnection.getPath() + "/actions");
 
 		assertTrue(operationFailed);
 		// Atomic operation, so multichunk is not yet present at location
@@ -541,6 +540,7 @@ public class CleanupOperationTest {
 		}));
 
 		TestClient clientA = new TestClient("A", testConnection);
+		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
 
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
@@ -552,12 +552,12 @@ public class CleanupOperationTest {
 		options.setMinSecondsBetweenCleanups(40000000);
 		options.setForce(true);
 
-		File repoDir = testConnection.getRepositoryPath();
-		File repoMultiChunkDir = new File(testConnection.getRepositoryPath() + "/multichunks");
-		File repoActionsDir = new File(testConnection.getRepositoryPath() + "/actions");
-		File repoDatabasesDir = new File(testConnection.getRepositoryPath() + "/databases");
-		File repoTransactionsDir = new File(testConnection.getRepositoryPath() + "/transactions");
-		File repoTemporaryDir = new File(testConnection.getRepositoryPath() + "/temporary");
+		File repoDir = testConnection.getPath();
+		File repoMultiChunkDir = new File(testConnection.getPath() + "/multichunks");
+		File repoActionsDir = new File(testConnection.getPath() + "/actions");
+		File repoDatabasesDir = new File(testConnection.getPath() + "/databases");
+		File repoTransactionsDir = new File(testConnection.getPath() + "/transactions");
+		File repoTemporaryDir = new File(testConnection.getPath() + "/temporary");
 
 		// Run
 
@@ -572,7 +572,8 @@ public class CleanupOperationTest {
 		assertEquals(6, repoDatabasesDir.listFiles().length);
 		assertEquals(6, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
-
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 		// Run cleanup, fails mid-move!
 		boolean operationFailed = false;
 
@@ -581,12 +582,16 @@ public class CleanupOperationTest {
 		}
 		catch (Exception e) {
 			operationFailed = true; // That is supposed to happen!
+			e.printStackTrace();
 		}
 
 		assertTrue(operationFailed);
 		assertEquals(1, repoTransactionsDir.list().length);
 		assertEquals(1, repoTemporaryDir.list().length);
-
+		assertEquals(6, repoDatabasesDir.listFiles().length);
+		assertEquals(6, repoMultiChunkDir.listFiles().length);
+		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 		// Retry
 		clientA.cleanup(options);
 
@@ -603,6 +608,8 @@ public class CleanupOperationTest {
 				return name.startsWith("temp-");
 			}
 		}).length);
+		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		
 
 		// Tear down
 		clientA.deleteTestData();

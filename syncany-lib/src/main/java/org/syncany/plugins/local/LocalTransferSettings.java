@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,43 +18,29 @@
 package org.syncany.plugins.local;
 
 import java.io.File;
-import java.util.Map;
 
-import org.syncany.plugins.PluginOptionSpec;
-import org.syncany.plugins.PluginOptionSpecs;
-import org.syncany.plugins.PluginOptionSpec.ValueType;
-import org.syncany.plugins.transfer.StorageException;
+import org.simpleframework.xml.Element;
+import org.syncany.plugins.transfer.Setup;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * The local connection represents the settings required to create to a
  * backend based on a local (or mounted network) folder. It can be used to
  * initialize/create a {@link LocalTransferManager} and is part of
- * the {@link LocalPlugin}.  
- *  
+ * the {@link LocalTransferPlugin}.
+ *
  * @author Philipp C. Heckel
  */
 public class LocalTransferSettings extends TransferSettings {
-	protected File repositoryPath;
+	@Element(required = true)
+	@Setup(order = 1, description = "Path to local repository")
+	public File path;	
 
-	public File getRepositoryPath() {
-		return repositoryPath;
+	public File getPath() {
+		return path;
 	}
 
-	public void setRepositoryPath(File repositoryPath) {
-		this.repositoryPath = repositoryPath;
-	}
-
-	@Override
-	public void init(Map<String, String> optionValues) throws StorageException {
-		getOptionSpecs().validate(optionValues);
-		this.repositoryPath = new File(optionValues.get("path"));
-	}
-
-	@Override
-	public PluginOptionSpecs getOptionSpecs() {
-		return new PluginOptionSpecs(
-			new PluginOptionSpec("path", "Local Folder", ValueType.STRING, true, false, null)
-		);
+	public void setPath(File path) {
+		this.path = path;
 	}
 }

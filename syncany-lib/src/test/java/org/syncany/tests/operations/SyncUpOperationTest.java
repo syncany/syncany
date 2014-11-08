@@ -75,7 +75,7 @@ public class SyncUpOperationTest {
 		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
 
 		File localDatabaseDir = testConfig.getDatabaseDir();
-		File remoteDatabaseFile = new File(localConnection.getRepositoryPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
 
 		assertNotNull(localDatabaseDir.listFiles());
 		assertTrue(localDatabaseDir.listFiles().length > 0);

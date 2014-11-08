@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +27,12 @@ import org.syncany.config.Config;
 /**
  * Implements basic functionality of a {@link TransferManager} which
  * can be implemented sub-classes.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class AbstractTransferManager implements TransferManager {
-	protected static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 
 	protected TransferSettings settings;
 	protected Config config;
@@ -41,12 +42,8 @@ public abstract class AbstractTransferManager implements TransferManager {
 		this.config = config;
 	}
 
-	public TransferSettings getSettings() {
-		return settings;
-	}
-
 	/**
-	 * Creates a temporary file, either using the config (if initialized) or 
+	 * Creates a temporary file, either using the config (if initialized) or
 	 * using the global temporary directory.
 	 */
 	protected File createTempFile(String name) throws IOException {
@@ -60,9 +57,9 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 	/**
 	 * Checks whether the settings given to this transfer manager can be
-	 * used to create or connect to a remote repository. 
-	 * 
-	 * <p>Tests if the target exists, if it can be written to and if a 
+	 * used to create or connect to a remote repository.
+	 *
+	 * <p>Tests if the target exists, if it can be written to and if a
 	 * repository can be created.
 	 */
 	@Override
@@ -109,5 +106,4 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 		return result;
 	}
-
 }

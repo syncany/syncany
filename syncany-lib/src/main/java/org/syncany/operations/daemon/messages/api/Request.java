@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import java.util.Random;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -26,6 +28,10 @@ import org.simpleframework.xml.Root;
 public abstract class Request extends Message {
 	@Element(required = true)
 	private int id;	
+	
+	public Request() {
+		this.id = Math.abs(new Random().nextInt());
+	}
 
 	public int getId() {
 		return id;

@@ -32,9 +32,11 @@ import org.syncany.plugins.transfer.StorageException;
  * @author Pim Otte
  */
 public class TempRemoteFile extends RemoteFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("temp-([A-Za-z]+)");
-	private static final String NAME_FORMAT = "temp-%s";
+	private static final Pattern NAME_PATTERN = Pattern.compile("temp-([A-Za-z]+)-(.+)");
+	private static final String NAME_FORMAT = "temp-%s-%s";
 
+	private RemoteFile targetRemoteFile;
+	
 	/**
 	 * Initializes a new temp file, given a name. 
 	 * 
@@ -50,8 +52,16 @@ public class TempRemoteFile extends RemoteFile {
 	 * 
 	 * @throws StorageException
 	 */
-	public TempRemoteFile() throws StorageException {
-		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(20)));
+	public TempRemoteFile(RemoteFile targetRemoteFile) throws StorageException {
+		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getName()));
+	}
+	
+	/**
+	 * Returns the target remote file, i.e. the {@link RemoteFile} this
+	 * temporary file will be renamed into, or was renamed from.
+	 */
+	public RemoteFile getTargetRemoteFile() {
+		return targetRemoteFile;
 	}
 
 	@Override
@@ -59,6 +69,13 @@ public class TempRemoteFile extends RemoteFile {
 		Matcher matcher = NAME_PATTERN.matcher(name);
 
 		if (!matcher.matches()) {
+			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
+		}
+		
+		try {
+			targetRemoteFile = RemoteFile.createRemoteFile(matcher.group(2));
+		}
+		catch (Exception e) {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
 

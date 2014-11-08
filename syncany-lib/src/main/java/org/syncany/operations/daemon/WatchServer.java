@@ -28,16 +28,20 @@ import java.util.logging.Logger;
 import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
+import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.daemon.Watch.SyncStatus;
+import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
+import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
-import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.StringUtil;
@@ -84,6 +88,8 @@ public class WatchServer {
 			
 			stopAllWatchOperations();
 			startWatchOperations(watchedFolders);
+			
+			fireDaemonReloadedEvent();
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Cannot (re-)load config. Exception thrown.", e);
@@ -174,14 +180,12 @@ public class WatchServer {
 		
 		return watchedFolderTOs;
 	}
-	
-	@Subscribe
-	public void onManagementRequestReceived(ManagementRequest request) {
-		if (request instanceof ListWatchesManagementRequest) {
-			processListWatchesRequest((ListWatchesManagementRequest) request);
-		}		
-	}
 
+	private void fireDaemonReloadedEvent() {		
+		logger.log(Level.INFO, "Firing daemon-reloaded event ...");		
+		eventBus.post(new DaemonReloadedExternalEvent());
+	}
+	
 	@Subscribe
 	public void onFolderRequestReceived(FolderRequest folderRequest) {
 		File rootFolder = new File(folderRequest.getRoot());
@@ -191,8 +195,43 @@ public class WatchServer {
 		}
 	}
 	
-	private void processListWatchesRequest(ListWatchesManagementRequest request) {
-		eventBus.post(new ListWatchesManagementResponse(request.getId(), new ArrayList<File>(watchOperations.keySet())));
+	@Subscribe
+	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
+		ArrayList<Watch> watchList = new ArrayList<>();
+		
+		for (File watchFolder : watchOperations.keySet()) {
+			boolean syncRunning = watchOperations.get(watchFolder).isSyncRunning();
+			SyncStatus syncStatus = (syncRunning) ? SyncStatus.SYNCING : SyncStatus.IN_SYNC;
+			
+			watchList.add(new Watch(watchFolder, syncStatus));
+		}
+		
+		eventBus.post(new ListWatchesManagementResponse(request.getId(), watchList));
+	}
+	
+	@Subscribe
+	public void onAddWatchRequestReceived(AddWatchManagementRequest request) {
+		File rootFolder = request.getWatch();
+		
+		if (watchOperations.containsKey(rootFolder)) {
+			eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists."));
+		}
+		else {			
+			try {
+				boolean folderAdded = DaemonConfigHelper.addToDaemonConfig(rootFolder);
+				
+				if (folderAdded) {
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));				
+				}
+				else {
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists (inactive/disabled)."));
+				}
+			}
+			catch (ConfigException e) {
+				logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Error adding to config: " + e.getMessage()));
+			}
+		}				
 	}
 	
 	@Subscribe

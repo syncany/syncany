@@ -212,11 +212,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
+		logger.log(Level.INFO, "START TX removeOldVersions() ...");
 
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMostRecentPurgeVersion(options.getKeepVersionsCount()));
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
 
 		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
@@ -238,8 +239,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-
-		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
+		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);		
 
 		// Remote: serialize purge database version to file and upload
 		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
@@ -249,13 +249,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		try {
+			logger.log(Level.INFO, "COMMITTING TX removeOldVersions() ...");
+
 			remoteTransaction.commit();
 			localDatabase.commit();
 		}
 		catch (StorageException e) {
+			logger.log(Level.INFO, "FAILED TO COMMIT TX removeOldVersions(). Rolling back ...");
+
 			localDatabase.rollback();
-			throw (e);
+			throw e;
 		}
+
+		logger.log(Level.INFO, "SUCCESS COMMITTING TX removeOldVersions().");
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
@@ -346,22 +352,23 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
-		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
+		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
 
 		if (!options.isForce() && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
-					numberOfDatabaseFiles, options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size() });
+					numberOfDatabaseFiles, maxDatabaseFiles });
 			return;
 		}
+
+		// Now do the merge!
+		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
+				new Object[] { numberOfDatabaseFiles, maxDatabaseFiles });
 
 		for (String client : allDatabaseFilesMap.keySet()) {
 			List<DatabaseRemoteFile> clientDatabaseFiles = allDatabaseFilesMap.get(client);
 			Collections.sort(clientDatabaseFiles);
 			logger.log(Level.INFO, "Databases: " + clientDatabaseFiles);
-
-			// Now do the merge!
-			logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
-					new Object[] { clientDatabaseFiles.size(), options.getMaxDatabaseFiles() });
 
 			// 1. Determine files to delete remotely
 			List<DatabaseRemoteFile> toDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>(clientDatabaseFiles);
