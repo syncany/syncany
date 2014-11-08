@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.2.0-alpha (Date: tbd.)
+### Syncany 0.2.0-alpha (Date: 8 Nov 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - **Breaks compatiblity to 0.1.12-alpha local folders!**
   From now on, breaking releases will always increase the minor version number.
