@@ -22,6 +22,7 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.config.to.ConfigTO;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.ConnectOperationOptions;
@@ -82,10 +83,15 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
+		OptionSpec<Void> optionInsecure = parser.acceptsAll(asList("insecure"));		
 
 		OptionSet options = parser.parse(operationArgs);
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
+		// Set 'isInteractive'  
+		initInteractivityMode(options, optionPlugin);
+		
 		// Plugin
 		TransferSettings transferSettings = null;
 

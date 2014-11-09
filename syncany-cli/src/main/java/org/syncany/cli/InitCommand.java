@@ -111,13 +111,18 @@ public class InitCommand extends AbstractInitCommand {
 
 		OptionSet options = parser.parse(operationArguments);
 
+		// Set 'isInteractive' and validate settings 
+		initInteractivityMode(options, optionPlugin);
+			
+		// Ask or set transfer settings
 		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
 
+		// Some misc settings
 		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
-
+		
 		// Cipher specs: --no-encryption, --advanced
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 
@@ -131,18 +136,10 @@ public class InitCommand extends AbstractInitCommand {
 		// Genlink options: --short
 		GenlinkOperationOptions genlinkOptions = new GenlinkOperationOptions();
 		genlinkOptions.setShortUrl(options.has(optionShortUrl));
-		
-		// Set password
-		if (options.has(optionPassword)) {
-			if (!options.has(optionInsecure)) {
-				throw new Exception("Password option also needs the --insecure flag. Please only use the --password option if you have to.");
-			}
-			
-			operationOptions.setPassword(options.valueOf(optionPassword));
-		}
-		else {
-			operationOptions.setPassword(null); // set by callback in operation
-		}
+				
+		// Set repo password
+		String password = validateAndGetPassword(options, optionNoEncryption, optionPassword, optionInsecure);
+		operationOptions.setPassword(password);
 		
 		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(transferSettings);
@@ -159,6 +156,32 @@ public class InitCommand extends AbstractInitCommand {
 		operationOptions.setGenlinkOptions(genlinkOptions);
 		
 		return operationOptions;
+	}
+	
+	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword,
+			OptionSpec<Void> optionInsecure) {
+		
+		if (!isInteractive) {
+			if (options.has(optionPassword) && options.has(optionNoEncryption)) {
+				throw new IllegalArgumentException("Cannot provide --password and --no-encryption. Conflicting options.");
+			}
+			else if (!options.has(optionPassword) && !options.has(optionNoEncryption)) {
+				throw new IllegalArgumentException("Non-interactive must either provide --no-encryption or --password and --insecure.");
+			}
+			else if (options.has(optionPassword) && !options.has(optionNoEncryption)) {
+				if (!options.has(optionInsecure)) {
+					throw new IllegalArgumentException("Password option --password also needs the --insecure flag.");
+				}
+				
+				return options.valueOf(optionPassword);
+			}			
+			else {
+				return null; // No encryption, no password.
+			}
+		}	
+		else {
+			return null; // Will be set in callback!
+		}
 	}
 
 	@Override

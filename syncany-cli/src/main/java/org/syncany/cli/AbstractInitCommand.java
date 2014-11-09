@@ -45,9 +45,11 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
@@ -85,20 +87,24 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return configTO;
 	}
 
+	protected void initInteractivityMode(OptionSet options, OptionSpec<String> optionPlugin) throws Exception {
+		isInteractive = !options.has(optionPlugin);
+	}
+
 	protected TransferSettings createTransferSettingsFromOptions(OptionSet options, OptionSpec<String> optionPlugin,
 			OptionSpec<String> optionPluginOpts) throws Exception {
 
 		TransferPlugin plugin;
 		TransferSettings transferSettings;
 
+		// Parse --plugin and --plugin-option values 
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
 		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
 
+		// Validation of some constraints
 		if (!options.has(optionPlugin) && knownPluginSettings.size() > 0) {
 			throw new IllegalArgumentException("Provided plugin settings without a plugin name.");
 		}
-
-		isInteractive = !options.has(optionPlugin) && knownPluginSettings.size() == 0;
 
 		plugin = options.has(optionPlugin) ? initPlugin(options.valueOf(optionPlugin)) : askPlugin();
 		transferSettings = askPluginSettings(plugin.createEmptySettings(), knownPluginSettings);
