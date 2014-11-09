@@ -34,12 +34,12 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ApplicationSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(ApplicationSqlDao.class.getSimpleName());	
-	
+	protected static final Logger logger = Logger.getLogger(ApplicationSqlDao.class.getSimpleName());
+
 	public ApplicationSqlDao(Connection connection) {
 		super(connection);
-	}	
-	
+	}
+
 	/**
 	 * Writes a list of {@link DatabaseRemoteFile}s to the database using the given connection.
 	 * <p><b>Note:</b> This method executes, but does not commit the query.
@@ -54,12 +54,10 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 			preparedStatement.setString(1, databaseRemoteFile.getName());
 			preparedStatement.addBatch();
 		}
-		
+
 		preparedStatement.executeBatch();
-		connection.commit();
-		preparedStatement.close();
 	}
-	
+
 	/**
 	 * Queries the database for already known {@link DatabaseRemoteFile}s and returns a
 	 * list of all of them. 
@@ -68,21 +66,21 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	 */
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		List<DatabaseRemoteFile> knownDatabases = new ArrayList<DatabaseRemoteFile>();
-				
+
 		try (PreparedStatement preparedStatement = getStatement("application.select.all.getKnownDatabases.sql")) {
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {		
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					knownDatabases.add(new DatabaseRemoteFile(resultSet.getString("database_name")));
 				}
-				
+
 				return knownDatabases;
-			}  
+			}
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
 	 * Shuts down the HSQL database, i.e. persists all data, closes all connections
 	 * and unlocks the database for other processes. 

@@ -19,6 +19,7 @@ package org.syncany.operations.cleanup;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -163,8 +164,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		if (options.isMergeRemoteFiles()) {
 			mergeRemoteFiles();
 		}
-
-		remoteTransaction.commit();
 
 		setLastTimeCleaned(System.currentTimeMillis() / 1000);
 		finishOperation();
@@ -338,7 +337,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles() throws IOException, StorageException {
+	private void mergeRemoteFiles() throws IOException, StorageException, SQLException {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
@@ -383,7 +382,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(),
 					lastRemoteMergeDatabaseFile.getClientVersion() + 1);
 
-			vectorClock.setClock(lastRemoteMergeDatabaseFile.getClientName(), lastRemoteMergeDatabaseFile.getClientVersion() + 1);
+			vectorClock.setClock(newRemoteMergeDatabaseFile.getClientName(), newRemoteMergeDatabaseFile.getClientVersion());
 
 			File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
 
@@ -391,14 +390,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 					toDeleteDatabaseFiles.get(0).getClientVersion(), lastRemoteMergeDatabaseFile.getClientVersion(), newLocalMergeDatabaseFile });
 
 			long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
-			Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(client, lastLocalClientVersion + 1);
+			Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(client, lastLocalClientVersion);
 
 			DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
 			databaseDAO.save(lastNDatabaseVersions, newLocalMergeDatabaseFile);
 
 			// Queue files for uploading and deletion
 			allToDeleteDatabaseFiles.addAll(toDeleteDatabaseFiles);
-			allMergedDatabaseFiles.put(newLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+			allMergedDatabaseFiles.put(newLocalMergeDatabaseFile, newRemoteMergeDatabaseFile);
 
 		}
 
@@ -413,6 +412,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		databaseDAO.save(dummyDatabaseVersionList, dummyLocalDatabaseFile);
 		allMergedDatabaseFiles.put(dummyLocalDatabaseFile, dummyRemoteDatabaseFile);
 
+		// Remember newly written files as so not to redownload them later.
+		List<DatabaseRemoteFile> newRemoteMergeDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
+		newRemoteMergeDatabaseFiles.addAll(allMergedDatabaseFiles.values());
+
+		logger.log(Level.INFO, "Files: " + newRemoteMergeDatabaseFiles);
+		localDatabase.writeKnownRemoteDatabases(newRemoteMergeDatabaseFiles);
 		// 3. Uploading merge file
 
 		// And delete others
@@ -429,6 +434,21 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			remoteTransaction.upload(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 		}
+
+		try {
+			logger.log(Level.INFO, "COMMITTING TX mergeRemoteFiles() ...");
+
+			remoteTransaction.commit();
+			localDatabase.commit();
+		}
+		catch (StorageException e) {
+			logger.log(Level.INFO, "FAILED TO COMMIT TX mergeRemoteFiles(). Rolling back ...");
+
+			localDatabase.rollback();
+			throw e;
+		}
+
+		logger.log(Level.INFO, "SUCCESS COMMITTING TX mergeRemoteFiles().");
 
 		// Update stats
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
