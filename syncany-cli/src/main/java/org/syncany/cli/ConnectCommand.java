@@ -118,10 +118,30 @@ public class ConnectCommand extends AbstractInitCommand {
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setDaemon(options.has(optionAddDaemon));
+		operationOptions.setPassword(validateAndGetPassword(options, optionPassword, optionInsecure));
 
 		return operationOptions;
 	}
 
+	private String validateAndGetPassword(OptionSet options, OptionSpec<String> optionPassword,
+			OptionSpec<Void> optionInsecure) {
+		
+		if (!isInteractive) {
+			if (options.has(optionPassword)) {
+				if (!options.has(optionInsecure)) {
+					throw new IllegalArgumentException("Password option --password also needs the --insecure flag.");
+				}
+				
+				return options.valueOf(optionPassword);
+			}			
+			else {
+				return null; // No encryption, no password.
+			}
+		}	
+		else {
+			return null; // Will be set in callback!
+		}
+	}
 	@Override
 	public void printResults(OperationResult operationResult) {
 		ConnectOperationResult concreteOperationResult = (ConnectOperationResult) operationResult;

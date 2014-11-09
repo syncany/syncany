@@ -586,6 +586,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	@Override
 	public String onUserPassword(String header, String message) {
+		if (!isInteractive) {
+			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");			
+		}
+		
 		out.println();
 
 		if (header != null) {
