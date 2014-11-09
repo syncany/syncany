@@ -228,9 +228,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A9,B7) + (A10,B7) [PURGE]
 		clientA.cleanup(options);
-		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000009").exists());
-		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000010").exists());
-		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000011").exists());
+		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000011").exists());
+		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000012").exists());
+		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000013").exists());
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionA));
 

@@ -239,7 +239,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);		
+		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);
 
 		// Remote: serialize purge database version to file and upload
 		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
@@ -361,6 +361,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return;
 		}
 
+		// Vectorclock to keep track of new database versions
+		VectorClock vectorClock = new VectorClock();
+
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files: Merging necessary ({0} database files, max. {1}) ...",
 				new Object[] { numberOfDatabaseFiles, maxDatabaseFiles });
@@ -375,22 +378,40 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			// 2. Write merge file
 			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
-			File lastLocalMergeDatabaseFile = config.getCache().getDatabaseFile(lastRemoteMergeDatabaseFile.getName());
+
+			// Increment the version by 1, to signal cleanup has occurred
+			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(),
+					lastRemoteMergeDatabaseFile.getClientVersion() + 1);
+
+			vectorClock.setClock(lastRemoteMergeDatabaseFile.getClientName(), lastRemoteMergeDatabaseFile.getClientVersion() + 1);
+
+			File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
 
 			logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
-					toDeleteDatabaseFiles.get(0).getClientVersion(), lastRemoteMergeDatabaseFile.getClientVersion(), lastLocalMergeDatabaseFile });
+					toDeleteDatabaseFiles.get(0).getClientVersion(), lastRemoteMergeDatabaseFile.getClientVersion(), newLocalMergeDatabaseFile });
 
 			long lastLocalClientVersion = lastRemoteMergeDatabaseFile.getClientVersion();
-			Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(client, lastLocalClientVersion);
+			Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(client, lastLocalClientVersion + 1);
 
 			DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
-			databaseDAO.save(lastNDatabaseVersions, lastLocalMergeDatabaseFile);
+			databaseDAO.save(lastNDatabaseVersions, newLocalMergeDatabaseFile);
 
 			// Queue files for uploading and deletion
 			allToDeleteDatabaseFiles.addAll(toDeleteDatabaseFiles);
-			allMergedDatabaseFiles.put(lastLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
+			allMergedDatabaseFiles.put(newLocalMergeDatabaseFile, lastRemoteMergeDatabaseFile);
 
 		}
+
+		// Create dummy database version to update vectorclocks.
+		vectorClock.incrementClock(config.getMachineName());
+		DatabaseVersion dummyDatabaseVersion = createDummyDatabaseVersion(vectorClock);
+		DatabaseRemoteFile dummyRemoteDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), vectorClock.getClock(config.getMachineName()));
+		File dummyLocalDatabaseFile = config.getCache().getDatabaseFile(dummyRemoteDatabaseFile.getName());
+		DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
+		List<DatabaseVersion> dummyDatabaseVersionList = new ArrayList<DatabaseVersion>();
+		dummyDatabaseVersionList.add(dummyDatabaseVersion);
+		databaseDAO.save(dummyDatabaseVersionList, dummyLocalDatabaseFile);
+		allMergedDatabaseFiles.put(dummyLocalDatabaseFile, dummyRemoteDatabaseFile);
 
 		// 3. Uploading merge file
 
@@ -456,5 +477,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
 		}
 
+	}
+
+	private DatabaseVersion createDummyDatabaseVersion(VectorClock vectorClock) {
+
+		DatabaseVersionHeader dummyDatabaseVersionHeader = new DatabaseVersionHeader();
+		dummyDatabaseVersionHeader.setType(DatabaseVersionType.DEFAULT);
+		dummyDatabaseVersionHeader.setDate(new Date());
+		dummyDatabaseVersionHeader.setClient(config.getMachineName());
+		dummyDatabaseVersionHeader.setVectorClock(vectorClock);
+
+		DatabaseVersion dummyDatabaseVersion = new DatabaseVersion();
+		dummyDatabaseVersion.setHeader(dummyDatabaseVersionHeader);
+
+		return dummyDatabaseVersion;
 	}
 }

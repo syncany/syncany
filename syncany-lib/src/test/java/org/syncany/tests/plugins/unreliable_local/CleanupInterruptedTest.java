@@ -26,6 +26,8 @@ import java.util.Arrays;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -158,7 +160,10 @@ public class CleanupInterruptedTest {
 			tempFile.delete();
 		}
 
-		clientA.cleanup(cleanupOptions);
+		// Cleanup should have merged the two files.
+		CleanupOperationResult result = clientA.cleanup(cleanupOptions);
+		assertEquals(CleanupResultCode.OK, result.getResultCode());
+		assertEquals(2, result.getMergedDatabaseFilesCount());
 
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
