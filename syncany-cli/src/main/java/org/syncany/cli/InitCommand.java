@@ -106,6 +106,8 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
 		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));		
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
+		OptionSpec<Void> optionInsecure = parser.acceptsAll(asList("insecure"));		
 
 		OptionSet options = parser.parse(operationArguments);
 
@@ -130,6 +132,18 @@ public class InitCommand extends AbstractInitCommand {
 		GenlinkOperationOptions genlinkOptions = new GenlinkOperationOptions();
 		genlinkOptions.setShortUrl(options.has(optionShortUrl));
 		
+		// Set password
+		if (options.has(optionPassword)) {
+			if (!options.has(optionInsecure)) {
+				throw new Exception("Password option also needs the --insecure flag. Please only use the --password option if you have to.");
+			}
+			
+			operationOptions.setPassword(options.valueOf(optionPassword));
+		}
+		else {
+			operationOptions.setPassword(null); // set by callback in operation
+		}
+		
 		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(transferSettings);
 		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
@@ -140,8 +154,7 @@ public class InitCommand extends AbstractInitCommand {
 
 		operationOptions.setCreateTarget(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
-		operationOptions.setCipherSpecs(cipherSpecs);
-		operationOptions.setPassword(null); // set by callback in operation
+		operationOptions.setCipherSpecs(cipherSpecs);		
 		operationOptions.setDaemon(options.has(optionAddDaemon));
 		operationOptions.setGenlinkOptions(genlinkOptions);
 		
