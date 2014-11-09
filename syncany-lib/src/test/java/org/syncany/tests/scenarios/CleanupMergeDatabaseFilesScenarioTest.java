@@ -229,8 +229,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.up(upOperationOptionsWithCleanupForce); // (A9,B7) + (A10,B7) [PURGE]
 		clientA.cleanup(options);
 		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000011").exists());
-		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000012").exists());
-		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000013").exists());
+		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000012").exists());
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionA));
 
@@ -238,9 +237,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B8) + (A10,B9) [PURGE]
 		clientB.cleanup(options);
-		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000008").exists());
-		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000009").exists());
-		assertFalse(new File(testConnection.getPath(), "databases/database-B-0000000010").exists());
+		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000011").exists());
+		assertFalse(new File(testConnection.getPath(), "databases/database-B-0000000012").exists());
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
@@ -248,9 +246,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B10) + (A10,B11) [PURGE]
 		clientB.cleanup(options);
-		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000010").exists());
-		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000011").exists());
-		assertFalse(new File(testConnection.getPath(), "databases/database-B-0000000012").exists());
+		assertTrue(new File(testConnection.getPath(), "databases/database-B-0000000013").exists());
+		assertFalse(new File(testConnection.getPath(), "databases/database-B-0000000014").exists());
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
@@ -258,9 +255,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A11,B11) + (A12,B11) [PURGE]
 		clientA.cleanup(options);
-		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000011").exists());
-		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000012").exists());
-		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000013").exists());
+		assertTrue(new File(testConnection.getPath(), "databases/database-A-0000000013").exists());
+		assertFalse(new File(testConnection.getPath(), "databases/database-A-0000000014").exists());
 		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionA));
 
