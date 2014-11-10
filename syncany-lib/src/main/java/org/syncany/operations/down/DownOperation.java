@@ -457,8 +457,12 @@ public class DownOperation extends AbstractTransferOperation {
 		VectorClock rangeVersionTo = null;
 
 		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
+			System.out.println();
+
 			DatabaseVersionHeader currentDatabaseVersionHeader = winnersApplyBranchList.get(i);
 			DatabaseVersionHeader nextDatabaseVersionHeader = (i + 1 < winnersApplyBranchList.size()) ? winnersApplyBranchList.get(i + 1) : null;
+
+			System.out.println("current: " + currentDatabaseVersionHeader + " --- next:    " + nextDatabaseVersionHeader);
 
 			// First of range for this client
 			if (rangeClientName == null) {
@@ -479,6 +483,8 @@ public class DownOperation extends AbstractTransferOperation {
 			File databaseVersionFile = databaseFileList.getExactDatabaseVersionFile(currentDatabaseVersionHeader);
 
 			if (databaseVersionFile != null) {
+				System.out.println("load1 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
+
 				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
 						filterType, ignoredMostRecentPurgeVersions);
 				rangeClientName = null;
@@ -487,16 +493,28 @@ public class DownOperation extends AbstractTransferOperation {
 				boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
 				boolean nextClientIsDifferent = !lastDatabaseVersionHeader
 						&& !currentDatabaseVersionHeader.getClient().equals(nextDatabaseVersionHeader.getClient());
-				boolean rangeEnds = lastDatabaseVersionHeader || nextClientIsDifferent;
+				boolean nextClientNotIncrementedByOne = currentDatabaseVersionHeader.getVectorClock().getClock(
+						currentDatabaseVersionHeader.getClient())
+						!= nextDatabaseVersionHeader.getVectorClock().getClock(currentDatabaseVersionHeader.getClient()) + 1;
+				boolean rangeEnds = lastDatabaseVersionHeader || nextClientIsDifferent || nextClientNotIncrementedByOne;
 
 				if (rangeEnds) {
 					databaseVersionFile = databaseFileList.getNextDatabaseVersionFile(currentDatabaseVersionHeader);
+
+					System.out.println("load2 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 
 					databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
 							filterType, ignoredMostRecentPurgeVersions);
 					rangeClientName = null;
 				}
+				else {
+					System.out.println("noload3 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
+				}
 			}
+		}
+
+		for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
+			System.out.println("WINNER " + dbv.getHeader());
 		}
 
 		return winnerBranchDatabase;
