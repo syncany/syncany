@@ -108,7 +108,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			// Insert & commit database version
 			long databaseVersionId = writeDatabaseVersion(connection, databaseVersion);
 			// Commit & clear local caches
-			connection.commit();
 			clearCaches();
 
 			return databaseVersionId;
