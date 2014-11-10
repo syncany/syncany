@@ -402,14 +402,26 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		// Create dummy database version to update vectorclocks.
+
+		// Increment the clock once more, because this database version is in a seperate file
 		vectorClock.incrementClock(config.getMachineName());
+
+		// Create database version with the requested name and clock
 		DatabaseVersion dummyDatabaseVersion = createDummyDatabaseVersion(vectorClock);
 		DatabaseRemoteFile dummyRemoteDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), vectorClock.getClock(config.getMachineName()));
+
+		// Create local file
 		File dummyLocalDatabaseFile = config.getCache().getDatabaseFile(dummyRemoteDatabaseFile.getName());
 		DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
+
+		// Create a list for saving
 		List<DatabaseVersion> dummyDatabaseVersionList = new ArrayList<DatabaseVersion>();
 		dummyDatabaseVersionList.add(dummyDatabaseVersion);
+
+		// Write to local file
 		databaseDAO.save(dummyDatabaseVersionList, dummyLocalDatabaseFile);
+
+		// Persist in local database and queue for uploading
 		localDatabase.persistDatabaseVersion(dummyDatabaseVersion);
 		allMergedDatabaseFiles.put(dummyLocalDatabaseFile, dummyRemoteDatabaseFile);
 
