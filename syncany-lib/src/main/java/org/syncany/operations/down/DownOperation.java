@@ -147,20 +147,20 @@ public class DownOperation extends AbstractTransferOperation {
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
 		boolean cleanupOccurred = containsDatabaseFromSelf(newRemoteDatabases);
-		if (cleanupOccurred) {
-			localBranch = new DatabaseBranch();
-		}
+
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
 
 		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
+		if (cleanupOccurred) {
+			localBranch = new DatabaseBranch();
+			localDatabase.deleteAll();
+		}
 		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
 		purgeConflictingLocalBranch(localBranch, winnersBranch);
-		if (cleanupOccurred) {
-			localDatabase.deleteAll();
-		}
+
 		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseFileList);
 
 		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseFileList);
