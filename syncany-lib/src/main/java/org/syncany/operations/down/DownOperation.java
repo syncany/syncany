@@ -156,6 +156,7 @@ public class DownOperation extends AbstractTransferOperation {
 		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
 			localDatabase.deleteAll();
+			localDatabase.commit();
 		}
 		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
