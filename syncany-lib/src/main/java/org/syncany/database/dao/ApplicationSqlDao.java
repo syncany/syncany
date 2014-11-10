@@ -17,6 +17,7 @@
  */
 package org.syncany.database.dao;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
+import org.syncany.util.SqlRunner;
 
 /**
  * The application data access object (DAO) writes and queries the SQL database for 
@@ -75,6 +77,21 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 
 				return knownDatabases;
 			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Deletes all metadata, except knowledge of known files on the serverside.
+	 */
+	public void deleteAll() {
+		String fullResourcePath = "/org/syncany/database/sql/delete.all.sql";
+		try (InputStream inputStream = ApplicationSqlDao.class.getResourceAsStream(fullResourcePath)) {
+
+			SqlRunner.runScript(connection, inputStream);
+			connection.commit();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

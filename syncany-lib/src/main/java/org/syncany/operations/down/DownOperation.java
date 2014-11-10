@@ -146,6 +146,10 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
+		boolean cleanupOccurred = containsDatabaseFromSelf(newRemoteDatabases);
+		if (cleanupOccurred) {
+			localBranch = new DatabaseBranch();
+		}
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
@@ -154,6 +158,9 @@ public class DownOperation extends AbstractTransferOperation {
 		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
 		purgeConflictingLocalBranch(localBranch, winnersBranch);
+		if (cleanupOccurred) {
+			localDatabase.deleteAll();
+		}
 		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseFileList);
 
 		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseFileList);
@@ -639,5 +646,15 @@ public class DownOperation extends AbstractTransferOperation {
 	private void removeNonMuddyMultiChunks() throws SQLException {
 		// TODO [medium] This might not get the right multichunks. Rather use the database version information in the multichunk_muddy table.
 		localDatabase.removeNonMuddyMultiChunks();
+	}
+
+	private boolean containsDatabaseFromSelf(List<DatabaseRemoteFile> databaseRemoteFiles) {
+		String clientName = config.getMachineName();
+		for (DatabaseRemoteFile dbRemoteFile : databaseRemoteFiles) {
+			if (dbRemoteFile.getClientName().equals(clientName)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

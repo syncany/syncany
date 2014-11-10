@@ -117,6 +117,10 @@ public class SqlDatabase {
 		return applicationDao.getKnownDatabases();
 	}
 
+	public void deleteAll() {
+		applicationDao.deleteAll();
+	}
+
 	public void shutdown() {
 		applicationDao.shutdown();
 	}
@@ -150,7 +154,7 @@ public class SqlDatabase {
 	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
 		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
 	}
-	
+
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
