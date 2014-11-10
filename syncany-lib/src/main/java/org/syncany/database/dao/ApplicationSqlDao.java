@@ -91,6 +91,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		try (InputStream inputStream = ApplicationSqlDao.class.getResourceAsStream(fullResourcePath)) {
 
 			SqlRunner.runScript(connection, inputStream);
+			connection.commit();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

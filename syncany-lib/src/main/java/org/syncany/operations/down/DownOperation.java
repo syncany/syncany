@@ -153,28 +153,21 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
 
 		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
-		if (cleanupOcurred) {
+		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
 			localDatabase.deleteAll();
 		}
+		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
-		try {
-			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
+		purgeConflictingLocalBranch(localBranch, winnersBranch);
 
-			purgeConflictingLocalBranch(localBranch, winnersBranch);
+		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseFileList);
 
-			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseFileList);
+		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseFileList);
+		removeNonMuddyMultiChunks();
 
-			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseFileList);
-			removeNonMuddyMultiChunks();
-
-			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
-			localDatabase.commit();
-		}
-		catch (Exception e) {
-			localDatabase.rollback();
-			throw e;
-		}
+		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
+		localDatabase.commit();
 
 		finishOperation();
 		fireEndEvent();
