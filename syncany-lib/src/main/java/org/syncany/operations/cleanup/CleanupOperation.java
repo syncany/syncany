@@ -410,6 +410,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> dummyDatabaseVersionList = new ArrayList<DatabaseVersion>();
 		dummyDatabaseVersionList.add(dummyDatabaseVersion);
 		databaseDAO.save(dummyDatabaseVersionList, dummyLocalDatabaseFile);
+		localDatabase.persistDatabaseVersion(dummyDatabaseVersion);
 		allMergedDatabaseFiles.put(dummyLocalDatabaseFile, dummyRemoteDatabaseFile);
 
 		// Remember newly written files as so not to redownload them later.
