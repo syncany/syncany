@@ -493,9 +493,10 @@ public class DownOperation extends AbstractTransferOperation {
 				boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
 				boolean nextClientIsDifferent = !lastDatabaseVersionHeader
 						&& !currentDatabaseVersionHeader.getClient().equals(nextDatabaseVersionHeader.getClient());
-				boolean nextClientNotIncrementedByOne = currentDatabaseVersionHeader.getVectorClock().getClock(
-						currentDatabaseVersionHeader.getClient())
-						!= nextDatabaseVersionHeader.getVectorClock().getClock(currentDatabaseVersionHeader.getClient()) + 1;
+				boolean nextClientNotIncrementedByOne = nextDatabaseVersionHeader != null
+						&& currentDatabaseVersionHeader.getVectorClock().getClock(
+								currentDatabaseVersionHeader.getClient()) + 1
+							!= nextDatabaseVersionHeader.getVectorClock().getClock(currentDatabaseVersionHeader.getClient());
 				boolean rangeEnds = lastDatabaseVersionHeader || nextClientIsDifferent || nextClientNotIncrementedByOne;
 
 				if (rangeEnds) {
