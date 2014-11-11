@@ -84,13 +84,12 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
 		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
-		OptionSpec<Void> optionInsecure = parser.acceptsAll(asList("insecure"));		
 
 		OptionSet options = parser.parse(operationArgs);
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
-		// Set 'isInteractive'  
-		initInteractivityMode(options, optionPlugin);
+		// Set interactivity mode  
+		isInteractive = !options.has(optionPlugin) && !options.has(optionPassword);
 		
 		// Plugin
 		TransferSettings transferSettings = null;
@@ -118,20 +117,14 @@ public class ConnectCommand extends AbstractInitCommand {
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setDaemon(options.has(optionAddDaemon));
-		operationOptions.setPassword(validateAndGetPassword(options, optionPassword, optionInsecure));
+		operationOptions.setPassword(validateAndGetPassword(options, optionPassword));
 
 		return operationOptions;
 	}
 
-	private String validateAndGetPassword(OptionSet options, OptionSpec<String> optionPassword,
-			OptionSpec<Void> optionInsecure) {
-		
+	private String validateAndGetPassword(OptionSet options, OptionSpec<String> optionPassword) {		
 		if (!isInteractive) {
 			if (options.has(optionPassword)) {
-				if (!options.has(optionInsecure)) {
-					throw new IllegalArgumentException("Password option --password also needs the --insecure flag.");
-				}
-				
 				return options.valueOf(optionPassword);
 			}			
 			else {

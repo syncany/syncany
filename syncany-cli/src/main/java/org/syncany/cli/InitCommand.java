@@ -106,13 +106,12 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
 		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));		
-		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
-		OptionSpec<Void> optionInsecure = parser.acceptsAll(asList("insecure"));		
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();	
 
 		OptionSet options = parser.parse(operationArguments);
 
-		// Set 'isInteractive' and validate settings 
-		initInteractivityMode(options, optionPlugin);
+		// Set interactivity mode  
+		isInteractive = !options.has(optionPlugin);
 			
 		// Ask or set transfer settings
 		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
@@ -138,7 +137,7 @@ public class InitCommand extends AbstractInitCommand {
 		genlinkOptions.setShortUrl(options.has(optionShortUrl));
 				
 		// Set repo password
-		String password = validateAndGetPassword(options, optionNoEncryption, optionPassword, optionInsecure);
+		String password = validateAndGetPassword(options, optionNoEncryption, optionPassword);
 		operationOptions.setPassword(password);
 		
 		// Create configTO and repoTO
@@ -158,19 +157,19 @@ public class InitCommand extends AbstractInitCommand {
 		return operationOptions;
 	}
 	
-	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword,
-			OptionSpec<Void> optionInsecure) {
-		
+	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword) {		
 		if (!isInteractive) {
 			if (options.has(optionPassword) && options.has(optionNoEncryption)) {
 				throw new IllegalArgumentException("Cannot provide --password and --no-encryption. Conflicting options.");
 			}
 			else if (!options.has(optionPassword) && !options.has(optionNoEncryption)) {
-				throw new IllegalArgumentException("Non-interactive must either provide --no-encryption or --password and --insecure.");
+				throw new IllegalArgumentException("Non-interactive must either provide --no-encryption or --password.");
 			}
 			else if (options.has(optionPassword) && !options.has(optionNoEncryption)) {
-				if (!options.has(optionInsecure)) {
-					throw new IllegalArgumentException("Password option --password also needs the --insecure flag.");
+				String password = options.valueOf(optionPassword);
+				
+				if (password.length() < PASSWORD_MIN_LENGTH) {
+					throw new IllegalArgumentException("This password is not allowed (too short, min. " + PASSWORD_MIN_LENGTH + " chars)");
 				}
 				
 				return options.valueOf(optionPassword);

@@ -64,10 +64,10 @@ import joptsimple.OptionSpec;
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
 
-	private static final char NESTED_OPTIONS_SEPARATOR = '.';
-	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
-	private static final int PASSWORD_MIN_LENGTH = 10;
-	private static final int PASSWORD_WARN_LENGTH = 12;
+	protected static final char NESTED_OPTIONS_SEPARATOR = '.';
+	protected static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
+	protected static final int PASSWORD_MIN_LENGTH = 10;
+	protected static final int PASSWORD_WARN_LENGTH = 12;
 
 	protected InitConsole console;
 	protected boolean isInteractive;
@@ -85,10 +85,6 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		configTO.setTransferSettings(transferSettings); // can be null
 
 		return configTO;
-	}
-
-	protected void initInteractivityMode(OptionSet options, OptionSpec<String> optionPlugin) throws Exception {
-		isInteractive = !options.has(optionPlugin);
 	}
 
 	protected TransferSettings createTransferSettingsFromOptions(OptionSet options, OptionSpec<String> optionPlugin,

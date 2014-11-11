@@ -3,10 +3,10 @@ NAME
 
 SYNOPSIS
   sy connect <syncany-link> 
-             [-n | --add-daemon] [--password] [--insecure]
+             [-n | --add-daemon] [--password]
 
   sy connect [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
-             [-n | --add-daemon] [--password] [--insecure]
+             [-n | --add-daemon] [--password]
 
 DESCRIPTION
   This command connects to an existing remote repository and initializes
@@ -44,11 +44,6 @@ OPTIONS
   --password=<password>
     DO NOT USE THIS OPTION. Set the password to decrypt the repository.
     This option shouldn't be used, because the password might be visible to 
-    other users or be stored in history files. If used anyway, this option
-    must be used with the --insecure option.
-        
-  --insecure
-    This option has no immediate effect, but it must be set if the --password
-    option is used.    
+    other users or be stored in history files. 
 
 %RESOURCE:incl/footer.skel%
