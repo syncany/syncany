@@ -19,7 +19,6 @@ package org.syncany.database.dao;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,8 +74,8 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private PartialFileHistory fileHistory;
 
 	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
-			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions) {
-		
+			DatabaseVersionType filterType) {
+
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
@@ -170,18 +169,20 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				String dosAttributes = attributes.getValue("dosattrs");
 				String posixPermissions = attributes.getValue("posixperms");
 
-				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
+				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null
+						|| lastModifiedStr == null) {
+					throw new SAXException(
+							"FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
 				}
 
 				// Filter it if it was purged somewhere in the future, see #58
 				Long fileVersionNum = Long.parseLong(fileVersionStr);
-				
+
 				// Go add it!
 				FileVersion fileVersion = new FileVersion();
 
 				fileVersion.setVersion(fileVersionNum);
-				
+
 				if (path != null) {
 					fileVersion.setPath(path);
 				}
@@ -193,7 +194,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 						throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
 					}
 				}
-				
+
 				fileVersion.setType(FileType.valueOf(typeStr));
 				fileVersion.setStatus(FileStatus.valueOf(statusStr));
 				fileVersion.setSize(Long.parseLong(sizeStr));
@@ -220,11 +221,10 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				}
 
 				fileHistory.addFileVersion(fileVersion);
-			
+
 			}
 		}
 	}
-
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
@@ -264,7 +264,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				if (fileHistory.getFileVersions().size() > 0) {
 					databaseVersion.addFileHistory(fileHistory);
 				}
-				
+
 				fileHistory = null;
 			}
 			else {

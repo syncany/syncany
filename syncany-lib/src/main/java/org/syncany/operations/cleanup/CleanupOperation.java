@@ -155,6 +155,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			removeOldVersions();
 		}
 
+		// TODO: Figure out if we can do this such that we don't risk local corruption.
+		localDatabase.commit();
+
 		boolean didPurge = result.getRemovedOldVersionsCount() > 0;
 
 		if (options.isRemoveUnreferencedTemporaryFiles()) {
@@ -235,7 +238,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		DatabaseVersion purgeDatabaseVersion = createPurgeDatabaseVersion(purgeFileVersions);
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);
+		persistPurgeDatabaseVersion(purgeDatabaseVersion);
 
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
 
@@ -501,5 +504,26 @@ public class CleanupOperation extends AbstractTransferOperation {
 		dummyDatabaseVersion.setHeader(dummyDatabaseVersionHeader);
 
 		return dummyDatabaseVersion;
+	}
+
+	/**
+	 * Persists a purge database version to the local database by removing all file versions 
+	 * smaller for equal to the file versions given in the purge database, and then removing all
+	 * of the leftover unreferenced database entities (unmapped chunks, multichunks, file contents).
+	 */
+	private void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion)
+			throws SQLException {
+
+		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+
+		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
+			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] {
+					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion() });
+
+			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());
+		}
+
+		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeUnreferencedDatabaseEntities();
 	}
 }

@@ -85,7 +85,7 @@ public class SyncUpOperationTest {
 		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
 
 		MemoryDatabase remoteDatabase = new MemoryDatabase();
-		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT);
 
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 

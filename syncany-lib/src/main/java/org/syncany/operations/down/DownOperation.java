@@ -281,7 +281,7 @@ public class DownOperation extends AbstractTransferOperation {
 			File remoteDatabaseFileInCache = remoteDatabaseFileEntry.getKey();
 			DatabaseRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
 
-			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null, null); // only load headers!
+			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null); // only load headers!
 			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
 
 			// Populate branches
@@ -386,13 +386,8 @@ public class DownOperation extends AbstractTransferOperation {
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 		}
 		else {
-			logger.log(Level.INFO, "Loading winners database (PURGE) ...");
-			MemoryDatabase winnersPurgeDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.PURGE, null);
-			Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions = extractMostRecentPurgeVersions(winnersPurgeDatabase.getFileHistories());
-
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT,
-					ignoredMostRecentPurgeVersions);
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT);
 
 			if (options.isApplyChanges()) {
 				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result).execute();
@@ -401,7 +396,7 @@ public class DownOperation extends AbstractTransferOperation {
 				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
 			}
 
-			persistDatabaseVersions(winnersApplyBranch, winnersDatabase, winnersPurgeDatabase);
+			persistDatabaseVersions(winnersApplyBranch, winnersDatabase);
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
@@ -447,7 +442,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
 	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, DatabaseFileList databaseFileList,
-			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions) throws IOException, StorageException {
+			DatabaseVersionType filterType) throws IOException, StorageException {
 
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase();
 
@@ -487,7 +482,7 @@ public class DownOperation extends AbstractTransferOperation {
 				System.out.println("load1 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 
 				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
-						filterType, ignoredMostRecentPurgeVersions);
+						filterType);
 				rangeClientName = null;
 			}
 			else {
@@ -506,7 +501,7 @@ public class DownOperation extends AbstractTransferOperation {
 					System.out.println("load2 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 
 					databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
-							filterType, ignoredMostRecentPurgeVersions);
+							filterType);
 					rangeClientName = null;
 				}
 				else {
@@ -548,7 +543,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * 
 	 * <p>This method applies both regular database versions as well as purge database versions. 
 	 */
-	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase, MemoryDatabase winnersPurgeDatabase)
+	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase)
 			throws SQLException {
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
@@ -557,9 +552,6 @@ public class DownOperation extends AbstractTransferOperation {
 		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
 			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
 				persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);
-			}
-			else if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
-				persistPurgeDatabaseVersion(winnersPurgeDatabase, currentDatabaseVersionHeader);
 			}
 			else {
 				throw new RuntimeException("Unknow database version type: " + currentDatabaseVersionHeader.getType());
@@ -576,32 +568,6 @@ public class DownOperation extends AbstractTransferOperation {
 
 		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
 		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
-	}
-
-	/**
-	 * Persists a purge database version to the local database by removing all file versions 
-	 * smaller for equal to the file versions given in the purge database, and then removing all
-	 * of the leftover unreferenced database entities (unmapped chunks, multichunks, file contents).
-	 */
-	private void persistPurgeDatabaseVersion(MemoryDatabase winnersPurgeDatabase, DatabaseVersionHeader currentDatabaseVersionHeader)
-			throws SQLException {
-		logger.log(Level.INFO, "  + Applying PURGE database version " + currentDatabaseVersionHeader.getVectorClock());
-
-		DatabaseVersion purgeDatabaseVersion = winnersPurgeDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<FileHistoryId, FileVersion>();
-
-		for (PartialFileHistory purgeFileHistory : purgeDatabaseVersion.getFileHistories()) {
-			logger.log(Level.INFO, "     - Purging file history {0}, with versions <= {1}", new Object[] {
-					purgeFileHistory.getFileHistoryId().toString(), purgeFileHistory.getLastVersion() });
-
-			purgeFileVersions.put(purgeFileHistory.getFileHistoryId(), purgeFileHistory.getLastVersion());
-		}
-
-		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
-		localDatabase.removeUnreferencedDatabaseEntities();
-		localDatabase.writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-
-		localDatabase.commit(); // TODO [medium] Harmonize commit behavior		
 	}
 
 	/**
@@ -638,7 +604,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 						logger.log(Level.INFO, "  - Loading " + muddyDatabaseVersionHeader + " from file " + localFileForMuddyDatabaseVersion);
 						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion,
-								DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
+								DatabaseReadType.FULL, DatabaseVersionType.DEFAULT);
 
 						boolean hasMuddyMultiChunks = muddyMultiChunksDatabase.getMultiChunks().size() > 0;
 
