@@ -3,6 +3,9 @@ Change Log
 
 ### Syncany 0.2.1-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Allow setting repo password in `sy connect` and `sy init` via 
+    `--password` option #256
 - Bugfixes and other things:
   + Fix Windows/CMD incompatibility with batch file #270
   
