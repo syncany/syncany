@@ -147,22 +147,22 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		logger.log(Level.INFO, "Cleanup: Starting transaction.");
+		remoteTransaction = new RemoteTransaction(config, transferManager);
 		// Now do the actual work!
 
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
 		}
 
+		boolean didPurge = result.getRemovedOldVersionsCount() > 0;
+
 		if (options.isRemoveUnreferencedTemporaryFiles()) {
 			transferManager.removeUnreferencedTemporaryFiles();
 		}
 
-		// Committing in two steps because a) at this point it is atomic b) such that
-		// the purge file can be accounted for when merging, if needed
-		remoteTransaction = new RemoteTransaction(config, transferManager);
-
 		if (options.isMergeRemoteFiles()) {
-			mergeRemoteFiles();
+			mergeRemoteFiles(didPurge);
 		}
 
 		setLastTimeCleaned(System.currentTimeMillis() / 1000);
@@ -211,10 +211,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void removeOldVersions() throws Exception {
-		logger.log(Level.INFO, "START TX removeOldVersions() ...");
-
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
-		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
@@ -240,27 +237,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		localDatabase.removeUnreferencedDatabaseEntities();
 		localDatabase.persistPurgeDatabaseVersion(purgeDatabaseVersion);
 
-		// Remote: serialize purge database version to file and upload
-		DatabaseRemoteFile newPurgeRemoteFile = findNewPurgeRemoteFile(purgeDatabaseVersion.getHeader());
-		File tempLocalPurgeDatabaseFile = writePurgeFile(purgeDatabaseVersion, newPurgeRemoteFile);
-
-		addPurgeFileToTransaction(tempLocalPurgeDatabaseFile, newPurgeRemoteFile);
 		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
-
-		try {
-			logger.log(Level.INFO, "COMMITTING TX removeOldVersions() ...");
-
-			remoteTransaction.commit();
-			localDatabase.commit();
-		}
-		catch (StorageException e) {
-			logger.log(Level.INFO, "FAILED TO COMMIT TX removeOldVersions(). Rolling back ...");
-
-			localDatabase.rollback();
-			throw e;
-		}
-
-		logger.log(Level.INFO, "SUCCESS COMMITTING TX removeOldVersions().");
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
@@ -337,7 +314,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles() throws IOException, StorageException, SQLException {
+	private void mergeRemoteFiles(boolean didPurging) throws IOException, StorageException, SQLException {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
@@ -354,7 +331,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
 		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
 
-		if (!options.isForce() && notTooManyDatabaseFiles) {
+		if (!options.isForce() && notTooManyDatabaseFiles && !didPurging) {
 			logger.log(Level.INFO, "- Merge remote files: Not necessary ({0} database files, max. {1})", new Object[] {
 					numberOfDatabaseFiles, maxDatabaseFiles });
 			return;
@@ -449,19 +426,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		try {
-			logger.log(Level.INFO, "COMMITTING TX mergeRemoteFiles() ...");
+			logger.log(Level.INFO, "Cleanup: COMMITTING TX ...");
 
 			remoteTransaction.commit();
 			localDatabase.commit();
 		}
 		catch (StorageException e) {
-			logger.log(Level.INFO, "FAILED TO COMMIT TX mergeRemoteFiles(). Rolling back ...");
+			logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
 
 			localDatabase.rollback();
 			throw e;
 		}
 
-		logger.log(Level.INFO, "SUCCESS COMMITTING TX mergeRemoteFiles().");
+		logger.log(Level.INFO, "Cleanup: SUCCESS COMMITTING TX.");
 
 		// Update stats
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
