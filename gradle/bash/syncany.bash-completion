@@ -90,7 +90,8 @@ _sy() {
 	CONNECT_OPTIONS="\
 		-P --plugin\
 		-o --plugin-option\
-		-n --add-daemon"
+		-n --add-daemon\
+		   --password"
 
 	DOWN_CONFLICT_STRATEGIES="\
 		ask\
@@ -120,7 +121,8 @@ _sy() {
 		-t --create-target\
 		-a --advanced\
 		-n --add-daemon\
-		-s --short"
+		-s --short\
+		   --password"
 
 	LS_OPTIONS="\
 		-V --versions\
