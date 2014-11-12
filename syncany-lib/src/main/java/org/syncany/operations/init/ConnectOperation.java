@@ -177,7 +177,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		// Write file 'master'
 		if (configTO.getMasterKey() != null) {
 			File masterFile = new File(appDir, Config.FILE_MASTER);
-			writeXmlFile(new MasterTO(configTO.getMasterKey().getSalt()), masterFile);
+			new MasterTO(configTO.getMasterKey().getSalt()).save(masterFile);
 		}
 
 		// Shutdown plugin
@@ -244,7 +244,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		try {
 			if (applicationLink.isEncrypted()) {
 				// Non-interactive mode
-				if (masterPassword != null) { 
+				if (masterPassword != null) {
 					logger.log(Level.INFO, " - Link is encrypted. Password available.");
 
 					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
@@ -257,21 +257,21 @@ public class ConnectOperation extends AbstractInitOperation {
 					logger.log(Level.INFO, " - Link is encrypted. Asking for password.");
 
 					boolean retryPassword = true;
-	
+
 					while (retryPassword) {
 						// Ask password
 						masterPassword = getOrAskPassword();
-	
+
 						// Generate master key
 						SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
-	
+
 						// Decrypt config
 						try {
 							TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
 
 							configTO.setMasterKey(masterKey);
 							configTO.setTransferSettings(transferSettings);
-	
+
 							retryPassword = false;
 						}
 						catch (CipherException e) {
@@ -286,7 +286,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			}
 			else {
 				logger.log(Level.INFO, " - Link is NOT encrypted. No password needed.");
-				
+
 				TransferSettings transferSettings = applicationLink.createTransferSettings();
 				configTO.setTransferSettings(transferSettings);
 			}

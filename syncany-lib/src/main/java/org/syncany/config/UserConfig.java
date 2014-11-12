@@ -17,13 +17,12 @@
  */
 package org.syncany.config;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
 import java.util.Map;
-
-import javax.net.ssl.SSLContext;
 
 import org.syncany.config.to.UserConfigTO;
 import org.syncany.crypto.CipherUtil;
@@ -39,7 +38,7 @@ import org.syncany.util.EnvironmentUtil;
  */
 public class UserConfig {
 	/*
-	 * Note: 
+	 * Note:
 	 *    This class can't have any logging methods, because the init() method is called
 	 *    BEFORE the logging initialization. All errors must be printed to STDERR.
 	 */
@@ -115,7 +114,7 @@ public class UserConfig {
 	public static boolean preventStandbyEnabled() {
 		return preventStandby;
 	}
-	
+
 	public static SaltedSecretKey getConfigEncryptionKey() {
 		return configEncryptionKey;
 	}
@@ -198,9 +197,9 @@ public class UserConfig {
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
 			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
-			
+
 			userConfigTO.setConfigEncryptionKey(configEncryptionKey);
-			UserConfigTO.save(userConfigTO, userConfigFile);
+			userConfigTO.save(userConfigFile);
 		}
 		catch (Exception e) {
 			// Don't care!
