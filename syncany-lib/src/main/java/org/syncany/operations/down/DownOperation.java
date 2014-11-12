@@ -152,12 +152,13 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
 
-		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
 		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
 			localDatabase.deleteAll();
 			localDatabase.commit();
 		}
+		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
+
 		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
 		purgeConflictingLocalBranch(localBranch, winnersBranch);
