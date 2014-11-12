@@ -305,6 +305,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 */
 	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
 		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");
+		logger.log(Level.FINE, "Local branch: " + localBranch);
 		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 	}
 
@@ -567,6 +568,7 @@ public class DownOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "  + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
 
 		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
+		logger.log(Level.FINE, "  + Contents: " + applyDatabaseVersion);
 		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
 	}
 
