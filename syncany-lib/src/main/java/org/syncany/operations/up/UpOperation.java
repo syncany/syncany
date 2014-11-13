@@ -149,7 +149,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Save local database
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
-		long newDatabaseVersionId = localDatabase.persistDatabaseVersion(newDatabaseVersion);
+		long newDatabaseVersionId = localDatabase.writeDatabaseVersion(newDatabaseVersion);
 
 		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
 		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);

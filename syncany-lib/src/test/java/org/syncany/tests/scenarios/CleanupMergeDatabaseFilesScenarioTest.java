@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
@@ -167,6 +165,10 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.up(upOperationOptionsWithCleanupForce); // (A4,B2) + (A4,B3) [PURGE]
 		clientB.cleanup(options);
 
+clientC.down();
+fail("aa");
+
+
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A5,B3) + (A6,B3) [PURGE]
@@ -252,7 +254,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		clientB.down();
 
-		//		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 
 		// Run
 		clientC.down(); // <<< Here is/was the issue: Client C failed when downloading

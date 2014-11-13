@@ -103,7 +103,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
+	public long writeDatabaseVersion(DatabaseVersion databaseVersion) {
 		try {
 			// Insert & commit database version
 			long databaseVersionId = writeDatabaseVersion(connection, databaseVersion);

@@ -226,7 +226,7 @@ public class DatabaseVersionDaoTest {
 		newDatabaseVersion.addFileContent(newFileContent);		
 		
 		// c. Persist database version
-		databaseVersionDao.persistDatabaseVersion(newDatabaseVersion);
+		databaseVersionDao.writeDatabaseVersion(newDatabaseVersion);
 		
 		// d. Capture new last database version header
 		DatabaseVersionHeader lastDatabaseVersionHeaderAfter = databaseVersionDao.getLastDatabaseVersionHeader();	
@@ -427,7 +427,7 @@ public class DatabaseVersionDaoTest {
 		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 		newDatabaseVersion.setVectorClock(TestDatabaseUtil.createVectorClock("A5,B2"));
 		
-		long newDatabaseVersionId = databaseVersionDao.persistDatabaseVersion(newDatabaseVersion);		
+		long newDatabaseVersionId = databaseVersionDao.writeDatabaseVersion(newDatabaseVersion);		
 		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId); 
 				
 		// c. Test after		
