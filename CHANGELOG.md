@@ -4,6 +4,7 @@ Change Log
 ### Syncany 0.2.1-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
+  + Implement [OpenStack Swift plugin](https://github.com/syncany/syncany-plugin-swift) #251
   + Allow setting repo password in `sy connect` and `sy init` via 
     `--password` option #256
 - Bugfixes and other things:
