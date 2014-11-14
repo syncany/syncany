@@ -563,14 +563,14 @@ public class DownOperation extends AbstractTransferOperation {
 
 	/**
 	 * Persists a regular database version to the local database by using 
-	 * {@link SqlDatabase#persistDatabaseVersion(DatabaseVersion)}.
+	 * {@link SqlDatabase#writeDatabaseVersion(DatabaseVersion)}.
 	 */
 	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
 		logger.log(Level.INFO, "  + Applying database version " + currentDatabaseVersionHeader.getVectorClock());
 
 		DatabaseVersion applyDatabaseVersion = winnersDatabase.getDatabaseVersion(currentDatabaseVersionHeader.getVectorClock());
 		logger.log(Level.FINE, "  + Contents: " + applyDatabaseVersion);
-		localDatabase.persistDatabaseVersion(applyDatabaseVersion);
+		localDatabase.writeDatabaseVersion(applyDatabaseVersion);
 	}
 
 	/**

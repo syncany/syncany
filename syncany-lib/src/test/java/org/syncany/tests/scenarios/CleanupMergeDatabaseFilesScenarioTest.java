@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
@@ -166,6 +164,10 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A4,B2) + (A4,B3) [PURGE]
 		clientB.cleanup(options);
+
+clientC.down();
+fail("aa");
+
 
 		clientA.down();
 		clientA.changeFile("A-file.jpg");

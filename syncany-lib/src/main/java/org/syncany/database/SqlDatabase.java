@@ -147,8 +147,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getNonEmptyDatabaseVersionHeaders();
 	}
 
-	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long writeDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.writeDatabaseVersion(databaseVersion);
 	}
 
 	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
