@@ -146,7 +146,14 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion);
-		remoteTransaction.commit();
+		try {
+			remoteTransaction.commit();
+			localDatabase.commit();
+		}
+		catch (Exception e) {
+			localDatabase.rollback();
+			throw e;
+		}
 
 		// Save local database
 		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
