@@ -161,9 +161,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		boolean didPurge = result.getRemovedOldVersionsCount() > 0;
 
-		if (didPurge) {
-			mergeRemoteFiles();
-		}
+		mergeRemoteFiles(didPurge);
 
 		setLastTimeCleaned(System.currentTimeMillis() / 1000);
 		finishOperation();
@@ -264,12 +262,27 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles() throws IOException, StorageException, SQLException {
+	private void mergeRemoteFiles(boolean didPurge) throws IOException, StorageException, SQLException {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
 		List<DatabaseRemoteFile> allToDeleteDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
 		Map<File, DatabaseRemoteFile> allMergedDatabaseFiles = new TreeMap<File, DatabaseRemoteFile>();
+
+		int numberOfDatabaseFiles = 0;
+
+		for (String client : allDatabaseFilesMap.keySet()) {
+			numberOfDatabaseFiles += allDatabaseFilesMap.get(client).size();
+		}
+
+		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
+		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
+		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
+
+		if (!didPurging && !notTooManyDatabaseFiles) {
+			logger.log(Level.INFO, "- No purging happened. Number of database files does not exceed threshold. Not merging remote files.");
+			return;
+		}
 
 		// Vectorclock to keep track of new database versions
 		VectorClock vectorClock = new VectorClock();
