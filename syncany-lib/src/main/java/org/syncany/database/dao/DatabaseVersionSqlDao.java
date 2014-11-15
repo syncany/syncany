@@ -300,8 +300,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
-			preparedStatement.setString(2, machineName);
-			preparedStatement.setLong(3, maxLocalClientVersion);
+			preparedStatement.setLong(2, maxLocalClientVersion);
 
 			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
