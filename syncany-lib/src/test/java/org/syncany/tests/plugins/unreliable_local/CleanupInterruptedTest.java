@@ -112,7 +112,7 @@ public class CleanupInterruptedTest {
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-						"rel=(11|12|13).+upload.+database", // << 3 retries!!
+						"rel=(12|13|14).+upload.+database", // << 3 retries!!
 				}
 						));
 
@@ -200,18 +200,12 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMaxDatabaseFiles(1);
-		boolean cleanupFailed = false;
-		try {
-			clientA.cleanup(cleanupOptions);
-		}
-		catch (StorageException e) {
-			cleanupFailed = true;
-		}
+		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		clientA.cleanup(cleanupOptions);
 
 		TransferManager transferManager = new TransactionAwareTransferManager(
 				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 
-		assertTrue(cleanupFailed);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
@@ -221,14 +215,18 @@ public class CleanupInterruptedTest {
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 
-		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "actions").list().length);
+		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
 
-		// Two temporary files left (first deletion failed)
-		assertEquals(2, transferManager.list(TempRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "temporary").list().length);
+		// One deletion failed 
+		assertEquals(1, transferManager.list(TempRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "temporary").list().length);
 
-		clientA.cleanup(cleanupOptions);
+		// Change something to trigger cleanup
+		clientA.changeFile("file");
+		clientA.up();
+
+		CleanupOperationResult result = clientA.cleanup(cleanupOptions);
 
 		// Functional cleanup results in removal of action file and unreferenced files
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
