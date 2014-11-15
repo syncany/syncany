@@ -124,6 +124,8 @@ public class UpOperation extends AbstractTransferOperation {
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
 		transferManager.cleanTransactions();
 
+		localDatabase.save();
+
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 
@@ -151,7 +153,7 @@ public class UpOperation extends AbstractTransferOperation {
 			localDatabase.commit();
 		}
 		catch (Exception e) {
-			localDatabase.rollback();
+			localDatabase.load();
 			throw e;
 		}
 

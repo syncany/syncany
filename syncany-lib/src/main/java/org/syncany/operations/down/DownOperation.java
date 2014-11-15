@@ -148,6 +148,8 @@ public class DownOperation extends AbstractTransferOperation {
 		fireStartEvent();
 		startOperation();
 
+		localDatabase.save();
+
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
@@ -161,19 +163,25 @@ public class DownOperation extends AbstractTransferOperation {
 			localDatabase.deleteAll();
 			localDatabase.commit();
 		}
-		DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
+		try {
+			DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
 
-		Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
+			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
 
-		purgeConflictingLocalBranch(localBranch, winnersBranch);
+			purgeConflictingLocalBranch(localBranch, winnersBranch);
 
-		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
+			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
 
-		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
-		removeNonMuddyMultiChunks();
+			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
+			removeNonMuddyMultiChunks();
 
-		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
-		localDatabase.commit();
+			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
+			localDatabase.commit();
+		}
+		catch (Exception e) {
+			localDatabase.load();
+			throw e;
+		}
 
 		finishOperation();
 		fireEndEvent();
