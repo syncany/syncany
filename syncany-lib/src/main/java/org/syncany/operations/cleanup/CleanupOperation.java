@@ -19,7 +19,6 @@ package org.syncany.operations.cleanup;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -162,7 +161,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		mergeRemoteFiles(didPurge);
 
-		setLastTimeCleaned(System.currentTimeMillis() / 1000);
 		finishOperation();
 		return updateResultCode(result);
 	}
@@ -257,11 +255,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
 
-	private boolean wasCleanedRecently() {
-		return getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
+	private boolean wasCleanedRecently() throws Exception {
+		return getCleanupTO().getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles(boolean didPurge) throws IOException, StorageException, SQLException {
+	private void mergeRemoteFiles(boolean didPurge) throws Exception {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
@@ -283,7 +281,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return;
 		}
 
-		updateCleanupFileInTransaction();
+		long cleanupNumber = updateCleanupFileInTransaction();
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files ...");
 
@@ -348,6 +346,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			remoteTransaction.commit();
 			localDatabase.commit();
+			CleanupTO cleanupTO = getCleanupTO();
+			cleanupTO.setLastTimeCleaned(System.currentTimeMillis() / 1000);
+			cleanupTO.setCleanupNumber(cleanupNumber);
+			setCleanupTO(cleanupTO);
+
 		}
 		catch (StorageException e) {
 			logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
@@ -381,35 +384,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return allDatabaseRemoteFilesMap;
 	}
 
-	private long getLastTimeCleaned() {
-		try {
-			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
-			return cleanupTO.getLastTimeCleaned();
+	private CleanupTO getCleanupTO() throws Exception {
+		CleanupTO cleanupTO;
+		if (config.getCleanupFile().exists()) {
+			cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
 		}
-		catch (Exception e) {
-			logger.log(Level.INFO, "Something went wrong with reading cleanup.xml, assuming never cleaned." + e.getMessage());
-			return 0;
+		else {
+			cleanupTO = new CleanupTO();
 		}
+		return cleanupTO;
 	}
 
-	private void setLastTimeCleaned(long lastTimeCleaned) {
-		try {
-			CleanupTO cleanupTO;
-			if (config.getCleanupFile().exists()) {
-				cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
-			}
-			else {
-				cleanupTO = new CleanupTO();
-			}
-			cleanupTO.setLastTimeCleaned(lastTimeCleaned);
-			logger.log(Level.INFO, "Writing cleanup.xml");
-			(new Persister()).write(cleanupTO, config.getCleanupFile());
-		}
-		catch (Exception e) {
-			// Not doing anything else, because the worst that could happen is that cleanup is run an extra time
-			logger.log(Level.INFO, "Something went wrong with writing cleanup.xml." + e.getMessage());
-		}
-
+	private void setCleanupTO(CleanupTO cleanupTO) throws Exception {
+		(new Persister()).write(cleanupTO, config.getCleanupFile());
 	}
 
 	private long getHighestDatabaseFileVersion(String client) {
@@ -424,17 +411,18 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return clientVersion;
 	}
 
-	private void updateCleanupFileInTransaction() throws StorageException, IOException {
+	private long updateCleanupFileInTransaction() throws StorageException, IOException {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 
 		Pattern cleanupFilePattern = Pattern.compile("cleanup-([0-9]+)");
 
-		// First number is 1
-		int cleanupNumber = 1;
+		// First number is 1 (we will add 1 at the end)
+		int cleanupNumber = 0;
 		// Find the number of the last cleanup
 		for (String filename : cleanupFiles.keySet()) {
 			Matcher matcher = cleanupFilePattern.matcher(filename);
+			matcher.matches();
 			cleanupNumber = Math.max(cleanupNumber, Integer.parseInt(matcher.group(1)));
 
 			// Schedule any existing cleanup files for deletion
@@ -444,5 +432,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// Upload a new cleanup file that indicates changes
 		File cleanupFile = config.getCache().createTempFile("cleanup");
 		remoteTransaction.upload(cleanupFile, new CleanupRemoteFile(cleanupNumber + 1));
+		return cleanupNumber + 1;
 	}
 }

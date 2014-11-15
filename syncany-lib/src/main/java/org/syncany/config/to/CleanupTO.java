@@ -27,16 +27,27 @@ import org.simpleframework.xml.Root;
  * 
  * @author Pim Otte
  */
-@Root(name="cleanup", strict=false)
+@Root(name = "cleanup", strict = false)
 public class CleanupTO {
-	@Element(name="lastTimeCleaned", required = false)
+	@Element(name = "lastTimeCleaned", required = false)
 	private long lastTimeCleaned = 0;
-	
+
+	@Element(name = "cleanupNumber", required = false)
+	private long cleanupNumber = 0;
+
 	public long getLastTimeCleaned() {
 		return lastTimeCleaned;
 	}
-	
+
 	public void setLastTimeCleaned(long lastTimeCleanup) {
 		this.lastTimeCleaned = lastTimeCleanup;
+	}
+
+	public long getCleanupNumber() {
+		return cleanupNumber;
+	}
+
+	public void setCleanupNumber(long cleanupNumber) {
+		this.cleanupNumber = cleanupNumber;
 	}
 }

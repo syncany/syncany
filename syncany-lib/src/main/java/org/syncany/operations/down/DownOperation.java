@@ -29,9 +29,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
+import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
@@ -56,6 +60,7 @@ import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 import com.google.common.collect.Sets;
@@ -146,14 +151,12 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
-		boolean cleanupOccurred = containsDatabaseFromSelf(newRemoteDatabases);
-
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
-		if (cleanupOccurred) {
+		if (cleanupOccurred()) {
 			localBranch = new DatabaseBranch();
 			localDatabase.deleteAll();
 			localDatabase.commit();
@@ -643,6 +646,29 @@ public class DownOperation extends AbstractTransferOperation {
 			}
 		}
 		return false;
+	}
+
+	private boolean cleanupOccurred() throws Exception {
+		// Find all existing cleanup files
+		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
+
+		Pattern cleanupFilePattern = Pattern.compile("cleanup-([0-9]+)");
+
+		int cleanupNumber = 0;
+		// Find the number of the last cleanup
+		for (String filename : cleanupFiles.keySet()) {
+			Matcher matcher = cleanupFilePattern.matcher(filename);
+			matcher.matches();
+			cleanupNumber = Math.max(cleanupNumber, Integer.parseInt(matcher.group(1)));
+		}
+
+		if (config.getCleanupFile().exists()) {
+			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
+			return cleanupNumber > cleanupTO.getCleanupNumber();
+		}
+		else {
+			return cleanupNumber > 0;
+		}
 	}
 
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
