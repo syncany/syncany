@@ -95,8 +95,8 @@ public class CleanupInterruptedTest {
 		clientA.cleanup(cleanupOptions);
 		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
-		assertEquals(3, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(3, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());

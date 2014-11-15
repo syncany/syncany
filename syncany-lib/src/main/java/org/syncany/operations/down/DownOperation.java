@@ -148,8 +148,6 @@ public class DownOperation extends AbstractTransferOperation {
 		fireStartEvent();
 		startOperation();
 
-		localDatabase.save();
-
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
@@ -179,7 +177,7 @@ public class DownOperation extends AbstractTransferOperation {
 			localDatabase.commit();
 		}
 		catch (Exception e) {
-			localDatabase.load();
+			localDatabase.rollback();
 			throw e;
 		}
 
