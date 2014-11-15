@@ -20,6 +20,7 @@ package org.syncany.operations.up;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -99,7 +100,7 @@ public class UpOperation extends AbstractTransferOperation {
 	public UpOperation(Config config, UpOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance();		
+		this.eventBus = LocalEventBus.getInstance();
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.localDatabase = new SqlDatabase(config);
@@ -111,11 +112,11 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-		
+
 		if (!checkPreconditions()) {
 			return result;
 		}
-		
+
 		// Upload action file (lock for cleanup)
 		fireStartEvent();
 		startOperation();
@@ -132,16 +133,16 @@ public class UpOperation extends AbstractTransferOperation {
 		if (newDatabaseVersion.getFileHistories().size() == 0) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
-			
+
 			finishOperation();
 			fireEndEvent();
 
 			return result;
 		}
-		
+
 		// Upload multichunks
 		logger.log(Level.INFO, "Uploading new multichunks ...");
-		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());		
+		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion);
@@ -156,9 +157,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
-		
+
 		logger.log(Level.INFO, "Sync up done.");
-		
+
 		// Result
 		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
@@ -169,7 +170,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private void fireStartEvent() {
-		eventBus.post(new UpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
+		eventBus.post(new UpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
 	private void fireEndEvent() {
@@ -194,7 +195,7 @@ public class UpOperation extends AbstractTransferOperation {
 		// Check if other operations are running
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
-			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES); 
+			result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
 			return false;
 		}
@@ -221,7 +222,8 @@ public class UpOperation extends AbstractTransferOperation {
 		return true;
 	}
 
-	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException {
+	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException,
+			SQLException {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
 
@@ -233,7 +235,7 @@ public class UpOperation extends AbstractTransferOperation {
 		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);
 
 		// Save delta database locally
-		long newestLocalDatabaseVersion = deltaDatabaseVersion.getVectorClock().getClock(config.getMachineName());
+		long newestLocalDatabaseVersion = getHighestDatabaseFileVersion(config.getMachineName());
 		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
@@ -245,6 +247,11 @@ public class UpOperation extends AbstractTransferOperation {
 		// Upload delta database
 		logger.log(Level.INFO, "- Uploading local delta database file ...");
 		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+
+		// Remember uploaded database as known.
+		List<DatabaseRemoteFile> newDatabaseRemoteFiles = new ArrayList<DatabaseRemoteFile>();
+		newDatabaseRemoteFiles.add(remoteDeltaDatabaseFile);
+		localDatabase.writeKnownRemoteDatabases(newDatabaseRemoteFiles);
 	}
 
 	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {
@@ -320,7 +327,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
-		
+
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
 			if (dirtyMultiChunkIds.contains(multiChunkEntry.getId())) {
 				logger.log(Level.INFO, "- Ignoring multichunk (from dirty database, already uploaded), " + multiChunkEntry.getId() + " ...");
@@ -387,5 +394,17 @@ public class UpOperation extends AbstractTransferOperation {
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
 		return newVectorClock;
+	}
+
+	private long getHighestDatabaseFileVersion(String client) {
+		// Obtain last known database file version number and increment it
+		long clientVersion = 0;
+		for (DatabaseRemoteFile databaseRemoteFile : localDatabase.getKnownDatabases()) {
+			if (databaseRemoteFile.getClientName().equals(client)) {
+				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
+			}
+		}
+		clientVersion++;
+		return clientVersion;
 	}
 }

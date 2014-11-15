@@ -151,7 +151,7 @@ public class DownOperation extends AbstractTransferOperation {
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
-		Map<DatabaseVersion, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
+		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
 		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
@@ -391,7 +391,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * and applies these actions locally.
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			Map<DatabaseVersion, File> databaseVersionLocations) throws Exception {
+			Map<DatabaseVersionHeader, File> databaseVersionLocations) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
@@ -456,7 +456,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * 
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersion, File> databaseVersionLocations,
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersionHeader, File> databaseVersionLocations,
 			DatabaseVersionType filterType) throws IOException, StorageException {
 
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase();
@@ -466,7 +466,7 @@ public class DownOperation extends AbstractTransferOperation {
 		String rangeClientName = null;
 		VectorClock rangeVersionFrom = null;
 		VectorClock rangeVersionTo = null;
-
+		System.out.println(databaseVersionLocations);
 		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
 			System.out.println();
 
@@ -496,7 +496,7 @@ public class DownOperation extends AbstractTransferOperation {
 			boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
 			boolean nextDatabaseVersionInSameFile = lastDatabaseVersionHeader
 					|| databaseVersionFile.equals(databaseVersionLocations.get(nextDatabaseVersionHeader));
-			boolean rangeEnds = lastDatabaseVersionHeader || nextDatabaseVersionInSameFile;
+			boolean rangeEnds = lastDatabaseVersionHeader || !nextDatabaseVersionInSameFile;
 
 			if (rangeEnds) {
 				System.out.println("load " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
@@ -577,7 +577,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * the other client cleans up its mess (performs another 'up'). 
 	 */
 	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			Map<DatabaseVersion, File> databaseVersionLocations) throws StorageException, IOException, SQLException {
+			Map<DatabaseVersionHeader, File> databaseVersionLocations) throws StorageException, IOException, SQLException {
 		// Find dirty database versions (from other clients!) and load them from files
 		Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion = new HashMap<>();
 		Set<DatabaseVersionHeader> winnersDatabaseVersionHeaders = Sets.newHashSet(winnersBranch.getValue().getAll());
@@ -645,14 +645,14 @@ public class DownOperation extends AbstractTransferOperation {
 		return false;
 	}
 
-	private Map<DatabaseVersion, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
+	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
 			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
-		Map<DatabaseVersion, File> databaseVersionLocations = new HashMap<DatabaseVersion, File>();
+		Map<DatabaseVersionHeader, File> databaseVersionLocations = new HashMap<DatabaseVersionHeader, File>();
 
 		for (File databaseFile : databaseRemoteFilesInCache.keySet()) {
 			DatabaseRemoteFile databaseRemoteFile = databaseRemoteFilesInCache.get(databaseFile);
 			for (DatabaseVersion databaseVersion : remoteDatabaseHeaders.get(databaseRemoteFile)) {
-				databaseVersionLocations.put(databaseVersion, databaseFile);
+				databaseVersionLocations.put(databaseVersion.getHeader(), databaseFile);
 			}
 		}
 		return databaseVersionLocations;

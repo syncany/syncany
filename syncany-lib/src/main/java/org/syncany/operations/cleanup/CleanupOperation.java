@@ -279,7 +279,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
 		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
 
-		if (!didPurge && !notTooManyDatabaseFiles) {
+		if (!didPurge && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- No purging happened. Number of database files does not exceed threshold. Not merging remote files.");
 			return;
 		}
@@ -299,8 +299,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile lastRemoteMergeDatabaseFile = toDeleteDatabaseFiles.get(toDeleteDatabaseFiles.size() - 1);
 
 			// Increment the version by 1, to signal cleanup has occurred
-			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(),
-					lastRemoteMergeDatabaseFile.getClientVersion() + 1);
+
+			long clientVersion = getHighestDatabaseFileVersion(lastRemoteMergeDatabaseFile.getClientName());
+			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(), clientVersion);
 
 			File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
 
@@ -418,6 +419,18 @@ public class CleanupOperation extends AbstractTransferOperation {
 		dummyDatabaseVersion.setHeader(dummyDatabaseVersionHeader);
 
 		return dummyDatabaseVersion;
+	}
+
+	private long getHighestDatabaseFileVersion(String client) {
+		// Obtain last known database file version number and increment it
+		long clientVersion = 0;
+		for (DatabaseRemoteFile databaseRemoteFile : localDatabase.getKnownDatabases()) {
+			if (databaseRemoteFile.getClientName().equals(client)) {
+				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
+			}
+		}
+		clientVersion++;
+		return clientVersion;
 	}
 
 }
