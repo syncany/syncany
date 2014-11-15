@@ -279,13 +279,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
 		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
 
-		if (!didPurging && !notTooManyDatabaseFiles) {
+		if (!didPurge && !notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- No purging happened. Number of database files does not exceed threshold. Not merging remote files.");
 			return;
 		}
-
-		// Vectorclock to keep track of new database versions
-		VectorClock vectorClock = new VectorClock();
 
 		// Now do the merge!
 		logger.log(Level.INFO, "- Merge remote files ...");
@@ -305,8 +302,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(),
 					lastRemoteMergeDatabaseFile.getClientVersion() + 1);
 
-			vectorClock.setClock(newRemoteMergeDatabaseFile.getClientName(), newRemoteMergeDatabaseFile.getClientVersion());
-
 			File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
 
 			logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
@@ -323,30 +318,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			allMergedDatabaseFiles.put(newLocalMergeDatabaseFile, newRemoteMergeDatabaseFile);
 
 		}
-
-		// Create dummy database version to update vectorclocks.
-
-		// Increment the clock once more, because this database version is in a seperate file
-		vectorClock.incrementClock(config.getMachineName());
-
-		// Create database version with the requested name and clock
-		DatabaseVersion dummyDatabaseVersion = createDummyDatabaseVersion(vectorClock);
-		DatabaseRemoteFile dummyRemoteDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), vectorClock.getClock(config.getMachineName()));
-
-		// Create local file
-		File dummyLocalDatabaseFile = config.getCache().getDatabaseFile(dummyRemoteDatabaseFile.getName());
-		DatabaseXmlSerializer databaseDAO = new DatabaseXmlSerializer(config.getTransformer());
-
-		// Create a list for saving
-		List<DatabaseVersion> dummyDatabaseVersionList = new ArrayList<DatabaseVersion>();
-		dummyDatabaseVersionList.add(dummyDatabaseVersion);
-
-		// Write to local file
-		databaseDAO.save(dummyDatabaseVersionList, dummyLocalDatabaseFile);
-
-		// Persist in local database and queue for uploading
-		localDatabase.writeDatabaseVersion(dummyDatabaseVersion);
-		allMergedDatabaseFiles.put(dummyLocalDatabaseFile, dummyRemoteDatabaseFile);
 
 		// Remember newly written files as so not to redownload them later.
 		List<DatabaseRemoteFile> newRemoteMergeDatabaseFiles = new ArrayList<DatabaseRemoteFile>();

@@ -149,8 +149,9 @@ public class DownOperation extends AbstractTransferOperation {
 		boolean cleanupOccurred = containsDatabaseFromSelf(newRemoteDatabases);
 
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
-		DatabaseBranches unknownRemoteBranches = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
-		DatabaseFileList databaseFileList = new DatabaseFileList(unknownRemoteDatabasesInCache);
+		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
+		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
+		Map<DatabaseVersion, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
 		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
@@ -163,9 +164,9 @@ public class DownOperation extends AbstractTransferOperation {
 
 		purgeConflictingLocalBranch(localBranch, winnersBranch);
 
-		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseFileList);
+		applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
 
-		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseFileList);
+		persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
 		removeNonMuddyMultiChunks();
 
 		localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
@@ -269,12 +270,13 @@ public class DownOperation extends AbstractTransferOperation {
 	 * <p>The returned database branches contain only the per-client {@link DatabaseVersionHeader}s, and not
 	 * the entire stitched branches, i.e. A's database branch will only contain database version headers from A.
 	 */
-	private DatabaseBranches readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases) throws IOException,
+	private TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases)
+			throws IOException,
 			StorageException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 
 		// Read database files
-		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
+		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = new TreeMap<DatabaseRemoteFile, List<DatabaseVersion>>();
 
 		for (Map.Entry<File, DatabaseRemoteFile> remoteDatabaseFileEntry : remoteDatabases.entrySet()) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
@@ -283,17 +285,28 @@ public class DownOperation extends AbstractTransferOperation {
 			DatabaseRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
 
 			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null); // only load headers!
-			List<DatabaseVersion> remoteDatabaseVersions = remoteDatabase.getDatabaseVersions();
+
+			remoteDatabaseHeaders.put(remoteDatabaseFile, remoteDatabase.getDatabaseVersions());
+
+		}
+
+		return remoteDatabaseHeaders;
+	}
+
+	private DatabaseBranches populateDatabaseBranches(TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
+		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
+		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseHeaders.keySet()) {
 
 			// Populate branches
 			DatabaseBranch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
 
-			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseVersions) {
+			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseHeaders.get(remoteDatabaseFile)) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
 				remoteClientBranch.add(header);
 			}
 		}
 
+		logger.log(Level.INFO, "Populated unknown branches: " + unknownRemoteBranches);
 		return unknownRemoteBranches;
 	}
 
@@ -378,7 +391,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * and applies these actions locally.
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			DatabaseFileList databaseFileList) throws Exception {
+			Map<DatabaseVersion, File> databaseVersionLocations) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
@@ -389,7 +402,7 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		else {
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseFileList, DatabaseVersionType.DEFAULT);
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations, DatabaseVersionType.DEFAULT);
 
 			if (options.isApplyChanges()) {
 				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result).execute();
@@ -443,7 +456,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * 
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, DatabaseFileList databaseFileList,
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersion, File> databaseVersionLocations,
 			DatabaseVersionType filterType) throws IOException, StorageException {
 
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase();
@@ -478,37 +491,22 @@ public class DownOperation extends AbstractTransferOperation {
 			//   - If the database file exists, load the range and reset it
 			//   - If not, only force a load if this is the range end
 
-			File databaseVersionFile = databaseFileList.getExactDatabaseVersionFile(currentDatabaseVersionHeader);
+			File databaseVersionFile = databaseVersionLocations.get(currentDatabaseVersionHeader);
 
-			if (databaseVersionFile != null) {
-				System.out.println("load1 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
+			boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
+			boolean nextDatabaseVersionInSameFile = lastDatabaseVersionHeader
+					|| databaseVersionFile.equals(databaseVersionLocations.get(nextDatabaseVersionHeader));
+			boolean rangeEnds = lastDatabaseVersionHeader || nextDatabaseVersionInSameFile;
+
+			if (rangeEnds) {
+				System.out.println("load " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 
 				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
 						filterType);
 				rangeClientName = null;
 			}
 			else {
-				boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
-				boolean nextClientIsDifferent = !lastDatabaseVersionHeader
-						&& !currentDatabaseVersionHeader.getClient().equals(nextDatabaseVersionHeader.getClient());
-				boolean nextClientNotIncrementedByOne = nextDatabaseVersionHeader != null
-						&& currentDatabaseVersionHeader.getVectorClock().getClock(
-								currentDatabaseVersionHeader.getClient()) + 1
-							!= nextDatabaseVersionHeader.getVectorClock().getClock(currentDatabaseVersionHeader.getClient());
-				boolean rangeEnds = lastDatabaseVersionHeader || nextClientIsDifferent || nextClientNotIncrementedByOne;
-
-				if (rangeEnds) {
-					databaseVersionFile = databaseFileList.getNextDatabaseVersionFile(currentDatabaseVersionHeader);
-
-					System.out.println("load2 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
-
-					databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
-							filterType);
-					rangeClientName = null;
-				}
-				else {
-					System.out.println("noload3 " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
-				}
+				System.out.println("noload " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 			}
 		}
 
@@ -579,7 +577,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * the other client cleans up its mess (performs another 'up'). 
 	 */
 	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			DatabaseFileList databaseFileList) throws StorageException, IOException, SQLException {
+			Map<DatabaseVersion, File> databaseVersionLocations) throws StorageException, IOException, SQLException {
 		// Find dirty database versions (from other clients!) and load them from files
 		Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion = new HashMap<>();
 		Set<DatabaseVersionHeader> winnersDatabaseVersionHeaders = Sets.newHashSet(winnersBranch.getValue().getAll());
@@ -601,7 +599,7 @@ public class DownOperation extends AbstractTransferOperation {
 					for (DatabaseVersionHeader muddyDatabaseVersionHeader : otherMuddyDatabaseVersionHeaders) {
 						MemoryDatabase muddyMultiChunksDatabase = new MemoryDatabase();
 
-						File localFileForMuddyDatabaseVersion = databaseFileList.getNextDatabaseVersionFile(muddyDatabaseVersionHeader);
+						File localFileForMuddyDatabaseVersion = databaseVersionLocations.get(muddyDatabaseVersionHeader);
 						VectorClock fromVersion = muddyDatabaseVersionHeader.getVectorClock();
 						VectorClock toVersion = muddyDatabaseVersionHeader.getVectorClock();
 
@@ -645,5 +643,18 @@ public class DownOperation extends AbstractTransferOperation {
 			}
 		}
 		return false;
+	}
+
+	private Map<DatabaseVersion, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
+			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
+		Map<DatabaseVersion, File> databaseVersionLocations = new HashMap<DatabaseVersion, File>();
+
+		for (File databaseFile : databaseRemoteFilesInCache.keySet()) {
+			DatabaseRemoteFile databaseRemoteFile = databaseRemoteFilesInCache.get(databaseFile);
+			for (DatabaseVersion databaseVersion : remoteDatabaseHeaders.get(databaseRemoteFile)) {
+				databaseVersionLocations.put(databaseVersion, databaseFile);
+			}
+		}
+		return databaseVersionLocations;
 	}
 }
