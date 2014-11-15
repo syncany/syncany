@@ -142,6 +142,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		localDatabase.save();
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
 		// Now do the actual work!
@@ -150,7 +151,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 			removeOldVersions();
 		}
 
-		// TODO: Figure out if we can do this such that we don't risk local corruption.
 		localDatabase.commit();
 
 		if (options.isRemoveUnreferencedTemporaryFiles()) {
@@ -355,7 +355,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		catch (StorageException e) {
 			logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
 
-			localDatabase.rollback();
+			localDatabase.load();
 			throw e;
 		}
 

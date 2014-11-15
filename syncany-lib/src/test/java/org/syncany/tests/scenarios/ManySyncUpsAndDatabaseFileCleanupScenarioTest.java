@@ -99,14 +99,14 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 
 		clientA.cleanup(options); // Force cleanup 
 
-		for (int i = 1; i <= 33; i++) {
+		for (int i = 1; i <= 32; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
 
 			assertTrue("Database file should NOT exist: " + expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
 
-		for (int i = 34; i <= 34; i++) {
+		for (int i = 33; i <= 33; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
 

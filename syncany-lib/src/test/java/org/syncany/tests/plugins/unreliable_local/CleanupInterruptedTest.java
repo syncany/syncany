@@ -57,7 +57,7 @@ public class CleanupInterruptedTest {
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-						"rel=(11|12|13).+upload.+database", // << 3 retries!!
+						"rel=(12|13|14).+upload.+database", // << 3 retries!!
 				}
 						));
 
@@ -84,9 +84,9 @@ public class CleanupInterruptedTest {
 		TransferManager transferManager = new TransactionAwareTransferManager(
 				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "databases").list().length);
 		assertEquals(1, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
