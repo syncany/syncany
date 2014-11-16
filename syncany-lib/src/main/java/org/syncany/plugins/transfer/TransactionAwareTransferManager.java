@@ -149,11 +149,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
 	 */
-	public void cleanTransactions() throws StorageException {
+	public boolean cleanTransactions() throws StorageException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
-
+		boolean deletingTransactionsFromOthersExist = false;
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
@@ -161,9 +161,18 @@ public class TransactionAwareTransferManager implements TransferManager {
 			if (isCancelledOwnTransaction) {
 				rollbackSingleTransaction(potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
 			}
+			else if (!deletingTransactionsFromOthersExist) {
+				// Only check if we have not yet found deleting transactions by others
+				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
+					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+						deletingTransactionsFromOthersExist = true;
+					}
+				}
+			}
 		}
 
 		logger.log(Level.INFO, "Done rolling back previous transaction.");
+		return deletingTransactionsFromOthersExist;
 	}
 
 	/**

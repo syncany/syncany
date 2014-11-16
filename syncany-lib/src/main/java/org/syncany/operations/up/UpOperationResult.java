@@ -23,7 +23,7 @@ import org.syncany.operations.status.StatusOperationResult;
 
 public class UpOperationResult implements OperationResult {
 	public enum UpResultCode {
-		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
+		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES, NOK_REPO_BLOCKED
 	};
 
 	private UpResultCode resultCode;

@@ -128,7 +128,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		startOperation();
 
 		// If there are any, rollback any existing/old transactions
-		transferManager.cleanTransactions();
+		boolean blockingTransactionExist = transferManager.cleanTransactions();
+		if (blockingTransactionExist) {
+			finishOperation();
+			return new CleanupOperationResult(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING);
+		}
 
 		// Wait two seconds (conservative cleanup, see #104)
 		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");

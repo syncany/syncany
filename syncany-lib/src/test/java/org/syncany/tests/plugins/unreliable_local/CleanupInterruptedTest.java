@@ -28,6 +28,8 @@ import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -234,5 +236,51 @@ public class CleanupInterruptedTest {
 
 		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
+	}
+
+	@Test
+	public void testUnreliableCleanup_failBlocksOtherClients() throws Exception {
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+						"rel=(13|14|15).+upload.+database", // << 3 retries!!
+				}
+						));
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		clientA.createNewFile("file");
+
+		clientA.up();
+
+		clientA.changeFile("file");
+		clientA.upWithForceChecksum();
+		clientB.down();
+
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setKeepVersionsCount(1);
+		boolean cleanupFailed = false;
+		try {
+			clientA.cleanup(cleanupOptions);
+		}
+		catch (StorageException e) {
+			cleanupFailed = true;
+		}
+
+		assertTrue(cleanupFailed);
+
+		// Pretend time has passed by deleting the action file:
+		TestFileUtil.deleteFile(new File(testConnection.getPath(), "/actions/").listFiles()[0]);
+
+		CleanupOperationResult cleanupResult = clientB.cleanup();
+		assertEquals(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING, cleanupResult.getResultCode());
+
+		clientB.createNewFile("file2");
+		UpOperationResult upResult = clientB.up();
+		assertEquals(UpResultCode.NOK_REPO_BLOCKED, upResult.getResultCode());
+
 	}
 }
