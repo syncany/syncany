@@ -305,7 +305,7 @@ public class UploadInterruptedTest {
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
 						"rel=[234].+move.+multichunk",
-						"rel=(8|9|10).+upload.+transaction",
+						"rel=(7|8|9).+upload.+transaction",
 				}
 						));
 

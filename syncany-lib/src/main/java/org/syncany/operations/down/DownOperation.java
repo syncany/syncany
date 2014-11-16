@@ -475,14 +475,13 @@ public class DownOperation extends AbstractTransferOperation {
 		String rangeClientName = null;
 		VectorClock rangeVersionFrom = null;
 		VectorClock rangeVersionTo = null;
-		System.out.println(databaseVersionLocations);
+		logger.log(Level.FINE, "DatabaseVersionLocations: " + databaseVersionLocations);
 		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
-			System.out.println();
 
 			DatabaseVersionHeader currentDatabaseVersionHeader = winnersApplyBranchList.get(i);
 			DatabaseVersionHeader nextDatabaseVersionHeader = (i + 1 < winnersApplyBranchList.size()) ? winnersApplyBranchList.get(i + 1) : null;
 
-			System.out.println("current: " + currentDatabaseVersionHeader + " --- next:    " + nextDatabaseVersionHeader);
+			logger.log(Level.FINE, "current header: " + currentDatabaseVersionHeader + " --- next header:    " + nextDatabaseVersionHeader);
 
 			// First of range for this client
 			if (rangeClientName == null) {
@@ -508,19 +507,19 @@ public class DownOperation extends AbstractTransferOperation {
 			boolean rangeEnds = lastDatabaseVersionHeader || !nextDatabaseVersionInSameFile;
 
 			if (rangeEnds) {
-				System.out.println("load " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
+				logger.log(Level.FINE, "load " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 
 				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
 						filterType);
 				rangeClientName = null;
 			}
 			else {
-				System.out.println("noload " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
+				logger.log(Level.FINE, "noload " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
 			}
 		}
 
 		for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
-			System.out.println("WINNER " + dbv.getHeader());
+			logger.log(Level.FINE, "WINNER " + dbv.getHeader());
 		}
 
 		return winnerBranchDatabase;
