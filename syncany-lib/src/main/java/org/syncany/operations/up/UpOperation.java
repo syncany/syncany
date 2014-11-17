@@ -132,7 +132,7 @@ public class UpOperation extends AbstractTransferOperation {
 		startOperation();
 
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
-		boolean blockingTransactionExist = transferManager.cleanTransactions();
+		boolean blockingTransactionExist = !transferManager.cleanTransactions();
 		if (blockingTransactionExist) {
 			logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
 			result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);

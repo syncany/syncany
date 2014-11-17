@@ -153,7 +153,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
-		boolean deletingTransactionsFromOthersExist = false;
+		boolean noBlockingTransactionsExist = true;
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
@@ -161,18 +161,18 @@ public class TransactionAwareTransferManager implements TransferManager {
 			if (isCancelledOwnTransaction) {
 				rollbackSingleTransaction(potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
 			}
-			else if (!deletingTransactionsFromOthersExist) {
+			else if (!noBlockingTransactionsExist) {
 				// Only check if we have not yet found deleting transactions by others
 				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
 					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
-						deletingTransactionsFromOthersExist = true;
+						noBlockingTransactionsExist = false;
 					}
 				}
 			}
 		}
 
-		logger.log(Level.INFO, "Done rolling back previous transaction.");
-		return deletingTransactionsFromOthersExist;
+		logger.log(Level.INFO, "Done rolling back previous transactions.");
+		return noBlockingTransactionsExist;
 	}
 
 	/**

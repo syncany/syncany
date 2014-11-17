@@ -19,7 +19,6 @@ package org.syncany.database;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -70,7 +69,6 @@ public class SqlDatabase {
 	protected FileHistorySqlDao fileHistoryDao;
 	protected MultiChunkSqlDao multiChunkDao;
 	protected DatabaseVersionSqlDao databaseVersionDao;
-	protected Savepoint savepoint;
 
 	public SqlDatabase(Config config) {
 		this.connection = config.createDatabaseConnection();
@@ -97,21 +95,13 @@ public class SqlDatabase {
 		connection.rollback();
 	}
 
-	public void save() throws SQLException {
-		savepoint = connection.setSavepoint();
-	}
-
-	public void load() throws SQLException {
-		connection.rollback(savepoint);
-	}
-
 	public void removeUnreferencedDatabaseEntities() {
 		try {
 			removeUnreferencedFileHistories();
 			removeUnreferencedFileContents();
 			removeUnreferencedMultiChunks();
 			removeUnreferencedChunks();
-			
+
 			removeEmptyDatabaseVersionHeaders();
 		}
 		catch (SQLException e) {

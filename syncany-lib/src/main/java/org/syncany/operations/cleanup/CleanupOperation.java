@@ -127,8 +127,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		startOperation();
 
-		// If there are any, rollback any existing/old transactions
-		boolean blockingTransactionExist = transferManager.cleanTransactions();
+		// If there are any, rollback any existing/old transactions.
+		// If other clients have unfinished transactions with deletions, do not proceed.
+		boolean blockingTransactionExist = !transferManager.cleanTransactions();
 		if (blockingTransactionExist) {
 			finishOperation();
 			return new CleanupOperationResult(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING);
