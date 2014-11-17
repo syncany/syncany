@@ -57,19 +57,19 @@ public class Issue143ScenarioTest {
 		clientA.upWithForceChecksum();
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
-		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
-		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		clientA.cleanup(cleanupOptions); // Database versions of deleted file are removed
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		TestFileUtil.copyFile(clientA.getLocalFile("file1.jpg"), clientA.getLocalFile("file1 (copy).jpg"));
 		clientA.upWithForceChecksum();
-		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		clientA.deleteFile("file1.jpg");
 		clientA.upWithForceChecksum();
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
-		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+		clientA.cleanup(cleanupOptions); // Database version of deleted file is removed
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		clientB.down(); // <<<< This creates the exception in #143
 						// integrity constraint violation: foreign key no parent; SYS_FK_10173 table: FILEVERSION
