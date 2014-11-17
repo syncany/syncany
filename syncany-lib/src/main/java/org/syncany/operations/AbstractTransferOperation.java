@@ -149,6 +149,15 @@ public abstract class AbstractTransferOperation extends Operation {
 		}
 	}
 
+	/**
+	 * getHighestDatabaseFileVersion is used to determine how a database file should be named when
+	 * it is about to be uploaded. This means that it should be the largest number present in
+	 * the repository, increased by one.
+	 * 
+	 * @param client Name of the client for which we want to upload a database version.
+	 * @param knownDatabases All DatabaseRemoteFiles present in the repository
+	 * @return the largest database fileversion number plus one.
+	 */
 	protected long getHighestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
