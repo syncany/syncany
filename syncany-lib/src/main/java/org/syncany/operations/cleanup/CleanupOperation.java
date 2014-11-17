@@ -300,7 +300,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			// Increment the version by 1, to signal cleanup has occurred
 
-			long clientVersion = getHighestDatabaseFileVersion(lastRemoteMergeDatabaseFile.getClientName());
+			long clientVersion = getHighestDatabaseFileVersion(lastRemoteMergeDatabaseFile.getClientName(), localDatabase.getKnownDatabases());
 			DatabaseRemoteFile newRemoteMergeDatabaseFile = new DatabaseRemoteFile(lastRemoteMergeDatabaseFile.getClientName(), clientVersion);
 
 			File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
@@ -399,18 +399,6 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void setCleanupTO(CleanupTO cleanupTO) throws Exception {
 		(new Persister()).write(cleanupTO, config.getCleanupFile());
-	}
-
-	private long getHighestDatabaseFileVersion(String client) {
-		// Obtain last known database file version number and increment it
-		long clientVersion = 0;
-		for (DatabaseRemoteFile databaseRemoteFile : localDatabase.getKnownDatabases()) {
-			if (databaseRemoteFile.getClientName().equals(client)) {
-				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
-			}
-		}
-		clientVersion++;
-		return clientVersion;
 	}
 
 	private long updateCleanupFileInTransaction() throws StorageException, IOException {

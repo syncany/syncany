@@ -29,6 +29,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Represents and is inherited by a transfer operation. Transfer operations are operations
@@ -146,6 +147,18 @@ public abstract class AbstractTransferOperation extends Operation {
 				logger.log(Level.INFO, "- Action file is current; ignoring " + actionRemoteFile + " ...");
 			}
 		}
+	}
+
+	protected long getHighestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
+		// Obtain last known database file version number and increment it
+		long clientVersion = 0;
+		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
+			if (databaseRemoteFile.getClientName().equals(client)) {
+				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
+			}
+		}
+		clientVersion++;
+		return clientVersion;
 	}
 
 	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {

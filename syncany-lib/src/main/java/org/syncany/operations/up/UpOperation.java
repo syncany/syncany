@@ -71,7 +71,17 @@ import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
  *   <li>Load local database (if not already loaded)</li>
  *   <li>Analyze local directory using the {@link StatusOperation} to determine any changed/new/deleted files</li>
  *   <li>Determine if there are unknown remote databases using the {@link LsRemoteOperation}, and skip the rest if there are</li>
- *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion} 
+ *   <li>If there are changes, use the {@link D	private long getHighestDatabaseFileVersion(String client) {
+		// Obtain last known database file version number and increment it
+		long clientVersion = 0;
+		for (DatabaseRemoteFile databaseRemoteFile : localDatabase.getKnownDatabases()) {
+			if (databaseRemoteFile.getClientName().equals(client)) {
+				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
+			}
+		}
+		clientVersion++;
+		return clientVersion;
+	}eduper} and {@link Indexer} to create a new {@link DatabaseVersion} 
  *       (including new chunks, multichunks, file contents and file versions).</li>
  *   <li>Upload new multichunks (if any) using a {@link TransferManager}</li>
  *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link MemoryDatabase} and upload it</li>
@@ -249,7 +259,7 @@ public class UpOperation extends AbstractTransferOperation {
 		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);
 
 		// Save delta database locally
-		long newestLocalDatabaseVersion = getHighestDatabaseFileVersion(config.getMachineName());
+		long newestLocalDatabaseVersion = getHighestDatabaseFileVersion(config.getMachineName(), localDatabase.getKnownDatabases());
 		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
 		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
@@ -408,17 +418,5 @@ public class UpOperation extends AbstractTransferOperation {
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
 		return newVectorClock;
-	}
-
-	private long getHighestDatabaseFileVersion(String client) {
-		// Obtain last known database file version number and increment it
-		long clientVersion = 0;
-		for (DatabaseRemoteFile databaseRemoteFile : localDatabase.getKnownDatabases()) {
-			if (databaseRemoteFile.getClientName().equals(client)) {
-				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
-			}
-		}
-		clientVersion++;
-		return clientVersion;
 	}
 }
