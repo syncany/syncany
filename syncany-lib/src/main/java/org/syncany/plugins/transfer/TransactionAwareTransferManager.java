@@ -148,6 +148,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 *  <li>Files in the transaction marked "UPLOAD" are deleted.</li>
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
+	 * 
+	 * @return false if we cannot proceed (Deleting transaction by another client exists). 
 	 */
 	public boolean cleanTransactions() throws StorageException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
