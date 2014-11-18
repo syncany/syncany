@@ -159,9 +159,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			transferManager.removeUnreferencedTemporaryFiles();
 		}
 
-		boolean didPurge = result.getRemovedOldVersionsCount() > 0;
-
-		mergeRemoteFiles(didPurge);
+		mergeRemoteFiles();
 
 		finishOperation();
 
@@ -262,7 +260,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getCleanupTO().getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles(boolean didPurge) throws Exception {
+	private void mergeRemoteFiles() throws Exception {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
@@ -278,6 +276,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
 		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
 		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
+		boolean didPurge = result.getMergedDatabaseFilesCount() > 0;
 
 		if (!didPurge && notTooManyDatabaseFiles) {
 			logger.log(Level.INFO, "- No purging happened. Number of database files does not exceed threshold. Not merging remote files.");
