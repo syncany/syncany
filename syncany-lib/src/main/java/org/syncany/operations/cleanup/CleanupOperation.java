@@ -267,7 +267,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		boolean needMerge = needMerge(allDatabaseFilesMap);
 
-		if (needMerge) {
+		if (!needMerge) {
 			logger.log(Level.INFO, "- No purging happened. Number of database files does not exceed threshold. Not merging remote files.");
 			return;
 		}
@@ -325,10 +325,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// A client will merge databases if the number of databases exceeds the maximum number per client times the amount of clients
 		int maxDatabaseFiles = options.getMaxDatabaseFiles() * allDatabaseFilesMap.keySet().size();
-		boolean notTooManyDatabaseFiles = numberOfDatabaseFiles <= maxDatabaseFiles;
-		boolean didPurge = result.getMergedDatabaseFilesCount() > 0;
+		boolean tooManyDatabaseFiles = numberOfDatabaseFiles > maxDatabaseFiles;
+		boolean removedOldVersions = result.getRemovedOldVersionsCount() > 0;
 
-		return !didPurge && notTooManyDatabaseFiles;
+		return removedOldVersions || tooManyDatabaseFiles;
 	}
 
 	private void writeMergeFile(String clientName, long firstClientVersion, Map<File, DatabaseRemoteFile> allMergedDatabaseFiles)

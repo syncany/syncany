@@ -59,7 +59,7 @@ public class CleanupInterruptedTest {
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-						"rel=(12|13|14).+upload.+database", // << 3 retries!!
+						"rel=(11|12|13).+upload.+database", // << 3 retries!!
 				}
 						));
 
@@ -114,7 +114,7 @@ public class CleanupInterruptedTest {
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-						"rel=(12|13|14).+upload.+database", // << 3 retries!!
+						"rel=(11|12|13).+upload.+database", // << 3 retries!!
 				}
 						));
 
@@ -245,7 +245,7 @@ public class CleanupInterruptedTest {
 				Arrays.asList(new String[] {
 						// List of failing operations (regex)
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
-						"rel=(13|14|15).+upload.+database", // << 3 retries!!
+						"rel=(12|13|14).+upload.+database", // << 3 retries!!
 				}
 						));
 
