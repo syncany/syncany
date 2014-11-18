@@ -259,8 +259,8 @@ public class UpOperation extends AbstractTransferOperation {
 		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);
 
 		// Save delta database locally
-		long newestLocalDatabaseVersion = getHighestDatabaseFileVersion(config.getMachineName(), localDatabase.getKnownDatabases());
-		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion);
+		long newestLocalDatabaseVersion = getNewestDatabaseFileVersion(config.getMachineName(), localDatabase.getKnownDatabases());
+		DatabaseRemoteFile remoteDeltaDatabaseFile = new DatabaseRemoteFile(config.getMachineName(), newestLocalDatabaseVersion + 1);
 		File localDeltaDatabaseFile = config.getCache().getDatabaseFile(remoteDeltaDatabaseFile.getName());
 
 		logger.log(Level.INFO, "Saving local delta database, version {0} to file {1} ... ", new Object[] { deltaDatabaseVersion.getHeader(),

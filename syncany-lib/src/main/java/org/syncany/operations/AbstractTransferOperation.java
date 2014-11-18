@@ -151,14 +151,14 @@ public abstract class AbstractTransferOperation extends Operation {
 
 	/**
 	 * getHighestDatabaseFileVersion is used to determine how a database file should be named when
-	 * it is about to be uploaded. This means that it should be the largest number present in
-	 * the repository, increased by one.
+	 * it is about to be uploaded. It returns the number of the newest database file (which is the
+	 * highest number).
 	 * 
 	 * @param client name of the client for which we want to upload a database version.
 	 * @param knownDatabases all DatabaseRemoteFiles present in the repository
-	 * @return the largest database fileversion number plus one.
+	 * @return the largest database fileversion number.
 	 */
-	protected long getHighestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
+	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
 		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
@@ -166,7 +166,6 @@ public abstract class AbstractTransferOperation extends Operation {
 				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
 			}
 		}
-		clientVersion++;
 		return clientVersion;
 	}
 
