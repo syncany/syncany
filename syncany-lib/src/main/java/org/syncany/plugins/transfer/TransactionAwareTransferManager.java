@@ -163,7 +163,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 			if (isCancelledOwnTransaction) {
 				rollbackSingleTransaction(potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
 			}
-			else if (!noBlockingTransactionsExist) {
+			else if (noBlockingTransactionsExist) {
 				// Only check if we have not yet found deleting transactions by others
 				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
 					if (action.getType().equals(ActionTO.TYPE_DELETE)) {

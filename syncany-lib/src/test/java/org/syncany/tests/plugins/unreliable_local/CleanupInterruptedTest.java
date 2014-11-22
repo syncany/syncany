@@ -275,8 +275,8 @@ public class CleanupInterruptedTest {
 		// Pretend time has passed by deleting the action file:
 		TestFileUtil.deleteFile(new File(testConnection.getPath(), "/actions/").listFiles()[0]);
 
-		CleanupOperationResult cleanupResult = clientB.cleanup();
-		assertEquals(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING, cleanupResult.getResultCode());
+		CleanupOperationResult cleanupResult = clientB.cleanup(cleanupOptions);
+		assertEquals(CleanupResultCode.NOK_REPO_BLOCKED, cleanupResult.getResultCode());
 
 		clientB.createNewFile("file2");
 		UpOperationResult upResult = clientB.up();

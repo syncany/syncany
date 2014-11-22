@@ -501,6 +501,11 @@ public class DownOperation extends AbstractTransferOperation {
 
 			File databaseVersionFile = databaseVersionLocations.get(currentDatabaseVersionHeader);
 
+			if (databaseVersionFile == null) {
+				throw new StorageException("Could not find file corresponding to " + currentDatabaseVersionHeader
+						+ ", while it is in the winners branch.");
+			}
+
 			boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
 			boolean nextDatabaseVersionInSameFile = lastDatabaseVersionHeader
 					|| databaseVersionFile.equals(databaseVersionLocations.get(nextDatabaseVersionHeader));

@@ -133,7 +133,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		boolean blockingTransactionExist = !transferManager.cleanTransactions();
 		if (blockingTransactionExist) {
 			finishOperation();
-			return new CleanupOperationResult(CleanupResultCode.NOK_OTHER_OPERATIONS_RUNNING);
+			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
 		}
 
 		// Wait two seconds (conservative cleanup, see #104)
@@ -261,7 +261,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getCleanupTO().getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void k() throws Exception {
+	private void mergeRemoteFiles() throws Exception {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
