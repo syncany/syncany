@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunk;
@@ -421,18 +419,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 
-		Pattern cleanupFilePattern = Pattern.compile("cleanup-([0-9]+)");
+		long cleanupNumber = lastCleanupNumber(cleanupFiles);
 
-		// First number is 1 (we will add 1 at the end)
-		int cleanupNumber = 0;
-		// Find the number of the last cleanup
-		for (String filename : cleanupFiles.keySet()) {
-			Matcher matcher = cleanupFilePattern.matcher(filename);
-			matcher.matches();
-			cleanupNumber = Math.max(cleanupNumber, Integer.parseInt(matcher.group(1)));
-
+		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
 			// Schedule any existing cleanup files for deletion
-			remoteTransaction.delete(cleanupFiles.get(filename));
+			remoteTransaction.delete(cleanupRemoteFile);
 		}
 
 		// Upload a new cleanup file that indicates changes

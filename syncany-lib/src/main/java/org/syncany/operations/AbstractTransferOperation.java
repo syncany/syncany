@@ -29,6 +29,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
+import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
@@ -167,6 +168,15 @@ public abstract class AbstractTransferOperation extends Operation {
 			}
 		}
 		return clientVersion;
+	}
+
+	protected long lastCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
+		long cleanupNumber = 0;
+		// Find the number of the last cleanup
+		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
+			cleanupNumber = Math.max(cleanupNumber, cleanupRemoteFile.getCleanupNumber());
+		}
+		return cleanupNumber;
 	}
 
 	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {

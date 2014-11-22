@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
@@ -39,11 +37,8 @@ import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
-import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
@@ -531,25 +526,6 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Takes a collection of {@link PartialFileHistory}s and returns a map of their history 
-	 * identifiers to the last version in the history. This method is used to determine the 
-	 * details purge versions (from a purge database file).
-	 * 
-	 * <p>The result of this method is used to ignore the already purged file histories when
-	 * reading the winner's database in {@link #readWinnersDatabase(DatabaseBranch, DatabaseFileList, DatabaseVersionType, Map)}.
-	 */
-	private Map<FileHistoryId, FileVersion> extractMostRecentPurgeVersions(Collection<PartialFileHistory> fileHistories) {
-		Map<FileHistoryId, FileVersion> mostRecentPurgeVersions = new HashMap<FileHistoryId, FileVersion>();
-
-		for (PartialFileHistory fileHistory : fileHistories) {
-			FileVersion mostRecentPurgeVersion = fileHistory.getLastVersion();
-			mostRecentPurgeVersions.put(fileHistory.getFileHistoryId(), mostRecentPurgeVersion);
-		}
-
-		return mostRecentPurgeVersions;
-	}
-
-	/**
 	 * Persists the given winners branch to the local database, i.e. for every database version
 	 * in the winners branch, all contained multichunks, chunks, etc. are added to the local SQL 
 	 * database.
@@ -648,39 +624,6 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.removeNonMuddyMultiChunks();
 	}
 
-	private boolean containsDatabaseFromSelf(List<DatabaseRemoteFile> databaseRemoteFiles) {
-		String clientName = config.getMachineName();
-		for (DatabaseRemoteFile dbRemoteFile : databaseRemoteFiles) {
-			if (dbRemoteFile.getClientName().equals(clientName)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean cleanupOccurred() throws Exception {
-		// Find all existing cleanup files
-		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
-
-		Pattern cleanupFilePattern = Pattern.compile("cleanup-([0-9]+)");
-
-		int cleanupNumber = 0;
-		// Find the number of the last cleanup
-		for (String filename : cleanupFiles.keySet()) {
-			Matcher matcher = cleanupFilePattern.matcher(filename);
-			matcher.matches();
-			cleanupNumber = Math.max(cleanupNumber, Integer.parseInt(matcher.group(1)));
-		}
-
-		if (config.getCleanupFile().exists()) {
-			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
-			return cleanupNumber > cleanupTO.getCleanupNumber();
-		}
-		else {
-			return cleanupNumber > 0;
-		}
-	}
-
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
 			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = new HashMap<DatabaseVersionHeader, File>();
@@ -692,5 +635,20 @@ public class DownOperation extends AbstractTransferOperation {
 			}
 		}
 		return databaseVersionLocations;
+	}
+
+	private boolean cleanupOccurred() throws Exception {
+		// Find all existing cleanup files
+		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
+
+		long cleanupNumber = lastCleanupNumber(cleanupFiles);
+
+		if (config.getCleanupFile().exists()) {
+			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
+			return cleanupNumber > cleanupTO.getCleanupNumber();
+		}
+		else {
+			return cleanupNumber > 0;
+		}
 	}
 }

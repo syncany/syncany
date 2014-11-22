@@ -34,6 +34,8 @@ public class CleanupRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("cleanup-([0-9]+)");
 	private static final String NAME_FORMAT = "cleanup-%s";
 
+	private long cleanupNumber;
+
 	/**
 	 * Initializes a new cleanup file, given a name. 
 	 * 
@@ -50,8 +52,8 @@ public class CleanupRemoteFile extends RemoteFile {
 	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public CleanupRemoteFile(int cleanupNumber) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toString(cleanupNumber)));
+	public CleanupRemoteFile(long cleanupNumber) throws StorageException {
+		super(String.format(NAME_FORMAT, Long.toString(cleanupNumber)));
 	}
 
 	@Override
@@ -62,6 +64,12 @@ public class CleanupRemoteFile extends RemoteFile {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
 
+		cleanupNumber = Long.parseLong(matcher.group(1));
+
 		return name;
+	}
+
+	public long getCleanupNumber() {
+		return cleanupNumber;
 	}
 }
