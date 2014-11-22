@@ -84,7 +84,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Deletes all metadata, except knowledge of known files on the serverside.
+	 * Deletes all metadata, including known databases.
 	 */
 	public void deleteAll() {
 		String fullResourcePath = "/org/syncany/database/sql/delete.all.sql";

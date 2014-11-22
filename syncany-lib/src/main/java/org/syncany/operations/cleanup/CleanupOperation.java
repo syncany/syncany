@@ -213,9 +213,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
 		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
 
-		boolean purgeDatabaseVersionNecessary = purgeFileVersions.size() > 0;
+		boolean needToRemoveFileVersions = purgeFileVersions.size() > 0;
 
-		if (!purgeDatabaseVersionNecessary) {
+		if (!needToRemoveFileVersions) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).",
 					options.getKeepVersionsCount());
 			return;
@@ -261,7 +261,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return getCleanupTO().getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
 	}
 
-	private void mergeRemoteFiles() throws Exception {
+	private void k() throws Exception {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
