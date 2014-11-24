@@ -755,6 +755,111 @@ public class DatabaseReconciliatorTest {
 		
 		assertEquals("Stitched branches not equal.", expectedStitchedBranches.toString(), actualStitchedRemoteBranches.toString());
 	}		
+	
+	@Test
+	public void testIssue226CompleteBranchesWithDatabaseVersionHeaders() throws Exception {	
+		/// Input data ///
+		String localMachineName = "T";
+		DatabaseVersionHeader currentLocalVersion = null;
+		DatabaseBranches allBranches = new DatabaseBranches();
+		 
+		// T
+		allBranches.put("T", TestDatabaseUtil.createBranch(new String[] {
+			"T/(T2,d5,k4,t7)/T=1416683697013",
+			"T/(T3,d5,k24,t8)/T=1416683760721",
+			"T/(T3,d6,k44,t10)/T=1416683822389",
+			"T/(T4,d6,k44,t10)/T=1416683824100"						
+		}));
+		
+		// d
+		allBranches.put("d", TestDatabaseUtil.createBranch(new String[] {
+			"d/(d1,t1)/T=1416683684310",
+			"d/(d2,t4)/T=1416683687747",
+			"d/(d3,k1,t4)/T=1416683689077",
+			"d/(d4,k1,t5)/T=1416683692428",
+			"d/(d5,k4,t7)/T=1416683696655",
+			"d/(T2,d6,k43,t10)/T=1416683820561",					
+		}));
+		
+		// k
+		allBranches.put("k", TestDatabaseUtil.createBranch(new String[] {
+			"k/(d2,k1,t4)/T=1416683688323",
+			"k/(d4,k3,t5)/T=1416683693134",
+			"k/(d4,k4,t7)/T=1416683696251",
+			"k/(T2,d5,k5,t8)/T=1416683701066",
+			"k/(T2,d5,k6,t8)/T=1416683703688",
+			"k/(T2,d5,k7,t8)/T=1416683707177",
+			"k/(T2,d5,k8,t8)/T=1416683709571",
+			"k/(T2,d5,k9,t8)/T=1416683712900",
+			"k/(T2,d5,k10,t8)/T=1416683716399",
+			"k/(T2,d5,k11,t8)/T=1416683719119",
+			"k/(T2,d5,k12,t8)/T=1416683722554",
+			"k/(T2,d5,k13,t8)/T=1416683724848",
+			"k/(T2,d5,k14,t8)/T=1416683728286",
+			"k/(T2,d5,k15,t8)/T=1416683731538",
+			"k/(T2,d5,k16,t8)/T=1416683734832",
+			"k/(T2,d5,k17,t8)/T=1416683738089",
+			"k/(T2,d5,k18,t8)/T=1416683740541",
+			"k/(T2,d5,k19,t8)/T=1416683743906",
+			"k/(T2,d5,k20,t8)/T=1416683747192",
+			"k/(T2,d5,k21,t8)/T=1416683750445",
+			"k/(T2,d5,k22,t8)/T=1416683752883",
+			"k/(T2,d5,k23,t8)/T=1416683756264",
+			"k/(T2,d5,k24,t8)/T=1416683759640",
+			"k/(T2,d5,k25,t10)/T=1416683762872",
+			"k/(T2,d5,k26,t10)/T=1416683765293",
+			"k/(T2,d5,k27,t10)/T=1416683768795",
+			"k/(T2,d5,k28,t10)/T=1416683772169",
+			"k/(T2,d5,k29,t10)/T=1416683774593",
+			"k/(T2,d5,k30,t10)/T=1416683777935",
+			"k/(T2,d5,k31,t10)/T=1416683781320",
+			"k/(T2,d5,k32,t10)/T=1416683784670",
+			"k/(T2,d5,k33,t10)/T=1416683787138",
+			"k/(T2,d5,k34,t10)/T=1416683790501",
+			"k/(T2,d5,k35,t10)/T=1416683793760",
+			"k/(T2,d5,k36,t10)/T=1416683797117",
+			"k/(T2,d5,k37,t10)/T=1416683799638",
+			"k/(T2,d5,k38,t10)/T=1416683803046",
+			"k/(T2,d5,k39,t10)/T=1416683806357",
+			"k/(T2,d5,k40,t10)/T=1416683808699",
+			"k/(T2,d5,k41,t10)/T=1416683812166",
+			"k/(T2,d5,k42,t10)/T=1416683815182",
+			"k/(T2,d5,k43,t10)/T=1416683818604",
+			"k/(T2,d6,k44,t10)/T=1416683821185"						
+		}));
+		
+		// t
+		allBranches.put("t", TestDatabaseUtil.createBranch(new String[] {
+			"t/(d1,t3)/T=1416683685357",
+			"t/(d1,t4)/T=1416683686957",
+			"t/(d3,k1,t5)/T=1416683690944",
+			"t/(d4,k3,t6)/T=1416683693534",
+			"t/(d4,k3,t7)/T=1416683696048",
+			"t/(T2,d5,k4,t8)/T=1416683700373",
+			"t/(T2,d5,k24,t9)/T=1416683760625",
+			"t/(T2,d5,k24,t10)/T=1416683762172"							
+		}));		
+				
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
+		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "C/(C4)/T=5",
+			"B", "B/(B1,C3)/T=7",
+			"C", "C/(C4)/T=5"			
+		});		
+		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "C/(C4)/T=5",
+			"C", "C/(C4)/T=5"		
+		});
+		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"A", "A/(A3,C4)/T=10"
+		}).firstEntry();				
+		
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
+	}		
 
 	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, DatabaseBranches allBranches, TestResult expectedTestResult) throws Exception {
 		// Print them all
