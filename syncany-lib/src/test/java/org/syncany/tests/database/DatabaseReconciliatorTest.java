@@ -433,6 +433,8 @@ public class DatabaseReconciliatorTest {
 	
 	@Test
 	public void testWinnersWinner() throws Exception {
+		Logging.init();
+		
 		System.out.println("Winners winner test");
 		System.out.println("----------------");
 		
@@ -594,6 +596,7 @@ public class DatabaseReconciliatorTest {
 		/* Scenario: Three clients, to conflicting DBVs with the same timestamp
 		 *           --> A should win over B (alphabetical order)
 		 */
+		Logging.init();
 		
 		/// Input data ///
 		String localMachineName = "C";
@@ -758,7 +761,7 @@ public class DatabaseReconciliatorTest {
 	}		
 	
 	@Test
-	public void testIssue226CompleteBranchesWithDatabaseVersionHeaders() throws Exception {
+	public void testStitchBranchesIssue226CompleteBranchesWithDatabaseVersionHeaders() throws Exception {
 		Logging.init();
 		
 		/// Input data ///
@@ -962,13 +965,20 @@ Not in T:
 
 		DatabaseBranches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
 		
-		System.out.println("Before Orchestration : Remote");
+		System.out.println("Unstitched Branches (from remote):");
+		System.out.println("##################################");
 		printBranches(unstitchedRemoteBranches);
-		System.out.println("Before Orchestration : Local");
+		System.out.println();
+		
+		System.out.println("Stitched Local Branch (client '" + localMachineName + "'):");
+		System.out.println("##################################");
 		printBranch(localBranch);
-		System.out.println("BEGIN Branch Orchestration!! ----------");
+		System.out.println();
+		
+		System.out.println("All Stitched Branches:");
+		System.out.println("##################################");
 		printBranches(stitchedRemoteBranches);				
-		System.out.println("END Branch Orchestration ----------");
+		System.out.println();
 				
 		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, stitchedRemoteBranches);
 		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, stitchedRemoteBranches);
