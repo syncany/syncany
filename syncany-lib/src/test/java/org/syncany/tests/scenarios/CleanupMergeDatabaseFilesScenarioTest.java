@@ -17,9 +17,7 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
@@ -489,5 +487,64 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		clientC.deleteTestData();
+	}
+	
+	@Test
+	public void testIssue266_EmptyDatabaseAfterCleanup() throws Exception {
+		// Test for https://github.com/syncany/syncany/issues/266#issuecomment-64472059
+
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+		TestClient clientC = new TestClient("C", testConnection);
+		TestClient clientD = new TestClient("D", testConnection);
+		TestClient clientE = new TestClient("E", testConnection);
+
+		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
+		cleanupOptionsKeepOneForce.setMergeRemoteFiles(true);
+		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
+		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
+		cleanupOptionsKeepOneForce.setForce(true);
+
+		// Create a couple of files, then delete them and do a cleanup
+		
+		clientA.createNewFile("fileA");
+		clientA.upWithForceChecksum();
+		
+		clientB.down();
+		clientB.createNewFile("fileB");
+		clientB.upWithForceChecksum();
+
+		clientC.down();
+		clientC.createNewFile("fileC");
+		clientC.upWithForceChecksum();
+		
+		clientD.down();
+		clientD.deleteFile("fileA");
+		clientD.deleteFile("fileB");
+		clientD.deleteFile("fileC");
+		clientD.upWithForceChecksum();
+		clientD.cleanup(cleanupOptionsKeepOneForce);
+		
+		// Now the remote databases are completely empty (no files, no histories, no database versions!)
+		
+		clientA.down();		// Existing client  << This created a NullPointerException 
+		clientE.down();		// Empty/new client << This created a NullPointerException 
+
+		// After a successful down, create a new database version (continue numbering!)
+		
+		clientA.createNewFile("fileA");
+		clientA.upWithForceChecksum();
+		
+		fail("Check numbering.");
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+		clientC.deleteTestData();
+		clientD.deleteTestData();
+		clientE.deleteTestData();
 	}
 }

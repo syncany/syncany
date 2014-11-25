@@ -416,15 +416,12 @@ public class DatabaseReconciliator {
 			DatabaseBranch clientBranch = allUnstitchedBranches.getBranch(client);
 			
 			if (clientBranch.size() > 0) {
-				logger.log(Level.FINE, "Branch for '" + client + "' is NOT empty. Stitching ...");
+				// logger.log(Level.FINE, "Branch for '" + client + "' is NOT empty. Stitching ...");
 				
 				DatabaseBranch newUnsortedClientBranch = stitchClientBranchFromOtherBranches(client, clientBranch, allUnstitchedBranches);
 				DatabaseBranch newSortedClientBranch = sortBranch(newUnsortedClientBranch);
 				
 				allStitchedBranches.put(client, newSortedClientBranch);
-			}
-			else {
-				logger.log(Level.FINE, "Branch for '" + client + "' is empty. Nothing to do.");
 			}
 		}
 		
@@ -439,7 +436,7 @@ public class DatabaseReconciliator {
 			DatabaseVersionHeader clientDatabaseVersionHeader = clientBranch.get(clientBranchIndex);								
 			VectorClock clientVectorClock = clientDatabaseVersionHeader.getVectorClock();					
 			
-			logger.log(Level.FINE, " - Comparing local " + clientDatabaseVersionHeader);
+			// logger.log(Level.FINE, " - Comparing local " + clientDatabaseVersionHeader);
 
 			for (String otherClient : allUnstitchedBranches.getClients()) {
 				boolean sameClient = otherClient.equals(client);
@@ -450,7 +447,7 @@ public class DatabaseReconciliator {
 				}
 			}
 			
-			logger.log(Level.FINE, "   * Adding own " + clientDatabaseVersionHeader);
+			// logger.log(Level.FINE, "   * Adding own " + clientDatabaseVersionHeader);
 			newClientBranch.add(clientDatabaseVersionHeader);
 		}
 
@@ -470,7 +467,7 @@ public class DatabaseReconciliator {
 			boolean isInConflict = VectorClock.compare(clientVectorClock, otherClientVectorClock) == VectorClockComparison.SIMULTANEOUS;
 			
 			if (!otherClientVectorClockExistsInBranch && isOtherClientVectorClockSmaller && !isInConflict) {
-				logger.log(Level.FINE, "   * [From " + otherClient + ", Index " + otherClientBranchIndex + "] Adding " + otherClientDatabaseVersionHeader);
+				// logger.log(Level.FINE, "   * [From " + otherClient + ", Index " + otherClientBranchIndex + "] Adding " + otherClientDatabaseVersionHeader);
 				
 				clientBranch.add(otherClientDatabaseVersionHeader);								
 				otherClientBranchIndex = otherClientIndices.incrementClock(otherClient);
