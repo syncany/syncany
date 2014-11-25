@@ -19,8 +19,9 @@ package org.syncany.tests.database;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.AbstractMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
@@ -64,17 +65,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"B", "B/(B1,C3)/T=7",
-			"C", "C/(C4)/T=5"			
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"C", "C/(C4)/T=5"		
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A3,C4)/T=10"
 		}).firstEntry();
 				
@@ -112,15 +103,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"B", "B/(B1,C3)/T=7"
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5"
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A3,C4)/T=10"
 		}).firstEntry();
 				
@@ -162,17 +145,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///x
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"B", "B/(B1,C3)/T=7",
-			"C", "C/(C4)/T=5"
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"C", "C/(C4)/T=5"
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A3,C4)/T=10"
 		}).firstEntry();
 				
@@ -224,16 +197,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A3,C4)/T=10");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11",
-			"B", "B/(A3,B2,C4)/T=16",
-			"C", "C/(A3,C5)/T=13"
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11"
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A6,C4)/T=19"
 		}).firstEntry();
 				
@@ -285,16 +249,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A3,C4)/T=10");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11",
-			"B", "B/(A3,B2,C4)/T=16",
-			"C", "C/(A3,C5)/T=13"
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11"
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A6,C4)/T=19"
 		}).firstEntry();		
 				
@@ -346,16 +301,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A3,C4)/T=10");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11",
-			"B", "B/(A3,B2,C4)/T=16",
-			"C", "C/(A3,C5)/T=13"
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A4,C4)/T=11"
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A6,C4)/T=19"
 		}).firstEntry();		
 				
@@ -415,15 +361,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A3,C4)/T=10");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"B", "A/(A3,B2,C4)/T=16", 
-			"C", "A/(A4,C4)/T=11" 
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"C", "A/(A4,C4)/T=11" 
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"C", "C/(A6,C9)/T=22"
 		}).firstEntry();		
 				
@@ -471,17 +409,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2,C4)/T=9",
-			"B", "A/(A2,C4)/T=9",
-			"C", "C/(A1,C5)/T=10"			
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2,C4)/T=9",
-			"B", "A/(A2,C4)/T=9",
-		});		
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A5,C4)/T=15"
 		}).firstEntry();
 				
@@ -535,17 +463,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2,C4)/T=9",
-			"B", "A/(A2,C4)/T=9",
-			"C", "C/(A1,C5)/T=10"			
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2,C4)/T=9",
-			"B", "A/(A2,C4)/T=9",
-		});		
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A5,B1,C4)/T=14"
 		}).firstEntry();
 				
@@ -576,14 +494,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2)/T=1376074225230",
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A2)/T=1376074225230",
-		});		
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A2)/T=1376074225230"
 		}).firstEntry();
 				
@@ -625,16 +536,7 @@ public class DatabaseReconciliatorTest {
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("A/(A2)/T=1376074225230");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A3)/T=1376074225256",
-			"B", "A/(A3)/T=1376074225256",
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A3)/T=1376074225256",
-			"B", "A/(A3)/T=1376074225256",
-		});		
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
 			"A", "A/(A4)/T=9999999999999"
 		}).firstEntry();
 				
@@ -844,100 +746,13 @@ public class DatabaseReconciliatorTest {
 			"t/(T2,d5,k4,t8)/T=700373",
 			"t/(T2,d5,k24,t9)/T=760625",
 			"t/(T2,d5,k24,t10)/T=762172"							
-		}));		
-				
-		
-		/*
-		 * 
-
-Expected:
-
-T:
-
-			"d/(d1,t1)/T=684310",
-			"t/(d1,t3)/T=685357",
-			"t/(d1,t4)/T=686957",
-			"d/(d2,t4)/T=687747",
-			"k/(d2,k1,t4)/T=688323",
-			"d/(d3,k1,t4)/T=689077",
-			"t/(d3,k1,t5)/T=690944",
-			"d/(d4,k1,t5)/T=692428",
-			"k/(d4,k3,t5)/T=693134",
-			"t/(d4,k3,t6)/T=693534",
-			"t/(d4,k3,t7)/T=696048",
-			"k/(d4,k4,t7)/T=696251",
-			"d/(d5,k4,t7)/T=696655",
-			"T/(T2,d5,k4,t7)/T=697013",
-			"t/(T2,d5,k4,t8)/T=700373",
-			"k/(T2,d5,k5,t8)/T=701066",
-			"k/(T2,d5,k6,t8)/T=703688",
-			"k/(T2,d5,k7,t8)/T=707177",
-			"k/(T2,d5,k8,t8)/T=709571",
-			"k/(T2,d5,k9,t8)/T=712900",
-			"k/(T2,d5,k10,t8)/T=716399",
-			"k/(T2,d5,k11,t8)/T=719119",
-			"k/(T2,d5,k12,t8)/T=722554",
-			"k/(T2,d5,k13,t8)/T=724848",
-			"k/(T2,d5,k14,t8)/T=728286",
-			"k/(T2,d5,k15,t8)/T=731538",
-			"k/(T2,d5,k16,t8)/T=734832",
-			"k/(T2,d5,k17,t8)/T=738089",
-			"k/(T2,d5,k18,t8)/T=740541",
-			"k/(T2,d5,k19,t8)/T=743906",
-			"k/(T2,d5,k20,t8)/T=747192",
-			"k/(T2,d5,k21,t8)/T=750445",
-			"k/(T2,d5,k22,t8)/T=752883",
-			"k/(T2,d5,k23,t8)/T=756264",			
-			"k/(T2,d5,k24,t8)/T=759640",
-			"T/(T3,d5,k24,t8)/T=760721", // <<< Conflicts with k/(T2,d5,k28,t10)/T=772169
-			"T/(T3,d6,k44,t10)/T=822389",
-			"T/(T4,d6,k44,t10)/T=824100"						
-
-Not in T:
-			"d/(T2,d6,k43,t10)/T=820561",					
-			"k/(T2,d5,k25,t10)/T=762872",
-			"k/(T2,d5,k26,t10)/T=765293",
-			"k/(T2,d5,k27,t10)/T=768795",
-			"k/(T2,d5,k28,t10)/T=772169", 
-			"k/(T2,d5,k29,t10)/T=774593",
-			"k/(T2,d5,k30,t10)/T=777935",
-			"k/(T2,d5,k31,t10)/T=781320",
-			"k/(T2,d5,k32,t10)/T=784670",
-			"k/(T2,d5,k33,t10)/T=787138",
-			"k/(T2,d5,k34,t10)/T=790501",
-			"k/(T2,d5,k35,t10)/T=793760",
-			"k/(T2,d5,k36,t10)/T=797117",
-			"k/(T2,d5,k37,t10)/T=799638",
-			"k/(T2,d5,k38,t10)/T=803046",
-			"k/(T2,d5,k39,t10)/T=806357",
-			"k/(T2,d5,k40,t10)/T=808699",
-			"k/(T2,d5,k41,t10)/T=812166",
-			"k/(T2,d5,k42,t10)/T=815182",
-			"k/(T2,d5,k43,t10)/T=818604",
-			"k/(T2,d6,k44,t10)/T=821185"						
-			"t/(T2,d5,k24,t9)/T=760625",
-			"t/(T2,d5,k24,t10)/T=762172"
-			
-			
-			
-			
-		 */
+		}));					
 		
 		/// Expected results ///
 		TestResult expectedTestResult = new TestResult();
 		
-		expectedTestResult.lastCommonHeader = TestDatabaseUtil.createFromString("C/(C3)/T=3");
-		expectedTestResult.firstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"B", "B/(B1,C3)/T=7",
-			"C", "C/(C4)/T=5"			
-		});		
-		expectedTestResult.winningFirstConflictingDatabaseVersionHeaders = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "C/(C4)/T=5",
-			"C", "C/(C4)/T=5"		
-		});
-		expectedTestResult.winnersWinnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-			"A", "A/(A3,C4)/T=10"
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"k", "k/(T2,d6,k44,t10)/T=821185"
 		}).firstEntry();				
 		
 		/// Perform test ///
@@ -963,44 +778,35 @@ Not in T:
 		DatabaseBranches unstitchedRemoteBranches = allBranches.clone();
 		unstitchedRemoteBranches.remove(localMachineName);
 
-		DatabaseBranches stitchedRemoteBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
+		DatabaseBranches allStitchedBranches = databaseReconciliator.stitchBranches(unstitchedRemoteBranches, localMachineName, localBranch);
 		
 		System.out.println("Unstitched Branches (from remote):");
 		System.out.println("##################################");
 		printBranches(unstitchedRemoteBranches);
 		System.out.println();
 		
-		System.out.println("Stitched Local Branch (client '" + localMachineName + "'):");
+		System.out.println("Unstitched Local Branch (client '" + localMachineName + "'):");
 		System.out.println("##################################");
 		printBranch(localBranch);
 		System.out.println();
 		
 		System.out.println("All Stitched Branches:");
 		System.out.println("##################################");
-		printBranches(stitchedRemoteBranches);				
+		printBranches(allStitchedBranches);				
+		System.out.println();
+		
+		Entry<String, DatabaseBranch> winnersBranch = databaseReconciliator.findWinnerBranch(allStitchedBranches);
+		System.out.println("Winners Branch (winner is " + winnersBranch.getKey() + "):");
+		System.out.println("##################################");
+		printBranch(winnersBranch.getValue());
 		System.out.println();
 				
-		actualTestResult.lastCommonHeader = databaseReconciliator.findLastCommonDatabaseVersionHeader(localBranch, stitchedRemoteBranches);
-		actualTestResult.firstConflictingDatabaseVersionHeaders = databaseReconciliator.findFirstConflictingDatabaseVersionHeader(actualTestResult.lastCommonHeader, stitchedRemoteBranches);
-		actualTestResult.winningFirstConflictingDatabaseVersionHeaders = databaseReconciliator.findWinningFirstConflictingDatabaseVersionHeaders(actualTestResult.firstConflictingDatabaseVersionHeaders);
-		actualTestResult.winnersWinnersLastDatabaseVersionHeader = databaseReconciliator.findWinnersLastDatabaseVersionHeader(actualTestResult.winningFirstConflictingDatabaseVersionHeaders, stitchedRemoteBranches);
-		
-		System.out.println("Actual lastCommonDatabaseVersionHeader = " +actualTestResult.lastCommonHeader);
-		System.out.println("Expect lastCommonDatabaseVersionHeader = " +expectedTestResult.lastCommonHeader);
+		actualTestResult.winnersLastDatabaseVersionHeader =  new AbstractMap.SimpleEntry<String, DatabaseVersionHeader>(winnersBranch.getKey(), winnersBranch.getValue().getLast());
+				
+		System.out.println("Actual winnersLastDatabaseVersionHeader = " + actualTestResult.winnersLastDatabaseVersionHeader);
+		System.out.println("Expect winnersLastDatabaseVersionHeader = " + expectedTestResult.winnersLastDatabaseVersionHeader);
 
-		System.out.println("Actual firstConflictingDatabaseVersionHeaders = "); printMap(actualTestResult.firstConflictingDatabaseVersionHeaders);
-		System.out.println("Expect firstConflictingDatabaseVersionHeaders = "); printMap(expectedTestResult.firstConflictingDatabaseVersionHeaders);
-
-		System.out.println("Actual winningFirstConflictingDatabaseVersionHeaders = "); printMap(actualTestResult.winningFirstConflictingDatabaseVersionHeaders);
-		System.out.println("Expect winningFirstConflictingDatabaseVersionHeaders = "); printMap(expectedTestResult.winningFirstConflictingDatabaseVersionHeaders);
-		
-		System.out.println("Actual winnersWinnersLastDatabaseVersionHeader = " + actualTestResult.winnersWinnersLastDatabaseVersionHeader);
-		System.out.println("Expect winnersWinnersLastDatabaseVersionHeader = " + expectedTestResult.winnersWinnersLastDatabaseVersionHeader);
-
-		assertEquals("Different last common database version header expected", expectedTestResult.lastCommonHeader, actualTestResult.lastCommonHeader);
-		assertEquals("Different first conflicting versions expected", expectedTestResult.firstConflictingDatabaseVersionHeaders, actualTestResult.firstConflictingDatabaseVersionHeaders);
-		assertEquals("Different winning first conflicting versions expected", expectedTestResult.winningFirstConflictingDatabaseVersionHeaders, actualTestResult.winningFirstConflictingDatabaseVersionHeaders);
-		assertEquals("Different winners winners last version expected", expectedTestResult.winnersWinnersLastDatabaseVersionHeader, actualTestResult.winnersWinnersLastDatabaseVersionHeader);
+		assertEquals("Different winners winners last version expected", expectedTestResult.winnersLastDatabaseVersionHeader, actualTestResult.winnersLastDatabaseVersionHeader);
 	}
 
 	private void printBranches(DatabaseBranches branches) {
@@ -1015,17 +821,8 @@ Not in T:
 			System.out.println("- "+databaseVersionHeader);
 		}
 	}
-
-	private void printMap(Map<?, ?> someMap) {
-		for (Map.Entry<?, ?> entry : someMap.entrySet()) {
-			System.out.println("- "+entry.getKey()+": "+entry.getValue());
-		}
-	}		
 	
 	private class TestResult {
-		DatabaseVersionHeader lastCommonHeader;		
-		TreeMap<String, DatabaseVersionHeader> firstConflictingDatabaseVersionHeaders;
-		TreeMap<String, DatabaseVersionHeader> winningFirstConflictingDatabaseVersionHeaders;
-		Map.Entry<String, DatabaseVersionHeader> winnersWinnersLastDatabaseVersionHeader;	
+		Map.Entry<String, DatabaseVersionHeader> winnersLastDatabaseVersionHeader;	
 	}
 }

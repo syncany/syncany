@@ -158,11 +158,9 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		try {
 			DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
-
-			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(localBranch, allStitchedBranches);
+			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allStitchedBranches);
 
 			purgeConflictingLocalBranch(localBranch, winnersBranch);
-
 			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
 
 			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
@@ -344,10 +342,10 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @return Returns the branch of the winner 
 	 * @throws Exception If any kind of error occurs (...)
 	 */
-	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranch localBranch, DatabaseBranches allStitchedBranches)
+	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
 			throws Exception {
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
-		return databaseReconciliator.findWinnerBranch(config.getMachineName(), localBranch, allStitchedBranches);
+		return databaseReconciliator.findWinnerBranch(allStitchedBranches);
 	}
 
 	/**
