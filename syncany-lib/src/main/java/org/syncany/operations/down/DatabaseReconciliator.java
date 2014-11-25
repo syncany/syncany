@@ -20,12 +20,10 @@ package org.syncany.operations.down;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,7 +37,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  * The database reconciliator implements various parts of the sync down algorithm (see also:
  * {@link DownOperation}). Its main responsibility is to compare the local database to the
  * other clients' delta databases. The final goal of the algorithms described in this class is
- * to determine a winning {@link MemoryDatabase} (or better: a winning database {@link DatabaseBranch}) of
+ * to determine a winning {@link MemoryDatabase} (or better: a winning {@link DatabaseBranch}) of
  * a client.
  * 
  * <p>All algorithm parts largely rely on the comparison of a client's database branch, i.e. its
@@ -50,48 +48,25 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  * 
  * <p>Because there are many ways to say it, there are a few explanations to the algorithms:
  * 
- * <p><b>Algorithm (short explanation):</b>
+ * <p><b>Algorithm:</b>
  * <ol>
- *  <li>Go back to the first conflict of all versions</li>
- *  <li>Determine winner of this conflict; follow the winner(s) branch</li>
- *  <li>If another conflict occurs, go to step 2</li>
- * </ol>
- * 
- * <p><b>Algorithm (medium long explanation):</b>
- * <ol>
- *  <li>Determine last versions per client A B C</li>
- *  <li>Determine if there are conflicts between last versions of client, if yes continue</li> 
- *  <li>Determine last common versions between clients</li>
- *  <li>Determine first conflicting versions between clients (= last common version + 1)</li>
- *  <li>Compare first conflicting versions and determine winner</li>
- *  <li>If one client has the winning first conflicting version, take this client's history as a winner</li>
- *  <li>If more than 2 clients are based on the winning first conflicting version, compare their other versions
+ *  <li>Input: Local branch, unknown remote branches</li>
+ *  <li>Stitch branches together, so that all branches also contain other clients' database version headers</li> 
+ *  <li>Using the full branches of all clients, walk forward and compare database versions of the same index to one another:
  *      <ol>
- *        <li>Iterate forward (from conflicting to newer!), and check for conflicts</li>
- *        <li>If a conflict is found, determine the winner and continue the branch of the winner</li>
+ *        <li>Iterate forward (from position 0 to newer!), and check for conflicts</li>
+ *        <li>If a conflict is found, determine the winner and eliminate the losing machine, and continue with the remaining machine branches</li>
  *        <li>This must be done until the last (newest!) version of the winning branch is reached</li>
  *      </ol>
  *  </li>
- *  <li>If the local machine loses (= winning first conflicting database version is NOT from the local machine)
- *      <i>and</i> there is a first conflicting database version from the local machine (and possibly more database versions),</li>
+ *  <li>If the local machine loses (= winning branch is NOT from the local machine)
+ *      <i>and</i> there is at least one conflicting database version from the local machine (and possibly more database versions),</li>
  *      <ol>
  *        <li>these database versions must be pruned/deleted from the local database</li>
  *        <li>and these database versions must be merged somehow in the last winning database version</li>
  *      </ol>
  *  </li>
  * </ol>
- * 
- * <p><b>Algorithm (long explanation):</b> 
- * <ul>
- *  <li>{@link #stitchBranches(DatabaseBranches, String, DatabaseBranch) stitchBranches()}: Due to the fact that
- *      Syncany exchanges only delta databases, but the algorithms require a full branch for the
- *      winner-determination, the full per-client branches must be created/derived from all the
- *      downloaded branches.</li>
- *  <li>{@link #findWinnersLastDatabaseVersionHeader(TreeMap, DatabaseBranches) findWinnersWinnersLastDatabaseVersionHeader()}:
- *      Having found one or many winning branches (candidates), the last step is to walk forward and compare
- *      the winning branches with each other -- comparing their database version headers. If a set does not match,
- *      a winner is determined until only one client branch remains. This client branch is the final winning branch.</li>
- * </ul>
  * 
  * @see DownOperation
  * @see VectorClock
@@ -106,18 +81,22 @@ public class DatabaseReconciliator {
 	 * branches containing other clients' database version headers.
 	 * 
 	 * <p>The algorithm takes the partial client branches and stitches them together so they can be easily 
-	 * compared by walking through the branches. See {@link #stitchAllBranches(DatabaseBranches)} for details.
+	 * compared by walking through the branches. 
+	 * 
+	 * <p>Due to the fact that Syncany exchanges only delta databases, but the winners algorithm in {@link #findWinnerBranch(DatabaseBranches)}
+	 * requires a full branch for the winner-determination, the full per-client branches must be created/derived from all the
+	 * downloaded branches. This method creates these full branches.
 	 * 
 	 * @param unstitchedUnknownBranches Unstitched branches per client (one client's database version headers per branch) 
 	 * @param localClientName Local client name
 	 * @param unstitchedLocalBranch Unstitched local branch (only local database version headers)
 	 * @return Returns all stitched branches (full branches, containing database version headers of all clients)
 	 */
-	public DatabaseBranches stitchBranches(DatabaseBranches unstitchedUnknownBranches, String localClientName, DatabaseBranch unstitchedLocalBranch) {
-		DatabaseBranches allUnstitchedBranches = unstitchedUnknownBranches.clone();
-		mergeLocalBranchInRemoteBranches(localClientName, allUnstitchedBranches, unstitchedLocalBranch);
-
-		return stitchAllBranches(allUnstitchedBranches);
+	public DatabaseBranches stitchBranches(DatabaseBranches unstitchedUnknownBranches, String localClientName, DatabaseBranch unstitchedLocalBranch) {		
+		DatabaseBranches allUnstitchedBranches = mergeLocalBranchInRemoteBranches(localClientName, unstitchedLocalBranch, unstitchedUnknownBranches);
+		DatabaseBranches allStitchedBranches = stitchAllBranches(allUnstitchedBranches);
+		
+		return allStitchedBranches;
 	}
 
 	/**
@@ -186,8 +165,8 @@ public class DatabaseReconciliator {
 	}
 
 	/**
-	 * Algorithm to find the ultimate winner's last database version header (client name and header).
-	 * The ultimate winner's branch is used to determine the local file system actions.
+	 * Algorithm to find the winner's database branch (client name and branch).
+	 * The winner's branch is used to determine the local file system actions.
 	 * 
 	 * <p>Basic algorithm: Iterate over all machines' branches forward, find conflicts and
 	 * decide who wins. The following numbers correspond to the comments in the code
@@ -195,15 +174,12 @@ public class DatabaseReconciliator {
 	 * <ol>
 	 *  <li>The algorithm first checks whether a winner comparison is even necessary. If there is only one
 	 *      machine, it simply returns this machine as the winner.</li>
-	 *  <li>If there is more than one machine, it determines per-client start positions in a branch. The start
-	 *      position is the position at which the first conflicting database version was found (given as input
-	 *      parameter).</li>
-	 *  <li>It then starts a 'race' in which the database version headers of two machines are compared. If the
+	 *  <li>If there is more than one machine, the 'race' starts at position 0 of each of the clients' branch.
+	 *      The algorithm starts a 'race' in which the database version headers of two machines are compared. If the
 	 *      two database version headers are equal, both machines are left in the race. If they are not equal,
 	 *      only the 'winner' stays in the race. This is repeated for each position of the machines' branches.
 	 *      See the example below for a more graphic representation.</li>
-	 *  <li>Once only one winner remains, the winner's name and its last database version header is
-	 *      returned.</li>
+	 *  <li>Once only one winner remains, the winner's name and branch is returned.</li>
 	 * </ol> 
 	 * 
 	 * <p><b>Illustration:</b><br />
@@ -219,30 +195,32 @@ public class DatabaseReconciliator {
 	 * 3 | A/(A4)/T=23    B/(A3,B1)/T=20   
 	 * </pre>
 	 * 
-	 * The algorithm input will be the database version headers in line 1 (= first conflicting
-	 * database version headers). In the first step, the algorithm will get the positions per branch
-	 * for the first conflicting database version headers. Here, this is A[1], B[1] and C[1].
+	 * The algorithm input will be the database version headers in line 1 (= first database
+	 * version headers of each client's branch). 
 	 * 
-	 * <p>It will then compare the database version headers in the following order:
+	 * <p>The algorithm will compare the database version headers moving forward, starting from position 0:
 	 * <pre>
 	 * Positions       1st machine       2nd machine
 	 * -----------------------------------------------------------------------------
 	 * Round 1:
+	 * A[0] vs. B[0]   A: A/(A1)/T=10    B: A/(A1)/T=10      // Equal, no eliminations
+	 * A[0] vs. C[0]   A: A/(A1)/T=10    C: A/(A1)/T=10      // Equal, no eliminations
+	 * 
+	 * Round 2:
 	 * A[1] vs. B[1]   A: A/(A2)/T=13    B: A/(A2)/T=13      // Equal, no eliminations
 	 * A[1] vs. C[1]   A: A/(A2)/T=13    C: C/(A1,C1)/T=14   // 13<14, A wins, eliminate C
 	 * 
-	 * Round 2 (C eliminated):
+	 * Round 3 (C eliminated):
 	 * A[2] vs. B[1]   A: A/(A3)/T=19    B: A/(A3)/T=19      // Equal, no eliminations
 	 *      
-	 * Round 3:
+	 * Round 4:
 	 * A[3] vs. B[3]   A: A/(A4)/T=23    B: B/(A3,B1)/T=20   // 20<23, B wins, eliminate A
 	 * 
 	 * // B wins!
 	 * </pre>
 	 * 
-	 * @param winningFirstConflictingDatabaseVersionHeaders Machine names and their corresponding first conflicting database version headers
-	 * @param allBranches All stitched branches of all machines (including local)
-	 * @return Returns the name and the last database version header of the winning machine 
+	 * @param allStitchedBranches All stitched branches of all machines (including local)
+	 * @return Returns the name and the branch of the winning machine 
 	 */
 	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allStitchedBranches) {
 		// 1. If there is only one conflicting database version header, return it (no need for a complex algorithm)
@@ -408,7 +386,9 @@ public class DatabaseReconciliator {
 		return clientPositionCounter;
 	}
 
-	private void mergeLocalBranchInRemoteBranches(String localClientName, DatabaseBranches allUnstitchedBranches, DatabaseBranch localBranch) {
+	private DatabaseBranches mergeLocalBranchInRemoteBranches(String localClientName, DatabaseBranch localBranch, DatabaseBranches unstitchedUnknownBranches) {
+		DatabaseBranches allUnstitchedBranches = unstitchedUnknownBranches.clone();
+		
 		if (allUnstitchedBranches.getClients().contains(localClientName)) {
 			DatabaseBranch unknownLocalClientBranch = allUnstitchedBranches.getBranch(localClientName);
 
@@ -424,8 +404,11 @@ public class DatabaseReconciliator {
 		else if (localBranch.size() > 0) {
 			allUnstitchedBranches.put(localClientName, localBranch);
 		}
+		
+		return allUnstitchedBranches;
 	}
 
+	
 	private DatabaseBranches stitchAllBranches(DatabaseBranches allUnstitchedBranches) {
 		DatabaseBranches allStitchedBranches = new DatabaseBranches();
 		
@@ -463,35 +446,7 @@ public class DatabaseReconciliator {
 				
 				if (!sameClient) {
 					DatabaseBranch otherClientBranch = allUnstitchedBranches.getBranch(otherClient);
-					long otherClientBranchIndex = otherClientIndices.get(otherClient);
-					
-					boolean endOfBranch = otherClientBranchIndex >= otherClientBranch.size();
-					
-					while (!endOfBranch) {
-						DatabaseVersionHeader otherClientDatabaseVersionHeader = otherClientBranch.get((int) otherClientBranchIndex);								
-						VectorClock otherClientVectorClock = otherClientDatabaseVersionHeader.getVectorClock();
-						
-						boolean isOtherClientVectorClockSmaller = VectorClock.compare(otherClientVectorClock, clientVectorClock) == VectorClockComparison.SMALLER;
-						boolean otherClientVectorClockExistsInBranch = newClientBranch.get(otherClientVectorClock) != null;
-						boolean isInConflict = VectorClock.compare(clientVectorClock, otherClientVectorClock) == VectorClockComparison.SIMULTANEOUS;
-						
-						if (!otherClientVectorClockExistsInBranch && isOtherClientVectorClockSmaller && !isInConflict) {
-							logger.log(Level.FINE, "   * [From " + otherClient + ", Index " + otherClientBranchIndex + "] Adding " + otherClientDatabaseVersionHeader);
-							newClientBranch.add(otherClientDatabaseVersionHeader);
-							
-							otherClientIndices.incrementClock(otherClient);
-							otherClientBranchIndex = otherClientIndices.get(otherClient);
-							
-							endOfBranch = otherClientBranchIndex >= otherClientBranch.size();
-						}
-						else {
-							if (isInConflict) {
-								otherClientIndices.setClock(otherClient, Long.MAX_VALUE);	
-							}
-							
-							endOfBranch = true;
-						}						
-					}
+					attachToClientBranchFromOtherBranch(newClientBranch, clientVectorClock, otherClient, otherClientBranch, otherClientIndices);					
 				}
 			}
 			
@@ -502,6 +457,36 @@ public class DatabaseReconciliator {
 		return newClientBranch;
 	}
 
+	private void attachToClientBranchFromOtherBranch(DatabaseBranch clientBranch, VectorClock clientVectorClock, String otherClient, DatabaseBranch otherClientBranch, VectorClock otherClientIndices) {		
+		long otherClientBranchIndex = otherClientIndices.get(otherClient);		
+		boolean endOfBranch = otherClientBranchIndex >= otherClientBranch.size();
+		
+		while (!endOfBranch) {
+			DatabaseVersionHeader otherClientDatabaseVersionHeader = otherClientBranch.get((int) otherClientBranchIndex);								
+			VectorClock otherClientVectorClock = otherClientDatabaseVersionHeader.getVectorClock();
+			
+			boolean isOtherClientVectorClockSmaller = VectorClock.compare(otherClientVectorClock, clientVectorClock) == VectorClockComparison.SMALLER;
+			boolean otherClientVectorClockExistsInBranch = clientBranch.get(otherClientVectorClock) != null;
+			boolean isInConflict = VectorClock.compare(clientVectorClock, otherClientVectorClock) == VectorClockComparison.SIMULTANEOUS;
+			
+			if (!otherClientVectorClockExistsInBranch && isOtherClientVectorClockSmaller && !isInConflict) {
+				logger.log(Level.FINE, "   * [From " + otherClient + ", Index " + otherClientBranchIndex + "] Adding " + otherClientDatabaseVersionHeader);
+				
+				clientBranch.add(otherClientDatabaseVersionHeader);								
+				otherClientBranchIndex = otherClientIndices.incrementClock(otherClient);
+				
+				endOfBranch = otherClientBranchIndex >= otherClientBranch.size();
+			}
+			else {
+				if (isInConflict) {
+					otherClientIndices.setClock(otherClient, Long.MAX_VALUE);	
+				}
+				
+				endOfBranch = true;
+			}						
+		}
+	}
+
 	private DatabaseBranch sortBranch(DatabaseBranch clientBranch) {
 		List<DatabaseVersionHeader> branchCopy = new ArrayList<DatabaseVersionHeader>(clientBranch.getAll());
 		Collections.sort(branchCopy, new DatabaseVersionHeaderComparator());
@@ -510,27 +495,5 @@ public class DatabaseReconciliator {
 		sortedBranch.addAll(branchCopy);
 		
 		return sortedBranch;
-	}
-
-	private class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
-		@Override
-		public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
-			VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
-
-			if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
-				throw new RuntimeException("There must not be a conflict within a branch. VC1: " + o1 + " - VC2: "
-						+ o2);
-			}
-
-			if (vectorClockComparison == VectorClockComparison.EQUAL) {
-				return 0;
-			}
-			else if (vectorClockComparison == VectorClockComparison.SMALLER) {
-				return -1;
-			}
-			else {
-				return 1;
-			}
-		}
 	}
 }

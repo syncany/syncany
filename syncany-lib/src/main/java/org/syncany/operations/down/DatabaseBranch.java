@@ -80,15 +80,7 @@ public class DatabaseBranch {
 	
 	public DatabaseVersionHeader getLast() {
 		return branch.get(branch.size()-1);
-	}	
-	
-	public DatabaseBranchIterator iteratorLast() {
-        return new DatabaseBranchIterator(branch, branch.size()-1);
-    }
-	
-	public DatabaseBranchIterator iteratorFirst() {
-        return new DatabaseBranchIterator(branch, 0);
-    }	
+	}		
 	
 	@Override
 	public String toString() {
