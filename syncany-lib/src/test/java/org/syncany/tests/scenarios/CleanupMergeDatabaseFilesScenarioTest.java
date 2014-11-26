@@ -547,4 +547,40 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientD.deleteTestData();
 		clientE.deleteTestData();
 	}
+	
+
+	@Test
+	public void testDeleteFileAndCleanup() throws Exception {
+		// Test if a deleted file is deleted remotely even after a cleanup
+
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
+		cleanupOptionsKeepOneForce.setMergeRemoteFiles(true);
+		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
+		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
+		cleanupOptionsKeepOneForce.setForce(true);
+
+		// Create a couple of files, then delete them and do a cleanup
+		
+		clientA.createNewFile("fileA1");
+		clientA.createNewFile("fileA2");
+		clientA.upWithForceChecksum();
+		
+		clientB.down();
+		clientB.deleteFile("fileA1");
+		clientB.upWithForceChecksum();
+		clientB.cleanup(cleanupOptionsKeepOneForce); // <<< This accidentally(?) deletes file histories marked DELETED
+		
+		clientA.down(); 		
+		assertFalse("Deleted file still exists.", clientA.getLocalFile("fileA1").exists()); 
+		
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
 }
