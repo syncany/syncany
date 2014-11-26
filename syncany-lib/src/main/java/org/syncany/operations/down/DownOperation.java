@@ -162,12 +162,14 @@ public class DownOperation extends AbstractTransferOperation {
 			DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
 			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allStitchedBranches);
 
-			purgeConflictingLocalBranch(localBranch, winnersBranch);
-			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
-
-			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
-			removeNonMuddyMultiChunks();
-
+			if (winnersBranch != null) {
+				purgeConflictingLocalBranch(localBranch, winnersBranch);
+				applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
+	
+				persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
+				removeNonMuddyMultiChunks();
+			}
+			
 			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 			localDatabase.commit();
 		}
@@ -324,6 +326,7 @@ public class DownOperation extends AbstractTransferOperation {
 	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
 		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");
 		logger.log(Level.FINE, "Local branch: " + localBranch);
+		
 		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
 	}
 
@@ -346,6 +349,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 */
 	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
 			throws Exception {
+		
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
 		return databaseReconciliator.findWinnerBranch(allStitchedBranches);
 	}
@@ -470,13 +474,10 @@ public class DownOperation extends AbstractTransferOperation {
 		String rangeClientName = null;
 		VectorClock rangeVersionFrom = null;
 		VectorClock rangeVersionTo = null;
-		logger.log(Level.FINE, "DatabaseVersionLocations: " + databaseVersionLocations);
-		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
 
+		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
 			DatabaseVersionHeader currentDatabaseVersionHeader = winnersApplyBranchList.get(i);
 			DatabaseVersionHeader nextDatabaseVersionHeader = (i + 1 < winnersApplyBranchList.size()) ? winnersApplyBranchList.get(i + 1) : null;
-
-			logger.log(Level.FINE, "current header: " + currentDatabaseVersionHeader + " --- next header:    " + nextDatabaseVersionHeader);
 
 			// First of range for this client
 			if (rangeClientName == null) {
@@ -507,19 +508,18 @@ public class DownOperation extends AbstractTransferOperation {
 			boolean rangeEnds = lastDatabaseVersionHeader || !nextDatabaseVersionInSameFile;
 
 			if (rangeEnds) {
-				logger.log(Level.FINE, "load " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
-
 				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
 						filterType);
 				rangeClientName = null;
 			}
-			else {
-				logger.log(Level.FINE, "noload " + rangeVersionFrom + " ... " + rangeVersionTo + " from " + databaseVersionFile);
-			}
 		}
 
-		for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
-			logger.log(Level.FINE, "WINNER " + dbv.getHeader());
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "Winner Database Branch:");
+
+			for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
+				logger.log(Level.FINE, "- " + dbv.getHeader());
+			}			
 		}
 
 		return winnerBranchDatabase;

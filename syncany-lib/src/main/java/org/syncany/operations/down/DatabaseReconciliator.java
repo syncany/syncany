@@ -112,18 +112,23 @@ public class DatabaseReconciliator {
 		
 		Entry<String, DatabaseBranch> winnersNameAndBranch = findWinnersNameAndBranch(allStitchedBranches);
 
-		String winnersName = winnersNameAndBranch.getKey();
-		DatabaseBranch winnersBranch = allStitchedBranches.getBranch(winnersName);
-
-		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, "- Winner is " + winnersName + " with branch: ");
-
-			for (DatabaseVersionHeader databaseVersionHeader : winnersBranch.getAll()) {
-				logger.log(Level.INFO, "  + " + databaseVersionHeader);
-			}			
+		if (winnersNameAndBranch != null) {
+			String winnersName = winnersNameAndBranch.getKey();
+			DatabaseBranch winnersBranch = allStitchedBranches.getBranch(winnersName);
+	
+			if (logger.isLoggable(Level.INFO)) {
+				logger.log(Level.INFO, "- Winner is " + winnersName + " with branch: ");
+	
+				for (DatabaseVersionHeader databaseVersionHeader : winnersBranch.getAll()) {
+					logger.log(Level.INFO, "  + " + databaseVersionHeader);
+				}			
+			}
+	
+			return new AbstractMap.SimpleEntry<String, DatabaseBranch>(winnersName, winnersBranch);
 		}
-
-		return new AbstractMap.SimpleEntry<String, DatabaseBranch>(winnersName, winnersBranch);
+		else {
+			return null;
+		}
 	}
 	
 	public DatabaseBranch findLosersPruneBranch(DatabaseBranch losersBranch, DatabaseBranch winnersBranch) {
