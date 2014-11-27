@@ -31,7 +31,7 @@ import java.util.Date;
  */
 public class DatabaseVersionHeader {
 	public enum DatabaseVersionType {
-		DEFAULT, PURGE
+		DEFAULT
 	}
 	
 	private DatabaseVersionType type;

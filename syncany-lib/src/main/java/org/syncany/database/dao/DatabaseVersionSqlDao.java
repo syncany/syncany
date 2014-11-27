@@ -374,9 +374,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		if (databaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
 			return createDatabaseVersionFromRowDefault(databaseVersionHeader, resultSet);
 		}
-		else if (databaseVersionHeader.getType() == DatabaseVersionType.PURGE) {
-			return createDatabaseVersionFromRowPurge(databaseVersionHeader, resultSet);
-		}
 		else {
 			throw new RuntimeException("Unexpected database version type: " + databaseVersionHeader.getType());
 		}
@@ -409,19 +406,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 
 		return databaseVersion;
-	}
-
-	private DatabaseVersion createDatabaseVersionFromRowPurge(DatabaseVersionHeader databaseVersionHeader, ResultSet resultSet) {
-		DatabaseVersion purgeDatabaseVersion = new DatabaseVersion();
-		purgeDatabaseVersion.setHeader(databaseVersionHeader);
-
-		List<PartialFileHistory> purgeFileHistories = fileHistoryDao.getPurgeFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
-
-		for (PartialFileHistory fileHistory : purgeFileHistories) {
-			purgeDatabaseVersion.addFileHistory(fileHistory);
-		}
-
-		return purgeDatabaseVersion;
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {

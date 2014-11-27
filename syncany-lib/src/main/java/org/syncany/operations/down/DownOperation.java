@@ -151,7 +151,9 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
-		if (cleanupOccurred()) {
+		boolean cleanupOccurred = cleanupOccurred();
+		
+		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
 			
 			localDatabase.deleteAll();
