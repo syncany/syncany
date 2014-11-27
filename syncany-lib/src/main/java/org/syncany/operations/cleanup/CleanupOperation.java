@@ -145,10 +145,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 			finishOperation();
 			return new CleanupOperationResult(preconditionResult);
 		}
-
+		
+		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
-		// Now do the actual work!
 
 		if (options.isRemoveOldVersions()) {
 			removeOldVersions();
@@ -229,14 +229,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-		remoteDeleteUnusedMultiChunks(unusedMultiChunks);
+		removeDeleteUnusedMultiChunks(unusedMultiChunks);
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
-	private void remoteDeleteUnusedMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
+	private void removeDeleteUnusedMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
 		logger.log(Level.INFO, "- Deleting remote multichunks ...");
 
 		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks.values()) {
@@ -289,7 +289,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			writeMergeFile(client, clientDatabaseFiles.get(0).getClientVersion(), allMergedDatabaseFiles);
 
 		}
+		
 		rememberDatabases(allMergedDatabaseFiles);
+		
 		// 3. Prepare transaction
 
 		// Queue old databases for deletion
@@ -365,6 +367,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			remoteTransaction.commit();
 			localDatabase.commit();
+			
 			CleanupTO cleanupTO = getCleanupTO();
 			cleanupTO.setLastTimeCleaned(System.currentTimeMillis() / 1000);
 			cleanupTO.setCleanupNumber(cleanupNumber);
@@ -391,9 +394,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
 			String clientName = entry.getValue().getClientName();
+			
 			if (allDatabaseRemoteFilesMap.get(clientName) == null) {
 				allDatabaseRemoteFilesMap.put(clientName, new ArrayList<DatabaseRemoteFile>());
 			}
+			
 			allDatabaseRemoteFilesMap.get(clientName).add(entry.getValue());
 		}
 
@@ -402,12 +407,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private CleanupTO getCleanupTO() throws Exception {
 		CleanupTO cleanupTO;
+		
 		if (config.getCleanupFile().exists()) {
 			cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
 		}
 		else {
 			cleanupTO = new CleanupTO();
 		}
+		
 		return cleanupTO;
 	}
 
@@ -421,14 +428,16 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		long cleanupNumber = lastCleanupNumber(cleanupFiles);
 
+		// Schedule any existing cleanup files for deletion
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
-			// Schedule any existing cleanup files for deletion
 			remoteTransaction.delete(cleanupRemoteFile);
 		}
 
 		// Upload a new cleanup file that indicates changes
-		File cleanupFile = config.getCache().createTempFile("cleanup");
-		remoteTransaction.upload(cleanupFile, new CleanupRemoteFile(cleanupNumber + 1));
-		return cleanupNumber + 1;
+		File newCleanupFile = config.getCache().createTempFile("cleanup");
+		long newCleanupNumber = cleanupNumber + 1;
+		
+		remoteTransaction.upload(newCleanupFile, new CleanupRemoteFile(newCleanupNumber));
+		return newCleanupNumber;
 	}
 }
