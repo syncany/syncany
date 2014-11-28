@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
 import org.syncany.database.MemoryDatabase;
@@ -44,9 +44,6 @@ import org.syncany.operations.down.actions.NewFileSystemAction;
 import org.syncany.operations.down.actions.NewSymlinkFileSystemAction;
 import org.syncany.operations.down.actions.RenameFileSystemAction;
 import org.syncany.operations.down.actions.SetAttributesFileSystemAction;
-
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 
 
 /**
@@ -145,16 +142,17 @@ public class FileSystemActionReconciliator {
 	
 	public List<FileSystemAction> determineFileSystemActions(MemoryDatabase winnersDatabase) throws Exception {
 		List<PartialFileHistory> localFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
-		return determineFileSystemActions(winnersDatabase, localFileHistoriesWithLastVersion);
+		return determineFileSystemActions(winnersDatabase, false, localFileHistoriesWithLastVersion);
 	}
-	
-	public List<FileSystemAction> determineFileSystemActions(MemoryDatabase winnersDatabase, List<PartialFileHistory> localFileHistoriesWithLastVersion) throws Exception {
+
+	public List<FileSystemAction> determineFileSystemActions(MemoryDatabase winnersDatabase, boolean cleanupOccurred,
+			List<PartialFileHistory> localFileHistoriesWithLastVersion) throws Exception {
+		
 		List<FileSystemAction> fileSystemActions = new ArrayList<FileSystemAction>();
 		
 		// Load file history cache
 		logger.log(Level.INFO, "- Loading current file tree...");						
 		Map<FileHistoryId, FileVersion> localFileHistoryIdCache = fillFileHistoryIdCache(localFileHistoriesWithLastVersion);
-		Map<FileHistoryId, FileVersion> winnerFileHistoryIdCache = fillFileHistoryIdCache(winnersDatabase.getFileHistories());
 		
 		logger.log(Level.INFO, "- Determine filesystem actions ...");
 		
@@ -198,19 +196,22 @@ public class FileSystemActionReconciliator {
 		// Find file histories that are in the local database and not in the
 		// winner's database. They will be assumed to be deleted.		
 		
-		logger.log(Level.INFO, "- Determine filesystem actions (for deleted histories in winner's branch)...");
-
-		for (PartialFileHistory localFileHistoryWithLastVersion : localFileHistoriesWithLastVersion) {
-			boolean localFileHistoryInWinnersDatabase = winnerFileHistoryIdCache.get(localFileHistoryWithLastVersion.getFileHistoryId()) != null;
-			
-			// If the file history is also present in the winner's database, it
-			// has already been processed above. So we'll ignore it here.
-			
-			if (!localFileHistoryInWinnersDatabase) {
-				FileVersion localLastVersion = localFileHistoryWithLastVersion.getLastVersion();
-				File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir(), localLastVersion.getPath()) : null;
-
-				determineActionFileHistoryNotInWinnerBranch(localLastVersion, localLastFile, fileSystemActions);
+		if (cleanupOccurred) {
+			logger.log(Level.INFO, "- Determine filesystem actions (for deleted histories in winner's branch)...");
+			Map<FileHistoryId, FileVersion> winnerFileHistoryIdCache = fillFileHistoryIdCache(winnersDatabase.getFileHistories());
+	
+			for (PartialFileHistory localFileHistoryWithLastVersion : localFileHistoriesWithLastVersion) {
+				boolean localFileHistoryInWinnersDatabase = winnerFileHistoryIdCache.get(localFileHistoryWithLastVersion.getFileHistoryId()) != null;
+				
+				// If the file history is also present in the winner's database, it
+				// has already been processed above. So we'll ignore it here.
+				
+				if (!localFileHistoryInWinnersDatabase) {
+					FileVersion localLastVersion = localFileHistoryWithLastVersion.getLastVersion();
+					File localLastFile = (localLastVersion != null) ? new File(config.getLocalDir(), localLastVersion.getPath()) : null;
+	
+					determineActionFileHistoryNotInWinnerBranch(localLastVersion, localLastFile, fileSystemActions);
+				}
 			}
 		}
 			
@@ -376,31 +377,14 @@ public class FileSystemActionReconciliator {
 		
 		// Local version found in local database
 		else {
-			if (localLastFile.exists())
-			
-			FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, null, null);
+			FileSystemAction action = new DeleteFileSystemAction(config, null, localLastVersion, null);
 			fileSystemActions.add(action);
 			
 			logger.log(Level.INFO, "     -> (17) Local file exists, but not in winner branch -> File was deleted remotely: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = (none)");					
 			logger.log(Level.INFO, "     -> "+action);	
 			
-			changeSet.getDeletedFiles().add(winningLastVersion.getPath());
-			
-			FileVersionComparison localFileToVersionComparison = fileVersionComparator.compare(localLastVersion, localLastFile, true);
-			
-			// Local file on disk as expected
-			if (localFileToVersionComparison.equals()) { 
-				determineActionWithLocalVersionAndLocalFileAsExpected(winningLastVersion, winningLastFile, localLastVersion, localLastFile,
-						winnersDatabase, fileSystemActions);
-			}
-			
-			// Local file NOT what was expected
-			else { 
-				determineActionWithLocalVersionAndLocalFileDiffers(winningLastVersion, winningLastFile, localLastVersion, localLastFile,
-						winnersDatabase, fileSystemActions, localFileToVersionComparison);			
-			}
-		}		
-		
+			changeSet.getDeletedFiles().add(localLastVersion.getPath());			
+		}				
 	}
 
 	private Map<FileHistoryId, FileVersion> fillFileHistoryIdCache(Collection<PartialFileHistory> fileHistoriesWithLastVersion) {

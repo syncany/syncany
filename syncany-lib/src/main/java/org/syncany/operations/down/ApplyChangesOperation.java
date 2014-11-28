@@ -89,7 +89,7 @@ public class ApplyChangesOperation extends Operation {
 		List<FileSystemAction> actions;
 		
 		if (cleanupOccurred) {
-			actions = actionReconciliator.determineFileSystemActions(winnersDatabase, preDeleteFileHistoriesWithLastVersion);
+			actions = actionReconciliator.determineFileSystemActions(winnersDatabase, true, preDeleteFileHistoriesWithLastVersion);
 		}
 		else {
 			actions = actionReconciliator.determineFileSystemActions(winnersDatabase);

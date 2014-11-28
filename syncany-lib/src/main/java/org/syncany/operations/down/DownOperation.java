@@ -156,16 +156,20 @@ public class DownOperation extends AbstractTransferOperation {
 		List<PartialFileHistory> fileHistoriesWithLastVersion = null;
 		
 		if (cleanupOccurred) {
-			localBranch = new DatabaseBranch();
+			logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
 			
+			// Capture file histories
 			fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
 			
 			for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
 				logger.log(Level.INFO, " - XXXXX: " + fileHistory);
 			}
 			
+			// Get rid of local database
 			localDatabase.deleteAll();
 			localDatabase.commit();
+
+			localBranch = new DatabaseBranch();
 		}
 		
 		try {
