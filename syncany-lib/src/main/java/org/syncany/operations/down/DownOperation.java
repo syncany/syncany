@@ -39,6 +39,7 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
@@ -152,9 +153,16 @@ public class DownOperation extends AbstractTransferOperation {
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
 		boolean cleanupOccurred = cleanupOccurred();
+		List<PartialFileHistory> fileHistoriesWithLastVersion = null;
 		
 		if (cleanupOccurred) {
 			localBranch = new DatabaseBranch();
+			
+			fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
+			
+			for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+				logger.log(Level.INFO, " - XXXXX: " + fileHistory);
+			}
 			
 			localDatabase.deleteAll();
 			localDatabase.commit();
@@ -166,7 +174,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 			if (winnersBranch != null) {
 				purgeConflictingLocalBranch(localBranch, winnersBranch);
-				applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations);
+				applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, fileHistoriesWithLastVersion);
 	
 				persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
 				removeNonMuddyMultiChunks();
@@ -399,9 +407,11 @@ public class DownOperation extends AbstractTransferOperation {
 	 * Applies the winner's branch locally in the local database as well as on the local file system. To
 	 * do so, it reads the winner's database, downloads newly required multichunks, determines file system actions
 	 * and applies these actions locally.
+	 * @param cleanupOccurred 
+	 * @param fileHistoriesWithLastVersion 
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			Map<DatabaseVersionHeader, File> databaseVersionLocations) throws Exception {
+			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred, List<PartialFileHistory> fileHistoriesWithLastVersion) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
@@ -415,7 +425,7 @@ public class DownOperation extends AbstractTransferOperation {
 			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations, DatabaseVersionType.DEFAULT);
 
 			if (options.isApplyChanges()) {
-				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result).execute();
+				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred, fileHistoriesWithLastVersion).execute();
 			}
 			else {
 				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
