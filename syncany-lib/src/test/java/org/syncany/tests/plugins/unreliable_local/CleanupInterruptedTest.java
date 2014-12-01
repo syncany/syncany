@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Arrays;
 
 import org.junit.BeforeClass;
@@ -98,7 +99,11 @@ public class CleanupInterruptedTest {
 		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
@@ -171,7 +176,11 @@ public class CleanupInterruptedTest {
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
@@ -212,7 +221,11 @@ public class CleanupInterruptedTest {
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);

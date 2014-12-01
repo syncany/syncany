@@ -97,28 +97,17 @@ public class LsRemoteOperation extends Operation {
 
 		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 
-		// No local database yet
-		if (lastLocalDatabaseVersionHeader == null) {
-			logger.log(Level.INFO, "- No local database versions yet. Assuming all {0} remote database files are unknown. ",
-					remoteDatabaseFiles.size());
-
-			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
-		}
-
-		// At least one local database version exists
-		else {
-			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
-				// This does NOT filter 'lock' files!
-				if (knownDatabases.contains(remoteDatabaseFile)) {
-					logger.log(Level.INFO, "- Remote database {0} is already known (in local database). Ignoring.", remoteDatabaseFile.getName());
-				}
-				else {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-					unknownRemoteDatabases.add(remoteDatabaseFile);
-				}
+		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
+			// This does NOT filter 'lock' files!
+			if (knownDatabases.contains(remoteDatabaseFile)) {
+				logger.log(Level.INFO, "- Remote database {0} is already known (in local database). Ignoring.", remoteDatabaseFile.getName());
 			}
-
-			return unknownRemoteDatabases;
+			else {
+				logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
+				unknownRemoteDatabases.add(remoteDatabaseFile);
+			}
 		}
+
+		return unknownRemoteDatabases;
 	}
 }
