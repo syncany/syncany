@@ -125,7 +125,11 @@ public class CleanupOperationTest {
 
 		// Test the repo
 		assertEquals(5, new File(testConnection.getPath() + "/multichunks/").list().length);
-		assertEquals(1, new File(testConnection.getPath() + "/databases/").list().length);
+		assertEquals(1, new File(testConnection.getPath() + "/databases/").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 
 		// B: Sync down cleanup
 		clientB.down();
@@ -596,7 +600,11 @@ public class CleanupOperationTest {
 		// Retry
 		clientA.cleanup(options);
 
-		assertEquals(1, repoDatabasesDir.listFiles().length);
+		assertEquals(1, repoDatabasesDir.listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 		assertEquals(5, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
 		assertEquals(0, repoDir.list(new FilenameFilter() {
