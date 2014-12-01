@@ -556,6 +556,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientA.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientA.getLocalFiles());
 
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionA));
+		
 		/*
 		 * Case 2:
 		 * 
