@@ -20,6 +20,7 @@ package org.syncany.operations.down;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -176,13 +177,11 @@ public class DownOperation extends AbstractTransferOperation {
 			DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
 			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allStitchedBranches);
 
-			if (winnersBranch != null) {
-				purgeConflictingLocalBranch(localBranch, winnersBranch);
-				applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, fileHistoriesWithLastVersion);
-	
-				persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
-				removeNonMuddyMultiChunks();
-			}
+			purgeConflictingLocalBranch(localBranch, winnersBranch);
+			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, fileHistoriesWithLastVersion);
+
+			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
+			removeNonMuddyMultiChunks();
 			
 			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 			localDatabase.commit();
@@ -365,7 +364,14 @@ public class DownOperation extends AbstractTransferOperation {
 			throws Exception {
 		
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
-		return databaseReconciliator.findWinnerBranch(allStitchedBranches);
+		Entry<String, DatabaseBranch> winnersBranch = databaseReconciliator.findWinnerBranch(allStitchedBranches);
+		
+		if (winnersBranch != null) {
+			return winnersBranch;
+		}
+		else {
+			return new AbstractMap.SimpleEntry<String, DatabaseBranch>("", new DatabaseBranch()); 
+		}
 	}
 
 	/**
@@ -418,9 +424,13 @@ public class DownOperation extends AbstractTransferOperation {
 			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred, List<PartialFileHistory> fileHistoriesWithLastVersion) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
+		
+		logger.log(Level.INFO, "- Cleanup occurred: " + cleanupOccurred);
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
 
-		if (winnersApplyBranch.size() == 0) {
+		boolean remoteChangesOccurred = winnersApplyBranch.size() > 0 || cleanupOccurred;
+		
+		if (!remoteChangesOccurred) {
 			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
 		}

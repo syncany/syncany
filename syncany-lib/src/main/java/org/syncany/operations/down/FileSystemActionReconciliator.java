@@ -377,7 +377,7 @@ public class FileSystemActionReconciliator {
 		
 		// Local version found in local database
 		else {
-			FileSystemAction action = new DeleteFileSystemAction(config, null, localLastVersion, null);
+			FileSystemAction action = new DeleteFileSystemAction(config, localLastVersion, localLastVersion, null);
 			fileSystemActions.add(action);
 			
 			logger.log(Level.INFO, "     -> (17) Local file exists, but not in winner branch -> File was deleted remotely: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = (none)");					
