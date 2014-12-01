@@ -221,6 +221,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 			if (unknownRemoteDatabases.size() > 0) {
 				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
+				logger.log(Level.FINE, "Unknown remote databases are: " + unknownRemoteDatabases);
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
 				return false;
