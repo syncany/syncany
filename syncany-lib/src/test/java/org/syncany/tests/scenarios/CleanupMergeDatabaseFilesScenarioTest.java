@@ -576,6 +576,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientE.getLocalFiles());
 		
+		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientE.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
+
 		// After a successful down, create a new database version (continue numbering!)
 				
 		clientA.createNewFile("fileA");
@@ -588,8 +591,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientE.down();
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientA.getLocalFiles(), clientE.getLocalFiles());
-		
-		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientE.getDatabaseFile());
 		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
 
 		clientE.changeFile("fileA");
