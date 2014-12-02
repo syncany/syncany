@@ -22,8 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileNotExists;
-import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 
@@ -36,7 +36,6 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
@@ -548,14 +547,17 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		
 		clientA.down();		// Existing client  << This created a NullPointerException in #266
 		assertFalse("File 'fileA' should have been deleted.", clientA.getLocalFile("fileA").exists());
-		assertFalse("File 'fileB' should not have bene created.", clientA.getLocalFile("fileB").exists());
-		assertFalse("File 'fileC' should not have bene created.", clientA.getLocalFile("fileC").exists());
+		assertFalse("File 'fileB' should not have been created.", clientA.getLocalFile("fileB").exists());
+		assertFalse("File 'fileC' should not have been created.", clientA.getLocalFile("fileC").exists());
 		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());		
 		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());		
 		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());				
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientA.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientA.getLocalFiles());
 
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionA));
+		
 		/*
 		 * Case 2:
 		 * 
@@ -565,9 +567,9 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		 */
 		
 		clientE.down();		// Empty/new client << This created a NullPointerException 
-		assertFalse("File 'fileA' should not have bene created.", clientE.getLocalFile("fileA").exists());
-		assertFalse("File 'fileB' should not have bene created.", clientE.getLocalFile("fileB").exists());
-		assertFalse("File 'fileC' should not have bene created.", clientE.getLocalFile("fileC").exists());
+		assertFalse("File 'fileA' should not have been created.", clientE.getLocalFile("fileA").exists());
+		assertFalse("File 'fileB' should not have been created.", clientE.getLocalFile("fileB").exists());
+		assertFalse("File 'fileC' should not have been created.", clientE.getLocalFile("fileC").exists());
 		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());		
 		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());		
 		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());				
@@ -578,9 +580,16 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 				
 		clientA.createNewFile("fileA");
 		UpOperationResult upResult = clientA.upWithForceChecksum();
-		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
+		assertEquals("(A3,B2,C2,D2)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionA));				
 		
-		//clientE.down();
+		clientE.down();
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientE.getDatabaseFile());
+		assertFileListEquals(clientA.getLocalFiles(), clientE.getLocalFiles());
+		
+		clientD.down();
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientD.getDatabaseFile());
+		assertFileListEquals(clientA.getLocalFiles(), clientD.getLocalFiles());		
 		
 		fail("Check numbering.");
 		

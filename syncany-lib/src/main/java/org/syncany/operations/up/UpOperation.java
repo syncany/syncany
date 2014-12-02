@@ -394,7 +394,6 @@ public class UpOperation extends AbstractTransferOperation {
 		Long newLocalValue = null;
 
 		if (lastDirtyLocalValue != null) {
-			// TODO [medium] Does this lead to problems? C-1 does not exist! Possible problems with DatabaseReconciliator?
 			newLocalValue = lastDirtyLocalValue + 1;
 		}
 		else {

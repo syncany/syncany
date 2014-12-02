@@ -156,6 +156,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		boolean noBlockingTransactionsExist = true;
+		
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
