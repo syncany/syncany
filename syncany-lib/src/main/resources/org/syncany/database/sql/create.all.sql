@@ -106,6 +106,11 @@ CREATE CACHED TABLE known_databases (
   UNIQUE (database_name)
 );
 
+CREATE CACHED TABLE general_settings (
+  key varchar(255) NOT NULL,
+  value varchar(255) NOT NULL,
+  PRIMARY KEY (key)
+);
 
 -- Non-primary indices                              
 

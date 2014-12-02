@@ -30,11 +30,9 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.core.Persister;
 import org.syncany.chunk.Chunk;
 import org.syncany.chunk.MultiChunk;
 import org.syncany.config.Config;
-import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
@@ -274,7 +272,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private boolean wasCleanedRecently() throws Exception {
-		return getCleanupTO().getLastTimeCleaned() + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
+		Long lastCleanupTime = localDatabase.getCleanupTime();
+		
+		if (lastCleanupTime == null) {
+			return false;
+		}
+		else {
+			return lastCleanupTime + options.getMinSecondsBetweenCleanups() > System.currentTimeMillis() / 1000;
+		}
 	}
 
 	private void mergeRemoteFiles() throws Exception {
@@ -379,18 +384,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void finishMerging() throws Exception {
-		long cleanupNumber = updateCleanupFileInTransaction();
+		updateCleanupFileInTransaction();
+		
 		try {
 			logger.log(Level.INFO, "Cleanup: COMMITTING TX ...");
 
 			remoteTransaction.commit();
 			localDatabase.commit();
-
-			CleanupTO cleanupTO = getCleanupTO();
-			cleanupTO.setLastTimeCleaned(System.currentTimeMillis() / 1000);
-			cleanupTO.setCleanupNumber(cleanupNumber);
-			setCleanupTO(cleanupTO);
-
 		}
 		catch (StorageException e) {
 			logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
@@ -423,28 +423,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return allDatabaseRemoteFilesMap;
 	}
 
-	private CleanupTO getCleanupTO() throws Exception {
-		CleanupTO cleanupTO;
-
-		if (config.getCleanupFile().exists()) {
-			cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
-		}
-		else {
-			cleanupTO = new CleanupTO();
-		}
-
-		return cleanupTO;
-	}
-
-	private void setCleanupTO(CleanupTO cleanupTO) throws Exception {
-		(new Persister()).write(cleanupTO, config.getCleanupFile());
-	}
-
-	private long updateCleanupFileInTransaction() throws StorageException, IOException {
+	private void updateCleanupFileInTransaction() throws StorageException, IOException {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 
-		long cleanupNumber = getLastCleanupNumber(cleanupFiles);
+		long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(cleanupFiles);
 
 		// Schedule any existing cleanup files for deletion
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
@@ -453,9 +436,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Upload a new cleanup file that indicates changes
 		File newCleanupFile = config.getCache().createTempFile("cleanup");
-		long newCleanupNumber = cleanupNumber + 1;
+		long newCleanupNumber = lastRemoteCleanupNumber + 1;
 
 		remoteTransaction.upload(newCleanupFile, new CleanupRemoteFile(newCleanupNumber));
-		return newCleanupNumber;
+		
+		// Set cleanup number locally
+		localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
+		localDatabase.writeCleanupNumber(newCleanupNumber);
 	}
 }

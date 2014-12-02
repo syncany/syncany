@@ -31,10 +31,8 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MemoryDatabase;
@@ -101,7 +99,7 @@ public class DownOperation extends AbstractTransferOperation {
 	private SqlDatabase localDatabase;
 	private DatabaseReconciliator databaseReconciliator;
 	private DatabaseXmlSerializer databaseSerializer;
-
+	
 	public DownOperation(Config config) {
 		this(config, new DownOperationOptions());
 	}
@@ -152,19 +150,27 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
-		boolean cleanupOccurred = cleanupOccurred();
-		List<PartialFileHistory> fileHistoriesWithLastVersion = null;
+		Map<String, CleanupRemoteFile> remoteCleanupFiles = getRemoteCleanupFiles();
+		boolean cleanupOccurred = cleanupOccurred(remoteCleanupFiles);
+		
+		List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion = null;
 		
 		if (cleanupOccurred) {
 			logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
 			
 			// Capture file histories
-			fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();			
+			preDeleteFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();			
 			
 			// Get rid of local database
 			localDatabase.deleteAll();
 			localDatabase.commit();
 
+			// Set last cleanup values
+			long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
+			
+			localDatabase.writeCleanupNumber(lastRemoteCleanupNumber);
+			localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
+			
 			localBranch = new DatabaseBranch();
 		}
 		
@@ -173,7 +179,7 @@ public class DownOperation extends AbstractTransferOperation {
 			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allStitchedBranches);
 
 			purgeConflictingLocalBranch(localBranch, winnersBranch);
-			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, fileHistoriesWithLastVersion);
+			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, preDeleteFileHistoriesWithLastVersion);
 
 			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
 			removeNonMuddyMultiChunks();
@@ -413,10 +419,10 @@ public class DownOperation extends AbstractTransferOperation {
 	 * do so, it reads the winner's database, downloads newly required multichunks, determines file system actions
 	 * and applies these actions locally.
 	 * @param cleanupOccurred 
-	 * @param fileHistoriesWithLastVersion 
+	 * @param preDeleteFileHistoriesWithLastVersion 
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred, List<PartialFileHistory> fileHistoriesWithLastVersion) throws Exception {
+			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred, List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
 		
@@ -434,7 +440,7 @@ public class DownOperation extends AbstractTransferOperation {
 			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations);
 
 			if (options.isApplyChanges()) {
-				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred, fileHistoriesWithLastVersion).execute();
+				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred, preDeleteFileHistoriesWithLastVersion).execute();
 			}
 			else {
 				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
@@ -642,6 +648,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
 			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
+		
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = new HashMap<DatabaseVersionHeader, File>();
 
 		for (File databaseFile : databaseRemoteFilesInCache.keySet()) {
@@ -650,21 +657,23 @@ public class DownOperation extends AbstractTransferOperation {
 				databaseVersionLocations.put(databaseVersion.getHeader(), databaseFile);
 			}
 		}
+		
 		return databaseVersionLocations;
 	}
 
-	private boolean cleanupOccurred() throws Exception {
-		// Find all existing cleanup files
-		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
-
-		long cleanupNumber = getLastCleanupNumber(cleanupFiles);
-
-		if (config.getCleanupFile().exists()) {
-			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
-			return cleanupNumber > cleanupTO.getCleanupNumber();
+	private Map<String, CleanupRemoteFile> getRemoteCleanupFiles() throws StorageException {
+		return transferManager.list(CleanupRemoteFile.class);
+	}
+	
+	private boolean cleanupOccurred(Map<String, CleanupRemoteFile> remoteCleanupFiles) throws Exception {
+		Long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
+		Long lastLocalCleanupNumber = localDatabase.getCleanupNumber();
+		
+		if (lastLocalCleanupNumber != null) {			
+			return lastRemoteCleanupNumber > lastLocalCleanupNumber;
 		}
 		else {
-			return cleanupNumber > 0;
+			return lastRemoteCleanupNumber > 0;
 		}
 	}
 }

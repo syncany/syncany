@@ -123,6 +123,22 @@ public class SqlDatabase {
 		return applicationDao.getHighestKnownDatabaseFilenameNumbers();
 	}
 
+	public Long getCleanupNumber() {
+		return applicationDao.getCleanupNumber();
+	}
+	
+	public Long getCleanupTime() {
+		return applicationDao.getCleanupTime();
+	}
+	
+	public void writeCleanupNumber(long cleanupNumber) {
+		applicationDao.writeCleanupNumber(cleanupNumber);		
+	}
+	
+	public void writeCleanupTime(long cleanupTime) {
+		applicationDao.writeCleanupTime(cleanupTime);		
+	}
+
 	public void deleteAll() {
 		applicationDao.deleteAll();
 	}

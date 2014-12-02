@@ -172,7 +172,7 @@ public abstract class AbstractTransferOperation extends Operation {
 		return clientVersion;
 	}
 
-	protected long getLastCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
+	protected long getLastRemoteCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
 		long cleanupNumber = 0;
 		
 		// Find the number of the last cleanup

@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.database.VectorClock;
@@ -141,6 +142,74 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 			catch (SQLException e) {
 				// Don't care
 			}
+		}
+	}
+	
+	public Long getCleanupNumber() {
+		return readSettingAsLong("cleanupNumber");
+	}
+	
+	public Long getCleanupTime() {
+		return readSettingAsLong("cleanupTime");
+	}
+	
+	public void writeCleanupNumber(long cleanupNumber) {
+		writeSetting("cleanupNumber", ""+cleanupNumber);		
+	}
+	
+	public void writeCleanupTime(long cleanupTime) {
+		writeSetting("cleanupTime", ""+cleanupTime);		
+	}
+	
+	public Long readSettingAsLong(String key) {
+		try {
+			String strValue = readSetting(key);
+			
+			if (strValue != null) {
+				return Long.parseLong(strValue);
+			}
+			else {
+				return null;
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public String readSetting(String key) {
+		try (PreparedStatement preparedStatement = getStatement("application.select.all.readGeneralSettings.sql")) {
+			preparedStatement.setString(1, key);
+			
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					String value = resultSet.getString("value");
+					logger.log(Level.INFO, "SQL (general_settings): Read " + key + "  = " + value);
+
+					return value;
+				}
+				else {
+					logger.log(Level.INFO, "SQL (general_settings): Read " + key + "  = (not set)");
+					return null;
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void writeSetting(String key, String value) {
+		logger.log(Level.INFO, "SQL (general_settings): Writing " + key + "  = " + value);
+
+		try (PreparedStatement preparedStatement = getStatement("application.insert.all.writeGeneralSettings.sql")) {
+			preparedStatement.setString(1, key);
+			preparedStatement.setString(2, value);
+	
+			preparedStatement.execute();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 }

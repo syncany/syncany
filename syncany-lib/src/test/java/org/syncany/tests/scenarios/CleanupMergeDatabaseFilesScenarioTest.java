@@ -20,7 +20,6 @@ package org.syncany.tests.scenarios;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.syncany.tests.util.TestAssertUtil.assertConflictingFileNotExists;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
@@ -596,7 +595,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientE.changeFile("fileA");
 		upResult = clientE.upWithForceChecksum();
 		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
-		assertEquals("(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionE));				
+		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionE));				
 		
 		// And with D ...
 		
@@ -604,6 +603,10 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertSqlDatabaseEquals(clientE.getDatabaseFile(), clientD.getDatabaseFile());
 		assertFileListEquals(clientE.getLocalFiles(), clientD.getLocalFiles());		
 				
+		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
+		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));				
+		
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
