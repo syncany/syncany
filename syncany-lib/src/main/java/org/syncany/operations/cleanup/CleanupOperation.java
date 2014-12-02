@@ -171,7 +171,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * updateResultCode checks if we have changed anything and sets the {@link CleanupResultCode} of the given result accordingly.
+	 * This method checks if we have changed anything and sets the
+	 * {@link CleanupResultCode} of the given result accordingly.
 	 * 
 	 * @param result The result so far in this operation.
 	 * @return result The original result, with the relevant {@link CleanupResultCode}
@@ -188,7 +189,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * checkPreconditions inspects the local database and remote repository to see if cleanup should be performed.
+	 * This method inspects the local database and remote repository to
+	 * see if cleanup should be performed.
 	 * 
 	 * @return {@link CleanupResultCode.OK} if nothing prevents continuing, another relevant code otherwise.
 	 */

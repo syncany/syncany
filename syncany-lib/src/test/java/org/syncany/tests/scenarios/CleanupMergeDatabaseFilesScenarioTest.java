@@ -590,9 +590,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientD.down();
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientD.getDatabaseFile());
 		assertFileListEquals(clientA.getLocalFiles(), clientD.getLocalFiles());		
-		
-		fail("Check numbering.");
-		
+				
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();

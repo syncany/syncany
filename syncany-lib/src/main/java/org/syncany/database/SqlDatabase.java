@@ -118,6 +118,10 @@ public class SqlDatabase {
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		return applicationDao.getKnownDatabases();
 	}
+	
+	public VectorClock getHighestKnownDatabaseFilenameNumbers() {
+		return applicationDao.getHighestKnownDatabaseFilenameNumbers();
+	}
 
 	public void deleteAll() {
 		applicationDao.deleteAll();

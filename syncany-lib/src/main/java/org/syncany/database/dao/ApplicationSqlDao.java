@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.syncany.database.VectorClock;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.util.SqlRunner;
 
@@ -54,12 +55,35 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getName());
+			preparedStatement.setString(2, databaseRemoteFile.getClientName());
+			preparedStatement.setInt(3, (int) databaseRemoteFile.getClientVersion());
+			
 			preparedStatement.addBatch();
 		}
 
 		preparedStatement.executeBatch();
 	}
 
+	public VectorClock getHighestKnownDatabaseFilenameNumbers() {
+		VectorClock highestKnownDatabaseFilenameNumbers = new VectorClock();
+
+		try (PreparedStatement preparedStatement = getStatement("application.select.all.getHighestKnownDatabaseFilenameNumbers.sql")) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					String clientName = resultSet.getString("client");
+					int fileNumber = resultSet.getInt("filenumber");
+					
+					highestKnownDatabaseFilenameNumbers.put(clientName, (long) fileNumber);
+				}
+				
+				return highestKnownDatabaseFilenameNumbers;
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	/**
 	 * Queries the database for already known {@link DatabaseRemoteFile}s and returns a
 	 * list of all of them. 
