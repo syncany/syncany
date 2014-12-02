@@ -583,13 +583,25 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
 		assertEquals("(A3,B2,C2,D2)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionA));				
 		
+		// Check if E applies everything correctly and check E's numbering
+		
 		clientE.down();
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientA.getLocalFiles(), clientE.getLocalFiles());
 		
+		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
+
+		clientE.changeFile("fileA");
+		upResult = clientE.upWithForceChecksum();
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
+		assertEquals("(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionE));				
+		
+		// And with D ...
+		
 		clientD.down();
-		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientD.getDatabaseFile());
-		assertFileListEquals(clientA.getLocalFiles(), clientD.getLocalFiles());		
+		assertSqlDatabaseEquals(clientE.getDatabaseFile(), clientD.getDatabaseFile());
+		assertFileListEquals(clientE.getLocalFiles(), clientD.getLocalFiles());		
 				
 		// Tear down
 		clientA.deleteTestData();
