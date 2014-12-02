@@ -151,7 +151,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	}
 
 	/**
-	 * getHighestDatabaseFileVersion is used to determine how a database file should be named when
+	 * This method is used to determine how a database file should be named when
 	 * it is about to be uploaded. It returns the number of the newest database file (which is the
 	 * highest number).
 	 * 
@@ -162,20 +162,24 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
+		
 		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
 			if (databaseRemoteFile.getClientName().equals(client)) {
 				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
 			}
 		}
+		
 		return clientVersion;
 	}
 
-	protected long lastCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
+	protected long getLastCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
 		long cleanupNumber = 0;
+		
 		// Find the number of the last cleanup
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
 			cleanupNumber = Math.max(cleanupNumber, cleanupRemoteFile.getCleanupNumber());
 		}
+		
 		return cleanupNumber;
 	}
 

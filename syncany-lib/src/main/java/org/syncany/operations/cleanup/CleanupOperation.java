@@ -129,6 +129,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// If there are any, rollback any existing/old transactions.
 		// If other clients have unfinished transactions with deletions, do not proceed.
 		boolean blockingTransactionExist = !transferManager.cleanTransactions();
+		
 		if (blockingTransactionExist) {
 			finishOperation();
 			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
@@ -426,7 +427,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 
-		long cleanupNumber = lastCleanupNumber(cleanupFiles);
+		long cleanupNumber = getLastCleanupNumber(cleanupFiles);
 
 		// Schedule any existing cleanup files for deletion
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {

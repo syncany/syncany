@@ -661,7 +661,7 @@ public class DownOperation extends AbstractTransferOperation {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 
-		long cleanupNumber = lastCleanupNumber(cleanupFiles);
+		long cleanupNumber = getLastCleanupNumber(cleanupFiles);
 
 		if (config.getCleanupFile().exists()) {
 			CleanupTO cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());

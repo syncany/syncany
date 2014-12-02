@@ -88,8 +88,8 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	 */
 	public void deleteAll() {
 		String fullResourcePath = "/org/syncany/database/sql/delete.all.sql";
+		
 		try (InputStream inputStream = ApplicationSqlDao.class.getResourceAsStream(fullResourcePath)) {
-
 			SqlRunner.runScript(connection, inputStream);
 		}
 		catch (Exception e) {
