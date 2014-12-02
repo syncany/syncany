@@ -10,13 +10,3 @@ DELETE FROM databaseversion_vectorclock;
 DELETE FROM chunk;
 DELETE FROM databaseversion;
 DELETE FROM known_databases;
-
-
-	
-	
-	
-	
-	
-	
-	
-	

@@ -173,11 +173,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
 
-			preparedStatement.setString(1, "DEFAULT"); // TODO [medium] To be removed with next breaking version
-			preparedStatement.setString(2, DatabaseVersionStatus.MASTER.toString());
-			preparedStatement.setTimestamp(3, new Timestamp(databaseVersionHeader.getDate().getTime()));
-			preparedStatement.setString(4, databaseVersionHeader.getClient());
-			preparedStatement.setString(5, databaseVersionHeader.getVectorClock().toString());
+			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
+			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
+			preparedStatement.setString(3, databaseVersionHeader.getClient());
+			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
 
 			int affectedRows = preparedStatement.executeUpdate();
 

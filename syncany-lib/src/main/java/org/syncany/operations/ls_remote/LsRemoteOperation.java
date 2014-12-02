@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
@@ -94,8 +93,6 @@ public class LsRemoteOperation extends Operation {
 
 		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
-
-		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 
 		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
 			// This does NOT filter 'lock' files!

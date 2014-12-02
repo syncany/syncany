@@ -159,11 +159,7 @@ public class DownOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
 			
 			// Capture file histories
-			fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
-			
-			for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
-				logger.log(Level.INFO, " - XXXXX: " + fileHistory);
-			}
+			fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();			
 			
 			// Get rid of local database
 			localDatabase.deleteAll();
