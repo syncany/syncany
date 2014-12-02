@@ -77,7 +77,10 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  * <ul>
  *    <ol>Lock repo and start thread that renews the lock every X seconds</ol>
  *    <ol>Find old versions / contents / ... from database</ol>
- *    <ol>Write and upload old versions to PRUNE file</ol>
+ *    <ol>Delete these versions and contents locally</ol>
+ *    <ol>Delete all remote metadata</ol>
+ *    <ol>Obtain consistent database files from local database</ol> 
+ *    <ol>Upload new database files to repo</ol>
  *    <ol>Remotely delete unused multichunks</ol> 
  *    <ol>Stop lock renewal thread and unlock repo</ol>
  * </ul>
@@ -124,6 +127,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		// At this point, the operation will lock the repository
 		startOperation();
 
 		// If there are any, rollback any existing/old transactions.
@@ -138,14 +142,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
 		Thread.sleep(BEFORE_DOUBLE_CHECK_TIME);
 
-		// Check again
+		// Check again. No other clients should be busy, because we waited BEFORE_DOUBLE_CHECK_TIME
 		preconditionResult = checkPreconditions();
 
 		if (preconditionResult != CleanupResultCode.OK) {
 			finishOperation();
 			return new CleanupOperationResult(preconditionResult);
 		}
-		
+
 		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
@@ -165,6 +169,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return updateResultCode(result);
 	}
 
+	/**
+	 * updateResultCode checks if we have changed anything and sets the {@link CleanupResultCode} of the given result accordingly.
+	 * 
+	 * @param result The result so far in this operation.
+	 * @return result The original result, with the relevant {@link CleanupResultCode}
+	 */
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
 		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
 			result.setResultCode(CleanupResultCode.OK);
@@ -176,6 +186,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return result;
 	}
 
+	/**
+	 * checkPreconditions inspects the local database and remote repository to see if cleanup should be performed.
+	 * 
+	 * @return {@link CleanupResultCode.OK} if nothing prevents continuing, another relevant code otherwise.
+	 */
 	private CleanupResultCode checkPreconditions() throws Exception {
 		if (hasDirtyDatabaseVersions()) {
 			return CleanupResultCode.NOK_DIRTY_LOCAL;
@@ -289,9 +304,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			writeMergeFile(client, clientDatabaseFiles.get(0).getClientVersion(), allMergedDatabaseFiles);
 
 		}
-		
+
 		rememberDatabases(allMergedDatabaseFiles);
-		
+
 		// 3. Prepare transaction
 
 		// Queue old databases for deletion
@@ -367,7 +382,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 			remoteTransaction.commit();
 			localDatabase.commit();
-			
+
 			CleanupTO cleanupTO = getCleanupTO();
 			cleanupTO.setLastTimeCleaned(System.currentTimeMillis() / 1000);
 			cleanupTO.setCleanupNumber(cleanupNumber);
@@ -394,11 +409,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
 			String clientName = entry.getValue().getClientName();
-			
+
 			if (allDatabaseRemoteFilesMap.get(clientName) == null) {
 				allDatabaseRemoteFilesMap.put(clientName, new ArrayList<DatabaseRemoteFile>());
 			}
-			
+
 			allDatabaseRemoteFilesMap.get(clientName).add(entry.getValue());
 		}
 
@@ -407,14 +422,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private CleanupTO getCleanupTO() throws Exception {
 		CleanupTO cleanupTO;
-		
+
 		if (config.getCleanupFile().exists()) {
 			cleanupTO = (new Persister()).read(CleanupTO.class, config.getCleanupFile());
 		}
 		else {
 			cleanupTO = new CleanupTO();
 		}
-		
+
 		return cleanupTO;
 	}
 
@@ -436,7 +451,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// Upload a new cleanup file that indicates changes
 		File newCleanupFile = config.getCache().createTempFile("cleanup");
 		long newCleanupNumber = cleanupNumber + 1;
-		
+
 		remoteTransaction.upload(newCleanupFile, new CleanupRemoteFile(newCleanupNumber));
 		return newCleanupNumber;
 	}
