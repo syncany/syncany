@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -116,7 +115,7 @@ public class TestDatabaseUtil {
 		MemoryDatabase db = new MemoryDatabase();
 
 		DatabaseXmlSerializer dao = new DatabaseXmlSerializer(transformer);
-		dao.load(db, databaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT);
+		dao.load(db, databaseFile, null, null, DatabaseReadType.FULL);
 
 		return db;
 	}

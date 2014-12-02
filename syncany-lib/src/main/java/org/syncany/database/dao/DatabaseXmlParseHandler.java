@@ -26,7 +26,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -63,7 +62,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionFrom;
 	private VectorClock versionTo;
 	private DatabaseReadType readType;
-	private DatabaseVersionType filterType;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -73,15 +71,12 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MultiChunkEntry multiChunk;
 	private PartialFileHistory fileHistory;
 
-	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
-			DatabaseVersionType filterType) {
-
+	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType) {
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
 		this.readType = readType;
-		this.filterType = filterType;
 	}
 
 	@Override
@@ -90,11 +85,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 
 		if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
 			databaseVersion = new DatabaseVersion();
-		}
-		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/type")) {
-			String typeStr = attributes.getValue("value");
-			databaseVersion.getHeader().setType(DatabaseVersionType.valueOf(typeStr));
-		}
+		}		
 		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/time")) {
 			Date timeValue = new Date(Long.parseLong(attributes.getValue("value")));
 			databaseVersion.setTimestamp(timeValue);
@@ -229,10 +220,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
-			// Type filter is true if no filter is set (null) or the type matches
-			boolean typeFilterMatches = filterType == null || (filterType != null && filterType == databaseVersion.getHeader().getType());
-
-			if (vectorClockInLoadRange && typeFilterMatches) {
+			if (vectorClockInLoadRange) {
 				database.addDatabaseVersion(databaseVersion);
 				logger.log(Level.INFO, "   + Added database version " + databaseVersion.getHeader());
 			}

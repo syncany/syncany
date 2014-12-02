@@ -37,7 +37,6 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.CleanupTO;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
@@ -303,7 +302,7 @@ public class DownOperation extends AbstractTransferOperation {
 			File remoteDatabaseFileInCache = remoteDatabaseFileEntry.getKey();
 			DatabaseRemoteFile remoteDatabaseFile = remoteDatabaseFileEntry.getValue();
 
-			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY, null); // only load headers!
+			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY); // only load headers!
 
 			remoteDatabaseHeaders.put(remoteDatabaseFile, remoteDatabase.getDatabaseVersions());
 
@@ -436,7 +435,7 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		else {
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations, DatabaseVersionType.DEFAULT);
+			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations);
 
 			if (options.isApplyChanges()) {
 				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred, fileHistoriesWithLastVersion).execute();
@@ -490,8 +489,8 @@ public class DownOperation extends AbstractTransferOperation {
 	 * 
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
 	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersionHeader, File> databaseVersionLocations,
-			DatabaseVersionType filterType) throws IOException, StorageException {
+	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersionHeader, File> databaseVersionLocations)
+			throws IOException, StorageException {
 
 		MemoryDatabase winnerBranchDatabase = new MemoryDatabase();
 
@@ -534,8 +533,7 @@ public class DownOperation extends AbstractTransferOperation {
 			boolean rangeEnds = lastDatabaseVersionHeader || !nextDatabaseVersionInSameFile;
 
 			if (rangeEnds) {
-				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL,
-						filterType);
+				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL);
 				rangeClientName = null;
 			}
 		}
@@ -560,17 +558,13 @@ public class DownOperation extends AbstractTransferOperation {
 	 */
 	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase)
 			throws SQLException {
+		
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
 		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
 
 		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
-			if (currentDatabaseVersionHeader.getType() == DatabaseVersionType.DEFAULT) {
-				persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);
-			}
-			else {
-				throw new RuntimeException("Unknow database version type: " + currentDatabaseVersionHeader.getType());
-			}
+			persistDatabaseVersion(winnersDatabase, currentDatabaseVersionHeader);
 		}
 	}
 
@@ -620,7 +614,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 						logger.log(Level.INFO, "  - Loading " + muddyDatabaseVersionHeader + " from file " + localFileForMuddyDatabaseVersion);
 						databaseSerializer.load(muddyMultiChunksDatabase, localFileForMuddyDatabaseVersion, fromVersion, toVersion,
-								DatabaseReadType.FULL, DatabaseVersionType.DEFAULT);
+								DatabaseReadType.FULL);
 
 						boolean hasMuddyMultiChunks = muddyMultiChunksDatabase.getMultiChunks().size() > 0;
 

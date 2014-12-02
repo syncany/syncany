@@ -35,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.VectorClock;
 
@@ -96,9 +95,9 @@ public class DatabaseXmlSerializer {
 		}
 	}
 
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
-			DatabaseVersionType filterType) throws IOException {
-
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType)
+			throws IOException {
+		
 		InputStream is;
 
 		if (transformer == null) {
@@ -109,12 +108,12 @@ public class DatabaseXmlSerializer {
 		}
 
 		try {
-			logger.log(Level.INFO, "- Loading database ({0}, {1}) from file {2} ...", new Object[] { readType, filterType, databaseFile });
+			logger.log(Level.INFO, "- Loading database ({0}) from file {2} ...", new Object[] { readType, databaseFile });
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
 
-			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, readType, filterType));
+			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, readType));
 		}
 		catch (Exception e) {
 			throw new IOException(e);
