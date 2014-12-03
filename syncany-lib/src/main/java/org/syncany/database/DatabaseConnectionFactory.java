@@ -160,6 +160,7 @@ public class DatabaseConnectionFactory {
 			}
 		}
 		catch (SQLException e) {
+			logger.log(Level.FINE, "Failed to execute SQL", e);
 			return false;
 		}
 	}

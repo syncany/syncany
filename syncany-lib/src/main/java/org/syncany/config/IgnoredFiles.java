@@ -94,7 +94,7 @@ public class IgnoredFiles {
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
-				logger.log(Level.INFO, "Ignore file not found (existed before).");
+				logger.log(Level.INFO, "Ignore file not found (existed before).", e);
 			}
 		}
 		else {
