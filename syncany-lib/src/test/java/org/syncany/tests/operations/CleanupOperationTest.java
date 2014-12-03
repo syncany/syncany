@@ -442,6 +442,7 @@ public class CleanupOperationTest {
 		TestClient clientA = new TestClient("A", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMinSecondsBetweenCleanups(0);
 		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(10);
