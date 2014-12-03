@@ -49,8 +49,8 @@ public class RemoteTransaction {
 	public RemoteTransaction(Config config, TransferManager transferManager) {
 		this.config = config;
 		this.transferManager = transferManager;
-		this.transactionTO = new TransactionTO(config.getMachineName());
-		this.eventBus = LocalEventBus.getInstance();
+		transactionTO = new TransactionTO(config.getMachineName());
+		eventBus = LocalEventBus.getInstance();
 	}
 
 	/**
@@ -178,7 +178,7 @@ public class RemoteTransaction {
 					transferManager.move(remoteFile, tempRemoteFile);
 				}
 				catch (StorageMoveException e) {
-					logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
+					logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile, e);
 				}
 			}
 		}

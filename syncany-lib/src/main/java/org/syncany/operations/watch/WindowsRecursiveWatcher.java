@@ -75,7 +75,7 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public boolean pollEvents() throws Exception {
+	public boolean pollEvents() throws InterruptedException {
 		WatchKey watchKey = watchService.take();
 
 		List<WatchEvent<?>> watchEvents = watchKey.pollEvents();

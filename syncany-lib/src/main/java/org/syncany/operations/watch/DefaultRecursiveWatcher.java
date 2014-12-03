@@ -75,7 +75,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	protected boolean pollEvents() throws Exception {
+	protected boolean pollEvents() throws InterruptedException {
 		// Take events, but don't care what they are!
 		WatchKey watchKey = watchService.take();
 

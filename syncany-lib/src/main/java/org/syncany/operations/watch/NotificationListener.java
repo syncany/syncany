@@ -149,7 +149,8 @@ public class NotificationListener {
 				socketOut.write(StringUtil.toBytesUTF8(message));
 				logger.log(Level.INFO, "Sent message: " + message.trim());
 			}
-			catch (Exception e) {
+			catch (IOException e) {
+				logger.log(Level.FINE, "Could write to the socket", e);
 				queueOutgoingMessage(message);
 			}
 		}
@@ -180,7 +181,8 @@ public class NotificationListener {
 
 			connected.set(socket.isConnected());
 		}
-		catch (Exception e) {
+		catch (IOException e) {
+			logger.log(Level.FINE, "Could not connect the socket", e);
 			disconnect();
 		}
 	}
@@ -241,7 +243,7 @@ public class NotificationListener {
 					logger.log(Level.FINE, "Socket timed out", e);
 				}
 				catch (InterruptedException e) {
-					logger.log(Level.INFO, "Notification listener interrupted.");
+					logger.log(Level.INFO, "Notification listener interrupted.", e);
 					running.set(false);
 				}
 				catch (Exception e) {
@@ -261,7 +263,7 @@ public class NotificationListener {
 						}
 					}
 					catch (InterruptedException e2) {
-						logger.log(Level.INFO, "Notification listener interrupted.");
+						logger.log(Level.INFO, "Notification listener interrupted.", e2);
 						running.set(false);
 					}
 				}

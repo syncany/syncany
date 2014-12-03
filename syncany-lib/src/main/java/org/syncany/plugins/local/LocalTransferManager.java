@@ -73,12 +73,12 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public LocalTransferManager(LocalTransferSettings connection, Config config) {
 		super(connection, config);
 
-		this.repoPath = connection.getPath().getAbsoluteFile(); // absolute file to get abs. path!
-		this.multichunksPath = new File(connection.getPath().getAbsolutePath(), "multichunks");
-		this.databasesPath = new File(connection.getPath().getAbsolutePath(), "databases");
-		this.actionsPath = new File(connection.getPath().getAbsolutePath(), "actions");
-		this.transactionsPath = new File(connection.getPath().getAbsolutePath(), "transactions");
-		this.temporaryPath = new File(connection.getPath().getAbsolutePath(), "temporary");
+		repoPath = connection.getPath().getAbsoluteFile(); // absolute file to get abs. path!
+		multichunksPath = new File(connection.getPath().getAbsolutePath(), "multichunks");
+		databasesPath = new File(connection.getPath().getAbsolutePath(), "databases");
+		actionsPath = new File(connection.getPath().getAbsolutePath(), "actions");
+		transactionsPath = new File(connection.getPath().getAbsolutePath(), "transactions");
+		temporaryPath = new File(connection.getPath().getAbsolutePath(), "temporary");
 	}
 
 	@Override
@@ -228,9 +228,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
 				remoteFiles.put(file.getName(), remoteFile);
 			}
-			catch (Exception e) {
+			catch (StorageException e) {
 				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file
-						+ "; maybe invalid file name pattern. Ignoring file.");
+						+ "; maybe invalid file name pattern. Ignoring file.", e);
 			}
 		}
 

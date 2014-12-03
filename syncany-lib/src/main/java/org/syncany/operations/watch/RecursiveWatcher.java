@@ -113,7 +113,8 @@ public abstract class RecursiveWatcher {
 							restartWaitSettlementTimer();
 						}
 					}
-					catch (Exception e) {
+					catch (InterruptedException e) {
+						logger.log(Level.FINE, "Could not poll the events", e);
 						running.set(false);
 					}
 				}
@@ -188,7 +189,7 @@ public abstract class RecursiveWatcher {
 	 * of the {@link #pollEvents()} loop. This method is called
 	 * multiple times.
 	 */
-	protected abstract boolean pollEvents() throws Exception;
+	protected abstract boolean pollEvents() throws InterruptedException;
 
 	/**
 	 * Called in the watch service polling thread, whenever
