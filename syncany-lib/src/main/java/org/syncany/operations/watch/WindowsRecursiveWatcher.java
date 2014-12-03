@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import static name.pachler.nio.file.StandardWatchEventKind.ENTRY_MODIFY;
 import static name.pachler.nio.file.StandardWatchEventKind.OVERFLOW;
 import static name.pachler.nio.file.ext.ExtendedWatchEventModifier.FILE_TREE;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -37,15 +38,15 @@ import name.pachler.nio.file.WatchService;
  * The Windows recursive file watcher monitors a folder (and its sub-folders)
  * by registering a <em>recursive</em> watch on the root folder. This class is used
  * only on Windows and uses jpathwatch-based {@link WatchService}.
- * 
+ *
  * <p>Via the jpathwatch library, the class uses the Windows-native recursive folder-
  * watching capabilities of Windows and thereby does not need to register watches on
  * all sub-folders. Instead, only one watch on the root folder is needed.
- * 
+ *
  * <p>When a file event occurs, a timer is started to wait for the file operations
  * to settle. It is reset whenever a new event occurs. When the timer times out,
  * an event is thrown through the {@link WatchListener}.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WindowsRecursiveWatcher extends RecursiveWatcher {
@@ -55,8 +56,8 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	public WindowsRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		super(root, ignorePaths, settleDelay, listener);
 
-		this.watchService = null;
-		this.rootWatchKey = null;
+		watchService = null;
+		rootWatchKey = null;
 	}
 
 	@Override
@@ -70,31 +71,31 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 
 	@Override
 	protected void beforePollEventLoop() {
-		// Nothing must happen before the event loop.		
+		// Nothing must happen before the event loop.
 	}
 
 	@Override
 	public boolean pollEvents() throws Exception {
 		WatchKey watchKey = watchService.take();
 
-		List<WatchEvent<?>> watchEvents = watchKey.pollEvents(); 
+		List<WatchEvent<?>> watchEvents = watchKey.pollEvents();
 		boolean hasRelevantEvents = false;
-		
+
 		// Filter ignored events
 		for (WatchEvent<?> watchEvent : watchEvents) {
-			if (watchEvent.kind() == ENTRY_CREATE || watchEvent.kind() == ENTRY_MODIFY || watchEvent.kind() == ENTRY_DELETE) {				
-				boolean ignoreEvent = false;		
+			if (watchEvent.kind() == ENTRY_CREATE || watchEvent.kind() == ENTRY_MODIFY || watchEvent.kind() == ENTRY_DELETE) {
+				boolean ignoreEvent = false;
 
 				name.pachler.nio.file.Path extLibFilePath = (name.pachler.nio.file.Path) watchEvent.context();
 				Path filePath = Paths.get(extLibFilePath.toString()).toAbsolutePath().normalize();
-				
+
 				for (Path ignorePath : ignorePaths) {
 					if (filePath.startsWith(ignorePath.toAbsolutePath().normalize())) {
 						ignoreEvent = true;
 						break;
 					}
 				}
-				
+
 				if (!ignoreEvent) {
 					hasRelevantEvents = true;
 					break;
@@ -112,7 +113,7 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public synchronized void afterStop() throws Exception {
+	public synchronized void afterStop() throws IOException {
 		rootWatchKey.cancel();
 		watchService.close();
 	}

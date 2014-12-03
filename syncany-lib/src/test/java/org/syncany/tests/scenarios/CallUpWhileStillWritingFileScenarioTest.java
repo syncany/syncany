@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,8 +77,8 @@ public class CallUpWhileStillWritingFileScenarioTest {
 
 					logger.log(Level.SEVERE, "Ended thread to write file to " + testFile + "  ...");
 				}
-				catch (Exception e) {
-					// Nothing.
+				catch (IOException e) {
+					logger.log(Level.FINE, "Thread failed to write to file", e);
 				}
 			}
 		}, "writerThread");

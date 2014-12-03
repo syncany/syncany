@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 
 /**
- * InternalWebSocketHandler handles the web socket requests 
+ * InternalWebSocketHandler handles the web socket requests
  * sent to the daemon.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -49,29 +50,29 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private WebServer daemonWebServer;
 	private LocalEventBus eventBus;
 	private String certificateCommonName;
-	
+
 	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName) {
 		this.daemonWebServer = daemonWebServer;
-		this.eventBus = LocalEventBus.getInstance();
+		eventBus = LocalEventBus.getInstance();
 		this.certificateCommonName = certificateCommonName;
-		
-		this.eventBus.register(this);
+
+		eventBus.register(this);
 	}
-	
+
 	@Override
 	public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
 		logger.log(Level.INFO, "Connecting to websocket server.");
-		
+
 		// Validate origin header (security!)
 		String originHeader = exchange.getRequestHeader("Origin");
-		
+
 		if (!allowedOriginHeader(originHeader)) {
 			logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
 			exchange.close();
 		}
 		else {
 			logger.log(Level.INFO, "Valid origin header, setting up connection.");
-			
+
 			channel.getReceiveSetter().set(new AbstractReceiveListener() {
 				@Override
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
@@ -95,33 +96,33 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 			channel.resumeReceives();
 		}
 	}
-	
+
 	private boolean allowedOriginHeader(String originHeader) {
 		// Allow all non-browser clients (no "Origin:" header!)
 		if (originHeader == null) {
 			return true;
 		}
-		
+
 		// Allow localhost's hostname
 		try {
 			if (originHeader.equals(InetAddress.getLocalHost().getHostName())) {
 				return true;
 			}
 		}
-		catch (Exception e) {
-			// Continue trying.
+		catch (UnknownHostException e) {
+			logger.log(Level.FINE, "Could not get the localhost ip", e);
 		}
-		
+
 		// Allow by whitelist
 		if (WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches()) {
 			return true;
 		}
-		
+
 		// Additional allowed origin header (certificate CN)
 		if (certificateCommonName != null && originHeader.startsWith("https://" + certificateCommonName + ":")) {
 			return true;
 		}
-		
+
 		// Otherwise, we fail
 		return false;
 	}
@@ -132,7 +133,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		try {
 			Request request = MessageFactory.toRequest(message);
 
-			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
+			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
 			eventBus.post(request);
 		}
 		catch (Exception e) {

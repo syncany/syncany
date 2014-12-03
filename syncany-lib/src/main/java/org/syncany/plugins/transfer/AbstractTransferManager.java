@@ -100,7 +100,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 				disconnect();
 			}
 			catch (StorageException e) {
-				// Don't care
+				logger.log(Level.FINE, "Could not disconnect", e);
 			}
 		}
 

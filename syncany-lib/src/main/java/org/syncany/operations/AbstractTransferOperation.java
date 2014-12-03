@@ -63,8 +63,8 @@ public abstract class AbstractTransferOperation extends Operation {
 		// Do NOT reuse TransferManager for action file renewal; see #140
 
 		try {
-			this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
-			this.transferManager = createReliableTransferManager(config);
+			actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
+			transferManager = createReliableTransferManager(config);
 		}
 		catch (StorageException e) {
 			logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
@@ -154,7 +154,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	 * This method is used to determine how a database file should be named when
 	 * it is about to be uploaded. It returns the number of the newest database file (which is the
 	 * highest number).
-	 * 
+	 *
 	 * @param client name of the client for which we want to upload a database version.
 	 * @param knownDatabases all DatabaseRemoteFiles present in the repository
 	 * @return the largest database fileversion number.
@@ -162,24 +162,24 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
-		
+
 		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
 			if (databaseRemoteFile.getClientName().equals(client)) {
 				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
 			}
 		}
-		
+
 		return clientVersion;
 	}
 
 	protected long getLastRemoteCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
 		long cleanupNumber = 0;
-		
+
 		// Find the number of the last cleanup
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
 			cleanupNumber = Math.max(cleanupNumber, cleanupRemoteFile.getCleanupNumber());
 		}
-		
+
 		return cleanupNumber;
 	}
 
@@ -193,7 +193,7 @@ public abstract class AbstractTransferOperation extends Operation {
 			transferManager.disconnect();
 		}
 		catch (StorageException e) {
-			// Don't care!
+			logger.log(Level.FINE, "Could not disconnect the transfermanager", e);
 		}
 	}
 
