@@ -82,7 +82,7 @@ public class DatabaseVersionHeader {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (!(obj instanceof DatabaseVersionHeader)) {
 			return false;
 		}
 		DatabaseVersionHeader other = (DatabaseVersionHeader) obj;

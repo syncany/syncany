@@ -101,7 +101,7 @@ public class DatabaseBranch {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (!(obj instanceof DatabaseBranch)) {
 			return false;
 		}
 		DatabaseBranch other = (DatabaseBranch) obj;

@@ -170,6 +170,9 @@ public class Adler32Fingerprinter extends Fingerprinter {
 
 	@Override
 	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
 		if (o instanceof Adler32Fingerprinter) {
 			return ((Adler32Fingerprinter) o).a == a && ((Adler32Fingerprinter) o).b == b;
 		}
