@@ -103,18 +103,18 @@ public class DatabaseConnectionFactory {
 		}
 		else {
 			InputStream statementInputStream = getStatementInputStream(resourceIdentifier);
-			
+
 			preparedStatement = readDatabaseStatement(statementInputStream);
 			DATABASE_STATEMENTS.put(fullResourcePath, preparedStatement);
 
 			return preparedStatement;
 		}
 	}
-	
+
 	public synchronized static InputStream getStatementInputStream(String resourceIdentifier) {
 		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, resourceIdentifier);
 		InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-		
+
 		if (statementInputStream == null) {
 			throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
 		}
@@ -126,6 +126,9 @@ public class DatabaseConnectionFactory {
 		try {
 			Connection connection = DriverManager.getConnection(connectionString);
 			connection.setAutoCommit(false);
+
+			// We use UNCOMMITTED read to enable operations to alter the database and continue
+			// with those changes, but still roll back the database if something goes wrong later.
 			connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
 
 			// Test and create tables
@@ -175,7 +178,7 @@ public class DatabaseConnectionFactory {
 	}
 
 	// TODO [low] Shouldn't the SqlRunner be used here? If so, the SqlRunner also needs refactoring.
-	private static String readDatabaseStatement(InputStream inputStream) {		
+	private static String readDatabaseStatement(InputStream inputStream) {
 		try {
 			StringBuilder preparedStatementStr = new StringBuilder();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
