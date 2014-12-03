@@ -17,7 +17,6 @@
  */
 package org.syncany.database.dao;
 
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,7 +28,6 @@ import java.util.logging.Logger;
 
 import org.syncany.database.VectorClock;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.util.SqlRunner;
 
 /**
  * The application data access object (DAO) writes and queries the SQL database for 
@@ -107,15 +105,22 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public void removeKnownDatabases() {
+		try (PreparedStatement preparedStatement = getStatement("application.delete.all.removeKnownDatabases.sql")) {
+			preparedStatement.execute();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	/**
 	 * Deletes all metadata, including known databases.
 	 */
 	public void deleteAll() {
-		String fullResourcePath = "/org/syncany/database/sql/delete.all.sql";
-		
-		try (InputStream inputStream = ApplicationSqlDao.class.getResourceAsStream(fullResourcePath)) {
-			SqlRunner.runScript(connection, inputStream);
+		try {
+			runScript("script.delete.all.sql");
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

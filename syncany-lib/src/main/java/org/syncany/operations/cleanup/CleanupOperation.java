@@ -379,7 +379,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		List<DatabaseRemoteFile> newRemoteMergeDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
 		newRemoteMergeDatabaseFiles.addAll(allMergedDatabaseFiles.values());
 
-		logger.log(Level.INFO, "Files: " + newRemoteMergeDatabaseFiles);
+		logger.log(Level.INFO, "Writing new known databases table: " + newRemoteMergeDatabaseFiles);
+		
+		localDatabase.removeKnownDatabases();
 		localDatabase.writeKnownRemoteDatabases(newRemoteMergeDatabaseFiles);
 	}
 

@@ -534,6 +534,10 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientD.upWithForceChecksum();
 		clientD.cleanup(cleanupOptionsKeepOneForce);
 		
+		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile());
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
+		assertEquals("", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));				
+				
 		// Now the remote databases are completely empty (no files, no histories, no database versions!)
 		
 		/* Case 1: 
@@ -602,9 +606,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientD.down();
 		assertSqlDatabaseEquals(clientE.getDatabaseFile(), clientD.getDatabaseFile());
 		assertFileListEquals(clientE.getLocalFiles(), clientD.getLocalFiles());		
-				
-		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile());
-		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
+		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002\ndatabase-E-0000000001", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
 		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));				
 		
 		// Tear down

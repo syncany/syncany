@@ -51,7 +51,7 @@ public class DatabaseConnectionFactory {
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
 	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
 	public static final String DATABASE_RESOURCE_PATTERN = "/org/syncany/database/sql/%s";
-	public static final String DATABASE_RESOURCE_CREATE_ALL = "create.all.sql";
+	public static final String DATABASE_RESOURCE_CREATE_ALL = "script.create.all.sql";
 
 	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>();
 
@@ -102,17 +102,24 @@ public class DatabaseConnectionFactory {
 			return preparedStatement;
 		}
 		else {
-			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-
-			if (statementInputStream == null) {
-				throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
-			}
-
+			InputStream statementInputStream = getStatementInputStream(resourceIdentifier);
+			
 			preparedStatement = readDatabaseStatement(statementInputStream);
 			DATABASE_STATEMENTS.put(fullResourcePath, preparedStatement);
 
 			return preparedStatement;
 		}
+	}
+	
+	public synchronized static InputStream getStatementInputStream(String resourceIdentifier) {
+		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, resourceIdentifier);
+		InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
+		
+		if (statementInputStream == null) {
+			throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
+		}
+
+		return statementInputStream;
 	}
 
 	private static Connection createConnection(String connectionString) {
@@ -168,7 +175,7 @@ public class DatabaseConnectionFactory {
 	}
 
 	// TODO [low] Shouldn't the SqlRunner be used here? If so, the SqlRunner also needs refactoring.
-	private static String readDatabaseStatement(InputStream inputStream) {
+	private static String readDatabaseStatement(InputStream inputStream) {		
 		try {
 			StringBuilder preparedStatementStr = new StringBuilder();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

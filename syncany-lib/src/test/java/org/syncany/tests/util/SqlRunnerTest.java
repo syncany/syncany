@@ -39,7 +39,7 @@ public class SqlRunnerTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		File tempDatabaseFile = new File(tempDir, "db");
 		
-		InputStream inputStream = SqlRunnerTest.class.getResourceAsStream("/org/syncany/database/sql/create.all.sql");
+		InputStream inputStream = SqlRunnerTest.class.getResourceAsStream("/org/syncany/database/sql/script.create.all.sql");
 		
 		String connectionString = "jdbc:hsqldb:file:"+tempDatabaseFile.getAbsolutePath()+";user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
 		Connection connection = DriverManager.getConnection(connectionString);	

@@ -122,6 +122,10 @@ public class SqlDatabase {
 	public VectorClock getHighestKnownDatabaseFilenameNumbers() {
 		return applicationDao.getHighestKnownDatabaseFilenameNumbers();
 	}
+	
+	public void removeKnownDatabases() {
+		applicationDao.removeKnownDatabases();
+	}
 
 	public Long getCleanupNumber() {
 		return applicationDao.getCleanupNumber();
