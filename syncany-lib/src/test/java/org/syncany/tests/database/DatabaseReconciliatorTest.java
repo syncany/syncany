@@ -758,6 +758,57 @@ public class DatabaseReconciliatorTest {
 		/// Perform test ///
 		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}		
+	
+
+	@Test
+	public void testStitchBranchesIssue226ConflictingVCsInOneBranch() throws Exception {
+		Logging.init();
+		
+		/// Input data ///
+		String localMachineName = "ZA";
+		DatabaseVersionHeader currentLocalVersion = null;
+		DatabaseBranches allBranches = new DatabaseBranches();
+		 
+		// ZA
+		allBranches.put("ZA", TestDatabaseUtil.createBranch(new String[] {
+			"WG/(WG2)/T=1417598306794",
+			"jR/(WG2,jR1)/T=1417598308654",
+			"WG/(WG3,jR1)/T=1417598309554",
+			"oq/(WG3,jR1,oq2)/T=1417598310488",
+			"WG/(WG4,jR1,oq2)/T=1417598311995",
+			"oq/(WG4,jR1,oq3)/T=1417598313779",
+			"jR/(WG4,jR2,oq3)/T=1417598314162",
+			"ZA/(WG4,ZA1,jR2,oq3)/T=1417598314796",
+			"ZA/(WG4,ZA2,jR2,oq3)/T=1417598316388"					
+		}));
+		
+		// WG
+		allBranches.put("WG", TestDatabaseUtil.createBranch(new String[] {
+			"WG/(WG5,ZA2,jR2,oq3)/T=1417598319102",
+			"WG/(WG6,ZA2,jR5,oq4)/T=1417598321850"				
+		}));
+		
+		// jR
+		allBranches.put("jR", TestDatabaseUtil.createBranch(new String[] {
+			"jR/(WG5,ZA2,jR4,oq3)/T=1417598319954",
+			"jR/(WG5,ZA2,jR5,oq4)/T=1417598320743"					
+		}));
+		
+		// oq
+		allBranches.put("oq", TestDatabaseUtil.createBranch(new String[] {
+			"oq/(WG5,ZA2,jR2,oq4)/T=1417598319900"						
+		}));					
+		
+		/// Expected results ///
+		TestResult expectedTestResult = new TestResult();
+		
+		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
+			"k", "k/(T2,d6,k44,t10)/T=821185"
+		}).firstEntry();				
+		
+		/// Perform test ///
+		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
+	}		
 
 	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, DatabaseBranches allBranches, TestResult expectedTestResult) throws Exception {
 		// Print them all
