@@ -222,7 +222,7 @@ public class Config {
 			}
 
 			try {
-				transferSettings = (TransferSettings) configTO.getTransferSettings();
+				transferSettings = configTO.getTransferSettings();
 			}
 			catch (Exception e) {
 				throw new ConfigException("Cannot initialize storage: " + e.getMessage(), e);
@@ -271,7 +271,7 @@ public class Config {
 	}
 
 	public void setConnection(TransferSettings connection) {
-		this.transferSettings = connection;
+		transferSettings = connection;
 	}
 
 	public byte[] getRepoId() {

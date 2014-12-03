@@ -152,12 +152,7 @@ public class DatabaseConnectionFactory {
 		try {
 			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
 
-			if (resultSet.next()) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return resultSet.next();
 		}
 		catch (SQLException e) {
 			logger.log(Level.FINE, "Failed to execute SQL", e);
