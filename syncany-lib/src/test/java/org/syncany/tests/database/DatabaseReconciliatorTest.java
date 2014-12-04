@@ -771,13 +771,13 @@ public class DatabaseReconciliatorTest {
 		 
 		// ZA
 		allBranches.put("ZA", TestDatabaseUtil.createBranch(new String[] {
-			"WG/(WG2)/T=1417598306794",
+		/*	"WG/(WG2)/T=1417598306794",
 			"jR/(WG2,jR1)/T=1417598308654",
 			"WG/(WG3,jR1)/T=1417598309554",
 			"oq/(WG3,jR1,oq2)/T=1417598310488",
 			"WG/(WG4,jR1,oq2)/T=1417598311995",
 			"oq/(WG4,jR1,oq3)/T=1417598313779",
-			"jR/(WG4,jR2,oq3)/T=1417598314162",
+			"jR/(WG4,jR2,oq3)/T=1417598314162",*/
 			"ZA/(WG4,ZA1,jR2,oq3)/T=1417598314796",
 			"ZA/(WG4,ZA2,jR2,oq3)/T=1417598316388"					
 		}));
