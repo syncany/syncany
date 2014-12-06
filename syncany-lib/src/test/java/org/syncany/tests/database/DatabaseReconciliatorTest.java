@@ -453,7 +453,7 @@ public class DatabaseReconciliatorTest {
 				"C/(C3)/T=3",
 				"C/(C4)/T=4",
 				"A/(A1,C4)/T=8", // last common - current DBV in B!
-				//				"A/(A2,C4)/T=9",     // new from here -> first conflicting, wins
+		//				"A/(A2,C4)/T=9",     // new from here -> first conflicting, wins
 				//				
 				//				"A/(A3,C4)/T=10",    // same as in A
 				//				"B/(A4,B1,C4)/T=12", // second conflict, loses = winners loser
@@ -684,7 +684,7 @@ public class DatabaseReconciliatorTest {
 		TestResult expectedTestResult = new TestResult();
 
 		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-				"k", "k/(T2,d6,k44,t10)/T=821185"
+				"WG", "WG/(WG6,ZA2,jR5,oq4)/T=1417598321850"
 		}).firstEntry();
 
 		/// Perform test ///
