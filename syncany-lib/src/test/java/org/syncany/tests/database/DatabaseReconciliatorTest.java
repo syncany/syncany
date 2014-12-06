@@ -634,7 +634,7 @@ public class DatabaseReconciliatorTest {
 		TestResult expectedTestResult = new TestResult();
 
 		expectedTestResult.winnersLastDatabaseVersionHeader = TestDatabaseUtil.createMapWithMachineKey(new String[] {
-				"k", "k/(T2,d6,k44,t10)/T=821185"
+				"T", "T/(T4,d6,k44,t10)/T=824100"
 		}).firstEntry();
 
 		/// Perform test ///
