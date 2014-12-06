@@ -39,19 +39,28 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
+	private boolean considerTime;
+
+	public DatabaseVersionHeaderComparator(boolean considerTime) {
+		super();
+		this.considerTime = considerTime;
+	}
+
 	@Override
 	public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
-		return compareByVectorClock(o1, o2);		
+		return compareByVectorClock(o1, o2);
 	}
 
 	private int compareByVectorClock(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
-
 		if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
-			throw new RuntimeException("There must not be a conflict within a branch. VC1: " + o1 + " - VC2: "
-					+ o2);
+			if (considerTime) {
+				return compareByTimestamp(o1, o2);
+			}
+			else {
+				return 0;
+			}
 		}
-
 		if (vectorClockComparison == VectorClockComparison.EQUAL) {
 			return compareByTimestamp(o1, o2);
 		}
@@ -65,7 +74,7 @@ public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersi
 
 	private int compareByTimestamp(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		int timestampComparison = Long.compare(o1.getDate().getTime(), o2.getDate().getTime());
-		
+
 		if (timestampComparison == 0) {
 			return compareByClientName(o1, o2);
 		}

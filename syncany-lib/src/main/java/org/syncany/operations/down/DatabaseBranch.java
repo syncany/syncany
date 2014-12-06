@@ -37,23 +37,23 @@ import org.syncany.database.VectorClock;
  */
 public class DatabaseBranch {
 	private ArrayList<DatabaseVersionHeader> branch;
-	
+
 	public DatabaseBranch() {
 		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
 
 	public void add(DatabaseVersionHeader header) {
-		branch.add(header);		
-	}	
-	
+		branch.add(header);
+	}
+
 	public void addAll(List<DatabaseVersionHeader> headers) {
 		branch.addAll(headers);
-	}	
-	
+	}
+
 	public int size() {
 		return branch.size();
 	}
-	
+
 	public DatabaseVersionHeader get(int index) {
 		try {
 			return branch.get(index);
@@ -62,7 +62,7 @@ public class DatabaseBranch {
 			return null;
 		}
 	}
-	
+
 	// TODO [medium] Performance: Use map instead of list
 	public DatabaseVersionHeader get(VectorClock vectorClock) {
 		for (DatabaseVersionHeader databaseVersionHeader : branch) {
@@ -70,23 +70,34 @@ public class DatabaseBranch {
 				return databaseVersionHeader;
 			}
 		}
-		
+
 		return null;
 	}
 
 	public List<DatabaseVersionHeader> getAll() {
 		return Collections.unmodifiableList(branch);
-	}	
-	
+	}
+
 	public DatabaseVersionHeader getLast() {
-		return branch.get(branch.size()-1);
-	}		
-	
+		if (branch.size() == 0) {
+			return null;
+		}
+		return branch.get(branch.size() - 1);
+	}
+
 	@Override
 	public String toString() {
 		return branch.toString();
 	}
-	
+
+	@Override
+	public DatabaseBranch clone() {
+		DatabaseBranch clonedBranch = new DatabaseBranch();
+		clonedBranch.addAll(getAll());
+
+		return clonedBranch;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
