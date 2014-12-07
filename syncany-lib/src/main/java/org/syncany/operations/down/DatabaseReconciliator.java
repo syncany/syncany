@@ -136,20 +136,10 @@ public class DatabaseReconciliator {
 	 * Algorithm to find the winner's database branch (client name and branch).
 	 * The winner's branch is used to determine the local file system actions.
 	 * 
-	 * <p>Basic algorithm: Iterate over all machines' branches forward, find conflicts and
-	 * decide who wins. The following numbers correspond to the comments in the code
-	 * 
-	 * <ol>
-	 *  <li>The algorithm first checks whether a winner comparison is even necessary. If there is only one
-	 *      machine, it simply returns this machine as the winner.</li>
-	 *  <li>If there is more than one machine, the 'race' starts at position 0 of each of the clients' branch.
-	 *      The algorithm starts a 'race' in which the database version headers of two machines are compared. If the
-	 *      two database version headers are equal, both machines are left in the race. If they are not equal,
-	 *      only the 'winner' stays in the race. This is repeated for each position of the machines' branches.
-	 *      See the example below for a more graphic representation.</li>
-	 *  <li>Once only one winner remains, the winner's name and branch is returned.</li>
-	 * </ol> 
-	 * 
+	 * <p>Basic algorithm: Sort all databaseversions by vectorclocks, tiebreaking with timestamps and machinenames.
+	 * Iterate over this list, adding databaseversions to the winning branch if they are not simultaneous with the
+	 * winning branch up until this point. 
+	 *
 	 * <p><b>Illustration:</b><br />
 	 * Suppose the following branches exist. 
 	 * Naming: <em>created-by / vector clock / local time</em>.
@@ -157,37 +147,51 @@ public class DatabaseReconciliator {
 	 * <pre>
 	 *    A               B                C
 	 * --|-------------------------------------------------
-	 * 0 | A/(A1)/T=10    A/(A1)/T=10      A/(A1)/T=10      
-	 * 1 | A/(A2)/T=13    A/(A2)/T=13      C/(A1,C1)/T=14
-	 * 2 | A/(A3)/T=19    A/(A3)/T=19      C/(A1,C2)/T=15
-	 * 3 | A/(A4)/T=23    B/(A3,B1)/T=20   
+	 * 0 | A/(A1)/T=10    B/(A3,B1)/T=20   C/(A1,C1)/T=14
+	 * 1 | A/(A2)/T=13                     C/(A1,C2)/T=15
+	 * 2 | A/(A3)/T=19          
+	 * 3 | A/(A4)/T=23       
 	 * </pre>
+	 * Sorted DatabaseVersions:
+	 * <ol>
+	 * 	<li>A[0]:A/(A1)/T=10</li>
+	 *  <li>A[1]:A/(A2)/T=13</li>
+	 *  <li>C[0]:C/(A1,C1)/T=14</li>
+	 *  <li>C[1]:C/(A1,C2)/T=15</li>
+	 *  <li>A[2]:A/(A3)/T=19</li>
+	 *  <li>B[0]:B/(A3,B1)/T=20</li>
+	 *  <li>A[3]:A/(A4)/T=23</li>
+	 * </ol> 
+	 *  Iterating through the list:
+	 *  
+	 *  A[0] is the first version. Add it.
+	 *  
+	 *  A[1] > A[0]. Add it.
+	 *  
+	 *  C[0] is simultaneous with A[1]. Ignore it.
+	 *  
+	 *  C[1] is simultaneous with A[1]. Ignore it.
+	 *  
+	 *  A[2] > A[1]. Add it.
+	 *  
+	 *  B[0] > A[2]. Add it.
+	 *  
+	 *  A[3] is simultaneous with B[0]. Ignore it.
+	 *  
+	 * Winning branch:
+	 *  <ol>
+	 * 	<li>A[0]:A/(A1)/T=10</li>
+	 *  <li>A[1]:A/(A2)/T=13</li>
+	 *  <li>A[2]:A/(A3)/T=19</li>
+	 *  <li>B[0]:B/(A3,B1)/T=20</li>
+	 * </ol> 
 	 * 
-	 * The algorithm input will be the database version headers in line 1 (= first database
-	 * version headers of each client's branch). 
-	 * 
-	 * <p>The algorithm will compare the database version headers moving forward, starting from position 0:
-	 * <pre>
-	 * Positions       1st machine       2nd machine
-	 * -----------------------------------------------------------------------------
-	 * Round 1:
-	 * A[0] vs. B[0]   A: A/(A1)/T=10    B: A/(A1)/T=10      // Equal, no eliminations
-	 * A[0] vs. C[0]   A: A/(A1)/T=10    C: A/(A1)/T=10      // Equal, no eliminations
-	 * 
-	 * Round 2:
-	 * A[1] vs. B[1]   A: A/(A2)/T=13    B: A/(A2)/T=13      // Equal, no eliminations
-	 * A[1] vs. C[1]   A: A/(A2)/T=13    C: C/(A1,C1)/T=14   // 13<14, A wins, eliminate C
-	 * 
-	 * Round 3 (C eliminated):
-	 * A[2] vs. B[1]   A: A/(A3)/T=19    B: A/(A3)/T=19      // Equal, no eliminations
-	 *      
-	 * Round 4:
-	 * A[3] vs. B[3]   A: A/(A4)/T=23    B: B/(A3,B1)/T=20   // 20<23, B wins, eliminate A
+	 * Last version matches last version of B. Hence B wins.
 	 * 
 	 * // B wins!
 	 * </pre>
 	 * 
-	 * @param allStitchedBranches All stitched branches of all machines (including local)
+	 * @param allStitchedBranches All branches of all machines (including local)
 	 * @return Returns the name and the branch of the winning machine 
 	 */
 	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allBranches) {
