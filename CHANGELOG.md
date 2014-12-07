@@ -8,13 +8,16 @@ Change Log
   + Implement [OpenStack Swift plugin](https://github.com/syncany/syncany-plugin-swift) #251
   + Allow setting repo password in `sy connect` and `sy init` via 
     `--password` option #256
-  + Rework of CleanupOperation. Merge databasefiles every cleanup. Drops PURGE concept. #284
+  + Rework of cleanup operation. Merge database files every cleanup. #266/#284
 - Bugfixes and other things:
   + Fix Windows/CMD incompatibility with batch file #270
+  + Remove empty database versions during cleanup #208 (part of #266/284)
+  + Drops PURGE concept #265 (part of #266/284)
+  + Fixing incorrect cleanup rollback #268 (part of #266/284)
   
 ### Syncany 0.2.0-alpha (Date: 8 Nov 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
-- **Breaks compatiblity to 0.1.12-alpha local folders!**
+- **Breaks compatiblity to 0.1.12-alpha local folders!**   
   From now on, breaking releases will always increase the minor version number.
 - Features and significant changes:
   + Allow plugin nesting and interaction via SimpleXML-ification (major!) #192/#240
