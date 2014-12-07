@@ -55,6 +55,7 @@ import org.syncany.database.VectorClock;
  * @see VectorClock
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Steffen Dangmann <steffen.dangmann@googlemail.com>
+ * @author Pim Otte <otte.pim@gmail.com>
  */
 public class DatabaseReconciliator {
 	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
