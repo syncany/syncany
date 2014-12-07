@@ -50,7 +50,7 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  *   <li>Creating the local Syncany folder structure in the local directory (.syncany
  *       folder and the sub-structure).</li>
  *   <li>Initializing the remote storage (creating folder-structure, if necessary)
- *       using the transfer manager's {@link TransferManager#init()} method.</li>
+ *       using a transfer manager.</li>
  *   <li>Creating a new repo and master file using {@link RepoTO} and {@link MasterTO},
  *       saving them locally and uploading them to the remote repository.</li>
  * </ul>
@@ -111,11 +111,11 @@ public class InitOperation extends AbstractInitOperation {
 			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!
 			options.getConfigTO().setMasterKey(masterKey);
 
-			writeXmlFile(new MasterTO(masterKey.getSalt()), masterFile);
-			writeEncryptedXmlFile(options.getRepoTO(), repoFile, options.getCipherSpecs(), masterKey);
+			new MasterTO(masterKey.getSalt()).save(masterFile);
+			options.getRepoTO().save(repoFile, options.getCipherSpecs(), masterKey);
 		}
 		else {
-			writeXmlFile(options.getRepoTO(), repoFile);
+			options.getRepoTO().save(repoFile);
 		}
 
 		options.getConfigTO().save(configFile);

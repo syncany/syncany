@@ -24,7 +24,9 @@ startScripts {
 		winMaxMemoryCommands += "set APP_USERCONFIG_FILE=%AppData%\\\\Syncany\\\\userconfig.xml\r\n";
 		winMaxMemoryCommands += "\r\n";
 		winMaxMemoryCommands += "if exist \"%APP_USERCONFIG_FILE%\" (\r\n";
-		winMaxMemoryCommands += "  for /F tokens^=2^,3^,5delims^=^<^\"^=^> %%a in (%APP_USERCONFIG_FILE%) do ( \r\n";
+		winMaxMemoryCommands += "  if \"%OS%\"==\"Windows_NT\" setlocal ENABLEDELAYEDEXPANSION\r\n";
+		winMaxMemoryCommands += "  set QT=^\"\r\n";
+		winMaxMemoryCommands += "  for /F \"tokens=2,3,5 delims=<=>!QT!\" %%a in (%APP_USERCONFIG_FILE%) do ( \r\n";
 		winMaxMemoryCommands += "    if \"%%a\" equ \"maxMemory\" set APP_MAX_MEMORY=%%b\r\n";
 		winMaxMemoryCommands += "  )\r\n";
 		winMaxMemoryCommands += ")\r\n";

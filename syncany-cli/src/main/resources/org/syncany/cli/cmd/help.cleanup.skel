@@ -4,7 +4,8 @@ NAME
 SYNOPSIS
   sy cleanup [-M | --no-database-merge] [-V | --no-version-removal]
              [-T | --no-temp-removal] [-k | --keep-versions=<count>] 
-             [<status-options>]
+             [-t | --time-between-cleanups ] [-x | --max-database-files]             
+             [-f | --force] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
@@ -61,6 +62,9 @@ OPTIONS
     Sets the number of database files per client. If the total number of 
     databases exceeds <count> times the number of clients, all database
     files will be merged to one per client.
-    
+  
+  -f, --force
+    Forces a the cleanup, even if the time between cleanups (-t) has not been 
+    run out yet. Use this option only if a cleanup is absolutely necessary.
+      
 %RESOURCE:incl/footer.skel%
-    

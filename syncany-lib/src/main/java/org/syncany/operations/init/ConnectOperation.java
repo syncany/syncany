@@ -100,7 +100,8 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
+		String pluginId = options.getConfigTO().getTransferSettings().getType();
+		plugin = Plugins.get(pluginId, TransferPlugin.class);
 
 		TransferSettings transferSettings = (TransferSettings) options.getConfigTO().getTransferSettings();
 		transferSettings.setUserInteractionListener(listener);
@@ -176,7 +177,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		// Write file 'master'
 		if (configTO.getMasterKey() != null) {
 			File masterFile = new File(appDir, Config.FILE_MASTER);
-			writeXmlFile(new MasterTO(configTO.getMasterKey().getSalt()), masterFile);
+			new MasterTO(configTO.getMasterKey().getSalt()).save(masterFile);
 		}
 
 		// Shutdown plugin
@@ -229,37 +230,53 @@ public class ConnectOperation extends AbstractInitOperation {
 			return configTO;
 		}
 		else if (options.getStrategy() == ConnectOptionsStrategy.CONNECTION_LINK) {
-			return createConfigTOFromLink(configTO, options.getConnectLink());
+			return createConfigTOFromLink(configTO, options.getConnectLink(), options.getPassword());
 		}
 		else {
 			throw new RuntimeException("Unhandled connect strategy: " + options.getStrategy());
 		}
 	}
 
-	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link) throws StorageException, CipherException {
+	private ConfigTO createConfigTOFromLink(ConfigTO configTO, String link, String masterPassword) throws StorageException, CipherException {
+		logger.log(Level.INFO, "Creating config TO from link: " + link + " ...");
 		ApplicationLink applicationLink = new ApplicationLink(link);
 
 		try {
 			if (applicationLink.isEncrypted()) {
-				boolean retryPassword = true;
+				// Non-interactive mode
+				if (masterPassword != null) {
+					logger.log(Level.INFO, " - Link is encrypted. Password available.");
 
-				while (retryPassword) {
-					// Ask password
-					String masterPassword = getOrAskPassword();
-
-					// Generate master key
 					SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
+					TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
+
 					configTO.setMasterKey(masterKey);
+					configTO.setTransferSettings(transferSettings);
+				}
+				else {
+					logger.log(Level.INFO, " - Link is encrypted. Asking for password.");
 
-					// Decrypt config
-					try {
-						TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
-						configTO.setTransferSettings(transferSettings);
+					boolean retryPassword = true;
 
-						retryPassword = false;
-					}
-					catch (CipherException e) {
-						retryPassword = askRetryPassword();
+					while (retryPassword) {
+						// Ask password
+						masterPassword = getOrAskPassword();
+
+						// Generate master key
+						SaltedSecretKey masterKey = createMasterKeyFromPassword(masterPassword, applicationLink.getMasterKeySalt());
+
+						// Decrypt config
+						try {
+							TransferSettings transferSettings = applicationLink.createTransferSettings(masterKey);
+
+							configTO.setMasterKey(masterKey);
+							configTO.setTransferSettings(transferSettings);
+
+							retryPassword = false;
+						}
+						catch (CipherException e) {
+							retryPassword = askRetryPassword();
+						}
 					}
 				}
 
@@ -268,6 +285,8 @@ public class ConnectOperation extends AbstractInitOperation {
 				}
 			}
 			else {
+				logger.log(Level.INFO, " - Link is NOT encrypted. No password needed.");
+
 				TransferSettings transferSettings = applicationLink.createTransferSettings();
 				configTO.setTransferSettings(transferSettings);
 			}

@@ -57,7 +57,7 @@ public class CleanupCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 
-		OptionSpec<Void> optionForce = parser.accepts("force");
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
