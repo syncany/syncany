@@ -245,14 +245,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
 
 		localDatabase.removeUnreferencedDatabaseEntities();
-		removeDeleteUnusedMultiChunks(unusedMultiChunks);
+		deleteUnusedRemoteMultiChunks(unusedMultiChunks);
 
 		// Update stats
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
-	private void removeDeleteUnusedMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
+	private void deleteUnusedRemoteMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
 		logger.log(Level.INFO, "- Deleting remote multichunks ...");
 
 		for (MultiChunkEntry multiChunkEntry : unusedMultiChunks.values()) {
