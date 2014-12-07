@@ -26,7 +26,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,10 +35,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
-import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 
 /**
@@ -63,25 +59,25 @@ public class DatabaseXmlSerializer {
 	public enum DatabaseReadType {
 		FULL, HEADER_ONLY
 	}
-	
+
 	private Transformer transformer;
-	
+
 	public DatabaseXmlSerializer() {
 		this(null);
 	}
-	
+
 	public DatabaseXmlSerializer(Transformer transformer) {
 		this.transformer = transformer;
 	}
-	
+
 	public void save(List<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {
 		save(databaseVersions.iterator(), destinationFile);
 	}
 
-	public void save(Iterator<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {	
+	public void save(Iterator<DatabaseVersion> databaseVersions, File destinationFile) throws IOException {
 		try {
 			PrintWriter out;
-			
+
 			if (transformer == null) {
 				out = new PrintWriter(new OutputStreamWriter(
 						new FileOutputStream(destinationFile), "UTF-8"));
@@ -90,17 +86,17 @@ public class DatabaseXmlSerializer {
 				out = new PrintWriter(new OutputStreamWriter(
 						transformer.createOutputStream(new FileOutputStream(destinationFile)), "UTF-8"));
 			}
-			
+
 			// Initialize XML writer
 			new DatabaseXmlWriter(databaseVersions, out).write();
 		}
 		catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
-	}		
+	}
 
-	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
-			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentPurgeVersions) throws IOException {
+	public void load(MemoryDatabase db, File databaseFile, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType)
+			throws IOException {
 		
 		InputStream is;
 
@@ -110,18 +106,18 @@ public class DatabaseXmlSerializer {
 		else {
 			is = transformer.createInputStream(new FileInputStream(databaseFile));
 		}
-        
-        try {
-			logger.log(Level.INFO, "- Loading database ({0}, {1}) from file {2} ...", new Object[] { readType, filterType, databaseFile });
+
+		try {
+			logger.log(Level.INFO, "- Loading database ({0}) from file {1} ...", new Object[] { readType, databaseFile });
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();
-			
-			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, readType, filterType, ignoredMostRecentPurgeVersions));
-        }
-        catch (Exception e) {
-        	throw new IOException(e);
-        } 
+
+			saxParser.parse(is, new DatabaseXmlParseHandler(db, fromVersion, toVersion, readType));
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
 }

@@ -17,7 +17,8 @@
  */
 package org.syncany.tests.operations;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -104,7 +105,7 @@ public class CleanupOperationTest {
 		// A: Cleanup this mess (except for two) <<<< This is the interesting part!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
-		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(11, cleanupOperationResult.getMergedDatabaseFilesCount());
 		assertEquals(5, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertEquals(3, cleanupOperationResult.getRemovedOldVersionsCount());
 
@@ -124,7 +125,11 @@ public class CleanupOperationTest {
 
 		// Test the repo
 		assertEquals(5, new File(testConnection.getPath() + "/multichunks/").list().length);
-		assertEquals(12, new File(testConnection.getPath() + "/databases/").list().length);
+		assertEquals(1, new File(testConnection.getPath() + "/databases/").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 
 		// B: Sync down cleanup
 		clientB.down();
@@ -279,7 +284,7 @@ public class CleanupOperationTest {
 		// A: Cleanup
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
-		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
+		assertEquals(4, cleanupOperationResult.getMergedDatabaseFilesCount());
 		assertEquals(2, cleanupOperationResult.getRemovedMultiChunks().size());
 		assertEquals(1, cleanupOperationResult.getRemovedOldVersionsCount());
 
@@ -437,6 +442,7 @@ public class CleanupOperationTest {
 		TestClient clientA = new TestClient("A", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMinSecondsBetweenCleanups(0);
 		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(10);
@@ -573,7 +579,7 @@ public class CleanupOperationTest {
 		assertEquals(6, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
 		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
-		
+
 		// Run cleanup, fails mid-move!
 		boolean operationFailed = false;
 
@@ -586,16 +592,20 @@ public class CleanupOperationTest {
 		}
 
 		assertTrue(operationFailed);
-		assertEquals(1, repoTransactionsDir.list().length);
-		assertEquals(1, repoTemporaryDir.list().length);
+		assertEquals(1, repoTransactionsDir.listFiles().length);
+		assertEquals(0, repoTemporaryDir.listFiles().length);
 		assertEquals(6, repoDatabasesDir.listFiles().length);
 		assertEquals(6, repoMultiChunkDir.listFiles().length);
 		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
-		
+
 		// Retry
 		clientA.cleanup(options);
 
-		assertEquals(1, repoDatabasesDir.listFiles().length);
+		assertEquals(1, repoDatabasesDir.listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 		assertEquals(5, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
 		assertEquals(0, repoDir.list(new FilenameFilter() {
@@ -609,7 +619,6 @@ public class CleanupOperationTest {
 			}
 		}).length);
 		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
-		
 
 		// Tear down
 		clientA.deleteTestData();

@@ -47,21 +47,21 @@ import org.syncany.util.SqlRunner;
  */
 public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
-	
+
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
 	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
 	public static final String DATABASE_RESOURCE_PATTERN = "/org/syncany/database/sql/%s";
-	public static final String DATABASE_RESOURCE_CREATE_ALL = "create.all.sql";	
-	
-	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>(); 
-	
+	public static final String DATABASE_RESOURCE_CREATE_ALL = "script.create.all.sql";
+
+	public static final Map<String, String> DATABASE_STATEMENTS = new HashMap<String, String>();
+
 	static {
 		try {
-			logger.log(Level.INFO, "Loading database driver "+DATABASE_DRIVER+" ...");
+			logger.log(Level.INFO, "Loading database driver " + DATABASE_DRIVER + " ...");
 			Class.forName(DATABASE_DRIVER);
 		}
 		catch (Exception e) {
-			throw new RuntimeException("Cannot load database driver: "+DATABASE_DRIVER, e);
+			throw new RuntimeException("Cannot load database driver: " + DATABASE_DRIVER, e);
 		}
 	}
 
@@ -76,14 +76,14 @@ public class DatabaseConnectionFactory {
 	public static Connection createConnection(File databaseFile) {
 		String databaseFilePath = FileUtil.getDatabasePath(databaseFile.toString());
 		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFilePath);
-		
+
 		if (logger.isLoggable(Level.FINEST)) {
 			connectionString += ";hsqldb.sqllog=3";
 		}
-		
+
 		return createConnection(connectionString);
 	}
-	
+
 	/**
 	 * Retrieves a SQL statement template from a resource using the given resource identifier. From
 	 * this template, a {@link PreparedStatement} can be created.
@@ -97,34 +97,45 @@ public class DatabaseConnectionFactory {
 	public synchronized static String getStatement(String resourceIdentifier) {
 		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, resourceIdentifier);
 		String preparedStatement = DATABASE_STATEMENTS.get(fullResourcePath);
-		
+
 		if (preparedStatement != null) {
 			return preparedStatement;
 		}
 		else {
-			InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-			
-			if (statementInputStream == null) {
-				throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
-			}
-			
-			preparedStatement = readDatabaseStatement(statementInputStream);			
-			DATABASE_STATEMENTS.put(fullResourcePath, preparedStatement);			
-			
+			InputStream statementInputStream = getStatementInputStream(resourceIdentifier);
+
+			preparedStatement = readDatabaseStatement(statementInputStream);
+			DATABASE_STATEMENTS.put(fullResourcePath, preparedStatement);
+
 			return preparedStatement;
-		}		
+		}
 	}
-	
+
+	public synchronized static InputStream getStatementInputStream(String resourceIdentifier) {
+		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, resourceIdentifier);
+		InputStream statementInputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
+
+		if (statementInputStream == null) {
+			throw new RuntimeException("Unable to load SQL statement '" + fullResourcePath + "'.");
+		}
+
+		return statementInputStream;
+	}
+
 	private static Connection createConnection(String connectionString) {
 		try {
-			Connection connection = DriverManager.getConnection(connectionString);			
+			Connection connection = DriverManager.getConnection(connectionString);
 			connection.setAutoCommit(false);
-			
+
+			// We use UNCOMMITTED read to enable operations to alter the database and continue
+			// with those changes, but still roll back the database if something goes wrong later.
+			connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+
 			// Test and create tables
 			if (!tablesExist(connection)) {
 				createTables(connection);
 			}
-			
+
 			return connection;
 		}
 		catch (Exception e) {
@@ -135,12 +146,12 @@ public class DatabaseConnectionFactory {
 			}
 			throw new RuntimeException("Cannot create new connection; database down?", e);
 		}
-	} 
+	}
 
 	private static boolean tablesExist(Connection connection) {
 		try {
 			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
-			
+
 			if (resultSet.next()) {
 				return true;
 			}
@@ -152,20 +163,20 @@ public class DatabaseConnectionFactory {
 			return false;
 		}
 	}
-	
+
 	private static void createTables(Connection connection) throws SQLException, IOException {
-		logger.log(Level.INFO, "Database has no tables. Creating tables from "+DATABASE_RESOURCE_CREATE_ALL);
-		
+		logger.log(Level.INFO, "Database has no tables. Creating tables from " + DATABASE_RESOURCE_CREATE_ALL);
+
 		String fullResourcePath = String.format(DATABASE_RESOURCE_PATTERN, DATABASE_RESOURCE_CREATE_ALL);
 		InputStream inputStream = DatabaseConnectionFactory.class.getResourceAsStream(fullResourcePath);
-		
+
 		connection.setAutoCommit(true);
-		
+
 		SqlRunner.runScript(connection, inputStream);
-		 
+
 		connection.setAutoCommit(false);
 	}
-	
+
 	// TODO [low] Shouldn't the SqlRunner be used here? If so, the SqlRunner also needs refactoring.
 	private static String readDatabaseStatement(InputStream inputStream) {
 		try {
@@ -173,23 +184,23 @@ public class DatabaseConnectionFactory {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
 			String line = null;
-			
+
 			while (null != (line = reader.readLine())) {
 				String trimmedLine = line.trim();
-				
+
 				if (!trimmedLine.startsWith("--")) {
 					preparedStatementStr.append(" ");
 					preparedStatementStr.append(trimmedLine);
 				}
 			}
-			
+
 			reader.close();
 			inputStream.close();
-			
+
 			return preparedStatementStr.toString();
 		}
 		catch (IOException e) {
 			throw new RuntimeException("Unable to read SQL statement from resource.", e);
-		}		
+		}
 	}
 }

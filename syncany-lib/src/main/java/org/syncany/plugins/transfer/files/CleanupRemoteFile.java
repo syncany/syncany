@@ -20,39 +20,40 @@ package org.syncany.plugins.transfer.files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.StorageException;
 
 /**
- * The transaction file represents a manifest of a transaction on the remote storage. 
+ * The transaction file only exists as an indicator to other clients a cleanup has occurred.
  * 
- * <p><b>Name pattern:</b> The name pattern of a transaction file is
- * <b>transaction-&lt;filehexhashcode&gt;</b>.
+ * <p><b>Name pattern:</b> The name pattern of a cleanup file is
+ * <b>cleanup-&lt;cleanupnumber&gt;</b>.
  * 
  * @author Pim Otte
  */
-public class TransactionRemoteFile extends RemoteFile {
-	private static final Pattern NAME_PATTERN = Pattern.compile("transaction-([a-f0-9]+)");
-	private static final String NAME_FORMAT = "transaction-%s";
+public class CleanupRemoteFile extends RemoteFile {
+	private static final Pattern NAME_PATTERN = Pattern.compile("cleanup-([0-9]+)");
+	private static final String NAME_FORMAT = "cleanup-%s";
+
+	private long cleanupNumber;
 
 	/**
-	 * Initializes a new transaction file, given a name. 
+	 * Initializes a new cleanup file, given a name. 
 	 * 
-	 * @param name transaction file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * @param name cleanup file name; <b>must</b> always match the {@link #NAME_PATTERN} 
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public TransactionRemoteFile(String name) throws StorageException {
+	public CleanupRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
 	/**
-	 * Initializes a new transaction file, given the transaction itself.
+	 * Initializes a new transaction file, given which cleanup has occurred 
 	 * 
 	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
-	public TransactionRemoteFile(RemoteTransaction remoteTransaction) throws StorageException {
-		super(String.format(NAME_FORMAT, Integer.toHexString(remoteTransaction.hashCode())));
+	public CleanupRemoteFile(long cleanupNumber) throws StorageException {
+		super(String.format(NAME_FORMAT, Long.toString(cleanupNumber)));
 	}
 
 	@Override
@@ -63,6 +64,12 @@ public class TransactionRemoteFile extends RemoteFile {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
 
+		cleanupNumber = Long.parseLong(matcher.group(1));
+
 		return name;
+	}
+
+	public long getCleanupNumber() {
+		return cleanupNumber;
 	}
 }

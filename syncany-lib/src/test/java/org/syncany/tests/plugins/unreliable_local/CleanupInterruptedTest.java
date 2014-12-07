@@ -21,11 +21,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -82,9 +87,9 @@ public class CleanupInterruptedTest {
 		TransferManager transferManager = new TransactionAwareTransferManager(
 				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(0, new File(testConnection.getPath(), "databases").list().length);
 		assertEquals(1, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
@@ -93,8 +98,12 @@ public class CleanupInterruptedTest {
 		clientA.cleanup(cleanupOptions);
 		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
-		assertEquals(3, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(3, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
@@ -158,13 +167,20 @@ public class CleanupInterruptedTest {
 			tempFile.delete();
 		}
 
-		clientA.cleanup(cleanupOptions);
+		// Cleanup should have merged the two files.
+		CleanupOperationResult result = clientA.cleanup(cleanupOptions);
+		assertEquals(CleanupResultCode.OK, result.getResultCode());
+		assertEquals(2, result.getMergedDatabaseFilesCount());
 
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
 
 		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
@@ -195,6 +211,70 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMaxDatabaseFiles(1);
+		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		clientA.cleanup(cleanupOptions);
+
+		TransferManager transferManager = new TransactionAwareTransferManager(
+				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
+
+		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
+		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
+
+		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.startsWith("database-");
+			}
+		}).length);
+
+		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
+		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
+
+		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
+
+		// One deletion failed 
+		assertEquals(1, transferManager.list(TempRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "temporary").list().length);
+
+		// Change something to trigger cleanup
+		clientA.changeFile("file");
+		clientA.up();
+
+		CleanupOperationResult result = clientA.cleanup(cleanupOptions);
+
+		// Functional cleanup results in removal of action file and unreferenced files
+		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
+		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
+
+		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
+		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
+	}
+
+	@Test
+	public void testUnreliableCleanup_failBlocksOtherClients() throws Exception {
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+						"rel=(12|13|14).+upload.+database", // << 3 retries!!
+				}
+						));
+
+		TestClient clientA = new TestClient("A", testConnection);
+		TestClient clientB = new TestClient("B", testConnection);
+
+		clientA.createNewFile("file");
+
+		clientA.up();
+
+		clientA.changeFile("file");
+		clientA.upWithForceChecksum();
+		clientB.down();
+
+		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
+		cleanupOptions.setKeepVersionsCount(1);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -203,33 +283,17 @@ public class CleanupInterruptedTest {
 			cleanupFailed = true;
 		}
 
-		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
-
 		assertTrue(cleanupFailed);
-		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
-		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "databases").list().length);
+		// Pretend time has passed by deleting the action file:
+		TestFileUtil.deleteFile(new File(testConnection.getPath(), "/actions/").listFiles()[0]);
 
-		assertEquals(0, transferManager.list(TransactionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getPath(), "transactions").list().length);
+		CleanupOperationResult cleanupResult = clientB.cleanup(cleanupOptions);
+		assertEquals(CleanupResultCode.NOK_REPO_BLOCKED, cleanupResult.getResultCode());
 
-		assertEquals(1, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(1, new File(testConnection.getPath(), "actions").list().length);
+		clientB.createNewFile("file2");
+		UpOperationResult upResult = clientB.up();
+		assertEquals(UpResultCode.NOK_REPO_BLOCKED, upResult.getResultCode());
 
-		// Two temporary files left (first deletion failed)
-		assertEquals(2, transferManager.list(TempRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "temporary").list().length);
-
-		clientA.cleanup(cleanupOptions);
-
-		// Functional cleanup results in removal of action file and unreferenced files
-		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
-
-		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
-		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
 	}
 }

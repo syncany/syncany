@@ -29,6 +29,8 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
+import org.syncany.plugins.transfer.files.CleanupRemoteFile;
+import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
  * Represents and is inherited by a transfer operation. Transfer operations are operations
@@ -146,6 +148,39 @@ public abstract class AbstractTransferOperation extends Operation {
 				logger.log(Level.INFO, "- Action file is current; ignoring " + actionRemoteFile + " ...");
 			}
 		}
+	}
+
+	/**
+	 * This method is used to determine how a database file should be named when
+	 * it is about to be uploaded. It returns the number of the newest database file (which is the
+	 * highest number).
+	 * 
+	 * @param client name of the client for which we want to upload a database version.
+	 * @param knownDatabases all DatabaseRemoteFiles present in the repository
+	 * @return the largest database fileversion number.
+	 */
+	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
+		// Obtain last known database file version number and increment it
+		long clientVersion = 0;
+		
+		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
+			if (databaseRemoteFile.getClientName().equals(client)) {
+				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
+			}
+		}
+		
+		return clientVersion;
+	}
+
+	protected long getLastRemoteCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
+		long cleanupNumber = 0;
+		
+		// Find the number of the last cleanup
+		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
+			cleanupNumber = Math.max(cleanupNumber, cleanupRemoteFile.getCleanupNumber());
+		}
+		
+		return cleanupNumber;
 	}
 
 	private boolean isOutdatedActionFile(ActionRemoteFile actionFile) {
