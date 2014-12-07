@@ -1,12 +1,14 @@
 Change Log
 ==========
 
-### Syncany 0.2.1-alpha (Date: Tbd.)
+### Syncany 0.3.0-alpha (Date: Tbd.)
+- **Breaks compatiblity to 0.2.0-alpha local folders!**
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
   + Implement [OpenStack Swift plugin](https://github.com/syncany/syncany-plugin-swift) #251
   + Allow setting repo password in `sy connect` and `sy init` via 
     `--password` option #256
+  + Rework of CleanupOperation. Merge databasefiles every cleanup. Drops PURGE concept. #284
 - Bugfixes and other things:
   + Fix Windows/CMD incompatibility with batch file #270
   
