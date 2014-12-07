@@ -33,19 +33,20 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  *  <li>Comparison by name of the client</li>
  * </ol>
  * 
- * <b>Note:</b> This comparator can only be used if the database version headers (namely, the {@link VectorClock}s)
- * in the set/list are not in conflict. Conflicting/simultaneous vector clocks will throw a {@link RuntimeException}. 
- * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
 	private boolean considerTime;
 
 	public DatabaseVersionHeaderComparator(boolean considerTime) {
-		super();
 		this.considerTime = considerTime;
 	}
 
+	/**
+	 * Compares the two given database versions headers and returns -1, 0 or 1 depending on
+	 * which header is considered larger. See {@link DatabaseVersionHeaderComparator class description}
+	 * for details regarding the precedence.  
+	 */
 	@Override
 	public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		return compareByVectorClock(o1, o2);
@@ -53,6 +54,7 @@ public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersi
 
 	private int compareByVectorClock(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
+		
 		if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
 			if (considerTime) {
 				return compareByTimestamp(o1, o2);
@@ -61,9 +63,10 @@ public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersi
 				return 0;
 			}
 		}
+		
 		if (vectorClockComparison == VectorClockComparison.EQUAL) {
 			return compareByTimestamp(o1, o2);
-		}
+		}		
 		else if (vectorClockComparison == VectorClockComparison.SMALLER) {
 			return -1;
 		}

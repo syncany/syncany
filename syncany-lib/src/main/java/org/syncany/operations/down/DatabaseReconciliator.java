@@ -54,8 +54,8 @@ import org.syncany.database.VectorClock;
  * @see DownOperation
  * @see VectorClock
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Steffen Dangmann <steffen.dangmann@googlemail.com>
  * @author Pim Otte <otte.pim@gmail.com>
+ * @author Steffen Dangmann <steffen.dangmann@googlemail.com>
  */
 public class DatabaseReconciliator {
 	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
@@ -153,7 +153,8 @@ public class DatabaseReconciliator {
 	 * 2 | A/(A3)/T=19          
 	 * 3 | A/(A4)/T=23       
 	 * </pre>
-	 * Sorted DatabaseVersions:
+	 * 
+	 * <b>Sorted Database versions:</b>
 	 * <ol>
 	 * 	<li>A[0]:A/(A1)/T=10</li>
 	 *  <li>A[1]:A/(A2)/T=13</li>
@@ -163,24 +164,20 @@ public class DatabaseReconciliator {
 	 *  <li>B[0]:B/(A3,B1)/T=20</li>
 	 *  <li>A[3]:A/(A4)/T=23</li>
 	 * </ol> 
-	 *  Iterating through the list:
+	 * 
+	 * <b>Iterating through the list:</b>
+	 * <ol> 
+	 *  <li>A[0] is the first version. Add it.</li>
+	 *  <li>A[1] > A[0]. Add it.</li>
+	 *  <li>C[0] is simultaneous with A[1]. Ignore it.</li>
+	 *  <li>C[1] is simultaneous with A[1]. Ignore it.</li>
+	 *  <li>A[2] > A[1]. Add it.</li>
+	 *  <li>B[0] > A[2]. Add it.</li>
+	 *  <li>A[3] is simultaneous with B[0]. Ignore it.</li>
+	 * </ol>
 	 *  
-	 *  A[0] is the first version. Add it.
-	 *  
-	 *  A[1] > A[0]. Add it.
-	 *  
-	 *  C[0] is simultaneous with A[1]. Ignore it.
-	 *  
-	 *  C[1] is simultaneous with A[1]. Ignore it.
-	 *  
-	 *  A[2] > A[1]. Add it.
-	 *  
-	 *  B[0] > A[2]. Add it.
-	 *  
-	 *  A[3] is simultaneous with B[0]. Ignore it.
-	 *  
-	 * Winning branch:
-	 *  <ol>
+	 * <b>Winning branch:</b>
+	 * <ol>
 	 * 	<li>A[0]:A/(A1)/T=10</li>
 	 *  <li>A[1]:A/(A2)/T=13</li>
 	 *  <li>A[2]:A/(A3)/T=19</li>
@@ -189,23 +186,25 @@ public class DatabaseReconciliator {
 	 * 
 	 * Last version matches last version of B. Hence B wins.
 	 * 
-	 * // B wins!
-	 * </pre>
-	 * 
 	 * @param allStitchedBranches All branches of all machines (including local)
 	 * @return Returns the name and the branch of the winning machine 
 	 */
 	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = sortBranches(allBranches);
+		
 		if (databaseVersionHeaders.size() == 0) {
 			return null;
 		}
+		
+		// Determine winning branch
 		DatabaseBranch winnersBranch = new DatabaseBranch();
-		DatabaseVersionHeaderComparator dbvComparator = new DatabaseVersionHeaderComparator(false);
+		DatabaseVersionHeaderComparator databaseVersionHeaderComparator = new DatabaseVersionHeaderComparator(false);
 
 		for (DatabaseVersionHeader potentialWinner : databaseVersionHeaders) {
+			boolean emptyWinnerBranch = winnersBranch.size() == 0;
+			boolean potentialWinnerWins = !emptyWinnerBranch && databaseVersionHeaderComparator.compare(potentialWinner, winnersBranch.getLast()) > 0;
 
-			if (winnersBranch.size() == 0 || dbvComparator.compare(potentialWinner, winnersBranch.getLast()) > 0) {
+			if (emptyWinnerBranch || potentialWinnerWins) {
 				logger.log(Level.INFO, "Adding database version to winning branch: " + potentialWinner);
 				winnersBranch.add(potentialWinner);
 			}
@@ -214,11 +213,15 @@ public class DatabaseReconciliator {
 			}
 		}
 
-		DatabaseVersionHeader winningDatabaseVersionHeader = winnersBranch.getLast();
+		// Determine client name for winning branch
+		DatabaseVersionHeader winningLastDatabaseVersionHeader = winnersBranch.getLast();
 
-		for (String client : allBranches.getClients()) {
-			if (winningDatabaseVersionHeader.equals(allBranches.getBranch(client).getLast())) {
-				return new AbstractMap.SimpleEntry<String, DatabaseBranch>(client, winnersBranch);
+		for (String currentClient : allBranches.getClients()) {
+			DatabaseBranch currentBranch = allBranches.getBranch(currentClient);
+			DatabaseVersionHeader currentBranchLastDatabaseVersionHeader = currentBranch.getLast();
+			
+			if (winningLastDatabaseVersionHeader.equals(currentBranchLastDatabaseVersionHeader)) {
+				return new AbstractMap.SimpleEntry<String, DatabaseBranch>(currentClient, winnersBranch);
 			}
 		}
 
@@ -227,9 +230,11 @@ public class DatabaseReconciliator {
 
 	private List<DatabaseVersionHeader> sortBranches(DatabaseBranches allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
+		
 		for (String client : allBranches.getClients()) {
 			databaseVersionHeaders.addAll(allBranches.getBranch(client).getAll());
 		}
+		
 		Collections.sort(databaseVersionHeaders, new DatabaseVersionHeaderComparator(true));
 
 		return databaseVersionHeaders;
