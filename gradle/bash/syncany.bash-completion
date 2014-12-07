@@ -226,7 +226,6 @@ _sy() {
 
 	CLEANUP_OPTIONS="\
 		-F --force\
-		-M --no-database-merge\
 		-V --no-version-removal\
 		-T --no-temp-removal\
 		-k --keep-versions\

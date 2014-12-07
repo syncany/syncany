@@ -53,7 +53,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientC = new TestClient("C", testConnection);
 
 		CleanupOperationOptions cleanupOptionsOnlyMergeDatabases = new CleanupOperationOptions();
-		cleanupOptionsOnlyMergeDatabases.setMergeRemoteFiles(true);
 		cleanupOptionsOnlyMergeDatabases.setRemoveOldVersions(false);
 
 		UpOperationOptions upOperationOptionsNoCleanup = new UpOperationOptions();
@@ -131,7 +130,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(5);
 		options.setMinSecondsBetweenCleanups(0);
@@ -280,7 +278,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientC = new TestClient("C", testConnection);
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
-		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
@@ -342,7 +339,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientC = new TestClient("C", testConnection);
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
-		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
@@ -372,7 +368,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		FileUtils.copyDirectory(clientB.getConfig().getDatabaseDir(), new File(clientB.getConfig().getAppDir(), "1_before_cleanup"));
 
 		CleanupOperationOptions cleanupMergeAndRemoveOldFiles = new CleanupOperationOptions();
-		cleanupMergeAndRemoveOldFiles.setMergeRemoteFiles(true);
 		cleanupMergeAndRemoveOldFiles.setRemoveOldVersions(true);
 		clientB.cleanup(cleanupMergeAndRemoveOldFiles);
 
@@ -401,7 +396,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientE = new TestClient("E", testConnection);
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
-		cleanupOptionsKeep1.setMergeRemoteFiles(true);
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
 		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
@@ -437,7 +431,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		FileUtils.copyDirectory(clientA.getConfig().getDatabaseDir(), new File(clientA.getConfig().getAppDir(), "1_before_cleanup"));
 
 		CleanupOperationOptions cleanupMergeAndRemoveOldFiles = new CleanupOperationOptions();
-		cleanupMergeAndRemoveOldFiles.setMergeRemoteFiles(true);
 		cleanupMergeAndRemoveOldFiles.setRemoveOldVersions(true);
 		clientA.cleanup(cleanupMergeAndRemoveOldFiles);
 
@@ -494,7 +487,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.deleteTestData();
 		clientC.deleteTestData();
 	}
-	
+
 	@Test
 	public void testIssue266_EmptyDatabaseAfterCleanup() throws Exception {
 		// Test for https://github.com/syncany/syncany/issues/266#issuecomment-64472059
@@ -509,16 +502,15 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientE = new TestClient("E", testConnection);
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
-		cleanupOptionsKeepOneForce.setMergeRemoteFiles(true);
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
 		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
 
 		// Create a couple of files, then delete them and do a cleanup
-		
-		clientA.createNewFile("fileA");		
+
+		clientA.createNewFile("fileA");
 		clientA.upWithForceChecksum();
-		
+
 		clientB.down();
 		clientB.createNewFile("fileB");
 		clientB.upWithForceChecksum();
@@ -526,20 +518,21 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientC.down();
 		clientC.createNewFile("fileC");
 		clientC.upWithForceChecksum();
-		
+
 		clientD.down();
 		clientD.deleteFile("fileA");
 		clientD.deleteFile("fileB");
 		clientD.deleteFile("fileC");
 		clientD.upWithForceChecksum();
 		clientD.cleanup(cleanupOptionsKeepOneForce);
-		
+
 		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile());
-		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
-		assertEquals("", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));				
-				
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002",
+				TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
+		assertEquals("", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));
+
 		// Now the remote databases are completely empty (no files, no histories, no database versions!)
-		
+
 		/* Case 1: 
 		 * 
 		 * Client A now knows "fileA" and must react on the cleanup by client D.
@@ -547,20 +540,21 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		 * client A has to detect the deletion by comparing the local database with 
 		 * the winner database. "fileA" should be deleted after the next 'down'.
 		 */
-		
-		clientA.down();		// Existing client  << This created a NullPointerException in #266
+
+		clientA.down(); // Existing client  << This created a NullPointerException in #266
 		assertFalse("File 'fileA' should have been deleted.", clientA.getLocalFile("fileA").exists());
 		assertFalse("File 'fileB' should not have been created.", clientA.getLocalFile("fileB").exists());
 		assertFalse("File 'fileC' should not have been created.", clientA.getLocalFile("fileC").exists());
-		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());		
-		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());		
-		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());				
+		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());
+		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());
+		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientA.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientA.getLocalFiles());
 
 		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
-		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionA));
-		
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002",
+				TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionA));
+
 		/*
 		 * Case 2:
 		 * 
@@ -568,47 +562,53 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		 * it has no local database, and (in this case), the remote/winner database is completely
 		 * empty!
 		 */
-		
-		clientE.down();		// Empty/new client << This created a NullPointerException 
+
+		clientE.down(); // Empty/new client << This created a NullPointerException 
 		assertFalse("File 'fileA' should not have been created.", clientE.getLocalFile("fileA").exists());
 		assertFalse("File 'fileB' should not have been created.", clientE.getLocalFile("fileB").exists());
 		assertFalse("File 'fileC' should not have been created.", clientE.getLocalFile("fileC").exists());
-		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());		
-		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());		
-		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());				
+		assertConflictingFileNotExists("fileA", clientA.getLocalFiles());
+		assertConflictingFileNotExists("fileB", clientA.getLocalFiles());
+		assertConflictingFileNotExists("fileC", clientA.getLocalFiles());
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientE.getLocalFiles());
-		
+
 		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientE.getDatabaseFile());
-		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
+		assertEquals("database-A-0000000002\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002",
+				TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
 
 		// After a successful down, create a new database version (continue numbering!)
-				
+
 		clientA.createNewFile("fileA");
 		UpOperationResult upResult = clientA.upWithForceChecksum();
-		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
-		assertEquals("(A3,B2,C2,D2)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionA));				
-		
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());
+		assertEquals("(A3,B2,C2,D2)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionA));
+
 		// Check if E applies everything correctly and check E's numbering
-		
+
 		clientE.down();
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientA.getLocalFiles(), clientE.getLocalFiles());
-		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
+		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002",
+				TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionE));
 
 		clientE.changeFile("fileA");
 		upResult = clientE.upWithForceChecksum();
-		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());		
-		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionE));				
-		
+		assertEquals(UpResultCode.OK_CHANGES_UPLOADED, upResult.getResultCode());
+		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)",
+				TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionE));
+
 		// And with D ...
-		
+
 		clientD.down();
 		assertSqlDatabaseEquals(clientE.getDatabaseFile(), clientD.getDatabaseFile());
-		assertFileListEquals(clientE.getLocalFiles(), clientD.getLocalFiles());		
-		assertEquals("database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002\ndatabase-E-0000000001", TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
-		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));				
-		
+		assertFileListEquals(clientE.getLocalFiles(), clientD.getLocalFiles());
+		assertEquals(
+				"database-A-0000000002\ndatabase-A-0000000003\ndatabase-B-0000000002\ndatabase-C-0000000002\ndatabase-D-0000000002\ndatabase-E-0000000001",
+				TestSqlUtil.runSqlSelect("select database_name from known_databases order by database_name", databaseConnectionD));
+		assertEquals("(A3,B2,C2,D2)\n(A3,B2,C2,D2,E1)",
+				TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));
+
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
@@ -628,25 +628,24 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
-		cleanupOptionsKeepOneForce.setMergeRemoteFiles(true);
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
 		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
 
 		// Create a couple of files, then delete them and do a cleanup
-		
+
 		clientA.createNewFile("fileA1");
 		clientA.createNewFile("fileA2");
 		clientA.upWithForceChecksum();
-		
+
 		clientB.down();
 		clientB.deleteFile("fileA1");
 		clientB.upWithForceChecksum();
 		clientB.cleanup(cleanupOptionsKeepOneForce); // <<< This accidentally(?) deletes file histories marked DELETED
-		
-		clientA.down(); 		
-		assertFalse("Deleted file still exists.", clientA.getLocalFile("fileA1").exists()); 
-		
+
+		clientA.down();
+		assertFalse("Deleted file still exists.", clientA.getLocalFile("fileA1").exists());
+
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();

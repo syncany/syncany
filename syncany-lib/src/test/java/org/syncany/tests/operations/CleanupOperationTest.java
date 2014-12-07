@@ -56,7 +56,6 @@ public class CleanupOperationTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(2);
 
@@ -152,7 +151,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setStatusOptions(statusOptions);
-		cleanupOptions.setMergeRemoteFiles(false);
 		cleanupOptions.setRemoveOldVersions(true);
 		cleanupOptions.setKeepVersionsCount(2);
 
@@ -189,7 +187,6 @@ public class CleanupOperationTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(2);
 
@@ -229,7 +226,6 @@ public class CleanupOperationTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(10); // <<<<<< Different!
 
@@ -265,7 +261,6 @@ public class CleanupOperationTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(false);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(2);
 
@@ -317,7 +312,6 @@ public class CleanupOperationTest {
 		TestClient clientB = new TestClient("B", testConnection);
 
 		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
-		removeOldCleanupOperationOptions.setMergeRemoteFiles(false);
 		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
 		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
 
@@ -443,7 +437,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMinSecondsBetweenCleanups(0);
-		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(10);
 		options.setMaxDatabaseFiles(3);
@@ -493,7 +486,6 @@ public class CleanupOperationTest {
 		TestClient clientA = new TestClient("A", testConnection);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(false);
 		options.setMinSecondsBetweenCleanups(40000000);
 
@@ -553,7 +545,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setStatusOptions(forceChecksumStatusOperationOptions);
-		options.setMergeRemoteFiles(true);
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(40000000);
 		options.setForce(true);
