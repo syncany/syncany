@@ -5,7 +5,7 @@ class Syncany < Formula
   url "https://codeload.github.com/syncany/syncany/tar.gz/v0.2.0-alpha"
   sha1 "5928db42002f2e9e0ffb76f94b7a9d81fa4fed89"
   version "0.2.0-alpha"
-  head "https://github.com/syncany/syncany.git"
+  head "https://github.com/syncany/syncany.git", :branch => "develop"
 
   depends_on :java => "1.7"
   depends_on "gradle" => "2.2"
