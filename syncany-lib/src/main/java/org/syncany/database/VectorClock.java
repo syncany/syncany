@@ -50,16 +50,15 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * Increases the component of a unit by 1.
 	 * 
 	 * @param unit The identifier of the vector element being increased
+	 * @return Returns the new clock value for the given unit
 	 */
-	public void incrementClock(String unit) {
+	public Long incrementClock(String unit) {
 		validateUnitName(unit);
 		
-		if (this.containsKey(unit)) {
-			this.put(unit, this.get(unit).longValue() + 1);
-		}
-		else {
-			this.put(unit, 1L);
-		}
+		Long newValue = (this.containsKey(unit)) ? this.get(unit).longValue() + 1 : 1L;		
+		this.put(unit, newValue);
+		
+		return newValue;
 	}
 	
 	private void validateUnitName(String unit) {

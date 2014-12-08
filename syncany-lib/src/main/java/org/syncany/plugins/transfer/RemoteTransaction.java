@@ -17,6 +17,10 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
@@ -26,10 +30,6 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.TransactionTO;
-
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class represents a transaction in a remote system. It will keep track of
@@ -225,16 +225,28 @@ public class RemoteTransaction {
 		// be cleaned up by CleanUp and download will not download these, because
 		// they are not in any transaction file.
 
+		boolean success = true;
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 				logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
-				transferManager.delete(tempRemoteFile);
+				try {
+					transferManager.delete(tempRemoteFile);
+				}
+				catch (Exception e) {
+					logger.log(Level.INFO, "Failed to delete: " + tempRemoteFile, " because of: " + e);
+					success = false;
+				}
 			}
 		}
 
-		logger.log(Level.INFO, "END of TX.delTemp(): Sucessfully deleted final files.");
+		if (success) {
+			logger.log(Level.INFO, "END of TX.delTemp(): Sucessfully deleted final files.");
+		}
+		else {
+			logger.log(Level.INFO, "END of TX.delTemp(): Did not succesfully delete all files!");
+		}
 	}
 
 	private class TransactionStats {

@@ -25,9 +25,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
@@ -47,7 +45,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  */
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());
-	
+
 	private TransferManager loadedTransferManager;
 	private SqlDatabase localDatabase;
 	private LocalEventBus eventBus;
@@ -71,7 +69,7 @@ public class LsRemoteOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
-		
+
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
 				: config.getTransferPlugin().createTransferManager(config.getConnection(), config);
@@ -83,7 +81,7 @@ public class LsRemoteOperation extends Operation {
 
 		boolean hasChanges = unknownRemoteDatabases.size() > 0;
 		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));
-		
+
 		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
 	}
 
@@ -96,45 +94,17 @@ public class LsRemoteOperation extends Operation {
 		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
 
-		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
-
-		// No local database yet
-		if (lastLocalDatabaseVersionHeader == null) {
-			logger.log(Level.INFO, "- No local database versions yet. Assuming all {0} remote database files are unknown. ",
-					remoteDatabaseFiles.size());
-			
-			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
-		}
-
-		// At least one local database version exists
-		else {
-			VectorClock knownDatabaseVersions = lastLocalDatabaseVersionHeader.getVectorClock();
-
-			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
-				String clientName = remoteDatabaseFile.getClientName();
-				Long knownClientVersion = knownDatabaseVersions.getClock(clientName);
-
-				// This does NOT filter 'lock' files!
-
-				if (knownClientVersion != null) {
-					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {
-						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteDatabaseFile.getName());
-					}
-					else if (knownDatabases.contains(remoteDatabaseFile)) {
-						logger.log(Level.INFO, "- Remote database {0} is already known (in local database). Ignoring.", remoteDatabaseFile.getName());
-					}
-					else {
-						logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-						unknownRemoteDatabases.add(remoteDatabaseFile);
-					}
-				}
-				else {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-					unknownRemoteDatabases.add(remoteDatabaseFile);
-				}
+		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
+			// This does NOT filter 'lock' files!
+			if (knownDatabases.contains(remoteDatabaseFile)) {
+				logger.log(Level.INFO, "- Remote database {0} is already known (in local database). Ignoring.", remoteDatabaseFile.getName());
 			}
-
-			return unknownRemoteDatabases;
+			else {
+				logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
+				unknownRemoteDatabases.add(remoteDatabaseFile);
+			}
 		}
+
+		return unknownRemoteDatabases;
 	}
 }

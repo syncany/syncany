@@ -101,6 +101,8 @@ public class SqlDatabase {
 			removeUnreferencedFileContents();
 			removeUnreferencedMultiChunks();
 			removeUnreferencedChunks();
+
+			removeEmptyDatabaseVersionHeaders();
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -115,6 +117,34 @@ public class SqlDatabase {
 
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		return applicationDao.getKnownDatabases();
+	}
+	
+	public VectorClock getHighestKnownDatabaseFilenameNumbers() {
+		return applicationDao.getHighestKnownDatabaseFilenameNumbers();
+	}
+	
+	public void removeKnownDatabases() {
+		applicationDao.removeKnownDatabases();
+	}
+
+	public Long getCleanupNumber() {
+		return applicationDao.getCleanupNumber();
+	}
+	
+	public Long getCleanupTime() {
+		return applicationDao.getCleanupTime();
+	}
+	
+	public void writeCleanupNumber(long cleanupNumber) {
+		applicationDao.writeCleanupNumber(cleanupNumber);		
+	}
+	
+	public void writeCleanupTime(long cleanupTime) {
+		applicationDao.writeCleanupTime(cleanupTime);		
+	}
+
+	public void deleteAll() {
+		applicationDao.deleteAll();
 	}
 
 	public void shutdown() {
@@ -143,14 +173,14 @@ public class SqlDatabase {
 		return databaseVersionDao.getNonEmptyDatabaseVersionHeaders();
 	}
 
-	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long writeDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.writeDatabaseVersion(databaseVersion);
 	}
 
 	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
 		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
 	}
-	
+
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
@@ -161,6 +191,10 @@ public class SqlDatabase {
 
 	public void removeDirtyDatabaseVersions(long newDatabaseVersionId) {
 		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId);
+	}
+
+	public void removeEmptyDatabaseVersionHeaders() {
+		databaseVersionDao.removeEmptyDatabaseVersionHeaders();
 	}
 
 	public Long getMaxDirtyVectorClock(String machineName) {

@@ -2,7 +2,6 @@
 
 CREATE CACHED TABLE databaseversion (
   id int NOT NULL IDENTITY,
-  type varchar(45) NOT NULL,
   status varchar(45) NOT NULL,
   localtime datetime NOT NULL,
   client varchar(45) NOT NULL,
@@ -102,9 +101,16 @@ CREATE CACHED TABLE multichunk_muddy (
 CREATE CACHED TABLE known_databases (
   id int NOT NULL IDENTITY,
   database_name varchar(255) NOT NULL,
+  client varchar(45) NOT NULL,
+  filenumber int NOT NULL,
   UNIQUE (database_name)
 );
 
+CREATE CACHED TABLE general_settings (
+  key varchar(255) NOT NULL,
+  value varchar(255) NOT NULL,
+  PRIMARY KEY (key)
+);
 
 -- Non-primary indices                              
 
@@ -191,12 +197,3 @@ begin atomic
 
 	return strCount;
 end;
-
-	
-	
-	
-	
-	
-	
-	
-	

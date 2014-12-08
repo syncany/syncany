@@ -21,6 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -106,6 +107,16 @@ public class TestAssertUtil {
 	}
 	
 	public static void assertConflictingFileExists(String originalFile, Map<String, File> actualFiles) {
+		boolean conflictingFileExists = conflictingFileExists(originalFile, actualFiles);
+		assertTrue("Conflicting file for '" + originalFile + "' does NOT exist, but it should exist.", conflictingFileExists);
+	}
+	
+	public static void assertConflictingFileNotExists(String originalFile, Map<String, File> actualFiles) {
+		boolean conflictingFileExists = conflictingFileExists(originalFile, actualFiles);
+		assertFalse("Conflicting file for '" + originalFile + "' does exist, but it should NOT exist.", conflictingFileExists);		
+	}
+	
+	private static boolean conflictingFileExists(String originalFile, Map<String, File> actualFiles) {
 		String fileNameWithoutExtention = TestFileUtil.getBasename(originalFile);
 		Pattern conflictFilePattern = Pattern.compile(fileNameWithoutExtention + ".*conflicted.*");
 		
@@ -120,7 +131,8 @@ public class TestAssertUtil {
 				break;
 			}
 		}		
-		assertTrue("Pattern " + conflictFilePattern + " could not be found.",conflictingFileFound);
+		
+		return conflictingFileFound;
 	}
 	
 	public static void assertFileEquals(File expectedFile, File actualFile) throws ArrayComparisonFailure, Exception {

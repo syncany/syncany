@@ -32,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
@@ -85,7 +84,7 @@ public class SyncUpOperationTest {
 		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
 
 		MemoryDatabase remoteDatabase = new MemoryDatabase();
-		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL, DatabaseVersionType.DEFAULT, null);
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL);
 
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 

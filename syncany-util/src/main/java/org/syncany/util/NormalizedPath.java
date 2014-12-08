@@ -185,7 +185,7 @@ public class NormalizedPath {
 				if (!exists) {
 					return creatableNormalizedPath;
 				}
-			} while (attempt++ < 10);
+			} while (attempt++ < 200);
 			
 			throw new Exception("Cannot create path with suffix; "+attempt+" attempts: "+creatableNormalizedPath);
 		}
