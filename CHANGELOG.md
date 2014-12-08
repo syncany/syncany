@@ -9,6 +9,7 @@ Change Log
   + Allow setting repo password in `sy connect` and `sy init` via 
     `--password` option #256
   + Rework of cleanup operation. Merge database files every cleanup. #266/#284
+  + Added Mac OSX / Homebrew recipe #267/#281 
 - Bugfixes and other things:
   + Fix Windows/CMD incompatibility with batch file #270
   + Remove empty database versions during cleanup #208 (part of #266/284)
