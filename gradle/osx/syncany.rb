@@ -26,6 +26,29 @@ class Syncany < Formula
     bin.install_symlink Dir["#{libexec}/bin/sy"]
   end
 
+  plist_options :manual => "sy --daemon"
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>Label</key>
+      <string>#{plist_name}</string>
+      <key>ProgramArguments</key>
+      <array>
+        <string>#{prefix}/bin/sy</string>
+        <string>--daemon</string>
+      </array>
+      <key>ProcessType</key>
+      <string>Background</string>
+      <key>KeepAlive</key>
+      <true/>
+    </dict>
+    </plist>
+    EOS
+  end
+
   test do
     require 'open3'
     require 'expect'
