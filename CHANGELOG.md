@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.3.0-alpha (Date: Tbd.)
+### Syncany 0.3.0-alpha (Date: 9 Dec 2014)
 - **Breaks compatiblity to 0.2.0-alpha local folders!**
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Features and significant changes:
