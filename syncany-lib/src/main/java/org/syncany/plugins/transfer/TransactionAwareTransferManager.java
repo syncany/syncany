@@ -148,31 +148,34 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 *  <li>Files in the transaction marked "UPLOAD" are deleted.</li>
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
+	 * 
+	 * @return false if we cannot proceed (Deleting transaction by another client exists). 
 	 */
-	public void cleanTransactions() throws StorageException {
+	public boolean cleanTransactions() throws StorageException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
-		RemoteTransaction rollbackTransaction = new RemoteTransaction(config, this);
-
+		boolean noBlockingTransactionsExist = true;
+		
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
 			// If this transaction is from our machine, delete all permanent or temporary files in this transaction.
 			if (isCancelledOwnTransaction) {
-				rollbackSingleTransaction(rollbackTransaction, potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
+				rollbackSingleTransaction(potentiallyCancelledTransaction, transactions.get(potentiallyCancelledTransaction));
+			}
+			else if (noBlockingTransactionsExist) {
+				// Only check if we have not yet found deleting transactions by others
+				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
+					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+						noBlockingTransactionsExist = false;
+					}
+				}
 			}
 		}
 
-		// Execute transaction (if it isn't empty)
-		if (!rollbackTransaction.isEmpty()) {
-			logger.log(Level.INFO, "CLEAN TX: Committing rollback transaction ...");
-			rollbackTransaction.commit();
-			logger.log(Level.INFO, "END OF CLEAN TX: Rollback transaction done.");
-		}
-		else {
-			logger.log(Level.INFO, "CLEAN TX: No stale transactions found. No cleansing necessary.");
-		}
+		logger.log(Level.INFO, "Done rolling back previous transactions.");
+		return noBlockingTransactionsExist;
 	}
 
 	/**
@@ -213,36 +216,28 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 * @param remoteCancelledTransaction is the remote file location of the cancelled transaction. 
 	 *        This file will be deleted as part of the rollback. 
 	 */
-	private void rollbackSingleTransaction(RemoteTransaction rollbackTransaction, TransactionTO cancelledTransaction,
+	private void rollbackSingleTransaction(TransactionTO cancelledTransaction,
 			TransactionRemoteFile remoteCancelledTransaction) throws StorageException {
 
-		TransactionTO cancelledOwnTransaction = cancelledTransaction;
-		addRollbackActionsToTransaction(rollbackTransaction, cancelledOwnTransaction.getActions());
+		logger.log(Level.INFO, "Unfinished transaction " + remoteCancelledTransaction + ". Rollback necessary!");
+		rollbackActions(cancelledTransaction.getActions());
 
 		// Get corresponding remote file of transaction and delete it.
-		TransactionRemoteFile cancelledOwnTransactionFile = remoteCancelledTransaction;
-		rollbackTransaction.delete(cancelledOwnTransactionFile);
-
-		// Nicer debug output
-		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, "Unfinished transaction " + cancelledOwnTransactionFile + ". Rollback necessary!");
-
-			for (ActionTO action : cancelledOwnTransaction.getActions()) {
-				logger.log(Level.INFO, "- Needs to be rolled back: " + action);
-			}
-		}
+		delete(remoteCancelledTransaction);
+		logger.log(Level.INFO, "Successfully rolled back transaction " + remoteCancelledTransaction);
 	}
 
 	/**
 	 * Adds the opposite actions (rollback actions) for the given unfinished actions 
 	 * to the rollback transaction.  
 	 */
-	private void addRollbackActionsToTransaction(RemoteTransaction rollbackTransaction, List<ActionTO> unfinishedActions) throws StorageException {
+	private void rollbackActions(List<ActionTO> unfinishedActions) throws StorageException {
 		for (ActionTO action : unfinishedActions) {
+			logger.log(Level.INFO, "- Needs to be rolled back: " + action);
 			switch (action.getType()) {
 			case ActionTO.TYPE_UPLOAD:
-				rollbackTransaction.delete(action.getRemoteFile());
-				rollbackTransaction.delete(action.getTempRemoteFile());
+				delete(action.getRemoteFile());
+				delete(action.getTempRemoteFile());
 
 				break;
 

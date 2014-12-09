@@ -29,21 +29,21 @@ import org.syncany.tests.util.TestSqlUtil;
 
 public class Issue143ScenarioTest {
 	@Test
-	public void testChangeAttributes() throws Exception {		
+	public void testChangeAttributes() throws Exception {
 		// Setup 
-		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
-		
+		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
+
 		TestClient clientA = new TestClient("A", testConnection);
 		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
-		
+
 		TestClient clientB = new TestClient("B", testConnection);
-		
+
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
 
 		// Scenario, see
 		// https://github.com/syncany/syncany/issues/143#issuecomment-50964685
-		
+
 		// Run 
 		clientA.createNewFile("file1.jpg");
 		clientA.upWithForceChecksum();
@@ -56,26 +56,26 @@ public class Issue143ScenarioTest {
 		clientA.deleteFile("file1 (copy).jpg");
 		clientA.upWithForceChecksum();
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
-		
-		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
-		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+
+		clientA.cleanup(cleanupOptions); // Database versions of deleted file are removed
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
 
 		TestFileUtil.copyFile(clientA.getLocalFile("file1.jpg"), clientA.getLocalFile("file1 (copy).jpg"));
 		clientA.upWithForceChecksum();
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
-		
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+
 		clientA.deleteFile("file1.jpg");
 		clientA.upWithForceChecksum();
-		assertEquals("6", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
-		
-		clientA.cleanup(cleanupOptions); // Creates PURGE database version with deleted file
-		assertEquals("7", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
-				
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+
+		clientA.cleanup(cleanupOptions); // Database version of deleted file is removed
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion", databaseConnectionA));
+
 		clientB.down(); // <<<< This creates the exception in #143
-		                // integrity constraint violation: foreign key no parent; SYS_FK_10173 table: FILEVERSION
-		
+						// integrity constraint violation: foreign key no parent; SYS_FK_10173 table: FILEVERSION
+
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
-	}	
+	}
 }

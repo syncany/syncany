@@ -22,6 +22,7 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+
 import org.syncany.config.to.ConfigTO;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.init.ConnectOperationOptions;
@@ -82,10 +83,14 @@ public class ConnectCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
 
 		OptionSet options = parser.parse(operationArgs);
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
+		// Set interactivity mode  
+		isInteractive = !options.has(optionPlugin) && !options.has(optionPassword);
+		
 		// Plugin
 		TransferSettings transferSettings = null;
 
@@ -112,10 +117,24 @@ public class ConnectCommand extends AbstractInitCommand {
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
 		operationOptions.setDaemon(options.has(optionAddDaemon));
+		operationOptions.setPassword(validateAndGetPassword(options, optionPassword));
 
 		return operationOptions;
 	}
 
+	private String validateAndGetPassword(OptionSet options, OptionSpec<String> optionPassword) {		
+		if (!isInteractive) {
+			if (options.has(optionPassword)) {
+				return options.valueOf(optionPassword);
+			}			
+			else {
+				return null; // No encryption, no password.
+			}
+		}	
+		else {
+			return null; // Will be set in callback!
+		}
+	}
 	@Override
 	public void printResults(OperationResult operationResult) {
 		ConnectOperationResult concreteOperationResult = (ConnectOperationResult) operationResult;

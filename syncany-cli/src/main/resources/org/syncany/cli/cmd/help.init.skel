@@ -5,6 +5,7 @@ SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
           [-E | --no-encryption] [-G | --no-compression] [-s | --short]
           [-t | --create-target] [-a | --advanced] [-n | --add-daemon]
+          [--password]
 
 DESCRIPTION
   This command creates a new remote repository using the specified plugin, and
@@ -60,5 +61,10 @@ OPTIONS
     The syncany:// link printed after the initialization will be shortened
     using the Syncany link shortener service. This option stores the encrypted
     link on the Syncany servers. The option does not work if -E is enabled.
+
+  --password=<password>
+    DO NOT USE THIS OPTION. Set the password used to encrypt the repository.
+    This option shouldn't be used, because the password might be visible to 
+    other users or be stored in history files.
 
 %RESOURCE:incl/footer.skel%

@@ -18,6 +18,7 @@
 package org.syncany.tests.scenarios;
 
 import static org.junit.Assert.assertTrue;
+import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import java.io.File;
 
@@ -32,88 +33,90 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 	@Test
 	public void testManySyncUpsAndDatabaseFileCleanup() throws Exception {
 		// Setup 
-		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
-		
+
 		// ROUND 1: many sync up (no cleanup expected here)		
-		for (int i=1; i<=15; i++) {
-			clientA.createNewFile("file"+i, 1);
-			clientA.up();		
+		for (int i = 1; i <= 15; i++) {
+			clientA.createNewFile("file" + i, 1);
+			clientA.up();
 		}
-		
-		for (int i=1; i<=15; i++) {
+
+		for (int i = 1; i <= 15; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file SHOULD exist: " + expectedDatabaseFile, expectedDatabaseFile.exists());
 		}
 
 		// ROUND 2: 1x sync up (cleanup expected!)
 		clientA.createNewFile("file16", 1);
-		clientA.up();		
-		
+		clientA.up();
+
 		clientA.cleanup(); // Force cleanup
 
-		for (int i=1; i<=15; i++) {
+		for (int i = 1; i <= 15; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file should NOT exist: " + expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
-		
-		for (int i=16; i<=16; i++) {
+
+		for (int i = 17; i <= 17; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file SHOULD exist: " + expectedDatabaseFile, expectedDatabaseFile.exists());
 		}
-		
+
 		// ROUND 3: many sync up (no cleanup expected here)		
-		for (int i=17; i<=30; i++) {
-			clientA.createNewFile("file"+i, 1);
-			clientA.up();		
+		for (int i = 17; i <= 30; i++) {
+			clientA.createNewFile("file" + i, 1);
+			clientA.up();
 		}
-		
-		for (int i=1; i<=15; i++) {
+
+		for (int i = 1; i <= 16; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file should NOT exist: " + expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
-		
-		for (int i=16; i<=30; i++) {
+
+		for (int i = 17; i <= 31; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
-		}		
-		
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file SHOULD exist: " + expectedDatabaseFile, expectedDatabaseFile.exists());
+		}
+
 		// ROUND 4: 1x sync up (cleanup expected!)
 		clientA.createNewFile("file31", 1);
-		clientA.up();		
-		
+		clientA.up();
+
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		
+
 		options.setForce(true);
-		
+
 		clientA.cleanup(options); // Force cleanup 
 
-		for (int i=1; i<=30; i++) {
+		for (int i = 1; i <= 32; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file should NOT exist: "+expectedDatabaseFile, !expectedDatabaseFile.exists());
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file should NOT exist: " + expectedDatabaseFile, !expectedDatabaseFile.exists());
 		}
-		 
-		for (int i=31; i<=31; i++) {
+
+		for (int i = 33; i <= 33; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
-			File expectedDatabaseFile = new File(testConnection.getPath()+"/databases/"+expectedDatabaseRemoteFile.getName());
-			
-			assertTrue("Database file SHOULD exist: "+expectedDatabaseFile, expectedDatabaseFile.exists());
-		}	
-		
+			File expectedDatabaseFile = new File(testConnection.getPath() + "/databases/" + expectedDatabaseRemoteFile.getName());
+
+			assertTrue("Database file SHOULD exist: " + expectedDatabaseFile, expectedDatabaseFile.exists());
+		}
+
 		// Tear down
-		// TODO [medium] Test the content of these database files
-		clientA.deleteTestData();		
+		TestClient clientB = new TestClient("B", testConnection);
+		clientB.down();
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
+		clientA.deleteTestData();
 	}
 }

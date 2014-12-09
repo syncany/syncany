@@ -35,12 +35,18 @@
 # If the current user input ($cur) starts with '-', only $command_options are
 # displayed/completed, otherwise only $command_words.
 #
+# References
+# ----------
+# [1] http://stackoverflow.com/a/12495480/1440785
+# [2] http://tiswww.case.edu/php/chet/bash/FAQ
+#
 
 shopt -s progcomp
 _sy() {
 	local cur prev firstword lastword complete_words complete_options
 
-	COMPREPLY=()
+	# Don't break words at : and =, see [1] and [2]
+	COMP_WORDBREAKS=${COMP_WORDBREAKS//[:=]}
 
 	cur=${COMP_WORDS[COMP_CWORD]}
 	prev=${COMP_WORDS[COMP_CWORD-1]}
@@ -84,7 +90,8 @@ _sy() {
 	CONNECT_OPTIONS="\
 		-P --plugin\
 		-o --plugin-option\
-		-n --add-daemon"
+		-n --add-daemon\
+		   --password"
 
 	DOWN_CONFLICT_STRATEGIES="\
 		ask\
@@ -103,7 +110,8 @@ _sy() {
 		stop"
 
 	GENLINK_OPTIONS="\
-		-s --short"
+		-s --short\
+		-m --machine-readable"
 
 	INIT_OPTIONS="\
 		-P --plugin\
@@ -112,7 +120,9 @@ _sy() {
 		-G --no-compression\
 		-t --create-target\
 		-a --advanced\
-		-n --add-daemon"
+		-n --add-daemon\
+		-s --short\
+		   --password"
 
 	LS_OPTIONS="\
 		-V --versions\
@@ -132,15 +142,21 @@ _sy() {
 		install\
 		remove"
 
-	PLUGIN_IDS="\
+	PLUGIN_IDS_TRANSFER="\
+		dropbox\
 		ftp\
 		local\
+		raid0\
 		s3\
 		samba\
 		sftp\
-		simpleweb\
 		webdav"
-
+		
+	PLUGIN_IDS_ALL="\
+		$PLUGIN_IDS_TRANSFER\
+		gui\
+		simpleweb"		
+		
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
 		-L --local-only\
@@ -148,6 +164,10 @@ _sy() {
 
 	PLUGIN_INSTALL_OPTIONS="\
 		-s --snapshot"
+
+	PLUGIN_DROPBOX_OPTIONS="\
+		authToken=\
+		path="
 
 	PLUGIN_FTP_OPTIONS="\
 		hostname=\
@@ -205,10 +225,12 @@ _sy() {
 		$DOWN_OPTIONS"
 
 	CLEANUP_OPTIONS="\
-		-M --no-database-merge\
+		-F --force\
 		-V --no-version-removal\
 		-T --no-temp-removal\
 		-k --keep-versions\
+		-t --time-between-cleanups\
+		-x --max-database-files\
 		$STATUS_OPTIONS"
 
 	# Un-comment this for debug purposes:
@@ -222,17 +244,15 @@ _sy() {
 	connect)
 		case "${prev}" in
 			--plugin|-P)
-				complete_words="$PLUGIN_IDS"
+				complete_words="$PLUGIN_IDS_TRANSFER"
 				;;
 
 			--plugin-option|-o)
-				# Special handling: Return plugin options and exit
-				complete_words=$(_sy_plugin_option_words)
+				complete_words=$(_sy_plugin_option_words) 
 
-				compopt -o nospace
-				COMPREPLY=( $( compgen -W "$complete_words" -- $cur ) )
-
-				return 0
+				if [[ ${#COMPREPLY[@]} != 1 || $complete_words = *= ]]; then
+					compopt -o nospace
+				fi
 				;;
 
 			*)
@@ -271,17 +291,16 @@ _sy() {
 	init)
 		case "${prev}" in
 			--plugin|-P)
-				complete_words="$PLUGIN_IDS"
+				complete_words="$PLUGIN_IDS_TRANSFER"
 				;;
 
 			--plugin-option|-o)
-				# Special handling: Return plugin options and exit
-				complete_words=$(_sy_plugin_option_words)
+				complete_words=$(_sy_plugin_option_words) 
 
-				compopt -o nospace
-				COMPREPLY=( $( compgen -W "$complete_words" -- $cur ) )
+				if [[ ${#COMPREPLY[@]} != 1 || $complete_words = *= ]]; then
+					compopt -o nospace
+				fi
 
-				return 0
 				;;
 
 			*)
@@ -312,13 +331,13 @@ _sy() {
 
 			;;
 		install)
-			complete_words="$PLUGIN_IDS"
+			complete_words="$PLUGIN_IDS_ALL"
 			complete_options="$PLUGIN_INSTALL_OPTIONS"
 
 			;;
 
 		remove)
-			complete_words="$PLUGIN_IDS"
+			complete_words="$PLUGIN_IDS_ALL"
 			;;
 
 		*)
@@ -398,8 +417,7 @@ _sy() {
 
 ## Helper functions ###
 
-# Determines the plugin-specific settings set by --plugin-option or -o
-# Requires: $COMP_WORDS
+# Finds plugin identifier and determines possible plugin-specific settings
 _sy_plugin_option_words() {
 	local plugin_id i
 
@@ -411,38 +429,96 @@ _sy_plugin_option_words() {
 		fi
 	done
 
+	# Output completions without prefix
+	echo $(_sy_plugin_option_words_for_plugin "$plugin_id" "")
+}
+
+# Determines the plugin-specific settings set by --plugin-option or -o for a specific plugin
+# Parameters: $1 is plugin ID (e.g. "ftp"), $2 is plugin prefix (e.g. "storage1.")
+_sy_plugin_option_words_for_plugin() {
+	local plugin_id="$1"
+	local plugin_prefix="$2"
+	local plugin_completions=""
+
 	case "${plugin_id}" in
+		dropbox)
+			plugin_completions="$PLUGIN_DROPBOX_OPTIONS"
+			;;
+
 		ftp)
-			echo "$PLUGIN_FTP_OPTIONS"
+			plugin_completions="$PLUGIN_FTP_OPTIONS"
 			;;
 
 		local)
-			echo "$PLUGIN_LOCAL_OPTIONS"
+			plugin_completions="$PLUGIN_LOCAL_OPTIONS"
+			;;
+
+		raid0)
+			plugin_completions=$(_sy_plugin_option_words_raid0)
 			;;
 
 		s3)
-			echo "$PLUGIN_S3_OPTIONS"
+			plugin_completions="$PLUGIN_S3_OPTIONS"
 			;;
 
 		samba)
-			echo "$PLUGIN_SAMBA_OPTIONS"
+			plugin_completions="$PLUGIN_SAMBA_OPTIONS"
 			;;
 
 		sftp)
-			echo "$PLUGIN_SFTP_OPTIONS"
+			plugin_completions="$PLUGIN_SFTP_OPTIONS"
 			;;
 
 		webdav)
-			echo "$PLUGIN_WEBDAV_OPTIONS"
+			plugin_completions="$PLUGIN_WEBDAV_OPTIONS"
 			;;
 
 		*)
 			;;
 	esac
+
+	# Output with prefix
+	for plugin_option in $plugin_completions; do
+		echo "${plugin_prefix}${plugin_option}"
+	done
+}
+
+# Determines the current plugin optons for RAID0 plugin, 
+# including sub-options of other plugins
+_sy_plugin_option_words_raid0() {
+	local storage1_type storage2_type i
+
+	storage1_type=
+	storage2_type=
+	for ((i = 1; i < ${#COMP_WORDS[@]}; ++i)); do
+		if [[ $cur != ${COMP_WORDS[i]} && ${COMP_WORDS[i]} == storage1:type=* ]]; then
+			storage1_type=${COMP_WORDS[i]/storage1:type=}
+		fi
+
+		if [[ $cur != ${COMP_WORDS[i]} && ${COMP_WORDS[i]} == storage2:type=* ]]; then
+			storage2_type=${COMP_WORDS[i]/storage2:type=}
+		fi
+	done
+
+	if [[ $storage1_type != "" && $storage1_type != "raid0" ]]; then
+		echo $(_sy_plugin_option_words_for_plugin "$storage1_type" "storage1.")		
+	else
+		for plugin_id in $PLUGIN_IDS_TRANSFER; do
+			echo "storage1:type=$plugin_id"
+		done
+	fi
+
+	if [[ $storage2_type != "" && $storage2_type != "raid0" ]]; then
+		echo $(_sy_plugin_option_words_for_plugin "$storage2_type" "storage2.")
+	else
+		for plugin_id in $PLUGIN_IDS_TRANSFER; do
+			echo "storage2:type=$plugin_id"
+		done
+	fi
 }
 
 # Determines the first non-option word of the command line. This
-# is usually the command; Requires: $COMP_WORDS
+# is usually the command
 _sy_get_firstword() {
 	local firstword i
 
@@ -458,7 +534,7 @@ _sy_get_firstword() {
 }
 
 # Determines the last non-option word of the command line. This
-# is usally a sub-command; Requires: $COMP_WORDS, $cur
+# is usally a sub-command
 _sy_get_lastword() {
 	local lastword i
 

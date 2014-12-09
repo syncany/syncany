@@ -29,9 +29,6 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean force = false;
 
 	@Element(required = false)
-	private boolean mergeRemoteFiles = true;
-
-	@Element(required = false)
 	private boolean removeOldVersions = true;
 
 	@Element(required = false)
@@ -59,10 +56,6 @@ public class CleanupOperationOptions implements OperationOptions {
 		this.statusOptions = statusOptions;
 	}
 
-	public boolean isMergeRemoteFiles() {
-		return mergeRemoteFiles;
-	}
-
 	public boolean isRemoveOldVersions() {
 		return removeOldVersions;
 	}
@@ -73,10 +66,6 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public int getKeepVersionsCount() {
 		return keepVersionsCount;
-	}
-
-	public void setMergeRemoteFiles(boolean mergeRemoteFiles) {
-		this.mergeRemoteFiles = mergeRemoteFiles;
 	}
 
 	public void setRemoveOldVersions(boolean removeOldVersions) {

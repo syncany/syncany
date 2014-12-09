@@ -69,7 +69,6 @@ public class Config {
 
 	// Files in .syncany/state
 	public static final String FILE_PORT = "port.xml";
-	public static final String FILE_CLEANUP = "cleanup.xml";
 
 	private byte[] repoId;
 	private String machineName;
@@ -329,9 +328,5 @@ public class Config {
 
 	public File getPortFile() {
 		return new File(stateDir, FILE_PORT);
-	}
-
-	public File getCleanupFile() {
-		return new File(stateDir, FILE_CLEANUP);
 	}
 }
