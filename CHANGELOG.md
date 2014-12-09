@@ -15,6 +15,7 @@ Change Log
   + Remove empty database versions during cleanup #208 (part of #266/284)
   + Drops PURGE concept #265 (part of #266/284)
   + Fixing incorrect cleanup rollback #268 (part of #266/284)
+  + Fixing 'Checksums do not match' exception; duplicate chunk issue #288
   
 ### Syncany 0.2.0-alpha (Date: 8 Nov 2014)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
