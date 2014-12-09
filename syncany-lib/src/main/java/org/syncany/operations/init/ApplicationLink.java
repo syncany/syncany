@@ -262,11 +262,11 @@ public class ApplicationLink {
 
 		// do we use a https proxy?
 		String proxyHost = System.getProperty("https.proxyHost");
-		int proxyPort = Integer.parseInt(System.getProperty("https.proxyPort"));
+		Integer proxyPort = Ints.tryParse(System.getProperty("https.proxyPort"));
 		String proxyUser = System.getProperty("https.proxyUser");
 		String proxyPassword = System.getProperty("https.proxyPassword");
 
-		if (proxyHost != null && proxyPort != 0) {
+		if (proxyHost != null && proxyPort != null) {
 			requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
 			if (proxyUser != null && proxyPassword != null) {
 				CredentialsProvider credsProvider = new BasicCredentialsProvider();
