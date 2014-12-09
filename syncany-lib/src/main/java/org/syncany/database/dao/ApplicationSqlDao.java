@@ -53,9 +53,8 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		PreparedStatement preparedStatement = getStatement("application.insert.all.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
-			preparedStatement.setString(1, databaseRemoteFile.getName());
-			preparedStatement.setString(2, databaseRemoteFile.getClientName());
-			preparedStatement.setInt(3, (int) databaseRemoteFile.getClientVersion());
+			preparedStatement.setString(1, databaseRemoteFile.getClientName());
+			preparedStatement.setInt(2, (int) databaseRemoteFile.getClientVersion());
 			
 			preparedStatement.addBatch();
 		}
@@ -95,7 +94,10 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = getStatement("application.select.all.getKnownDatabases.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					knownDatabases.add(new DatabaseRemoteFile(resultSet.getString("database_name")));
+					String clientName = resultSet.getString("client");
+					int fileNumber = resultSet.getInt("filenumber");
+					
+					knownDatabases.add(new DatabaseRemoteFile(clientName, fileNumber));
 				}
 
 				return knownDatabases;

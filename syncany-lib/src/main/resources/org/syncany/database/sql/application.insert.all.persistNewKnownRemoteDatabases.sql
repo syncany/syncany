@@ -1,1 +1,1 @@
-insert into known_databases (database_name, client, filenumber) values (?, ?, ?)
+insert into known_databases (client, filenumber) values (?, ?)

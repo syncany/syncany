@@ -160,6 +160,8 @@ public abstract class AbstractTransferOperation extends Operation {
 	 * @return the largest database fileversion number.
 	 */
 	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
+		// TODO [low] This could be done via the "known_databases" database table
+		
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
 		
