@@ -33,12 +33,17 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.Header;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -54,6 +59,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.Base58;
+
 import com.google.common.primitives.Ints;
 
 /**
@@ -247,18 +253,31 @@ public class ApplicationLink {
 	}
 
 	private CloseableHttpClient createHttpClient() {
-		RequestConfig requestConfig = RequestConfig.custom()
+		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
 				.setSocketTimeout(2000)
 				.setConnectTimeout(2000)
-				.setRedirectsEnabled(false)
-				.build();
+				.setRedirectsEnabled(false);
 
-		CloseableHttpClient httpClient = HttpClientBuilder
-				.create()
-				.setDefaultRequestConfig(requestConfig)
-				.build();
+		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
-		return httpClient;
+		// do we use a https proxy?
+		String proxyHost = System.getProperty("https.proxyHost");
+		int proxyPort = Integer.parseInt(System.getProperty("https.proxyPort"));
+		String proxyUser = System.getProperty("https.proxyUser");
+		String proxyPassword = System.getProperty("https.proxyPassword");
+
+		if (proxyHost != null && proxyPort != 0) {
+			requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
+			if (proxyUser != null && proxyPassword != null) {
+				CredentialsProvider credsProvider = new BasicCredentialsProvider();
+				credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
+				httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+			}
+		}
+
+		httpClientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
+
+		return httpClientBuilder.build();
 	}
 
 	private void parseLink(String applicationLink) throws StorageException {
