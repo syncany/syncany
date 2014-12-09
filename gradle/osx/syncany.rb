@@ -5,7 +5,7 @@ class Syncany < Formula
   url "https://codeload.github.com/syncany/syncany/tar.gz/v0.2.0-alpha"
   sha1 "5928db42002f2e9e0ffb76f94b7a9d81fa4fed89"
   version "0.2.0-alpha"
-  head "https://github.com/syncany/syncany.git"
+  head "https://github.com/syncany/syncany.git", :branch => "develop"
 
   depends_on :java => "1.7"
   depends_on "gradle" => "2.2"
@@ -24,6 +24,29 @@ class Syncany < Formula
 
     libexec.install Dir["build/install/syncany/*"]
     bin.install_symlink Dir["#{libexec}/bin/sy"]
+  end
+
+  plist_options :manual => "sy --daemon"
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>Label</key>
+      <string>#{plist_name}</string>
+      <key>ProgramArguments</key>
+      <array>
+        <string>#{prefix}/bin/sy</string>
+        <string>--daemon</string>
+      </array>
+      <key>ProcessType</key>
+      <string>Background</string>
+      <key>KeepAlive</key>
+      <true/>
+    </dict>
+    </plist>
+    EOS
   end
 
   test do

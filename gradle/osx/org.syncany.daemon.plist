@@ -9,6 +9,8 @@
         <string>/usr/local/bin/sy</string>
         <string>--daemon</string>
     </array>
+    <key>ProcessType</key>
+    <string>Background</string>
     <key>KeepAlive</key>
     <true/>
 </dict>
