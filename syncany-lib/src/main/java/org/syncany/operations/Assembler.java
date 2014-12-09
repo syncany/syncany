@@ -103,6 +103,10 @@ public class Assembler {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
+				if (fileVersion.getName().contains("4pp")) {
+					logger.log(Level.INFO, "						<chunkRef ref=\""+chunkChecksum+"\"/>");
+				}
+				
 				MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
 
 				if (multiChunkIdForChunk == null && memoryDatabase != null) {
@@ -114,14 +118,14 @@ public class Assembler {
 				MultiChunk multiChunk = multiChunker.createMultiChunk(decryptedMultiChunkFile);
 				InputStream chunkInputStream = multiChunk.getChunkInputStream(chunkChecksum.getBytes());
 
-		        byte[] buffer = new byte[4096];
-		        int read = 0;
+				byte[] buffer = new byte[4096];
+				int read = 0;
 
-		        while (-1 != (read = chunkInputStream.read(buffer))) {
-		        	reconstructedFileChecksum.update(buffer, 0, read);
-		            reconstructedFileOutputStream.write(buffer, 0, read);
-		        }
-		        
+				while (-1 != (read = chunkInputStream.read(buffer))) {
+					reconstructedFileChecksum.update(buffer, 0, read);
+					reconstructedFileOutputStream.write(buffer, 0, read);
+				}
+
 				chunkInputStream.close();
 				multiChunk.close();
 			}
@@ -133,8 +137,10 @@ public class Assembler {
 		byte[] reconstructedFileExpectedChecksum = fileContent.getChecksum().getBytes();
 		byte[] reconstructedFileActualChecksum = reconstructedFileChecksum.digest();
 		
+		logger.log(Level.INFO, "fileVersion checksum: " + fileVersion.getChecksum() + "; reconstructed checksum: " + StringUtil.toHex(reconstructedFileActualChecksum) + "; file content checksum: " + fileContent.getChecksum());
+		
 		if (!Arrays.equals(reconstructedFileActualChecksum, reconstructedFileExpectedChecksum)) {
-			throw new Exception("Checksums do not match: actual " + fileVersion.getChecksum() + " != expected "
+			throw new Exception("Checksums do not match: expected " + StringUtil.toHex(reconstructedFileExpectedChecksum) + " != actual "
 					+ StringUtil.toHex(reconstructedFileActualChecksum));
 		}
 		
