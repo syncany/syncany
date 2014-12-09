@@ -103,10 +103,6 @@ public class Assembler {
 			Collection<ChunkChecksum> fileChunks = fileContent.getChunks();
 
 			for (ChunkChecksum chunkChecksum : fileChunks) {
-				if (fileVersion.getName().contains("4pp")) {
-					logger.log(Level.INFO, "						<chunkRef ref=\""+chunkChecksum+"\"/>");
-				}
-				
 				MultiChunkId multiChunkIdForChunk = localDatabase.getMultiChunkId(chunkChecksum);
 
 				if (multiChunkIdForChunk == null && memoryDatabase != null) {
@@ -136,8 +132,6 @@ public class Assembler {
 		// Validate checksum
 		byte[] reconstructedFileExpectedChecksum = fileContent.getChecksum().getBytes();
 		byte[] reconstructedFileActualChecksum = reconstructedFileChecksum.digest();
-		
-		logger.log(Level.INFO, "fileVersion checksum: " + fileVersion.getChecksum() + "; reconstructed checksum: " + StringUtil.toHex(reconstructedFileActualChecksum) + "; file content checksum: " + fileContent.getChecksum());
 		
 		if (!Arrays.equals(reconstructedFileActualChecksum, reconstructedFileExpectedChecksum)) {
 			throw new Exception("Checksums do not match: expected " + StringUtil.toHex(reconstructedFileExpectedChecksum) + " != actual "

@@ -17,12 +17,16 @@
  */
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestSqlUtil;
 
 public class Issue288ScenarioTest {
 	@Test
@@ -43,6 +47,9 @@ public class Issue288ScenarioTest {
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 		
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		
 		CleanupOperationOptions cleanupOptionsKeepOne = new CleanupOperationOptions();
 		cleanupOptionsKeepOne.setKeepVersionsCount(1);
 		cleanupOptionsKeepOne.setForce(true);
@@ -52,23 +59,28 @@ public class Issue288ScenarioTest {
 		
 		byte[] fileContentA = new byte[2*1024*1024]; // 1 MB
 		
-		for (int i=0; i<512*1024; i++) {
+		for (int i=0; i<512*1024; i++) { // First chunk
 			fileContentA[i] = (byte) i;
 		}
 		
-		for (int i=512*1024; i<1024*1024; i++) {
+		for (int i=512*1024; i<1536*1024; i++) { // Two identical middle chunks
 			fileContentA[i] = 99;
 		}
 		
-		for (int i=1024*1024; i<2*1024*1024; i++) {
+		for (int i=1536*1024; i<2*1024*1024; i++) { // Last chunk
 			fileContentA[i] = (byte) (i+i);
 		}
 		
-		FileUtils.writeByteArrayToFile(clientA.getLocalFile("fileA"), fileContentA);		
-		clientA.upWithForceChecksum();
+		FileUtils.writeByteArrayToFile(clientA.getLocalFile("fileA"), fileContentA);
+		
+		clientA.upWithForceChecksum();		
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));		
+		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from filecontent_chunk", databaseConnectionA));		
 		
 		// Sync file to client B
 		clientB.down();
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionB));		
+		assertEquals("4", TestSqlUtil.runSqlSelect("select count(*) from filecontent_chunk", databaseConnectionB));		
 		
 		// Move file, sync again and perform cleanup (wipe everything but one file version)
 		clientA.moveFile("fileA", "fileA-moved");
