@@ -17,11 +17,13 @@
  */
 package org.syncany.database.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.syncany.database.DatabaseConnectionFactory;
+import org.syncany.util.SqlRunner;
 
 /**
  * Small helper class to implement common tasks for the inheriting 
@@ -46,5 +48,9 @@ public abstract class AbstractSqlDao {
 	
 	protected PreparedStatement getStatement(Connection overrideConnection, String resourceId) throws SQLException {
 		return overrideConnection.prepareStatement(DatabaseConnectionFactory.getStatement(resourceId));
+	}
+	
+	protected void runScript(String resourceId) throws SQLException, IOException {
+		SqlRunner.runScript(connection, DatabaseConnectionFactory.getStatementInputStream(resourceId));
 	}
 }

@@ -57,8 +57,7 @@ public class CleanupCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 
-		OptionSpec<Void> optionForce = parser.accepts("force");
-		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
 		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
@@ -71,12 +70,9 @@ public class CleanupCommand extends Command {
 		// -F, --force
 		operationOptions.setForce(options.has(optionForce));
 
-		// -M, --no-database-merge
-		operationOptions.setMergeRemoteFiles(!options.has(optionNoDatabaseMerge));
-
 		// -V, --no-version-removal
 		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
-		
+
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
@@ -116,25 +112,18 @@ public class CleanupCommand extends Command {
 		// Parse 'status' options
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 
-		// Does this configuration make sense
-		boolean nothingToDo = !operationOptions.isMergeRemoteFiles() && operationOptions.isRemoveOldVersions();
-
-		if (nothingToDo) {
-			throw new Exception("Invalid parameter configuration: -M and -V cannot be set together. Nothing to do.");
-		}
-
 		return operationOptions;
 	}
-	
+
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
 		statusCommand.setOut(out);
-		
+
 		return statusCommand.parseOptions(operationArgs);
 	}
 
 	@Override
-	public void printResults(OperationResult operationResult) {	
+	public void printResults(OperationResult operationResult) {
 		CleanupOperationResult concreteOperationResult = (CleanupOperationResult) operationResult;
 
 		switch (concreteOperationResult.getResultCode()) {
@@ -162,15 +151,15 @@ public class CleanupCommand extends Command {
 			if (concreteOperationResult.getMergedDatabaseFilesCount() > 0) {
 				out.println(concreteOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
 			}
-			
+
 			if (concreteOperationResult.getRemovedMultiChunks().size() > 0) {
 				long totalRemovedMultiChunkSize = 0;
-				
+
 				for (MultiChunkEntry removedMultiChunk : concreteOperationResult.getRemovedMultiChunks().values()) {
 					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
 				}
-				
-				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
+
+				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n",
 						concreteOperationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
 			}
 
@@ -188,6 +177,6 @@ public class CleanupCommand extends Command {
 
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
-		}	
+		}
 	}
 }

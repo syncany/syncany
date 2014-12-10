@@ -31,6 +31,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.Operation;
@@ -63,14 +64,21 @@ public class ApplyChangesOperation extends Operation {
 
 	private MemoryDatabase winnersDatabase;
 	private DownOperationResult result;
+	
+	private boolean cleanupOccurred;
+	private List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion;
 
-	public ApplyChangesOperation(Config config, SqlDatabase localDatabase, TransferManager transferManager, MemoryDatabase winnersDatabase, DownOperationResult result) {
+	public ApplyChangesOperation(Config config, SqlDatabase localDatabase, TransferManager transferManager, MemoryDatabase winnersDatabase,
+			DownOperationResult result, boolean cleanupOccurred, List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) {
+		
 		super(config);
 		
 		this.localDatabase = localDatabase;
 		this.downloader = new Downloader(config, transferManager);
 		this.winnersDatabase = winnersDatabase;
 		this.result = result;
+		this.cleanupOccurred = cleanupOccurred;
+		this.preDeleteFileHistoriesWithLastVersion = preDeleteFileHistoriesWithLastVersion;
 	}
 
 	@Override
@@ -78,7 +86,14 @@ public class ApplyChangesOperation extends Operation {
 		logger.log(Level.INFO, "Determine file system actions ...");		
 		
 		FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result.getChangeSet());
-		List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
+		List<FileSystemAction> actions;
+		
+		if (cleanupOccurred) {
+			actions = actionReconciliator.determineFileSystemActions(winnersDatabase, true, preDeleteFileHistoriesWithLastVersion);
+		}
+		else {
+			actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
+		}
 
 		Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
 		

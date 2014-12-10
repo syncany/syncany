@@ -17,24 +17,13 @@
  */
 package org.syncany.operations.init;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
-import org.syncany.config.to.RepoTO;
-import org.syncany.crypto.CipherException;
-import org.syncany.crypto.CipherSpec;
-import org.syncany.crypto.CipherUtil;
-import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.Operation;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.EnvironmentUtil;
@@ -106,32 +95,6 @@ public abstract class AbstractInitOperation extends Operation {
 		cacheDir.delete();
 		databaseDir.delete();
 		appDir.delete();
-	}
-
-	protected void writeXmlFile(Object source, File file) throws IOException {
-		try {
-			Serializer serializer = new Persister();
-			serializer.write(source, file);
-		}
-		catch (Exception e) {
-			throw new IOException(e);
-		}
-	}
-
-	protected void writeEncryptedXmlFile(RepoTO repoTO, File file, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws IOException,
-			CipherException {
-
-		ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
-
-		try {
-			Serializer serializer = new Persister();
-			serializer.write(repoTO, plaintextRepoOutputStream);
-		}
-		catch (Exception e) {
-			throw new IOException(e);
-		}
-
-		CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSpecs, masterKey);
 	}
 
 	protected void fireNotifyCreateMaster() {

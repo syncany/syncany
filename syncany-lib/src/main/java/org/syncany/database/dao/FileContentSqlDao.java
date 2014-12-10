@@ -82,7 +82,6 @@ public class FileContentSqlDao extends AbstractSqlDao {
 		int order = 0;
 		
 		for (ChunkChecksum chunkChecksum : fileContent.getChunks()) {
-			
 			preparedStatement.setString(1, fileContent.getChecksum().toString());
 			preparedStatement.setString(2, chunkChecksum.toString());
 			preparedStatement.setInt(3, order);

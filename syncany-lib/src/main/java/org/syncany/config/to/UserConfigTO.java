@@ -83,9 +83,9 @@ public class UserConfigTO {
 		}
 	}
 
-	public static void save(UserConfigTO userConfigTO, File file) throws ConfigException {
+	public void save(File file) throws ConfigException {
 		try {
-			new Persister(new AnnotationStrategy()).write(userConfigTO, file);
+			new Persister(new AnnotationStrategy()).write(this, file);
 		}
 		catch (Exception e) {
 			throw new ConfigException("Cannot write user config to file " + file, e);

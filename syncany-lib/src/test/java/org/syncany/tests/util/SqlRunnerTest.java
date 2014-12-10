@@ -17,7 +17,7 @@
  */
 package org.syncany.tests.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.InputStream;
@@ -31,34 +31,35 @@ import org.syncany.util.SqlRunner;
 public class SqlRunnerTest {
 	@BeforeClass
 	public static void loadDriver() throws ClassNotFoundException {
-		Class.forName("org.hsqldb.jdbcDriver");		
+		Class.forName("org.hsqldb.jdbcDriver");
 	}
-	
+
 	@Test
 	public void testRunScript() throws Exception {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		File tempDatabaseFile = new File(tempDir, "db");
-		
-		InputStream inputStream = SqlRunnerTest.class.getResourceAsStream("/org/syncany/database/sql/create.all.sql");
-		
-		String connectionString = "jdbc:hsqldb:file:"+tempDatabaseFile.getAbsolutePath()+";user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
-		Connection connection = DriverManager.getConnection(connectionString);	
-				
+
+		InputStream inputStream = SqlRunnerTest.class.getResourceAsStream("/org/syncany/database/sql/script.create.all.sql");
+
+		String connectionString = "jdbc:hsqldb:file:" + tempDatabaseFile.getAbsolutePath()
+				+ ";user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
+		Connection connection = DriverManager.getConnection(connectionString);
+
 		SqlRunner.runScript(connection, inputStream);
-		
-		connection.createStatement().execute("INSERT INTO DATABASEVERSION VALUES(1337,'DEFAULT','MASTER',TIMESTAMP_WITH_ZONE(1388589969),'A','(A1)')");
-	 
+
+		connection.createStatement().execute("INSERT INTO DATABASEVERSION VALUES(1337,'MASTER',TIMESTAMP_WITH_ZONE(1388589969),'A','(A1)')");
+
 		// Test a few selects
 		assertEquals("1337", TestSqlUtil.runSqlSelect("select id from databaseversion", connection));
 		assertEquals(
-			"DATABASEVERSION\nCHUNK\nDATABASEVERSION_VECTORCLOCK\nFILECONTENT\nFILECONTENT_CHUNK\nFILEHISTORY\nFILEVERSION\nFILEVERSION_PURGE\nMULTICHUNK\nMULTICHUNK_CHUNK\nMULTICHUNK_MUDDY\nKNOWN_DATABASES\nDATABASEVERSION_MASTER\nFILEVERSION_MASTER\nFILEVERSION_MASTER_MAXVERSION\nFILEVERSION_MASTER_LAST\nFILEHISTORY_FULL\nFILEVERSION_FULL", 
-			TestSqlUtil.runSqlSelect("select table_name from information_schema.tables where table_schema='PUBLIC'", connection));		
-		
+				"DATABASEVERSION\nCHUNK\nDATABASEVERSION_VECTORCLOCK\nFILECONTENT\nFILECONTENT_CHUNK\nFILEHISTORY\nFILEVERSION\nFILEVERSION_PURGE\nMULTICHUNK\nMULTICHUNK_CHUNK\nMULTICHUNK_MUDDY\nKNOWN_DATABASES\nGENERAL_SETTINGS\nDATABASEVERSION_MASTER\nFILEVERSION_MASTER\nFILEVERSION_MASTER_MAXVERSION\nFILEVERSION_MASTER_LAST\nFILEHISTORY_FULL\nFILEVERSION_FULL",
+				TestSqlUtil.runSqlSelect("select table_name from information_schema.tables where table_schema='PUBLIC'", connection));
+
 		// Test the function (--> different delimiter!)
 		assertEquals("3", TestSqlUtil.runSqlSelect("select distinct substr_count('/a/b/c', '/') from information_schema.system_tables", connection));
-		
+
 		connection.createStatement().execute("shutdown");
-		
+
 		TestFileUtil.deleteDirectory(tempDir);
-	}	
+	}
 }

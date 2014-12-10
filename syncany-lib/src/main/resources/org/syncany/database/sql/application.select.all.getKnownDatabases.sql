@@ -1,1 +1,1 @@
-select database_name from known_databases
+select * from known_databases

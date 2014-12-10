@@ -44,7 +44,7 @@ public class TransactionRemoteFile extends RemoteFile {
 	public TransactionRemoteFile(String name) throws StorageException {
 		super(name);
 	}
-	
+
 	/**
 	 * Initializes a new transaction file, given the transaction itself.
 	 * 

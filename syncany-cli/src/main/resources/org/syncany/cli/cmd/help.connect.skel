@@ -2,10 +2,11 @@ NAME
   sy-connect - connect to an existing Syncany repository
 
 SYNOPSIS
-  sy connect <syncany-link>
+  sy connect <syncany-link> 
+             [-n | --add-daemon] [--password]
 
   sy connect [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
-             [-n | --add-daemon]
+             [-n | --add-daemon] [--password]
 
 DESCRIPTION
   This command connects to an existing remote repository and initializes
@@ -36,14 +37,13 @@ OPTIONS
     mandatory settings must be specified by this option. All mandatory and
     optional settings can be listed using the 'plugin' command.
 
-  -I, --no-interaction
-    Runs the command in a non-interactive mode. The user will not be queried
-    for any input. The command will fail if not all mandatory options are
-    given on the command line. This option can be used to automate repository
-    creation.
-
   -n, --add-daemon
     The initialized local folder is automatically added to the daemon
     configuration for automatic synchronization if this option is used.
+    
+  --password=<password>
+    DO NOT USE THIS OPTION. Set the password to decrypt the repository.
+    This option shouldn't be used, because the password might be visible to 
+    other users or be stored in history files. 
 
 %RESOURCE:incl/footer.skel%

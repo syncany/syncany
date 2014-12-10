@@ -43,6 +43,7 @@ import org.syncany.tests.scenarios.IgnoredFileScenarioTest;
 import org.syncany.tests.scenarios.Issue143ScenarioTest;
 import org.syncany.tests.scenarios.Issue227_2_ScenarioTest;
 import org.syncany.tests.scenarios.Issue247ScenarioTest;
+import org.syncany.tests.scenarios.Issue288ScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
@@ -84,6 +85,7 @@ import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
 		Issue143ScenarioTest.class,
 		Issue227_2_ScenarioTest.class,
 		Issue247ScenarioTest.class,
+		Issue288ScenarioTest.class,
 		ManyRenamesScenarioTest.class,
 		ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
 		ManySyncUpsLargeFileScenarioTest.class,

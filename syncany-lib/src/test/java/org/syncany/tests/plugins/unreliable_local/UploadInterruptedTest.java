@@ -305,7 +305,7 @@ public class UploadInterruptedTest {
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
 						"rel=[234].+move.+multichunk",
-						"rel=(8|9|10).+upload.+transaction",
+						"rel=(7|8|9).+upload.+transaction",
 				}
 						));
 
@@ -412,7 +412,7 @@ public class UploadInterruptedTest {
 						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
 
 						"rel=[234].+move.+multichunk",
-						"rel=[234].+delete.+temp",
+						"rel=[567].+delete.+database",
 				}
 						));
 
@@ -471,8 +471,8 @@ public class UploadInterruptedTest {
 		assertEquals(0, new File(testConnection.getPath() + "/databases/").listFiles().length);
 		assertEquals(0, new File(testConnection.getPath() + "/multichunks/").listFiles().length);
 		assertEquals(2, new File(testConnection.getPath() + "/actions/").listFiles().length); // left over, 2 failed ops
-		assertEquals(0, new File(testConnection.getPath() + "/transactions/").listFiles().length);
-		assertEquals(4, new File(testConnection.getPath() + "/temporary/").listFiles().length);
+		assertEquals(1, new File(testConnection.getPath() + "/transactions/").listFiles().length);
+		assertEquals(1, new File(testConnection.getPath() + "/temporary/").listFiles().length);
 
 		// 4. Third try; this should finally succeed
 		clientA.up();
@@ -481,7 +481,7 @@ public class UploadInterruptedTest {
 		assertEquals(2, new File(testConnection.getPath() + "/multichunks/").listFiles().length);
 		assertEquals(0, new File(testConnection.getPath() + "/actions/").listFiles().length); // cleaned
 		assertEquals(0, new File(testConnection.getPath() + "/transactions/").listFiles().length);
-		assertEquals(4, new File(testConnection.getPath() + "/temporary/").listFiles().length); // cleaned
+		assertEquals(0, new File(testConnection.getPath() + "/temporary/").listFiles().length); // cleaned
 
 		// Tear down
 		clientA.deleteTestData();
