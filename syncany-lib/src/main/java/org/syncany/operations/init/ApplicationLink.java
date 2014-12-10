@@ -266,12 +266,15 @@ public class ApplicationLink {
 		String proxyUser = System.getProperty("https.proxyUser");
 		String proxyPassword = System.getProperty("https.proxyPassword");
 
-		if (proxyHost != null && proxyPort != null) {
+		if (proxyHost != null && proxyPort != null && proxyPort > 0) {
 			requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
+			logger.log(Level.INFO, "Using proxy: " + proxyHost + ":" + proxyPort);
+
 			if (proxyUser != null && proxyPassword != null) {
 				CredentialsProvider credsProvider = new BasicCredentialsProvider();
 				credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
 				httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+				logger.log(Level.INFO, "Proxy requires credentials");
 			}
 		}
 
