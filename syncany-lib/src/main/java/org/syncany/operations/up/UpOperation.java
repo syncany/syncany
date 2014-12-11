@@ -113,12 +113,14 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		fireStartEvent();
+
 		if (!checkPreconditions()) {
+			fireEndEvent();
 			return result;
 		}
 
 		// Upload action file (lock for cleanup)
-		fireStartEvent();
 		startOperation();
 
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
