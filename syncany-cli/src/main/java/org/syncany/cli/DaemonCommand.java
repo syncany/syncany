@@ -66,7 +66,7 @@ public class DaemonCommand extends Command {
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
 		if (nonOptionArgs.size() == 0) {
-			throw new Exception("Invalid syntax, please specify an action (list, add, remove).");
+			throw new Exception("Invalid syntax, no action given (start, stop, reload, restart, status, force-stop, list, add, remove).");
 		}
 
 		// <action>

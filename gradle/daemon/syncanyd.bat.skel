@@ -53,7 +53,7 @@ rem END OF PID FILE STUFF
 @if "%2" == "reload" goto reload
 @if "%2" == "status" goto status
 
-echo Usage: sy daemon (start/stop/reload/status/force-stop)
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %SYNCANY_OPTS%  -classpath "%CLASSPATH%" org.syncany.Syncany %CMD_LINE_ARGS%
 goto mainEnd
 
 :stop
