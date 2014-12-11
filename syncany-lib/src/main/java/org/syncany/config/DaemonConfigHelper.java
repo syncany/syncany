@@ -31,6 +31,10 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.FileUtil;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.primitives.Ints;
+
 /**
  * The daemon helper provides helper functions to read and/or write the
  * daemon configuration file as defined by {@link DaemonConfigTO}.
@@ -67,7 +71,7 @@ public class DaemonConfigHelper {
 	 *         <tt>false</tt> otherwise
 	 * @throws ConfigException If an error occurs, e.g. an I/O error or an invalid XML file
 	 */
-	public static boolean addToDaemonConfig(File localDir) throws ConfigException {
+	public static boolean addFolder(File localDir) throws ConfigException {
 		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
 
 		if (daemonConfigFile.exists()) {
@@ -101,6 +105,63 @@ public class DaemonConfigHelper {
 			FolderTO localDirFolderTO = new FolderTO(localDir.getAbsolutePath());
 			createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { localDirFolderTO }));
 
+			return true;
+		}
+	}
+	
+	public static boolean removeFolder(File localDir) throws ConfigException {
+		return removeFolder(localDir.getAbsolutePath());
+	}
+	
+	public static boolean removeFolder(String localDirIdentifier) throws ConfigException {
+		File daemonConfigFile = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_FILE);
+
+		if (daemonConfigFile.exists()) {
+			DaemonConfigTO daemonConfigTO = DaemonConfigTO.load(daemonConfigFile);
+			
+			// Is index?
+			Integer localDirIndex = Ints.tryParse(localDirIdentifier);
+			boolean isLocalDirIndex = localDirIndex != null;
+			boolean folderRemoved = false;
+			
+			// Remove by index
+			if (isLocalDirIndex) {
+				localDirIndex--;
+				
+				if (localDirIndex >= 0 && localDirIndex < daemonConfigTO.getFolders().size()) {
+					logger.log(Level.INFO, "Given identifier (" + localDirIndex + ") is a valid index for " + daemonConfigTO.getFolders().get(localDirIndex).getPath() + ". REMOVING.");
+					folderRemoved = null != daemonConfigTO.getFolders().remove((int) localDirIndex);
+				}
+				else {
+					logger.log(Level.INFO, "Given identifier (" + localDirIndex + ") is a INVALID index. NOT REMOVING.");
+				}
+			}
+			
+			// Remove by name/path
+			else {
+				final String localDirPath = FileUtil.getCanonicalFile(new File(localDirIdentifier)).getAbsolutePath();
+				
+				folderRemoved = Iterables.removeIf(daemonConfigTO.getFolders(), new Predicate<FolderTO>() {
+					@Override
+					public boolean apply(FolderTO folder) {
+						return folder.getPath().equals(localDirPath);
+					}
+				});	
+			}			
+						
+			// Save (if removed)
+			if (folderRemoved) {
+				logger.log(Level.INFO, "Folder was removed. Saving daemon.xml ...");
+
+				daemonConfigTO.save(daemonConfigFile);
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			createAndWriteDaemonConfig(daemonConfigFile, Arrays.asList(new FolderTO[] { }));
 			return true;
 		}
 	}

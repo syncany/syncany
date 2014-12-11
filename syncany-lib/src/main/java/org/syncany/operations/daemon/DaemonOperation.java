@@ -31,8 +31,9 @@ import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;
+import org.syncany.operations.daemon.DaemonOperationOptions.DaemonAction;
+import org.syncany.operations.daemon.DaemonOperationResult.DaemonResultCode;
 import org.syncany.operations.daemon.messages.ControlManagementRequest;
 import org.syncany.operations.daemon.messages.ControlManagementResponse;
 import org.syncany.operations.watch.WatchOperation;
@@ -69,6 +70,7 @@ public class DaemonOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
 	public static final String PID_FILE = "daemon.pid";
 
+	private DaemonOperationOptions options;
 	private File pidFile;
 	
 	private WebServer webServer;
@@ -76,22 +78,75 @@ public class DaemonOperation extends Operation {
 	private ControlServer controlServer;
 	private LocalEventBus eventBus;
 	private DaemonConfigTO daemonConfig;
-	private PortTO portTO;
+	private PortTO portTO;	
 
 	public DaemonOperation() {
-		super(null);		
+		this(new DaemonOperationOptions(DaemonAction.RUN));
+	}
+	
+	public DaemonOperation(DaemonOperationOptions options) {
+		super(null);	
+		
+		this.options = options;
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);		
 	}
 
 	@Override
-	public OperationResult execute() throws Exception {		
-		logger.log(Level.INFO, "Starting daemon operation ...");
+	public DaemonOperationResult execute() throws Exception {		
+		logger.log(Level.INFO, "Starting daemon operation with action " + options.getAction() + " ...");
 		
-		startOperation();
-		return null;
+		switch (options.getAction()) {
+		case LIST:
+			return executeList();
+
+		case ADD:
+			return executeAdd();
+
+		case REMOVE:
+			return executeRemove();
+			
+		case RUN:
+			return executeRun();
+
+		default:
+			throw new Exception("Unknown action: " + options.getAction());
+		}
 	}
 
-	private void startOperation() throws Exception {
+	private DaemonOperationResult executeList() {
+		loadOrCreateConfig();
+		return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
+	}
+	
+	private DaemonOperationResult executeAdd() throws Exception {
+		File watchRoot = new File(options.getWatchRoot());
+		
+		if (!watchRoot.isDirectory()) {
+			throw new Exception("Given argument is not an existing folder. Adding to daemon failed.");
+		}
+		
+		boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(watchRoot);
+
+		if (addedToDaemonConfig) {
+			return new DaemonOperationResult(DaemonResultCode.OK);			
+		}
+		else {
+			return new DaemonOperationResult(DaemonResultCode.NOK);
+		}		
+	}
+	
+	private DaemonOperationResult executeRemove() throws ConfigException {
+		boolean removedFromDaemonConfig = DaemonConfigHelper.removeFolder(options.getWatchRoot());
+
+		if (removedFromDaemonConfig) {
+			return new DaemonOperationResult(DaemonResultCode.OK);			
+		}
+		else {
+			return new DaemonOperationResult(DaemonResultCode.NOK);
+		}		
+	}
+	
+	private DaemonOperationResult executeRun() throws Exception {
 		if (PidFileUtil.isProcessRunning(pidFile)) {
 			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
 		}
@@ -105,6 +160,8 @@ public class DaemonOperation extends Operation {
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
+		
+		return new DaemonOperationResult(DaemonResultCode.OK);
 	}
 
 	@Subscribe

@@ -186,7 +186,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
 			try {
-				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(options.getLocalDir());
 				result.setAddedToDaemon(addedToDaemonConfig);
 			}
 			catch (Exception e) {
