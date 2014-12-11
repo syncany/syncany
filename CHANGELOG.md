@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
 - Bugfixes and other things:
   + `sy genlink -s` now works behind a proxy #291
+  + GUI: Correctly working icon rotation #296
 
 ### Syncany 0.3.0-alpha (Date: 9 Dec 2014)
 - **Breaks compatiblity to 0.2.0-alpha local folders!**
