@@ -116,7 +116,7 @@ public class DaemonCommand extends Command {
 			return;
 
 		default:
-			out.println("Unknown action: " + action);
+			// Nothing.
 		}
 	}
 
