@@ -8,4 +8,179 @@ for name in $HOME/.config/syncany/plugins/lib/*.jar ; do
   CP=$CP:$name
 done
 
-"$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$@"
+
+### Daemon script begin #########################################SYNCANY_INCL_4#
+
+# Daemon variables
+DAEMON_NAME=syncanyd
+DAEMON_APPDIR=~/.config/syncany
+DAEMON_CONTROLFILE=$DAEMON_APPDIR/daemon.ctrl
+DAEMON_PIDFILE=$DAEMON_APPDIR/daemon.pid
+DAEMON_CMD="daemon"
+
+# Daemon functions
+daemon_get_pid() {
+	if [ -e $DAEMON_PIDFILE ]; then
+		echo $(cat $DAEMON_PIDFILE)
+	else
+		echo -1
+	fi
+}
+
+daemon_running() {
+	ID=$(daemon_get_pid)
+	if [ $ID -eq -1 ]; then
+		echo 0
+	elif [ -n "$(ps -p$ID -opid=)" ]; then
+		echo 1
+	else
+		echo 0
+	fi	
+}
+
+daemon_start() {
+	DAEMON_RUNNING=$(daemon_running)
+	
+	echo -n "Starting daemon: "
+	
+	if [ $DAEMON_RUNNING -eq 1 ]; then
+		echo "$DAEMON_NAME already running (pid $DAEMON_PID)"
+	else
+        nohup "$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$DAEMON_CMD"> /dev/null 2>&1 &
+
+		DAEMON_PID=-1
+		TRIES=10
+		
+		while [ $DAEMON_RUNNING -eq 0 -a $TRIES -gt 0 ]; do
+			DAEMON_RUNNING=$(daemon_running)
+			echo -n "."
+		
+			DAEMON_PID=$(daemon_get_pid)
+			TRIES=$(($TRIES-1))
+			sleep 1
+		done
+		
+		if [ $TRIES -eq 0 ]; then
+			echo " Failed to start process. EXITING."
+			echo "Failed command line: $ $DAEMON $DAEMON_CMD"
+			exit 2
+		fi
+		
+		echo " $DAEMON_NAME (pid $DAEMON_PID)."
+	fi
+}
+
+daemon_stop() {
+	DAEMON_RUNNING=$(daemon_running)
+
+	echo -n "Stopping daemon: "
+	
+	if [ $DAEMON_RUNNING -eq 0 ]; then
+		echo "$DAEMON_NAME not running"
+	else
+		echo "shutdown" >> $DAEMON_CONTROLFILE
+		
+		TRIES=10
+		while [ $DAEMON_RUNNING -eq 1 -a $TRIES -gt 0 ]; do
+			DAEMON_RUNNING=$(daemon_running)
+			echo -n "."
+		
+			TRIES=$(($TRIES-1))
+			sleep 1
+		done
+		
+		if [ $TRIES -eq 0 ]; then
+			echo " Failed to stop process $DAEMON_PID. Try 'force-stop'. EXITING."
+			exit 3
+		fi
+		
+		echo " $DAEMON_NAME stopped."
+	fi
+}
+
+daemon_force_stop() {
+	DAEMON_RUNNING=$(daemon_running)
+
+	echo -n "Force-stopping daemon: "
+
+	if [ $DAEMON_RUNNING -eq 0 ]; then
+		echo "$DAEMON_NAME not running"
+	else
+		kill -9 $DAEMON_PID
+		
+		DAEMON_RUNNING=$(daemon_running)
+		
+		sleep 1
+			
+		DAEMON_RUNNING=$(daemon_running)
+		if [ $DAEMON_RUNNING -eq 1 ]; then
+			echo "Failed to kill -9 $DAEMON_PID. EXITING."
+		else 
+			rm $DAEMON_PIDFILE 2> /dev/null
+			rm $DAEMON_CONTROLFILE 2> /dev/null
+
+			echo "Killed $DAEMON_NAME (pid $DAEMON_PID)."
+		fi
+	fi
+}
+
+daemon_status() {
+	DAEMON_RUNNING=$(daemon_running)
+	echo -n "Checking daemon: "$DAEMON_NAME
+	
+	if [ $DAEMON_RUNNING -eq 0 ]; then
+		echo " not running"
+	else
+		echo " running (pid $DAEMON_PID)."
+	fi
+}
+
+daemon_reload() {
+	DAEMON_RUNNING=$(daemon_running)
+	echo -n "Reloading daemon: "$DAEMON_NAME
+	
+	if [ $DAEMON_RUNNING -eq 0 ]; then
+		echo " not running"
+	else
+		echo "reload" >> $DAEMON_CONTROLFILE
+		echo "."
+	fi
+}
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+mkdir -p $DAEMON_APPDIR
+DAEMON_PID=$(daemon_get_pid)
+
+case "$1" in                 
+	daemon)                   
+		case "$2" in         
+			start) 
+				daemon_start
+				;;     
+			stop) 
+				daemon_stop
+				;;     
+			restart) 
+				daemon_stop
+				daemon_start				
+				;;     
+			status)
+				daemon_status
+				;;     
+			reload)
+				daemon_reload
+				;;     
+			force-stop) 
+				daemon_force_stop
+				;; 
+			*) 
+				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
+				;;
+		esac
+		;;  
+	
+	*)                       
+        exec "$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$@"
+		;;
+esac
