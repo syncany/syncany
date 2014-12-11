@@ -3,6 +3,8 @@ Change Log
 
 ### Syncany 0.3.1-alpha (Date: Tbd.)
 - Developer/alpha release (**STILL NOT FOR PRODUCTION USE!**)
+- Features and significant changes:
+  + Implement folder management commands: `sy daemon (list|add|remove)` #286
 - Bugfixes and other things:
   + `sy genlink -s` now works behind a proxy #291
 
