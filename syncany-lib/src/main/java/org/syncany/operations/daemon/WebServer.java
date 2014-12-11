@@ -271,7 +271,7 @@ public class WebServer {
 	public void onResponse(Response response) {
 		try {
 			// Serialize response
-			String responseMessage = MessageFactory.toXml(response);
+			String responseMessage = MessageFactory.toJson(response);
 			
 			// Send to one or many receivers
 			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;

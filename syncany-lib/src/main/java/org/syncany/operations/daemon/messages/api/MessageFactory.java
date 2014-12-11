@@ -34,6 +34,9 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.StringUtil;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 /**
  * The message factory serializes and deserializes messages sent to
  * or from the daemon via the REST/WS API.
@@ -148,5 +151,10 @@ public class MessageFactory {
 		public void write(OutputNode node, FileChecksum value) throws Exception {
 			node.setValue(value.toString());
 		}
+	}
+
+	public static String toJson(Response response) {
+		Gson gson = new Gson();
+		return gson.toJson(response);
 	}
 }
