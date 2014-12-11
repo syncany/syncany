@@ -135,11 +135,13 @@ public class DownOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync down' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		fireStartEvent();
+
 		if (!checkPreconditions()) {
+			fireEndEvent();
 			return result;
 		}
 
-		fireStartEvent();
 		startOperation();
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
