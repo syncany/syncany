@@ -182,6 +182,7 @@ public class RemoteTransaction {
 
 				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 				transferManager.upload(localFile, tempRemoteFile);
+				action.setStatus(ActionTO.STATUS_STARTED);
 			}
 			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile remoteFile = action.getRemoteFile();
@@ -193,6 +194,7 @@ public class RemoteTransaction {
 				catch (StorageMoveException e) {
 					logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
 				}
+				action.setStatus(ActionTO.STATUS_STARTED);
 			}
 		}
 	}
@@ -218,6 +220,7 @@ public class RemoteTransaction {
 
 				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
 				transferManager.move(tempRemoteFile, finalRemoteFile);
+				action.setStatus(ActionTO.STATUS_DONE);
 			}
 		}
 	}
@@ -251,6 +254,7 @@ public class RemoteTransaction {
 					logger.log(Level.INFO, "Failed to delete: " + tempRemoteFile, " because of: " + e);
 					success = false;
 				}
+				action.setStatus(ActionTO.STATUS_DONE);
 			}
 		}
 

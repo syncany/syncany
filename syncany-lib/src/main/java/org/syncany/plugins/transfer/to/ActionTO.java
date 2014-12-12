@@ -40,8 +40,15 @@ public class ActionTO {
 	public static final String TYPE_UPLOAD = "UPLOAD";
 	public static final String TYPE_DELETE = "DELETE";
 
+	public static final String STATUS_UNSTARTED = "UNSTARTED";
+	public static final String STATUS_STARTED = "STARTED";
+	public static final String STATUS_DONE = "DONE";
+
 	@Element(name = "type", required = true)
 	private String type;
+
+	@Element(name = "status", required = false)
+	private String status = STATUS_UNSTARTED;
 
 	@Element(name = "remoteLocation", required = true)
 	private String remoteLocation;
@@ -58,6 +65,14 @@ public class ActionTO {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public void setRemoteLocation(RemoteFile remoteFile) {
@@ -94,5 +109,5 @@ public class ActionTO {
 	public String toString() {
 		return "ActionTO [type=" + type + ", remoteLocation=" + remoteLocation + ", remoteTempLocation=" + remoteTempLocation
 				+ ", localTempLocation=" + localTempLocation + "]";
-	}		
+	}
 }
