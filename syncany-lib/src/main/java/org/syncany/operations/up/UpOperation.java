@@ -125,14 +125,14 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// TODO [medium/high] Remove this and construct mechanism to resume uploads
 		boolean blockingTransactionExist = !transferManager.cleanTransactions();
-		
+
 		if (blockingTransactionExist) {
 			logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
 			result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
-			
+
 			finishOperation();
 			fireEndEvent();
-			
+
 			return result;
 		}
 
@@ -158,14 +158,22 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion);
-		
+
+		boolean committingFailed = false;
 		try {
 			remoteTransaction.commit();
 			localDatabase.commit();
 		}
 		catch (Exception e) {
+			committingFailed = true;
 			localDatabase.rollback();
 			throw e;
+		}
+		finally {
+			if (committingFailed) {
+				File transactionFile = config.getTransactionFile();
+				remoteTransaction.writeToFile(transactionFile);
+			}
 		}
 
 		// Save local database
@@ -404,10 +412,10 @@ public class UpOperation extends AbstractTransferOperation {
 	 * to determine a new vector clock		
 	 */
 	private VectorClock findNewVectorClock(VectorClock lastVectorClock) {
-		logger.log(Level.INFO, "Last vector clock was: " + lastVectorClock);		
-		
+		logger.log(Level.INFO, "Last vector clock was: " + lastVectorClock);
+
 		boolean noPreviousVectorClock = lastVectorClock.isEmpty();
-		
+
 		if (noPreviousVectorClock) {
 			lastVectorClock = localDatabase.getHighestKnownDatabaseFilenameNumbers();
 		}
@@ -433,6 +441,6 @@ public class UpOperation extends AbstractTransferOperation {
 
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
-		return newVectorClock;		
-	}	
+		return newVectorClock;
+	}
 }
