@@ -268,7 +268,7 @@ public class ApplicationLink {
 
 		if (proxyHost != null && proxyPortStr != null) {
 			try {
-				Integer proxyPort = Ints.tryParse(proxyPortStr);
+				Integer proxyPort = Integer.parseInt(proxyPortStr);
 				
 				requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
 				logger.log(Level.INFO, "Using proxy: " + proxyHost + ":" + proxyPort);
@@ -281,7 +281,7 @@ public class ApplicationLink {
 					httpClientBuilder.setDefaultCredentialsProvider(credsProvider);					
 				}
 			}
-			catch (Exception e) {
+			catch (NumberFormatException e) {
 				logger.log(Level.WARNING, "Invalid proxy settings found. Not using proxy.", e);
 			}
 		}
