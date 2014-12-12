@@ -70,6 +70,7 @@ public class Config {
 	// Files in .syncany/state
 	public static final String FILE_PORT = "port.xml";
 	public static final String FILE_TRANSACTION = "transaction";
+	public static final String FILE_TRANSACTION_DATABASE = "transaction-db.xml";
 
 	private byte[] repoId;
 	private String machineName;
@@ -333,5 +334,9 @@ public class Config {
 
 	public File getTransactionFile() {
 		return new File(stateDir, FILE_TRANSACTION);
+	}
+
+	public File getTransactionDatabaseFile() {
+		return new File(stateDir, FILE_TRANSACTION_DATABASE);
 	}
 }

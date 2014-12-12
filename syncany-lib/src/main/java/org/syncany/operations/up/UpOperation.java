@@ -44,6 +44,7 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.cleanup.CleanupOperation;
@@ -60,6 +61,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
+import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
@@ -123,38 +125,48 @@ public class UpOperation extends AbstractTransferOperation {
 		// Upload action file (lock for cleanup)
 		startOperation();
 
-		// TODO [medium/high] Remove this and construct mechanism to resume uploads
-		boolean blockingTransactionExist = !transferManager.cleanTransactions();
-
-		if (blockingTransactionExist) {
-			logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
-			result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
-
-			finishOperation();
-			fireEndEvent();
-
-			return result;
+		DatabaseVersion newDatabaseVersion;
+		boolean resuming = false;
+		if (options.resumeTransaction()) {
+			newDatabaseVersion == attemptResumeTransaction();
+			if (newDatabaseVersion != null) {
+				logger.log(Level.INFO, "Successfully resumed transaction.");
+				resuming = true;
+			}
 		}
+		if (!resuming) {
+            boolean blockingTransactionExist = !transferManager.cleanTransactions();
 
-		ChangeSet localChanges = result.getStatusResult().getChangeSet();
-		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
+            if (blockingTransactionExist) {
+                logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
+                result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
 
-		// Index
-		DatabaseVersion newDatabaseVersion = index(locallyUpdatedFiles);
+                finishOperation();
+                fireEndEvent();
 
-		if (newDatabaseVersion.getFileHistories().size() == 0) {
-			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
-			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+                return result;
+            }
 
-			finishOperation();
-			fireEndEvent();
+            ChangeSet localChanges = result.getStatusResult().getChangeSet();
+            List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 
-			return result;
+            // Index
+            newDatabaseVersion = index(locallyUpdatedFiles);
+
+            if (newDatabaseVersion.getFileHistories().size() == 0) {
+                logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+                result.setResultCode(UpResultCode.OK_NO_CHANGES);
+
+                finishOperation();
+                fireEndEvent();
+
+                return result;
+            }
+
+            // Upload multichunks
+            logger.log(Level.INFO, "Uploading new multichunks ...");
+            addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 		}
-
-		// Upload multichunks
-		logger.log(Level.INFO, "Uploading new multichunks ...");
-		addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion);
@@ -173,6 +185,9 @@ public class UpOperation extends AbstractTransferOperation {
 			if (committingFailed) {
 				File transactionFile = config.getTransactionFile();
 				remoteTransaction.writeToFile(transactionFile);
+				MemoryDatabase memoryDatabase = new MemoryDatabase();
+				memoryDatabase.addDatabaseVersion(newDatabaseVersion);
+				saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
 			}
 		}
 
@@ -379,12 +394,6 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
-		// Get last vector clock
-		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
-		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
-
-		// New vector clock
-		VectorClock newVectorClock = findNewVectorClock(lastVectorClock);
 
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
@@ -392,6 +401,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
 
+		VectorClock newVectorClock = findNewVectorClock();
 		newDatabaseVersion.setVectorClock(newVectorClock);
 		newDatabaseVersion.setTimestamp(new Date());
 		newDatabaseVersion.setClient(config.getMachineName());
@@ -411,7 +421,11 @@ public class UpOperation extends AbstractTransferOperation {
 	 * In the latter case, the method looks at the previous database version numbers 
 	 * to determine a new vector clock		
 	 */
-	private VectorClock findNewVectorClock(VectorClock lastVectorClock) {
+	private VectorClock findNewVectorClock() {
+		// Get last vector clock
+		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
+		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
+
 		logger.log(Level.INFO, "Last vector clock was: " + lastVectorClock);
 
 		boolean noPreviousVectorClock = lastVectorClock.isEmpty();
@@ -442,5 +456,32 @@ public class UpOperation extends AbstractTransferOperation {
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
 		return newVectorClock;
+	}
+
+	private DatabaseVersion attemptResumeTransaction() throws Exception {
+		File transactionFile = config.getTransactionFile();
+		if (!transactionFile.exists()) {
+			return null;
+		}
+
+		TransactionTO transactionTO = TransactionTO.load(config.getTransformer(), transactionFile);
+
+		remoteTransaction = new RemoteTransaction(config, transferManager, transactionTO);
+
+		File databaseFile = config.getTransactionDatabaseFile();
+		if (!databaseFile.exists()) {
+			return null;
+		}
+
+		DatabaseXmlSerializer databaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
+		MemoryDatabase memoryDatabase = new MemoryDatabase();
+		databaseSerializer.load(memoryDatabase, databaseFile, null, null, DatabaseReadType.FULL);
+
+		if (memoryDatabase.getDatabaseVersions().size() == 0) {
+			return null;
+		}
+
+		return memoryDatabase.getLastDatabaseVersion();
+
 	}
 }

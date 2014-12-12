@@ -47,9 +47,13 @@ public class RemoteTransaction {
 	private LocalEventBus eventBus;
 
 	public RemoteTransaction(Config config, TransferManager transferManager) {
+		this(config, transferManager, new TransactionTO(config.getMachineName()));
+	}
+
+	public RemoteTransaction(Config config, TransferManager transferManager, TransactionTO transactionTO) {
 		this.config = config;
 		this.transferManager = transferManager;
-		this.transactionTO = new TransactionTO(config.getMachineName());
+		this.transactionTO = transactionTO;
 		this.eventBus = LocalEventBus.getInstance();
 	}
 
