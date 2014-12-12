@@ -262,19 +262,27 @@ public class ApplicationLink {
 
 		// do we use a https proxy?
 		String proxyHost = System.getProperty("https.proxyHost");
-		Integer proxyPort = Ints.tryParse(System.getProperty("https.proxyPort"));
+		String proxyPortStr = System.getProperty("https.proxyPort");
 		String proxyUser = System.getProperty("https.proxyUser");
 		String proxyPassword = System.getProperty("https.proxyPassword");
 
-		if (proxyHost != null && proxyPort != null && proxyPort > 0) {
-			requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
-			logger.log(Level.INFO, "Using proxy: " + proxyHost + ":" + proxyPort);
+		if (proxyHost != null && proxyPortStr != null) {
+			try {
+				Integer proxyPort = Ints.tryParse(proxyPortStr);
+				
+				requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
+				logger.log(Level.INFO, "Using proxy: " + proxyHost + ":" + proxyPort);
+	
+				if (proxyUser != null && proxyPassword != null) {
+					logger.log(Level.INFO, "Proxy required credentials; using '" + proxyUser + "' (username) and *** (hidden password)");
 
-			if (proxyUser != null && proxyPassword != null) {
-				CredentialsProvider credsProvider = new BasicCredentialsProvider();
-				credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
-				httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
-				logger.log(Level.INFO, "Proxy requires credentials");
+					CredentialsProvider credsProvider = new BasicCredentialsProvider();
+					credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
+					httpClientBuilder.setDefaultCredentialsProvider(credsProvider);					
+				}
+			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Invalid proxy settings found. Not using proxy.", e);
 			}
 		}
 
