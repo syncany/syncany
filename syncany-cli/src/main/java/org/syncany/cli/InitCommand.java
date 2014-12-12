@@ -106,16 +106,22 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
 		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));		
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();	
 
 		OptionSet options = parser.parse(operationArguments);
 
+		// Set interactivity mode  
+		isInteractive = !options.has(optionPlugin);
+			
+		// Ask or set transfer settings
 		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
 
+		// Some misc settings
 		boolean createTargetPath = options.has(optionCreateTargetPath);
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
-
+		
 		// Cipher specs: --no-encryption, --advanced
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 
@@ -129,6 +135,10 @@ public class InitCommand extends AbstractInitCommand {
 		// Genlink options: --short
 		GenlinkOperationOptions genlinkOptions = new GenlinkOperationOptions();
 		genlinkOptions.setShortUrl(options.has(optionShortUrl));
+				
+		// Set repo password
+		String password = validateAndGetPassword(options, optionNoEncryption, optionPassword);
+		operationOptions.setPassword(password);
 		
 		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(transferSettings);
@@ -140,12 +150,37 @@ public class InitCommand extends AbstractInitCommand {
 
 		operationOptions.setCreateTarget(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
-		operationOptions.setCipherSpecs(cipherSpecs);
-		operationOptions.setPassword(null); // set by callback in operation
+		operationOptions.setCipherSpecs(cipherSpecs);		
 		operationOptions.setDaemon(options.has(optionAddDaemon));
 		operationOptions.setGenlinkOptions(genlinkOptions);
 		
 		return operationOptions;
+	}
+	
+	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword) {		
+		if (!isInteractive) {
+			if (options.has(optionPassword) && options.has(optionNoEncryption)) {
+				throw new IllegalArgumentException("Cannot provide --password and --no-encryption. Conflicting options.");
+			}
+			else if (!options.has(optionPassword) && !options.has(optionNoEncryption)) {
+				throw new IllegalArgumentException("Non-interactive must either provide --no-encryption or --password.");
+			}
+			else if (options.has(optionPassword) && !options.has(optionNoEncryption)) {
+				String password = options.valueOf(optionPassword);
+				
+				if (password.length() < PASSWORD_MIN_LENGTH) {
+					throw new IllegalArgumentException("This password is not allowed (too short, min. " + PASSWORD_MIN_LENGTH + " chars)");
+				}
+				
+				return options.valueOf(optionPassword);
+			}			
+			else {
+				return null; // No encryption, no password.
+			}
+		}	
+		else {
+			return null; // Will be set in callback!
+		}
 	}
 
 	@Override

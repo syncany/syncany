@@ -77,12 +77,23 @@ public class DatabaseBranch {
 	}
 
 	public DatabaseVersionHeader getLast() {
+		if (branch.size() == 0) {
+			return null;
+		}
 		return branch.get(branch.size() - 1);
 	}
 
 	@Override
 	public String toString() {
 		return branch.toString();
+	}
+
+	@Override
+	public DatabaseBranch clone() {
+		DatabaseBranch clonedBranch = new DatabaseBranch();
+		clonedBranch.addAll(getAll());
+
+		return clonedBranch;
 	}
 
 	@Override

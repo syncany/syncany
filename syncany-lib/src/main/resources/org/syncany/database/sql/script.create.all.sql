@@ -100,10 +100,9 @@ CREATE CACHED TABLE multichunk_muddy (
 
 CREATE CACHED TABLE known_databases (
   id int NOT NULL IDENTITY,
-  database_name varchar(255) NOT NULL,
   client varchar(45) NOT NULL,
   filenumber int NOT NULL,
-  UNIQUE (database_name)
+  UNIQUE (client, filenumber)
 );
 
 CREATE CACHED TABLE general_settings (

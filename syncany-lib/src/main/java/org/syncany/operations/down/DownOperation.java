@@ -44,6 +44,7 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.daemon.messages.DownChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownStartSyncExternalEvent;
@@ -99,7 +100,7 @@ public class DownOperation extends AbstractTransferOperation {
 	private SqlDatabase localDatabase;
 	private DatabaseReconciliator databaseReconciliator;
 	private DatabaseXmlSerializer databaseSerializer;
-	
+
 	public DownOperation(Config config) {
 		this(config, new DownOperationOptions());
 	}
@@ -135,11 +136,14 @@ public class DownOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync down' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		fireStartEvent();
+
 		if (!checkPreconditions()) {
+			fireEndEvent();
 			return result;
 		}
 
-		fireStartEvent();
+		fireChangesDetectedEvent();
 		startOperation();
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
@@ -147,43 +151,43 @@ public class DownOperation extends AbstractTransferOperation {
 
 		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
 		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
-		DatabaseBranches unknownRemoteBranches = populateDatabaseBranches(remoteDatabaseHeaders);
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
 		Map<String, CleanupRemoteFile> remoteCleanupFiles = getRemoteCleanupFiles();
 		boolean cleanupOccurred = cleanupOccurred(remoteCleanupFiles);
-		
+
 		List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion = null;
-		
+
 		if (cleanupOccurred) {
 			logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
-			
+
 			// Capture file histories
-			preDeleteFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();			
-			
+			preDeleteFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
+
 			// Get rid of local database
 			localDatabase.deleteAll();
 			localDatabase.commit();
 
 			// Set last cleanup values
 			long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
-			
+
 			localDatabase.writeCleanupNumber(lastRemoteCleanupNumber);
 			localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
-			
+
 			localBranch = new DatabaseBranch();
 		}
-		
+
 		try {
-			DatabaseBranches allStitchedBranches = determineStitchedBranches(localBranch, unknownRemoteBranches);
-			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allStitchedBranches);
+			DatabaseBranches allBranches = populateDatabaseBranches(localBranch, remoteDatabaseHeaders);
+			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allBranches);
 
 			purgeConflictingLocalBranch(localBranch, winnersBranch);
-			applyWinnersBranch(localBranch, winnersBranch, allStitchedBranches, databaseVersionLocations, cleanupOccurred, preDeleteFileHistoriesWithLastVersion);
+			applyWinnersBranch(localBranch, winnersBranch, databaseVersionLocations, cleanupOccurred,
+					preDeleteFileHistoriesWithLastVersion);
 
-			persistMuddyMultiChunks(winnersBranch, allStitchedBranches, databaseVersionLocations);
+			persistMuddyMultiChunks(winnersBranch, allBranches, databaseVersionLocations);
 			removeNonMuddyMultiChunks();
-			
+
 			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 			localDatabase.commit();
 		}
@@ -201,6 +205,10 @@ public class DownOperation extends AbstractTransferOperation {
 
 	private void fireStartEvent() {
 		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+	}
+
+	private void fireChangesDetectedEvent() {
+		eventBus.post(new DownChangesDetectedSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
 	private void fireEndEvent() {
@@ -313,12 +321,16 @@ public class DownOperation extends AbstractTransferOperation {
 		return remoteDatabaseHeaders;
 	}
 
-	private DatabaseBranches populateDatabaseBranches(TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
-		DatabaseBranches unknownRemoteBranches = new DatabaseBranches();
+	private DatabaseBranches populateDatabaseBranches(DatabaseBranch localBranch,
+			TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
+		DatabaseBranches allBranches = new DatabaseBranches();
+
+		allBranches.put(config.getMachineName(), localBranch.clone());
+
 		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseHeaders.keySet()) {
 
 			// Populate branches
-			DatabaseBranch remoteClientBranch = unknownRemoteBranches.getBranch(remoteDatabaseFile.getClientName(), true);
+			DatabaseBranch remoteClientBranch = allBranches.getBranch(remoteDatabaseFile.getClientName(), true);
 
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseHeaders.get(remoteDatabaseFile)) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
@@ -326,22 +338,8 @@ public class DownOperation extends AbstractTransferOperation {
 			}
 		}
 
-		logger.log(Level.INFO, "Populated unknown branches: " + unknownRemoteBranches);
-		return unknownRemoteBranches;
-	}
-
-	/**
-	 * Uses the {@link DatabaseReconciliator} to stitch together the partial database branches of 
-	 * the other clients to full database branches that can be used in further algorithms.
-	 * 
-	 * <p>Input to this algorithm are the locally complete branch (extracted from the local database)
-	 * and the partial remote databases read from the new database files. 
-	 */
-	private DatabaseBranches determineStitchedBranches(DatabaseBranch localBranch, DatabaseBranches unknownRemoteBranches) {
-		logger.log(Level.INFO, "Determine stitched branches using database reconciliator ...");
-		logger.log(Level.FINE, "Local branch: " + localBranch);
-		
-		return databaseReconciliator.stitchBranches(unknownRemoteBranches, config.getMachineName(), localBranch);
+		logger.log(Level.INFO, "Populated unknown branches: " + allBranches);
+		return allBranches;
 	}
 
 	/**
@@ -363,15 +361,15 @@ public class DownOperation extends AbstractTransferOperation {
 	 */
 	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
 			throws Exception {
-		
+
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
 		Entry<String, DatabaseBranch> winnersBranch = databaseReconciliator.findWinnerBranch(allStitchedBranches);
-		
+
 		if (winnersBranch != null) {
 			return winnersBranch;
 		}
 		else {
-			return new AbstractMap.SimpleEntry<String, DatabaseBranch>("", new DatabaseBranch()); 
+			return new AbstractMap.SimpleEntry<String, DatabaseBranch>("", new DatabaseBranch());
 		}
 	}
 
@@ -421,16 +419,17 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @param cleanupOccurred 
 	 * @param preDeleteFileHistoriesWithLastVersion 
 	 */
-	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
-			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred, List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws Exception {
+	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch,
+			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred,
+			List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws Exception {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
-		
+
 		logger.log(Level.INFO, "- Cleanup occurred: " + cleanupOccurred);
 		logger.log(Level.INFO, "- Database versions to APPLY locally: " + winnersApplyBranch);
 
 		boolean remoteChangesOccurred = winnersApplyBranch.size() > 0 || cleanupOccurred;
-		
+
 		if (!remoteChangesOccurred) {
 			logger.log(Level.WARNING, "  + Nothing to update. Nice!");
 			result.setResultCode(DownResultCode.OK_NO_REMOTE_CHANGES);
@@ -440,7 +439,8 @@ public class DownOperation extends AbstractTransferOperation {
 			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations);
 
 			if (options.isApplyChanges()) {
-				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred, preDeleteFileHistoriesWithLastVersion).execute();
+				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred,
+						preDeleteFileHistoriesWithLastVersion).execute();
 			}
 			else {
 				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
@@ -545,7 +545,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 			for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
 				logger.log(Level.FINE, "- " + dbv.getHeader());
-			}			
+			}
 		}
 
 		return winnerBranchDatabase;
@@ -560,7 +560,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 */
 	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase)
 			throws SQLException {
-		
+
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
 		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
@@ -648,7 +648,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
 			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
-		
+
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = new HashMap<DatabaseVersionHeader, File>();
 
 		for (File databaseFile : databaseRemoteFilesInCache.keySet()) {
@@ -657,19 +657,19 @@ public class DownOperation extends AbstractTransferOperation {
 				databaseVersionLocations.put(databaseVersion.getHeader(), databaseFile);
 			}
 		}
-		
+
 		return databaseVersionLocations;
 	}
 
 	private Map<String, CleanupRemoteFile> getRemoteCleanupFiles() throws StorageException {
 		return transferManager.list(CleanupRemoteFile.class);
 	}
-	
+
 	private boolean cleanupOccurred(Map<String, CleanupRemoteFile> remoteCleanupFiles) throws Exception {
 		Long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
 		Long lastLocalCleanupNumber = localDatabase.getCleanupNumber();
-		
-		if (lastLocalCleanupNumber != null) {			
+
+		if (lastLocalCleanupNumber != null) {
 			return lastRemoteCleanupNumber > lastLocalCleanupNumber;
 		}
 		else {

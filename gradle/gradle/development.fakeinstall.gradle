@@ -1,14 +1,15 @@
 // CLI-specific Tasks //////////////////////////////////////////////////////////
+import org.apache.tools.ant.taskdefs.condition.Os
 
-String osName = System.getProperty("os.name").toLowerCase();
+
 
 task fakeinstall(dependsOn: ["fakeuninstall"]) << {
 	description = "Must be run as root: Makes syncany/sy command available everywhere (symlink to syncany-cli/build/..)"
-	
-	// Do not depend on :syncany-cli:installApp to avoid permission issues when 
+
+	// Do not depend on :syncany-cli:installApp to avoid permission issues when
 	// running fakeinstall as "root"; manually calling installApp required
-	
-	if (osName.startsWith("windows")) {
+
+	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		copy {
 			from "gradle/windows/syncany.bat"
 			into System.getenv()["windir"]
@@ -20,12 +21,22 @@ task fakeinstall(dependsOn: ["fakeuninstall"]) << {
     		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
     		ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
 	}
+
+    if(Os.isFamily(Os.FAMILY_MAC)) {
+        copy {
+            from "gradle/osx/org.syncany.daemon.plist"
+            into "/Library/LaunchAgents"
+        }
+        exec {
+            commandLine "/bin/launchctl", "load", "/Library/LaunchAgents/org.syncany.daemon.plist"
+        }
+    }
 }
 
 task fakeuninstall << {
 	description = "Must be run as root: Removes symlink for syncany/sy command (complement to fakeinstall)"
 
-	if (osName.startsWith("windows")) {
+	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		new File(System.getenv()["windir"] + "/syncany.bat").delete()
 		new File(System.getenv()["windir"] + "/sy.bat").delete()
 	}
@@ -33,5 +44,16 @@ task fakeuninstall << {
 		new File("/usr/local/bin/syncany").delete()
 		new File("/usr/local/bin/sy").delete()
 	}
-}
 
+    if(Os.isFamily(Os.FAMILY_MAC)) {
+        File daemonFile = new File("/Library/LaunchAgents/org.syncany.daemon.plist")
+
+        if (daemonFile.exists()) {
+            exec {
+                commandLine "/bin/launchctl", "stop", "org.syncany.daemon"
+                commandLine "/bin/launchctl", "unload", "/Library/LaunchAgents/org.syncany.daemon.plist"
+            }
+            daemonFile.delete()
+        }
+    }
+}

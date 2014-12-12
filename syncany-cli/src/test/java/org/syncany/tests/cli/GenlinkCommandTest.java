@@ -47,7 +47,7 @@ public class GenlinkCommandTest {
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"genlink",
-				"-s"
+				"--machine-readable"
 		}));
 
 		assertEquals("Different number of output lines expected.", 1, cliOutA.length);
@@ -90,7 +90,7 @@ public class GenlinkCommandTest {
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"genlink",
-				"-s"
+				"--machine-readable"
 		}));
 
 		assertEquals("Different number of output lines expected.", 1, cliOutA.length);

@@ -33,28 +33,40 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  *  <li>Comparison by name of the client</li>
  * </ol>
  * 
- * <b>Note:</b> This comparator can only be used if the database version headers (namely, the {@link VectorClock}s)
- * in the set/list are not in conflict. Conflicting/simultaneous vector clocks will throw a {@link RuntimeException}. 
- * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
+	private boolean considerTime;
+
+	public DatabaseVersionHeaderComparator(boolean considerTime) {
+		this.considerTime = considerTime;
+	}
+
+	/**
+	 * Compares the two given database versions headers and returns -1, 0 or 1 depending on
+	 * which header is considered larger. See {@link DatabaseVersionHeaderComparator class description}
+	 * for details regarding the precedence.  
+	 */
 	@Override
 	public int compare(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
-		return compareByVectorClock(o1, o2);		
+		return compareByVectorClock(o1, o2);
 	}
 
 	private int compareByVectorClock(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		VectorClockComparison vectorClockComparison = VectorClock.compare(o1.getVectorClock(), o2.getVectorClock());
-
+		
 		if (vectorClockComparison == VectorClockComparison.SIMULTANEOUS) {
-			throw new RuntimeException("There must not be a conflict within a branch. VC1: " + o1 + " - VC2: "
-					+ o2);
+			if (considerTime) {
+				return compareByTimestamp(o1, o2);
+			}
+			else {
+				return 0;
+			}
 		}
-
+		
 		if (vectorClockComparison == VectorClockComparison.EQUAL) {
 			return compareByTimestamp(o1, o2);
-		}
+		}		
 		else if (vectorClockComparison == VectorClockComparison.SMALLER) {
 			return -1;
 		}
@@ -65,7 +77,7 @@ public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersi
 
 	private int compareByTimestamp(DatabaseVersionHeader o1, DatabaseVersionHeader o2) {
 		int timestampComparison = Long.compare(o1.getDate().getTime(), o2.getDate().getTime());
-		
+
 		if (timestampComparison == 0) {
 			return compareByClientName(o1, o2);
 		}

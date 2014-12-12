@@ -108,7 +108,7 @@ public class DatabaseXmlSerializer {
 		}
 
 		try {
-			logger.log(Level.INFO, "- Loading database ({0}) from file {2} ...", new Object[] { readType, databaseFile });
+			logger.log(Level.INFO, "- Loading database ({0}) from file {1} ...", new Object[] { readType, databaseFile });
 
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser saxParser = factory.newSAXParser();

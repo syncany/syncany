@@ -2,9 +2,10 @@ NAME
   sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
-  sy cleanup [-M | --no-database-merge] [-V | --no-version-removal]
+  sy cleanup [-V | --no-version-removal]
              [-T | --no-temp-removal] [-k | --keep-versions=<count>] 
-             [<status-options>]
+             [-t | --time-between-cleanups ] [-x | --max-database-files]             
+             [-f | --force] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
@@ -30,11 +31,6 @@ DESCRIPTION
   This command is used by the 'up' command.
   
 OPTIONS
-  -M, --no-database-merge          
-    Turns off database file merging for the local client. If this is set, this
-    command will not merge this client's metadata files even if there are more
-    than 15 database files on the remote storage. 
-    
   -V, --no-version-removal 
     Turns off the removal of old versions for the command. If this is set, this
     command will not shorten file histories to the <count> given by -k, and it
@@ -61,6 +57,9 @@ OPTIONS
     Sets the number of database files per client. If the total number of 
     databases exceeds <count> times the number of clients, all database
     files will be merged to one per client.
-    
+  
+  -f, --force
+    Forces a the cleanup, even if the time between cleanups (-t) has not been 
+    run out yet. Use this option only if a cleanup is absolutely necessary.
+      
 %RESOURCE:incl/footer.skel%
-    

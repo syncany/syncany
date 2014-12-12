@@ -45,9 +45,11 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
@@ -62,10 +64,10 @@ import joptsimple.OptionSpec;
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
 
-	private static final char NESTED_OPTIONS_SEPARATOR = '.';
-	private static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
-	private static final int PASSWORD_MIN_LENGTH = 10;
-	private static final int PASSWORD_WARN_LENGTH = 12;
+	protected static final char NESTED_OPTIONS_SEPARATOR = '.';
+	protected static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
+	protected static final int PASSWORD_MIN_LENGTH = 10;
+	protected static final int PASSWORD_WARN_LENGTH = 12;
 
 	protected InitConsole console;
 	protected boolean isInteractive;
@@ -91,14 +93,14 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		TransferPlugin plugin;
 		TransferSettings transferSettings;
 
+		// Parse --plugin and --plugin-option values 
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
 		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
 
+		// Validation of some constraints
 		if (!options.has(optionPlugin) && knownPluginSettings.size() > 0) {
 			throw new IllegalArgumentException("Provided plugin settings without a plugin name.");
 		}
-
-		isInteractive = !options.has(optionPlugin) && knownPluginSettings.size() == 0;
 
 		plugin = options.has(optionPlugin) ? initPlugin(options.valueOf(optionPlugin)) : askPlugin();
 		transferSettings = askPluginSettings(plugin.createEmptySettings(), knownPluginSettings);
@@ -580,6 +582,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	@Override
 	public String onUserPassword(String header, String message) {
+		if (!isInteractive) {
+			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");			
+		}
+		
 		out.println();
 
 		if (header != null) {

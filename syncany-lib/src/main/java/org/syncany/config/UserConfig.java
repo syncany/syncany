@@ -17,13 +17,12 @@
  */
 package org.syncany.config;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
 import java.util.Map;
-
-import javax.net.ssl.SSLContext;
 
 import org.syncany.config.to.UserConfigTO;
 import org.syncany.crypto.CipherException;
@@ -198,11 +197,10 @@ public class UserConfig {
 
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
-			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil
-					.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
+			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
 
 			userConfigTO.setConfigEncryptionKey(configEncryptionKey);
-			UserConfigTO.save(userConfigTO, userConfigFile);
+			userConfigTO.save(userConfigFile);
 		}
 		catch (CipherException e) {
 			System.err.println("ERROR: " + e.getMessage());
