@@ -150,13 +150,8 @@ public class Adler32Fingerprinter extends Fingerprinter {
 	}
 
 	@Override
-	public Object clone() {
-		try {
-			return super.clone();
-		}
-		catch (CloneNotSupportedException cnse) {
-			throw new Error();
-		}
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 
 	@Override
