@@ -128,18 +128,31 @@ public class RemoteTransaction {
 		deleteTempRemoteFiles();
 	}
 
+	/**
+	 * writeToFile writes serializes the current state of the RemoteTransaction to a file.
+	 * 
+	 * @param transactionFile The file where the transaction will be written to.
+	 */
+	public void writeToFile(File transactionFile) throws StorageException {
+		try {
+			transactionTO.save(config.getTransformer(), transactionFile);
+			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + transactionFile);
+		}
+		catch (Exception e) {
+			throw new StorageException("Could not write transaction to file: " + transactionFile, e);
+		}
+	}
+
 	private File writeLocalTransactionFile() throws StorageException {
 		try {
 			File localTransactionFile = config.getCache().createTempFile("transaction");
-
-			transactionTO.save(config.getTransformer(), localTransactionFile);
-			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
-
+			writeToFile(localTransactionFile);
 			return localTransactionFile;
 		}
 		catch (Exception e) {
 			throw new StorageException("Could not create temporary file for transaction", e);
 		}
+
 	}
 
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
