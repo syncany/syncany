@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package org.syncany.operations.ls;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -32,7 +33,7 @@ public class LsOperationOptions implements OperationOptions {
 	private Date date;
 
 	@Element(required = false)
-	private String pathExpression;	
+	private String pathExpression;
 
 	@Element(required = false)
 	private boolean recursive;
@@ -42,15 +43,15 @@ public class LsOperationOptions implements OperationOptions {
 
 	@Element(required = false)
 	private boolean fetchHistories;
-	
+
 	public LsOperationOptions() {
-		this.date = null;
-		this.pathExpression = null;
-		this.recursive = false;
-		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
-		this.fetchHistories = false;
+		date = null;
+		pathExpression = null;
+		recursive = false;
+		fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
+		fetchHistories = false;
 	}
-	
+
 	public Date getDate() {
 		return date;
 	}
@@ -75,7 +76,7 @@ public class LsOperationOptions implements OperationOptions {
 		this.recursive = recursive;
 	}
 
-	public HashSet<FileType> getFileTypes() {
+	public Set<FileType> getFileTypes() {
 		return fileTypes;
 	}
 
@@ -89,5 +90,5 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setFetchHistories(boolean fetchHistories) {
 		this.fetchHistories = fetchHistories;
-	}	
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,41 +54,41 @@ import com.google.common.eventbus.Subscribe;
  * with {@link #start()} or {@link #reload()}, it first reads the daemon configuration file
  * and then runs new threads for each configured Syncany folder. Invalid or non-existing folders
  * are ignored.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class WatchServer {	
+public class WatchServer {
 	private static final Logger logger = Logger.getLogger(WatchServer.class.getSimpleName());
-	
-	private DaemonConfigTO daemonConfig;	
+
+	private DaemonConfigTO daemonConfig;
 	private Map<File, WatchRunner> watchOperations;
 	private LocalEventBus eventBus;
-	
+
 	public WatchServer() {
-		this.daemonConfig = null;
-		this.watchOperations = new TreeMap<File, WatchRunner>();
-		
-		this.eventBus = LocalEventBus.getInstance();
-		this.eventBus.register(this);
+		daemonConfig = null;
+		watchOperations = new TreeMap<File, WatchRunner>();
+
+		eventBus = LocalEventBus.getInstance();
+		eventBus.register(this);
 	}
-	
-	public void start(DaemonConfigTO daemonConfigTO) {		
+
+	public void start(DaemonConfigTO daemonConfigTO) {
 		reload(daemonConfigTO);
 	}
-	
+
 	public void reload(DaemonConfigTO daemonConfigTO) {
 		logger.log(Level.INFO, "Starting/reloading watch server ... ");
-		
+
 		// Update config
-		this.daemonConfig = daemonConfigTO;
-		
+		daemonConfig = daemonConfigTO;
+
 		// Restart threads
 		try {
 			Map<File, FolderTO> watchedFolders = getFolderMap(daemonConfigTO.getFolders());
-			
+
 			stopAllWatchOperations();
 			startWatchOperations(watchedFolders);
-			
+
 			fireDaemonReloadedEvent();
 		}
 		catch (Exception e) {
@@ -97,16 +97,16 @@ public class WatchServer {
 	}
 
 	public void stop() {
-		logger.log(Level.INFO, "Stopping watch server ...  ");		
+		logger.log(Level.INFO, "Stopping watch server ...  ");
 		Map<File, WatchRunner> copyOfWatchOperations = Maps.newHashMap(watchOperations);
-		
+
 		for (Map.Entry<File, WatchRunner> folderEntry : copyOfWatchOperations.entrySet()) {
 			File localDir = folderEntry.getKey();
 			WatchRunner watchOperationThread = folderEntry.getValue();
-					
+
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
-			
+
 			watchOperations.remove(localDir);
 		}
 	}
@@ -115,25 +115,25 @@ public class WatchServer {
 		for (Map.Entry<File, FolderTO> folderEntry : newWatchedFolderTOs.entrySet()) {
 			File localDir = folderEntry.getKey();
 
-			try {	
+			try {
 				Config watchConfig = ConfigHelper.loadConfig(localDir);
-				
+
 				if (watchConfig != null) {
-					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");					
-					
+					logger.log(Level.INFO, "- Starting watch operation at " + localDir + " ...");
+
 					WatchOperationOptions watchOptions = folderEntry.getValue().getWatchOptions();
-					
+
 					if (watchOptions == null) {
 						watchOptions = new WatchOperationOptions();
 					}
-					
-					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, daemonConfig.getPortTO());	
+
+					WatchRunner watchRunner = new WatchRunner(watchConfig, watchOptions, daemonConfig.getPortTO());
 					watchRunner.start();
-	
+
 					watchOperations.put(localDir, watchRunner);
 				}
 				else {
-					logger.log(Level.INFO, "- CANNOT start watch, because no config found at " + localDir + " ...");										
+					logger.log(Level.INFO, "- CANNOT start watch, because no config found at " + localDir + " ...");
 				}
 			}
 			catch (Exception e) {
@@ -141,7 +141,7 @@ public class WatchServer {
 			}
 		}
 	}
-	
+
 	/**
 	 * Stops all watchOperations and verifies if
 	 * they actually have stopped.
@@ -153,14 +153,14 @@ public class WatchServer {
 			logger.log(Level.INFO, "- Stopping watch operation at " + localDir + " ...");
 			watchOperationThread.stop();
 		}
-		
+
 		// Check if watch operations actually have stopped.
 		while (watchOperations.keySet().size() > 0) {
 			Map<File, WatchRunner> watchOperationsCopy = new TreeMap<File, WatchRunner>(watchOperations);
-			
+
 			for (File localDir : watchOperationsCopy.keySet()) {
 				WatchRunner watchOperationThread = watchOperationsCopy.get(localDir);
-				
+
 				if (watchOperationThread.hasStopped()) {
 					logger.log(Level.INFO, "- Watch operation at " + localDir + " has stopped");
 					watchOperations.remove(localDir);
@@ -168,105 +168,107 @@ public class WatchServer {
 			}
 		}
 	}
-	
+
 	private Map<File, FolderTO> getFolderMap(List<FolderTO> watchedFolders) {
 		Map<File, FolderTO> watchedFolderTOs = new TreeMap<File, FolderTO>();
-		
+
 		for (FolderTO folderTO : watchedFolders) {
 			if (folderTO.isEnabled()) {
 				watchedFolderTOs.put(new File(folderTO.getPath()), folderTO);
 			}
 		}
-		
+
 		return watchedFolderTOs;
 	}
 
-	private void fireDaemonReloadedEvent() {		
-		logger.log(Level.INFO, "Firing daemon-reloaded event ...");		
+	private void fireDaemonReloadedEvent() {
+		logger.log(Level.INFO, "Firing daemon-reloaded event ...");
 		eventBus.post(new DaemonReloadedExternalEvent());
 	}
-	
+
 	@Subscribe
 	public void onFolderRequestReceived(FolderRequest folderRequest) {
 		File rootFolder = new File(folderRequest.getRoot());
-		
+
 		if (!watchOperations.containsKey(rootFolder)) {
 			eventBus.post(new BadRequestResponse(folderRequest.getId(), "Unknown root folder."));
 		}
 	}
-	
+
 	@Subscribe
 	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
-		ArrayList<Watch> watchList = new ArrayList<>();
-		
+		List<Watch> watchList = new ArrayList<>();
+
 		for (File watchFolder : watchOperations.keySet()) {
 			boolean syncRunning = watchOperations.get(watchFolder).isSyncRunning();
 			SyncStatus syncStatus = (syncRunning) ? SyncStatus.SYNCING : SyncStatus.IN_SYNC;
-			
+
 			watchList.add(new Watch(watchFolder, syncStatus));
 		}
-		
+
 		eventBus.post(new ListWatchesManagementResponse(request.getId(), watchList));
 	}
-	
+
 	@Subscribe
 	public void onAddWatchRequestReceived(AddWatchManagementRequest request) {
 		File rootFolder = request.getWatch();
-		
+
 		if (watchOperations.containsKey(rootFolder)) {
 			eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists."));
 		}
-		else {			
+		else {
 			try {
 				boolean folderAdded = DaemonConfigHelper.addToDaemonConfig(rootFolder);
-				
+
 				if (folderAdded) {
-					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));				
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));
 				}
 				else {
-					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(), "Watch already exists (inactive/disabled)."));
+					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_ALREADY_EXISTS, request.getId(),
+							"Watch already exists (inactive/disabled)."));
 				}
 			}
 			catch (ConfigException e) {
 				logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Error adding to config: " + e.getMessage()));
+				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Error adding to config: "
+						+ e.getMessage()));
 			}
-		}				
+		}
 	}
-	
+
 	@Subscribe
 	public void onPostDownOperation(DownEndSyncExternalEvent downEndSyncEvent) {
 		if (daemonConfig.getHooks() != null) {
 			String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
-			
-			if (runAfterSyncCommand != null) { 
+
+			if (runAfterSyncCommand != null) {
 				ChangeSet changeSet = downEndSyncEvent.getChanges();
-				
+
 				List<String> changeMessageParts = new ArrayList<>();
-				
+
 				if (changeSet.getNewFiles().size() > 0) {
 					changeMessageParts.add(changeSet.getNewFiles().size() + " file(s) added");
 				}
-				
+
 				if (changeSet.getChangedFiles().size() > 0) {
 					changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) changed");
 				}
-				
+
 				if (changeSet.getDeletedFiles().size() > 0) {
 					changeMessageParts.add(changeSet.getDeletedFiles().size() + " file(s) deleted");
 				}
-				
+
 				String changedMessage = StringUtil.join(changeMessageParts, ", ");
-				
-				String escapedSubject = changedMessage.replace("\"", "\\\"");			
+
+				String escapedSubject = changedMessage.replace("\"", "\\\"");
 				runAfterSyncCommand = runAfterSyncCommand.replace("%subject", escapedSubject);
-							
+
 				try {
 					logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
-					
+
 					List<String> commandArgsList = StringUtil.splitCommandLineArgs(runAfterSyncCommand);
 					String[] commandArgs = commandArgsList.toArray(new String[0]);
-				    
+
 					Runtime.getRuntime().exec(commandArgs);
 				}
 				catch (Exception e) {
@@ -274,5 +276,5 @@ public class WatchServer {
 				}
 			}
 		}
-	}	
+	}
 }

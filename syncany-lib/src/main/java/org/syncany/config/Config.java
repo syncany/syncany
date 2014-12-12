@@ -19,6 +19,7 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -184,7 +185,7 @@ public class Config {
 			transformer = new NoTransformer();
 		}
 		else {
-			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
+			List<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
 			Transformer lastTransformer = null;
 
 			for (int i = transformerTOs.size() - 1; i >= 0; i--) {
