@@ -125,47 +125,48 @@ public class UpOperation extends AbstractTransferOperation {
 		// Upload action file (lock for cleanup)
 		startOperation();
 
-		DatabaseVersion newDatabaseVersion;
+		DatabaseVersion newDatabaseVersion = null;
 		boolean resuming = false;
 		if (options.resumeTransaction()) {
-			newDatabaseVersion == attemptResumeTransaction();
+			newDatabaseVersion = attemptResumeTransaction();
 			if (newDatabaseVersion != null) {
 				logger.log(Level.INFO, "Successfully resumed transaction.");
 				resuming = true;
 			}
 		}
+
 		if (!resuming) {
-            boolean blockingTransactionExist = !transferManager.cleanTransactions();
+			boolean blockingTransactionExist = !transferManager.cleanTransactions();
 
-            if (blockingTransactionExist) {
-                logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
-                result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
+			if (blockingTransactionExist) {
+				logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
+				result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
 
-                finishOperation();
-                fireEndEvent();
+				finishOperation();
+				fireEndEvent();
 
-                return result;
-            }
+				return result;
+			}
 
-            ChangeSet localChanges = result.getStatusResult().getChangeSet();
-            List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
+			ChangeSet localChanges = result.getStatusResult().getChangeSet();
+			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 
-            // Index
-            newDatabaseVersion = index(locallyUpdatedFiles);
+			// Index
+			newDatabaseVersion = index(locallyUpdatedFiles);
 
-            if (newDatabaseVersion.getFileHistories().size() == 0) {
-                logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
-                result.setResultCode(UpResultCode.OK_NO_CHANGES);
+			if (newDatabaseVersion.getFileHistories().size() == 0) {
+				logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+				result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
-                finishOperation();
-                fireEndEvent();
+				finishOperation();
+				fireEndEvent();
 
-                return result;
-            }
+				return result;
+			}
 
-            // Upload multichunks
-            logger.log(Level.INFO, "Uploading new multichunks ...");
-            addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
+			// Upload multichunks
+			logger.log(Level.INFO, "Uploading new multichunks ...");
+			addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 		}
 
 		// Create delta database and commit transaction

@@ -175,6 +175,10 @@ public class RemoteTransaction {
 		int uploadFileIndex = 0;
 
 		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getStatus() != ActionTO.STATUS_UNSTARTED) {
+				// We are resuming a previous transaction, and this has already been done.
+				continue;
+			}
 			RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
@@ -207,6 +211,10 @@ public class RemoteTransaction {
 		TransactionStats stats = new TransactionStats();
 
 		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getStatus() != ActionTO.STATUS_STARTED) {
+				// We are resuming a previous transaction, and this has already been done.
+				continue;
+			}
 			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
 				stats.totalUploadFileCount++;
 				stats.totalUploadSize += action.getLocalTempLocation().length();
@@ -247,6 +255,10 @@ public class RemoteTransaction {
 
 		boolean success = true;
 		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getStatus() != ActionTO.STATUS_STARTED) {
+				// We are resuming a previous transaction, and this has already been done.
+				continue;
+			}
 			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
