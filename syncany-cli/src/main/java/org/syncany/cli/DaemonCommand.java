@@ -30,7 +30,6 @@ import org.syncany.operations.daemon.DaemonOperation;
 import org.syncany.operations.daemon.DaemonOperationOptions;
 import org.syncany.operations.daemon.DaemonOperationOptions.DaemonAction;
 import org.syncany.operations.daemon.DaemonOperationResult;
-import org.syncany.operations.daemon.DaemonOperationResult.DaemonResultCode;
 
 public class DaemonCommand extends Command {
 	private DaemonAction action;
@@ -121,47 +120,61 @@ public class DaemonCommand extends Command {
 	}
 
 	private void printResultList(DaemonOperationResult operationResult) {
-		if (operationResult.getResultCode() == DaemonResultCode.OK) {
+		switch (operationResult.getResultCode()) {
+		case OK:
 			List<String[]> tableValues = new ArrayList<String[]>();
 			tableValues.add(new String[] { "#", "Enabled", "Path" });
 
 			for (int i=0; i<operationResult.getWatchList().size(); i++) {
 				FolderTO folderTO = operationResult.getWatchList().get(i);		
 				
-				String number = "" + (i+1);
+				String number = Integer.toString(i+1);
 				String enabledStr = folderTO.isEnabled() ? "yes" : "no";
 				
 				tableValues.add(new String[] { number, enabledStr, folderTO.getPath()  });
 			}
 
 			CliTableUtil.printTable(out, tableValues, "No managed folders found.");			
-		}
-		else {
-			out.printf("Listing watches failed.\n");
-			out.println();
-		}
+			break;
+						
+		default:
+			throw new RuntimeException("Invalid result code for this action: " + operationResult.getResultCode());
+		}		
 	}
 	
 	private void printResultAdd(DaemonOperationResult operationResult) {
-		if (operationResult.getResultCode() == DaemonResultCode.OK) {
-			out.println("Folder successfully added to daemon config. Run 'sy restart' to apply the changes.");
-			out.println();			
-		}
-		else {
-			out.println("Folder was NOT added. Valid Syncany folder? Already in the daemon config?");
+		switch (operationResult.getResultCode()) {
+		case OK:
+			out.println("Folder successfully added to daemon config.");
+			out.println("Run 'sy restart' to apply the changes.");
 			out.println();
+			break;
+			
+		case NOK_FOLDER_EXISTS:
+			out.println("Folder was NOT added, because it already exists in the daemon configuration.");
+			out.println();
+			break;
+			
+		default:
+			throw new RuntimeException("Invalid result code for this action: " + operationResult.getResultCode());
 		}
-	}
-	
+	}	
 
 	private void printResultRemove(DaemonOperationResult operationResult) {
-		if (operationResult.getResultCode() == DaemonResultCode.OK) {
-			out.println("Folder successfully removed from daemon config. Run 'sy restart' to apply the changes.");
-			out.println();			
-		}
-		else {
-			out.println("Folder was NOT removed. Not in daemon config?");
+		switch (operationResult.getResultCode()) {
+		case OK:
+			out.println("Folder successfully removed from the daemon config.");
+			out.println("Run 'sy restart' to apply the changes.");
 			out.println();
-		}
+			break;
+			
+		case NOK_FOLDER_DOESNT_EXIST:
+			out.println("Folder was NOT removed, because it does not exist in the daemon config.");
+			out.println();
+			break;
+			
+		default:
+			throw new RuntimeException("Invalid result code for this action: " + operationResult.getResultCode());
+		}		
 	}
 }

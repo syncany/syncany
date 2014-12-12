@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
@@ -114,35 +115,43 @@ public class DaemonOperation extends Operation {
 	}
 
 	private DaemonOperationResult executeList() {
+		logger.log(Level.INFO, "Listing daemon-managed folders ...");
+		
 		loadOrCreateConfig();
 		return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
 	}
 	
 	private DaemonOperationResult executeAdd() throws Exception {
-		File watchRoot = new File(options.getWatchRoot());
+		logger.log(Level.INFO, "Adding folder to daemon config: " + options.getWatchRoot() + " ...");
+
+		// Check if folder is valid
+		File watchRootFolder = new File(options.getWatchRoot());
+		File watchRootAppFolder = new File(watchRootFolder, Config.DIR_APPLICATION);
 		
-		if (!watchRoot.isDirectory()) {
-			throw new Exception("Given argument is not an existing folder. Adding to daemon failed.");
+		if (!watchRootFolder.isDirectory() || !watchRootAppFolder.isDirectory()) {
+			throw new Exception("Given argument is not an existing folder, or a valid Syncany folder. Adding to daemon failed.");
 		}
 		
-		boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(watchRoot);
+		boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(watchRootFolder);
 
 		if (addedToDaemonConfig) {
 			return new DaemonOperationResult(DaemonResultCode.OK);			
 		}
 		else {
-			return new DaemonOperationResult(DaemonResultCode.NOK);
+			return new DaemonOperationResult(DaemonResultCode.NOK_FOLDER_EXISTS);
 		}		
 	}
 	
 	private DaemonOperationResult executeRemove() throws ConfigException {
+		logger.log(Level.INFO, "Removing folder from daemon config: " + options.getWatchRoot() + " ...");
+
 		boolean removedFromDaemonConfig = DaemonConfigHelper.removeFolder(options.getWatchRoot());
 
 		if (removedFromDaemonConfig) {
 			return new DaemonOperationResult(DaemonResultCode.OK);			
 		}
 		else {
-			return new DaemonOperationResult(DaemonResultCode.NOK);
+			return new DaemonOperationResult(DaemonResultCode.NOK_FOLDER_DOESNT_EXIST);
 		}		
 	}
 	
@@ -219,11 +228,15 @@ public class DaemonOperation extends Operation {
 			File daemonConfigFileExample = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_EXAMPLE_FILE);
 			
 			if (daemonConfigFile.exists()) {
+				logger.log(Level.INFO, "Loading daemon config file from " + daemonConfigFile + " ...");
 				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
 			}
 			else {
-				// Write example config to daemon-example.xml, and default config to daemon.xml
+				logger.log(Level.INFO, "Daemon config file does not exist.");
+				logger.log(Level.INFO, "- Writing example config file to " + daemonConfigFileExample + " ...");				
 				DaemonConfigHelper.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
+
+				logger.log(Level.INFO, "- Creating at  " + daemonConfigFile + " ...");				
 				daemonConfig = DaemonConfigHelper.createAndWriteDefaultDaemonConfig(daemonConfigFile);
 			}
 			
