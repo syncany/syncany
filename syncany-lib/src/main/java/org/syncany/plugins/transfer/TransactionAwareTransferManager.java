@@ -209,7 +209,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	}
 
 	/**
-	 * clearResumableTransactions deletes local copies of transactions that might be resumed. This is done when
+	 * This methods deletes local copies of transactions that might be resumed. This is done when
 	 * a transaction is successfully resumed, or some other operations is performed, which implies that resuming is
 	 * no longer an option.
 	 */

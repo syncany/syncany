@@ -512,7 +512,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * attemptResumeTransaction will try to load a local transaction and the corresponding database file.
+	 * This method will try to load a local transaction and the corresponding database file.
 	 * 
 	 * Side-effect: A resumable transaction will be loaded into remoteTransaction, if it exists.
 	 * @return the loaded databaseVersion if found. Null otherwise.
