@@ -69,16 +69,18 @@ public class UpCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<Void> optionForceUpload = parser.acceptsAll(asList("F", "force-upload"));
-		OptionSpec<Void> optionResumeUpload = parser.acceptsAll(asList("r", "resume"));
+		OptionSpec<Void> optionNoResumeUpload = parser.acceptsAll(asList("R", "no-resume"));
 
 		OptionSet options = parser.parse(operationArgs);
 
 		// status [<args>]
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 
-		// --force
+		// -F, --force-upload
 		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
-		operationOptions.setResume(options.has(optionResumeUpload));
+		
+		// -R, --no-resume
+		operationOptions.setResume(!options.has(optionNoResumeUpload));
 
 		return operationOptions;
 	}

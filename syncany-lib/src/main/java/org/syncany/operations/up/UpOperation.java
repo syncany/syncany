@@ -317,7 +317,7 @@ public class UpOperation extends AbstractTransferOperation {
 			List<DatabaseRemoteFile> unknownRemoteDatabases = lsRemoteOperationResult.getUnknownRemoteDatabases();
 
 			if (unknownRemoteDatabases.size() > 0) {
-				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force you must, Luke!");
+				logger.log(Level.INFO, "There are remote changes. Call 'down' first or use --force-upload you must, Luke!");
 				logger.log(Level.FINE, "Unknown remote databases are: " + unknownRemoteDatabases);
 				result.setResultCode(UpResultCode.NOK_UNKNOWN_DATABASES);
 
@@ -328,7 +328,7 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 		}
 		else {
-			logger.log(Level.INFO, "Force (--force) is enabled, ignoring potential remote changes.");
+			logger.log(Level.INFO, "Force (--force-upload) is enabled, ignoring potential remote changes.");
 		}
 
 		return true;
