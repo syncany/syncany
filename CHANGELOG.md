@@ -6,6 +6,7 @@ Change Log
 - Features and significant changes:
   + Implement folder management commands: `sy daemon (list|add|remove)` #286
   + Support S3-compatible backends in [Amazon S3 plugin](https://github.com/syncany/syncany-plugin-s3) #301
+  + New [Flickr plugin](https://github.com/syncany/syncany-plugin-flickr) (store data in images) #304
 - Bugfixes and other things:
   + `sy genlink -s` now works behind a proxy #291
   + `sy genlink -s` now works when folder is daemon-managed #293
