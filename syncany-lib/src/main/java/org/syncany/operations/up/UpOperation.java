@@ -148,6 +148,7 @@ public class UpOperation extends AbstractTransferOperation {
 				if (transactions.size() != 1) {
 					logger.log(Level.INFO, "Unable to find (unique) transactionRemoteFile. Not resuming.");
 					resuming = false;
+					transferManager.clearResumableTransactions();
 				}
 				else {
 					transactionRemoteFile = transactions.get(0);
