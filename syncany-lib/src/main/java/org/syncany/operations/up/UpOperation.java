@@ -129,8 +129,10 @@ public class UpOperation extends AbstractTransferOperation {
 		DatabaseVersion newDatabaseVersion = null;
 		TransactionRemoteFile transactionRemoteFile = null;
 		boolean resuming = false;
+
 		if (options.resumeTransaction()) {
 			newDatabaseVersion = attemptResumeTransaction();
+
 			if (newDatabaseVersion != null) {
 				logger.log(Level.INFO, "Found local transaction to resume.");
 				resuming = true;
@@ -153,7 +155,9 @@ public class UpOperation extends AbstractTransferOperation {
 				else {
 					transactionRemoteFile = transactions.get(0);
 				}
-
+			}
+			else {
+				transferManager.clearResumableTransactions();
 			}
 		}
 
