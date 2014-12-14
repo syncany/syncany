@@ -197,8 +197,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			NoSuchMethodException, SecurityException {
 
 		TransferPluginOptionCallback optionCallback = createOptionCallback(settings, option.getCallback());
-		
-		Class<? extends TransferPluginOptionConverter> optionConverterClass = option.getConverter();
+		TransferPluginOptionConverter optionConverter = createOptionConverter(settings, option.getConverter());
 
 		if (!isInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
 			throw new IllegalArgumentException("Missing plugin option (" + nestPrefix + option.getName() + ") in non-interactive mode.");
@@ -211,28 +210,14 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			String optionValue = askPluginOption(settings, option);
 
-			if (optionConverterClass != null) {
-				optionValue = optionConverterClass.newInstance().convert(optionValue);
+			if (optionConverter != null) {
+				optionValue = optionConverter.convert(optionValue);
 			}
 
 			settings.setField(option.getField().getName(), optionValue);
 
 			callAndPrintPostQueryCallback(optionCallback, optionValue);
 		}
-	}
-
-	private TransferPluginOptionCallback createOptionCallback(TransferSettings settings,
-			Class<? extends TransferPluginOptionCallback> optionCallbackClass) throws InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		
-		TransferPluginOptionCallback optionCallback = null;
-		
-		if (optionCallbackClass != null) {
-			Constructor<? extends TransferPluginOptionCallback> optionCallbackClassConstructor = optionCallbackClass.getDeclaredConstructor(settings.getClass());
-			optionCallback = optionCallbackClassConstructor.newInstance(settings);			
-		}
-		
-		return optionCallback;
 	}
 
 	/**
@@ -505,6 +490,34 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
+	private TransferPluginOptionConverter createOptionConverter(TransferSettings settings,
+			Class<? extends TransferPluginOptionConverter> optionConverterClass) throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		
+		TransferPluginOptionConverter optionConverter = null;
+		
+		if (optionConverterClass != null) {
+			Constructor<? extends TransferPluginOptionConverter> optionConverterClassConstructor = optionConverterClass.getDeclaredConstructor(settings.getClass());
+			optionConverter = optionConverterClassConstructor.newInstance(settings);			
+		}
+		
+		return optionConverter;
+	}
+
+	private TransferPluginOptionCallback createOptionCallback(TransferSettings settings,
+			Class<? extends TransferPluginOptionCallback> optionCallbackClass) throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		
+		TransferPluginOptionCallback optionCallback = null;
+		
+		if (optionCallbackClass != null) {
+			Constructor<? extends TransferPluginOptionCallback> optionCallbackClassConstructor = optionCallbackClass.getDeclaredConstructor(settings.getClass());
+			optionCallback = optionCallbackClassConstructor.newInstance(settings);			
+		}
+		
+		return optionCallback;
+	}
+	
 	protected String getRandomMachineName() {
 		return CipherUtil.createRandomAlphabeticString(20);
 	}
