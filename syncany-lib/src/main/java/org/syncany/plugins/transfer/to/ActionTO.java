@@ -37,18 +37,19 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 public class ActionTO {
 	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
 
-	public static final String TYPE_UPLOAD = "UPLOAD";
-	public static final String TYPE_DELETE = "DELETE";
+	public enum ActionType {
+		UPLOAD, DELETE
+	}
 
-	public static final String STATUS_UNSTARTED = "UNSTARTED";
-	public static final String STATUS_STARTED = "STARTED";
-	public static final String STATUS_DONE = "DONE";
+	public enum ActionStatus {
+		UNSTARTED, STARTED, DONE
+	}
 
 	@Element(name = "type", required = true)
-	private String type;
+	private ActionType type;
 
 	@Element(name = "status", required = false)
-	private String status = STATUS_UNSTARTED;
+	private ActionStatus status = ActionStatus.UNSTARTED;
 
 	@Element(name = "remoteLocation", required = true)
 	private String remoteLocation;
@@ -59,19 +60,19 @@ public class ActionTO {
 	@Element(name = "localTempLocation", required = false)
 	private String localTempLocation;
 
-	public String getType() {
+	public ActionType getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(ActionType type) {
 		this.type = type;
 	}
 
-	public String getStatus() {
+	public ActionStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(ActionStatus status) {
 		this.status = status;
 	}
 

@@ -36,6 +36,7 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
+import org.syncany.plugins.transfer.to.ActionTO.ActionType;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -97,7 +98,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 		// Find file: If the file is being deleted and the name matches, download temporary file instead.
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_DELETE) && action.getRemoteFile().equals(remoteFile)) {
+				if (action.getType().equals(ActionType.DELETE) && action.getRemoteFile().equals(remoteFile)) {
 					tempRemoteFile = action.getTempRemoteFile();
 					break;
 				}
@@ -168,7 +169,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 			else if (noBlockingTransactionsExist) {
 				// Only check if we have not yet found deleting transactions by others
 				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
-					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+					if (action.getType().equals(ActionType.DELETE)) {
 						noBlockingTransactionsExist = false;
 					}
 				}
@@ -196,7 +197,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 			else {
 				// Check for blocking transactions
 				for (ActionTO action : potentiallyResumableTransaction.getActions()) {
-					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+					if (action.getType().equals(ActionType.DELETE)) {
 						return null;
 					}
 				}
@@ -282,13 +283,13 @@ public class TransactionAwareTransferManager implements TransferManager {
 		for (ActionTO action : unfinishedActions) {
 			logger.log(Level.INFO, "- Needs to be rolled back: " + action);
 			switch (action.getType()) {
-			case ActionTO.TYPE_UPLOAD:
+			case UPLOAD:
 				delete(action.getRemoteFile());
 				delete(action.getTempRemoteFile());
 
 				break;
 
-			case ActionTO.TYPE_DELETE:
+			case DELETE:
 				try {
 					logger.log(Level.INFO, "- Rollback action: Moving " + action.getTempRemoteFile().getName() + " to "
 							+ action.getRemoteFile().getName());
@@ -381,7 +382,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				if (action.getType().equals(ActionType.UPLOAD)) {
 					filesInTransaction.add(action.getRemoteFile());
 				}
 			}
@@ -395,7 +396,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+				if (action.getType().equals(ActionType.DELETE)) {
 					dummyDeletedFiles.add(action.getRemoteFile());
 				}
 			}

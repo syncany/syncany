@@ -29,6 +29,8 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
+import org.syncany.plugins.transfer.to.ActionTO.ActionStatus;
+import org.syncany.plugins.transfer.to.ActionTO.ActionType;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -74,7 +76,7 @@ public class RemoteTransaction {
 				+ ", final location: " + remoteFile);
 
 		ActionTO action = new ActionTO();
-		action.setType(ActionTO.TYPE_UPLOAD);
+		action.setType(ActionType.UPLOAD);
 		action.setLocalTempLocation(localFile);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
@@ -92,7 +94,7 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "- Adding file to TX for DELETE: " + remoteFile + "-> Temp. remote file: " + temporaryRemoteFile);
 
 		ActionTO action = new ActionTO();
-		action.setType(ActionTO.TYPE_DELETE);
+		action.setType(ActionType.DELETE);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
 
@@ -185,11 +187,11 @@ public class RemoteTransaction {
 		int uploadFileIndex = 0;
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus().equals(ActionTO.STATUS_UNSTARTED)) {
+			if (action.getStatus().equals(ActionStatus.UNSTARTED)) {
 				// If we are resuming, this has not been started yet.
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
-				if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				if (action.getType().equals(ActionType.UPLOAD)) {
 					File localFile = action.getLocalTempLocation();
 					long localFileSize = localFile.length();
 
@@ -198,9 +200,9 @@ public class RemoteTransaction {
 
 					logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
 					transferManager.upload(localFile, tempRemoteFile);
-					action.setStatus(ActionTO.STATUS_STARTED);
+					action.setStatus(ActionStatus.STARTED);
 				}
-				else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+				else if (action.getType().equals(ActionType.DELETE)) {
 					RemoteFile remoteFile = action.getRemoteFile();
 
 					try {
@@ -210,7 +212,7 @@ public class RemoteTransaction {
 					catch (StorageMoveException e) {
 						logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
 					}
-					action.setStatus(ActionTO.STATUS_STARTED);
+					action.setStatus(ActionStatus.STARTED);
 				}
 			}
 		}
@@ -220,9 +222,9 @@ public class RemoteTransaction {
 		TransactionStats stats = new TransactionStats();
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus().equals(ActionTO.STATUS_STARTED)) {
+			if (action.getStatus().equals(ActionStatus.STARTED)) {
 				// If we are resuming a transaction, this has not yet been done.
-				if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				if (action.getType().equals(ActionType.UPLOAD)) {
 					stats.totalUploadFileCount++;
 					stats.totalUploadSize += action.getLocalTempLocation().length();
 				}
@@ -234,13 +236,13 @@ public class RemoteTransaction {
 
 	private void moveToFinalLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+			if (action.getType().equals(ActionType.UPLOAD)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				RemoteFile finalRemoteFile = action.getRemoteFile();
 
 				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
 				transferManager.move(tempRemoteFile, finalRemoteFile);
-				action.setStatus(ActionTO.STATUS_DONE);
+				action.setStatus(ActionStatus.DONE);
 			}
 		}
 	}
@@ -263,9 +265,9 @@ public class RemoteTransaction {
 
 		boolean success = true;
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus().equals(ActionTO.STATUS_STARTED)) {
+			if (action.getStatus().equals(ActionStatus.STARTED)) {
 				// If we are resuming, this action has not been comopleted.
-				if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+				if (action.getType().equals(ActionType.DELETE)) {
 					RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 					logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
@@ -276,7 +278,7 @@ public class RemoteTransaction {
 						logger.log(Level.INFO, "Failed to delete: " + tempRemoteFile, " because of: " + e);
 						success = false;
 					}
-					action.setStatus(ActionTO.STATUS_DONE);
+					action.setStatus(ActionStatus.DONE);
 				}
 			}
 		}
