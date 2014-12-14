@@ -179,6 +179,10 @@ public class TransactionAwareTransferManager implements TransferManager {
 		return noBlockingTransactionsExist;
 	}
 
+	/**
+	 * This function returns a list of all remote transaction files that belong to the client. If blocking transactions exist,
+	 * this methods returns null, because we are not allowed to proceed.
+	 */
 	public List<TransactionRemoteFile> getTransactionsByClient(String client) throws StorageException {
 		Objects.requireNonNull(config, "Cannot get transactions if config is null.");
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
@@ -203,6 +207,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 		return transactionsByClient;
 	}
 
+	/**
+	 * clearResumableTransactions deletes local copies of transactions that might be resumed. This is done when
+	 * a transaction is successfully resumed, or some other operations is performed, which implies that resuming is
+	 * no longer an option.
+	 */
 	public void clearResumableTransactions() {
 		Objects.requireNonNull(config, "Cannot delete resumable transactions if config is null.");
 		File transactionFile = config.getTransactionFile();

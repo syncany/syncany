@@ -127,6 +127,11 @@ public class RemoteTransaction {
 		commit(localTransactionFile, remoteTransactionFile);
 	}
 
+	/**
+	 * Does exactly the same as the paramterless version, except it does not create and upload the transactionfile. Instead
+	 * it uses the files that are passed. Used for resuming existing transactions. Only call this function if resuming
+	 * cannot cause invalid states.
+	 */
 	public void commit(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
 		logger.log(Level.INFO, "- Starting to upload data in commit.");
 

@@ -507,6 +507,12 @@ public class UpOperation extends AbstractTransferOperation {
 		return newVectorClock;
 	}
 
+	/**
+	 * attemptResumeTransaction will try to load a local transaction and the corresponding database file.
+	 * 
+	 * Side-effect: A resumable transaction will be loaded into remoteTransaction, if it exists.
+	 * @return the loaded databaseVersion if found. Null otherwise.
+	 */
 	private DatabaseVersion attemptResumeTransaction() throws Exception {
 		File transactionFile = config.getTransactionFile();
 		if (!transactionFile.exists()) {
