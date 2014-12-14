@@ -17,20 +17,12 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
-import org.syncany.operations.OperationOptions;
-import org.syncany.operations.daemon.messages.api.FolderRequest;
-import org.syncany.operations.init.GenlinkOperationOptions;
-
-public class GenlinkFolderRequest extends FolderRequest {
-	@Element(required = false)
-	private GenlinkOperationOptions options;
-
-	public GenlinkOperationOptions getOptions() {
-		return options;
+public class UpIndexChangesDetectedSyncExternalEvent extends SyncExternalEvent {
+	public UpIndexChangesDetectedSyncExternalEvent() {
+		// Nothing
 	}
-
-	public void setOptions(OperationOptions options) {
-		this.options = (GenlinkOperationOptions) options;
+	
+	public UpIndexChangesDetectedSyncExternalEvent(String root) {
+		super(root);
 	}
 }

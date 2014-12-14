@@ -44,6 +44,7 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperation;
+import org.syncany.operations.daemon.messages.DownChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownStartSyncExternalEvent;
@@ -135,11 +136,14 @@ public class DownOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Sync down' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
+		fireStartEvent();
+
 		if (!checkPreconditions()) {
+			fireEndEvent();
 			return result;
 		}
 
-		fireStartEvent();
+		fireChangesDetectedEvent();
 		startOperation();
 
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
@@ -201,6 +205,10 @@ public class DownOperation extends AbstractTransferOperation {
 
 	private void fireStartEvent() {
 		eventBus.post(new DownStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+	}
+
+	private void fireChangesDetectedEvent() {
+		eventBus.post(new DownChangesDetectedSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
 	private void fireEndEvent() {

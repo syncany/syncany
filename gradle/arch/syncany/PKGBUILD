@@ -1,7 +1,7 @@
 # Maintainer: Pim Otte <otte dot pim at gmail dot com>
 pkgname=syncany
-pkgver=0.2.0_alpha
-_realver=0.2.0-alpha
+pkgver=0.3.0_alpha
+_realver=0.3.0-alpha
 pkgrel=1
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
@@ -11,8 +11,8 @@ depends=('java-runtime>=7' 'bash-completion')
 source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
         syncany
         syncany.bash-completion)
-sha256sums=('55871809462b42de731cef8313b7966ef20c5e8361a2a73caf1de9b38a24c1ce'
-            'ef07ec9a971243b45ec216c3fa4c4acfdd3ef7e165ae2773c4124123fd2463d0'
+sha256sums=('158e31a99d6c9b877dbd7ad72ec10cf9ea39f55e53e1cda401ca1941d73fb105'
+            'df627b5306967f6e0d9a4bf264bdac44caee14ff8e9e7df93fc291339a1d353e'
             '043bdc2bb47fad48a5d8ca6cd612faf5b8d00bd66677f4cea99dde84c129e209')
 
 package() {

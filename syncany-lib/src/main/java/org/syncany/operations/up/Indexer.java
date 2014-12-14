@@ -52,6 +52,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.daemon.messages.UpIndexChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
 import org.syncany.util.EnvironmentUtil;
@@ -284,8 +285,10 @@ public class Indexer {
 		@Override
 		public void onFileEnd(File file, byte[] rawFileChecksum) {
 			// Get file attributes (get them while file exists)
+			
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part,
 			// because the file could vanish!
+			
 			FileChecksum fileChecksum = (rawFileChecksum != null) ? new FileChecksum(rawFileChecksum) : null;
 			endFileProperties = fileVersionComparator.captureFileProperties(file, fileChecksum, false);
 
@@ -340,6 +343,8 @@ public class Indexer {
 
 				logger.log(Level.INFO, "   * Added file version:    " + fileVersion);
 				logger.log(Level.INFO, "     based on file version: " + lastFileVersion);
+				
+				fireHasChangesEvent();
 			}
 			else {
 				logger.log(Level.INFO, "   * NOT ADDING file version: " + fileVersion);
@@ -360,6 +365,14 @@ public class Indexer {
 				else {
 					// Uses existing content (already in database); ref. by checksum
 				}
+			}
+		}
+
+		private void fireHasChangesEvent() {
+			boolean firstNewFileDetected = newDatabaseVersion.getFileHistories().size() == 1;
+			
+			if (firstNewFileDetected) { // Only fires once!
+				eventBus.post(new UpIndexChangesDetectedSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 			}
 		}
 
