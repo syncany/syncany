@@ -241,7 +241,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private Thread createAndAddShutdownHook(final DatabaseVersion newDatabaseVersion) {
-		Thread writeResumeFilesShutDownHook = new Thread() {
+		Thread writeResumeFilesShutDownHook = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -260,7 +260,7 @@ public class UpOperation extends AbstractTransferOperation {
 					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
 				}
 			}
-		};
+		}, "ResumeShtdwn");
 		
 		logger.log(Level.INFO, "Adding shutdown hook (to allow resuming the upload) ...");
 

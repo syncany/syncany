@@ -31,7 +31,7 @@ public class UpOperationOptions implements OperationOptions {
 	private boolean forceUploadEnabled = false;
 
 	@Element(required = false)
-	private boolean resume = false;
+	private boolean resume = true;
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
