@@ -188,7 +188,7 @@ public class UpOperation extends AbstractTransferOperation {
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
-		boolean committingFailed = false;
+		boolean committingFailed = true;
 		try {
 			if (!resuming) {
 				remoteTransaction.commit();
@@ -197,9 +197,9 @@ public class UpOperation extends AbstractTransferOperation {
 				remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFile);
 			}
 			localDatabase.commit();
+			committingFailed = false;
 		}
 		catch (Exception e) {
-			committingFailed = true;
 			localDatabase.rollback();
 			throw e;
 		}
