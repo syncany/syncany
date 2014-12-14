@@ -31,7 +31,7 @@ public class UpOperationOptions implements OperationOptions {
 	private boolean forceUploadEnabled = false;
 
 	@Element(required = false)
-	private boolean resumeTransaction = false;
+	private boolean resume = false;
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -49,11 +49,11 @@ public class UpOperationOptions implements OperationOptions {
 		this.forceUploadEnabled = forceUploadEnabled;
 	}
 
-	public boolean resumeTransaction() {
-		return resumeTransaction;
+	public boolean isResume() {
+		return resume;
 	}
 
-	public void setResumeTransaction(boolean resumeTransaction) {
-		this.resumeTransaction = resumeTransaction;
+	public void setResume(boolean resume) {
+		this.resume = resume;
 	}
 }

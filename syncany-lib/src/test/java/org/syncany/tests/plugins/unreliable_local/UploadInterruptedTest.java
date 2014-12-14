@@ -522,7 +522,7 @@ public class UploadInterruptedTest {
 		assertEquals(0, clientB.getLocalFiles().size());
 
 		UpOperationOptions upOptions = new UpOperationOptions();
-		upOptions.setResumeTransaction(true);
+		upOptions.setResume(true);
 		upOptions.setForceUploadEnabled(true);
 		clientA.up(upOptions);
 
@@ -568,7 +568,7 @@ public class UploadInterruptedTest {
 		assertTrue(failed);
 
 		UpOperationOptions upOptions = new UpOperationOptions();
-		upOptions.setResumeTransaction(true);
+		upOptions.setResume(true);
 		upOptions.setForceUploadEnabled(true);
 
 		// Try to resume and fail

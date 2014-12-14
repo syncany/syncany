@@ -78,7 +78,7 @@ public class UpCommand extends Command {
 
 		// --force
 		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
-		operationOptions.setResumeTransaction(options.has(optionResumeUpload));
+		operationOptions.setResume(options.has(optionResumeUpload));
 
 		return operationOptions;
 	}

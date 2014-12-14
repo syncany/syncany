@@ -130,7 +130,7 @@ public class UpOperation extends AbstractTransferOperation {
 		TransactionRemoteFile transactionRemoteFile = null;
 		boolean resuming = false;
 
-		if (options.resumeTransaction()) {
+		if (options.isResume()) {
 			newDatabaseVersion = attemptResumeTransaction();
 
 			if (newDatabaseVersion != null) {
@@ -185,7 +185,7 @@ public class UpOperation extends AbstractTransferOperation {
 				return result;
 			}
 
-			// Upload multichunks
+			// Add multichunks to transaction
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 		}
@@ -193,26 +193,9 @@ public class UpOperation extends AbstractTransferOperation {
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
-		final DatabaseVersion finalDatabaseVersion = newDatabaseVersion;
 		boolean committingFailed = true;
-		Thread shutDownHook = new Thread() {
-			@Override
-			public void run() {
-				try {
-					logger.log(Level.INFO, "Persisting status of Up to resume later.");
-					File transactionFile = config.getTransactionFile();
-					remoteTransaction.writeToFile(transactionFile);
-					MemoryDatabase memoryDatabase = new MemoryDatabase();
-					memoryDatabase.addDatabaseVersion(finalDatabaseVersion);
-					saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
-				}
-			}
-		};
-
-		Runtime.getRuntime().addShutdownHook(shutDownHook);
+		Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(newDatabaseVersion);
+		
 		try {
 			if (!resuming) {
 				remoteTransaction.commit();
@@ -220,6 +203,7 @@ public class UpOperation extends AbstractTransferOperation {
 			else {
 				remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFile);
 			}
+			
 			localDatabase.commit();
 			committingFailed = false;
 		}
@@ -228,9 +212,10 @@ public class UpOperation extends AbstractTransferOperation {
 			throw e;
 		}
 		finally {
-			Runtime.getRuntime().removeShutdownHook(shutDownHook);
+			removeShutdownHook(writeResumeFilesShutDownHook);
+			
 			if (committingFailed) {
-				shutDownHook.run();
+				writeResumeFilesShutDownHook.run();
 			}
 		}
 
@@ -253,6 +238,38 @@ public class UpOperation extends AbstractTransferOperation {
 		fireEndEvent();
 
 		return result;
+	}
+
+	private Thread createAndAddShutdownHook(final DatabaseVersion newDatabaseVersion) {
+		Thread writeResumeFilesShutDownHook = new Thread() {
+			@Override
+			public void run() {
+				try {
+					logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
+
+					// Writing transaction file to state dir
+					remoteTransaction.writeToFile(config.getTransactionFile());
+					
+					// Writing database representation of new database version to state dir
+					MemoryDatabase memoryDatabase = new MemoryDatabase();
+					memoryDatabase.addDatabaseVersion(newDatabaseVersion);
+					
+					saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
+				}
+			}
+		};
+		
+		logger.log(Level.INFO, "Adding shutdown hook (to allow resuming the upload) ...");
+
+		Runtime.getRuntime().addShutdownHook(writeResumeFilesShutDownHook);
+		return writeResumeFilesShutDownHook;
+	}
+
+	private void removeShutdownHook(Thread writeResumeFilesShutDownHook) {
+		Runtime.getRuntime().removeShutdownHook(writeResumeFilesShutDownHook);
 	}
 
 	private void fireStartEvent() {
