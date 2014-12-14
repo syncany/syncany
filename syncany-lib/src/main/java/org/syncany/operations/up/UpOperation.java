@@ -188,7 +188,26 @@ public class UpOperation extends AbstractTransferOperation {
 		// Create delta database and commit transaction
 		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
+		final DatabaseVersion finalDatabaseVersion = newDatabaseVersion;
 		boolean committingFailed = true;
+		Thread shutDownHook = new Thread() {
+			@Override
+			public void run() {
+				try {
+					logger.log(Level.INFO, "Persisting status of Up to resume later.");
+					File transactionFile = config.getTransactionFile();
+					remoteTransaction.writeToFile(transactionFile);
+					MemoryDatabase memoryDatabase = new MemoryDatabase();
+					memoryDatabase.addDatabaseVersion(finalDatabaseVersion);
+					saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
+				}
+			}
+		};
+
+		Runtime.getRuntime().addShutdownHook(shutDownHook);
 		try {
 			if (!resuming) {
 				remoteTransaction.commit();
@@ -204,12 +223,9 @@ public class UpOperation extends AbstractTransferOperation {
 			throw e;
 		}
 		finally {
+			Runtime.getRuntime().removeShutdownHook(shutDownHook);
 			if (committingFailed) {
-				File transactionFile = config.getTransactionFile();
-				remoteTransaction.writeToFile(transactionFile);
-				MemoryDatabase memoryDatabase = new MemoryDatabase();
-				memoryDatabase.addDatabaseVersion(newDatabaseVersion);
-				saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
+				shutDownHook.run();
 			}
 		}
 
