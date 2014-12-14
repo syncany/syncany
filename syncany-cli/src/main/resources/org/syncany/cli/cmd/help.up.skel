@@ -2,7 +2,7 @@ NAME
   sy-up - uploads changes in local Syncany folder to remote repository
    
 SYNOPSIS
-  sy up [<status-options>]
+  sy up [-r | --resume] [<status-options>]
   
 DESCRIPTION 
   This command detects changes in the local folder, indexes new files and 
@@ -18,6 +18,10 @@ DESCRIPTION
   no multichunks and no metadata.
   
 OPTIONS
+  -r, --resume
+    With this option, 'up' will attempt to resume a locally stored transaction.
+    This can only be done if the last 'up' failed and no 'down' or 'cleanup' has
+    been done since then.
   All arguments of the 'status' command can be used.
  
 %RESOURCE:incl/footer.skel%

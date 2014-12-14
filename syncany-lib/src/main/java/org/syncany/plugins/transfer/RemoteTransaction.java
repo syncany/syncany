@@ -116,7 +116,6 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
-
 		if (isEmpty()) {
 			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
 			return;
@@ -124,6 +123,17 @@ public class RemoteTransaction {
 
 		File localTransactionFile = writeLocalTransactionFile();
 		TransactionRemoteFile remoteTransactionFile = uploadTransactionFile(localTransactionFile);
+
+		commit(localTransactionFile, remoteTransactionFile);
+	}
+
+	/**
+	 * Does exactly the same as the paramterless version, except it does not create and upload the transactionfile. Instead
+	 * it uses the files that are passed. Used for resuming existing transactions. Only call this function if resuming
+	 * cannot cause invalid states.
+	 */
+	public void commit(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
+		logger.log(Level.INFO, "- Starting to upload data in commit.");
 
 		uploadAndMoveToTempLocation();
 		moveToFinalLocation();
@@ -175,7 +185,7 @@ public class RemoteTransaction {
 		int uploadFileIndex = 0;
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus() != ActionTO.STATUS_UNSTARTED) {
+			if (!action.getStatus().equals(ActionTO.STATUS_UNSTARTED)) {
 				// We are resuming a previous transaction, and this has already been done.
 				continue;
 			}
