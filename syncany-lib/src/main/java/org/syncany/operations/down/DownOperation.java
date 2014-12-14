@@ -146,6 +146,9 @@ public class DownOperation extends AbstractTransferOperation {
 		fireChangesDetectedEvent();
 		startOperation();
 
+		// If we do down, we are no longer allowed to resume a transaction
+		transferManager.clearResumableTransactions();
+
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 

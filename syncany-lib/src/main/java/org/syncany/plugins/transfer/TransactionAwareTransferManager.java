@@ -203,6 +203,19 @@ public class TransactionAwareTransferManager implements TransferManager {
 		return transactionsByClient;
 	}
 
+	public void clearResumableTransactions() {
+		Objects.requireNonNull(config, "Cannot delete resumable transactions if config is null.");
+		File transactionFile = config.getTransactionFile();
+		if (transactionFile.exists()) {
+			transactionFile.delete();
+		}
+
+		File transactionDatabaseFile = config.getTransactionDatabaseFile();
+		if (transactionDatabaseFile.exists()) {
+			transactionFile.delete();
+		}
+	}
+
 	/**
 	 * Removes temporary files on the offsite storage that are not listed in any
 	 * of the {@link TransactionRemoteFile}s available remotely. 
