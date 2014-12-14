@@ -15,22 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon;
 
-import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationOptions;
-import org.syncany.operations.daemon.messages.api.FolderRequest;
-import org.syncany.operations.init.GenlinkOperationOptions;
 
-public class GenlinkFolderRequest extends FolderRequest {
-	@Element(required = false)
-	private GenlinkOperationOptions options;
-
-	public GenlinkOperationOptions getOptions() {
-		return options;
+public class DaemonOperationOptions implements OperationOptions {
+	public enum DaemonAction {
+		RUN, LIST, ADD, REMOVE
 	}
-
-	public void setOptions(OperationOptions options) {
-		this.options = (GenlinkOperationOptions) options;
+	
+	private DaemonAction action = null;
+	private String watchRoot = null;
+	
+	public DaemonOperationOptions() {
+		// Nothing
+	}
+	
+	public DaemonOperationOptions(DaemonAction action) {
+		this.action = action;
+	}
+	
+	public DaemonAction getAction() {
+		return action;
+	}
+	
+	public void setAction(DaemonAction action) {
+		this.action = action;
+	}
+	
+	public String getWatchRoot() {
+		return watchRoot;
+	}
+	
+	public void setWatchRoot(String watchRoot) {
+		this.watchRoot = watchRoot;
 	}
 }
