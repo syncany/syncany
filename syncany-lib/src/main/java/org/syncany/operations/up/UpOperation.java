@@ -61,6 +61,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
+import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -126,12 +127,32 @@ public class UpOperation extends AbstractTransferOperation {
 		startOperation();
 
 		DatabaseVersion newDatabaseVersion = null;
+		TransactionRemoteFile transactionRemoteFile = null;
 		boolean resuming = false;
 		if (options.resumeTransaction()) {
 			newDatabaseVersion = attemptResumeTransaction();
 			if (newDatabaseVersion != null) {
-				logger.log(Level.INFO, "Successfully resumed transaction.");
+				logger.log(Level.INFO, "Found local transaction to resume.");
 				resuming = true;
+
+				logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
+
+				List<TransactionRemoteFile> transactions = transferManager.getTransactionsByClient(config.getMachineName());
+
+				if (transactions == null) {
+					// We have blocking transactions
+					stopBecauseOfBlockingTransactions();
+					return result;
+				}
+
+				if (transactions.size() != 1) {
+					logger.log(Level.INFO, "Unable to find (unique) transactionRemoteFile. Not resuming.");
+					resuming = false;
+				}
+				else {
+					transactionRemoteFile = transactions.get(0);
+				}
+
 			}
 		}
 
@@ -139,12 +160,7 @@ public class UpOperation extends AbstractTransferOperation {
 			boolean blockingTransactionExist = !transferManager.cleanTransactions();
 
 			if (blockingTransactionExist) {
-				logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
-				result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
-
-				finishOperation();
-				fireEndEvent();
-
+				stopBecauseOfBlockingTransactions();
 				return result;
 			}
 
@@ -170,11 +186,16 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		// Create delta database and commit transaction
-		writeAndAddDeltaDatabase(newDatabaseVersion);
+		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
 		boolean committingFailed = false;
 		try {
-			remoteTransaction.commit();
+			if (!resuming) {
+				remoteTransaction.commit();
+			}
+			else {
+				remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFile);
+			}
 			localDatabase.commit();
 		}
 		catch (Exception e) {
@@ -219,6 +240,14 @@ public class UpOperation extends AbstractTransferOperation {
 
 	private void fireEndEvent() {
 		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
+	}
+
+	private void stopBecauseOfBlockingTransactions() throws StorageException {
+		logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
+		result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
+
+		finishOperation();
+		fireEndEvent();
 	}
 
 	private boolean checkPreconditions() throws Exception {
@@ -267,7 +296,8 @@ public class UpOperation extends AbstractTransferOperation {
 		return true;
 	}
 
-	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion) throws InterruptedException, StorageException, IOException,
+	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion, boolean resuming) throws InterruptedException, StorageException,
+			IOException,
 			SQLException {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
@@ -289,10 +319,11 @@ public class UpOperation extends AbstractTransferOperation {
 
 		saveDeltaDatabase(deltaDatabase, localDeltaDatabaseFile);
 
-		// Upload delta database
-		logger.log(Level.INFO, "- Uploading local delta database file ...");
-		uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
-
+		if (!resuming) {
+			// Upload delta database, if we are not resuming (in which case the db is in the transaction already)
+			logger.log(Level.INFO, "- Uploading local delta database file ...");
+			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+		}
 		// Remember uploaded database as known.
 		List<DatabaseRemoteFile> newDatabaseRemoteFiles = new ArrayList<DatabaseRemoteFile>();
 		newDatabaseRemoteFiles.add(remoteDeltaDatabaseFile);
