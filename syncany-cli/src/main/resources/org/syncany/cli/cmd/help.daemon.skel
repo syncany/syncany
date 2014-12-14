@@ -4,10 +4,20 @@ NAME
 SYNOPSIS
   sy daemon (start|stop|reload|restart|status|force-stop)
   
+  sy daemon list
+  
+  sy daemon add <folder-path>
+  
+  sy daemon remove (<folder-path> | <folder-index>)
+  
 DESCRIPTION 
   This command manages the Syncany background process (aka the daemon). It can
   start and stop the daemon, display the status and reload the daemon
   configuration.
+  
+  With the actions `list`, `add` and `remove`, the command furthermore manages
+  the Syncany folders controlled by the daemon. Controlled folders are synced
+  automatically when the daemon is running.
   
   This daemon can be started with `sy daemon start`. Once it is running, all
   registered folders are monitored for changes and remote changes are
@@ -35,5 +45,19 @@ OPTIONS
     
   force-stop
     Forces the process to stop. Do not use this unless absolutely necessary!
+    
+  list
+    Lists the folders managed by the daemon.
+    
+  add <folder-path>
+    Adds the given folder to the daemon configuration. The added folder will
+    be managed by the daemon after the config has been reloaded, or the
+    daemon is restarted.
+    
+  remove (<folder-path> | <folder-index>)
+    Removes the given folder from the daemon configuration. The argument can
+    either be the full path of the folder or the index of the folder (as
+    printed by the `list` action). Changes will be applied after a restart
+    of the daemon.
     
 %RESOURCE:incl/footer.skel%

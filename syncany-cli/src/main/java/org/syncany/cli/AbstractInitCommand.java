@@ -17,6 +17,8 @@
  */
 package org.syncany.cli;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
@@ -49,9 +54,6 @@ import org.syncany.util.StringUtil.StringJoinListener;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -151,7 +153,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				askPluginSettings(settings, option, knownPluginSettings, "");
 			}
 		}
-		catch (InstantiationException | IllegalAccessException e) {
+		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 			logger.log(Level.SEVERE, "Unable to execute option generator", e);
 			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
@@ -170,7 +172,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	private void askPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
-			throws IllegalAccessException, InstantiationException, StorageException {
+			throws IllegalAccessException, InstantiationException, StorageException, IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 
 		if (option instanceof NestedTransferPluginOption) {
 			Class<?> childPluginTransferSettingsClass = ReflectionUtil.getClassFromType(option.getType());
@@ -188,12 +191,13 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 	}
 
-	private void askNormalPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
-			throws StorageException, InstantiationException, IllegalAccessException {
+	private void askNormalPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings,
+			String nestPrefix)
+			throws StorageException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 
-		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
-		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
-		Class<? extends TransferPluginOptionConverter> optionConverterClass = option.getConverter();
+		TransferPluginOptionCallback optionCallback = createOptionCallback(settings, option.getCallback());
+		TransferPluginOptionConverter optionConverter = createOptionConverter(settings, option.getConverter());
 
 		if (!isInteractive && !knownPluginSettings.containsKey(nestPrefix + option.getName())) {
 			throw new IllegalArgumentException("Missing plugin option (" + nestPrefix + option.getName() + ") in non-interactive mode.");
@@ -206,8 +210,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			String optionValue = askPluginOption(settings, option);
 
-			if (optionConverterClass != null) {
-				optionValue = optionConverterClass.newInstance().convert(optionValue);
+			if (optionConverter != null) {
+				optionValue = optionConverter.convert(optionValue);
 			}
 
 			settings.setField(option.getField().getName(), optionValue);
@@ -223,11 +227,12 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	 * <p>This case is triggered by a field looking like this:
 	 * <tt>private TransferSettings childPluginSettings;</tt>
 	 */
-	private void askGenericChildPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)
-			throws StorageException, IllegalAccessException, InstantiationException {
+	private void askGenericChildPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings,
+			String nestPrefix)
+			throws StorageException, IllegalAccessException, InstantiationException, IllegalArgumentException, InvocationTargetException,
+			NoSuchMethodException, SecurityException {
 
-		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
-		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
+		TransferPluginOptionCallback optionCallback = createOptionCallback(settings, option.getCallback());
 
 		if (isInteractive) {
 			callAndPrintPreQueryCallback(optionCallback);
@@ -281,10 +286,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	 * <tt>private LocalTransferSettings localChildPluginSettings;</tt>
 	 */
 	private void askConreteChildPluginSettings(TransferSettings settings, NestedTransferPluginOption option, Map<String, String> knownPluginSettings,
-			String nestPrefix) throws StorageException, IllegalAccessException, InstantiationException {
+			String nestPrefix) throws StorageException, IllegalAccessException, InstantiationException, IllegalArgumentException,
+			InvocationTargetException, NoSuchMethodException, SecurityException {
 
-		Class<? extends TransferPluginOptionCallback> optionCallbackClass = option.getCallback();
-		TransferPluginOptionCallback optionCallback = optionCallbackClass != null ? optionCallbackClass.newInstance() : null;
+		TransferPluginOptionCallback optionCallback = createOptionCallback(settings, option.getCallback());
 
 		if (isInteractive) {
 			callAndPrintPreQueryCallback(optionCallback);
@@ -485,6 +490,34 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		return plugin;
 	}
 
+	private TransferPluginOptionConverter createOptionConverter(TransferSettings settings,
+			Class<? extends TransferPluginOptionConverter> optionConverterClass) throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		
+		TransferPluginOptionConverter optionConverter = null;
+		
+		if (optionConverterClass != null) {
+			Constructor<? extends TransferPluginOptionConverter> optionConverterClassConstructor = optionConverterClass.getDeclaredConstructor(settings.getClass());
+			optionConverter = optionConverterClassConstructor.newInstance(settings);			
+		}
+		
+		return optionConverter;
+	}
+
+	private TransferPluginOptionCallback createOptionCallback(TransferSettings settings,
+			Class<? extends TransferPluginOptionCallback> optionCallbackClass) throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		
+		TransferPluginOptionCallback optionCallback = null;
+		
+		if (optionCallbackClass != null) {
+			Constructor<? extends TransferPluginOptionCallback> optionCallbackClassConstructor = optionCallbackClass.getDeclaredConstructor(settings.getClass());
+			optionCallback = optionCallbackClassConstructor.newInstance(settings);			
+		}
+		
+		return optionCallback;
+	}
+	
 	protected String getRandomMachineName() {
 		return CipherUtil.createRandomAlphabeticString(20);
 	}

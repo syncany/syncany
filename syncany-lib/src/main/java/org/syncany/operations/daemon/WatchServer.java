@@ -218,7 +218,7 @@ public class WatchServer {
 		}
 		else {			
 			try {
-				boolean folderAdded = DaemonConfigHelper.addToDaemonConfig(rootFolder);
+				boolean folderAdded = DaemonConfigHelper.addFolder(rootFolder);
 				
 				if (folderAdded) {
 					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));				
