@@ -62,6 +62,9 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
+import org.syncany.plugins.transfer.to.ActionTO;
+import org.syncany.plugins.transfer.to.ActionTO.ActionStatus;
+import org.syncany.plugins.transfer.to.ActionTO.ActionType;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -537,15 +540,31 @@ public class UpOperation extends AbstractTransferOperation {
 	 */
 	private DatabaseVersion attemptResumeTransaction() throws Exception {
 		File transactionFile = config.getTransactionFile();
+
 		if (!transactionFile.exists()) {
 			return null;
 		}
 
 		TransactionTO transactionTO = TransactionTO.load(null, transactionFile);
 
+		// Verify if all files needed are in cache.
+
+		for (ActionTO action : transactionTO.getActions()) {
+			if (action.getType() == ActionType.UPLOAD) {
+				if (action.getStatus() == ActionStatus.UNSTARTED) {
+					if (!action.getLocalTempLocation().exists()) {
+						// Unstarted upload has no cached local copy, abort
+						return null;
+					}
+				}
+			}
+
+		}
+
 		remoteTransaction = new RemoteTransaction(config, transferManager, transactionTO);
 
 		File databaseFile = config.getTransactionDatabaseFile();
+
 		if (!databaseFile.exists()) {
 			return null;
 		}
@@ -559,6 +578,5 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		return memoryDatabase.getLastDatabaseVersion();
-
 	}
 }
