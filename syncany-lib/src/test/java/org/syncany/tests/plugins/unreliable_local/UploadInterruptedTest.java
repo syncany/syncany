@@ -353,8 +353,11 @@ public class UploadInterruptedTest {
 		// 3. Second try fails in the beginning, to see if cleanTransactions was successful
 		boolean secondUpFailed = false;
 
+		// Do not resume, since we want to clean transactions.
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(false);
 		try {
-			clientA.up();
+			clientA.up(upOptions);
 		}
 		catch (StorageException e) {
 			secondUpFailed = true;
@@ -460,8 +463,12 @@ public class UploadInterruptedTest {
 		// 3. Second try fails in the beginning, to see if cleanTransactions was successful
 		boolean secondUpFailed = false;
 
+		// Do not resume, since we want to clean transactions.
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(false);
+
 		try {
-			clientA.up();
+			clientA.up(upOptions);
 		}
 		catch (StorageException e) {
 			secondUpFailed = true;
@@ -476,7 +483,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getPath() + "/temporary/").listFiles().length);
 
 		// 4. Third try; this should finally succeed
-		clientA.up();
+		clientA.up(upOptions);
 
 		assertEquals(1, new File(testConnection.getPath() + "/databases/").listFiles().length);
 		assertEquals(2, new File(testConnection.getPath() + "/multichunks/").listFiles().length);
