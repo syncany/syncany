@@ -195,7 +195,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		boolean committingFailed = true;
 		Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(newDatabaseVersion);
-		
+
 		try {
 			if (!resuming) {
 				remoteTransaction.commit();
@@ -203,7 +203,7 @@ public class UpOperation extends AbstractTransferOperation {
 			else {
 				remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFile);
 			}
-			
+
 			localDatabase.commit();
 			committingFailed = false;
 		}
@@ -213,7 +213,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 		finally {
 			removeShutdownHook(writeResumeFilesShutDownHook);
-			
+
 			if (committingFailed) {
 				writeResumeFilesShutDownHook.run();
 			}
@@ -249,19 +249,20 @@ public class UpOperation extends AbstractTransferOperation {
 
 					// Writing transaction file to state dir
 					remoteTransaction.writeToFile(config.getTransactionFile());
-					
+
 					// Writing database representation of new database version to state dir
 					MemoryDatabase memoryDatabase = new MemoryDatabase();
 					memoryDatabase.addDatabaseVersion(newDatabaseVersion);
-					
-					saveDeltaDatabase(memoryDatabase, config.getTransactionDatabaseFile());
+
+					DatabaseXmlSerializer dao = new DatabaseXmlSerializer();
+					dao.save(memoryDatabase.getDatabaseVersions(), config.getTransactionDatabaseFile());
 				}
 				catch (Exception e) {
 					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
 				}
 			}
 		}, "ResumeShtdwn");
-		
+
 		logger.log(Level.INFO, "Adding shutdown hook (to allow resuming the upload) ...");
 
 		Runtime.getRuntime().addShutdownHook(writeResumeFilesShutDownHook);
@@ -540,7 +541,7 @@ public class UpOperation extends AbstractTransferOperation {
 			return null;
 		}
 
-		TransactionTO transactionTO = TransactionTO.load(config.getTransformer(), transactionFile);
+		TransactionTO transactionTO = TransactionTO.load(null, transactionFile);
 
 		remoteTransaction = new RemoteTransaction(config, transferManager, transactionTO);
 
@@ -549,7 +550,7 @@ public class UpOperation extends AbstractTransferOperation {
 			return null;
 		}
 
-		DatabaseXmlSerializer databaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
+		DatabaseXmlSerializer databaseSerializer = new DatabaseXmlSerializer();
 		MemoryDatabase memoryDatabase = new MemoryDatabase();
 		databaseSerializer.load(memoryDatabase, databaseFile, null, null, DatabaseReadType.FULL);
 
