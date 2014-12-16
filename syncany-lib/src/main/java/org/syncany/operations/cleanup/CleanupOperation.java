@@ -131,7 +131,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// If there are any, rollback any existing/old transactions.
 		// If other clients have unfinished transactions with deletions, do not proceed.
 		boolean blockingTransactionExist = !transferManager.cleanTransactions();
-		
+
 		if (blockingTransactionExist) {
 			finishOperation();
 			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
@@ -148,6 +148,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			finishOperation();
 			return new CleanupOperationResult(preconditionResult);
 		}
+
+		// If we do cleanup, we are no longer allowed to resume a transaction
+		transferManager.clearResumableTransactions();
 
 		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
@@ -273,7 +276,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private boolean wasCleanedRecently() throws Exception {
 		Long lastCleanupTime = localDatabase.getCleanupTime();
-		
+
 		if (lastCleanupTime == null) {
 			return false;
 		}
@@ -380,14 +383,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 		newRemoteMergeDatabaseFiles.addAll(allMergedDatabaseFiles.values());
 
 		logger.log(Level.INFO, "Writing new known databases table: " + newRemoteMergeDatabaseFiles);
-		
+
 		localDatabase.removeKnownDatabases();
 		localDatabase.writeKnownRemoteDatabases(newRemoteMergeDatabaseFiles);
 	}
 
 	private void finishMerging() throws Exception {
 		updateCleanupFileInTransaction();
-		
+
 		try {
 			logger.log(Level.INFO, "Cleanup: COMMITTING TX ...");
 
@@ -441,7 +444,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		long newCleanupNumber = lastRemoteCleanupNumber + 1;
 
 		remoteTransaction.upload(newCleanupFile, new CleanupRemoteFile(newCleanupNumber));
-		
+
 		// Set cleanup number locally
 		localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
 		localDatabase.writeCleanupNumber(newCleanupNumber);

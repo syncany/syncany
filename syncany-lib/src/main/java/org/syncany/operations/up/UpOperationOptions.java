@@ -22,13 +22,16 @@ import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 
-@Root(name="up")
+@Root(name = "up")
 public class UpOperationOptions implements OperationOptions {
 	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
-	
+
 	@Element(required = false)
 	private boolean forceUploadEnabled = false;
+
+	@Element(required = false)
+	private boolean resume = true;
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -44,5 +47,13 @@ public class UpOperationOptions implements OperationOptions {
 
 	public void setForceUploadEnabled(boolean forceUploadEnabled) {
 		this.forceUploadEnabled = forceUploadEnabled;
+	}
+
+	public boolean isResume() {
+		return resume;
+	}
+
+	public void setResume(boolean resume) {
+		this.resume = resume;
 	}
 }
