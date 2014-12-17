@@ -39,6 +39,8 @@ import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.InitManagementRequest;
+import org.syncany.operations.daemon.messages.InitManagementResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
@@ -232,6 +234,12 @@ public class WatchServer {
 				eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.ERR_OTHER, request.getId(), "Error adding to config: " + e.getMessage()));
 			}
 		}				
+	}
+	
+	@Subscribe
+	public void onInitRequestReceived(InitManagementRequest request) {
+		logger.log(Level.SEVERE, "onInitRequestReceived() not yet implemented.");
+		eventBus.post(new InitManagementResponse());									
 	}
 	
 	@Subscribe
