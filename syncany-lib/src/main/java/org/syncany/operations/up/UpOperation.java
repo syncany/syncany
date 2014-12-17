@@ -251,7 +251,7 @@ public class UpOperation extends AbstractTransferOperation {
 					logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
 
 					// Writing transaction file to state dir
-					remoteTransaction.writeToFile(config.getTransactionFile());
+					remoteTransaction.writeToFile(null, config.getTransactionFile());
 
 					// Writing database representation of new database version to state dir
 					MemoryDatabase memoryDatabase = new MemoryDatabase();

@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
@@ -118,6 +119,7 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
+		
 		if (isEmpty()) {
 			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
 			return;
@@ -145,13 +147,13 @@ public class RemoteTransaction {
 	}
 
 	/**
-	 * writeToFile writes serializes the current state of the RemoteTransaction to a file.
+	 * This method serializes the current state of the {@link RemoteTransaction} to a file.
 	 * 
 	 * @param transactionFile The file where the transaction will be written to.
 	 */
-	public void writeToFile(File transactionFile) throws StorageException {
+	public void writeToFile(Transformer transformer, File transactionFile) throws StorageException {
 		try {
-			transactionTO.save(config.getTransformer(), transactionFile);
+			transactionTO.save(transformer, transactionFile);
 			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + transactionFile);
 		}
 		catch (Exception e) {
@@ -162,13 +164,13 @@ public class RemoteTransaction {
 	private File writeLocalTransactionFile() throws StorageException {
 		try {
 			File localTransactionFile = config.getCache().createTempFile("transaction");
-			writeToFile(localTransactionFile);
+			writeToFile(config.getTransformer(), localTransactionFile);
+			
 			return localTransactionFile;
 		}
 		catch (Exception e) {
 			throw new StorageException("Could not create temporary file for transaction", e);
 		}
-
 	}
 
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
