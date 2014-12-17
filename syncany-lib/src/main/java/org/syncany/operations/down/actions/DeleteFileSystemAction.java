@@ -42,9 +42,11 @@ public class DeleteFileSystemAction extends FileSystemAction {
 					moveToConflictFile(fileVersion2);	
 				}
 			}
+			else {
+				deleteFile(fileVersion1);	
+			}
 		}
-			
-		deleteFile(fileVersion2);
+					
 		return new FileSystemActionResult();
 	}
 

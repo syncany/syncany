@@ -40,9 +40,9 @@ import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
 	private long uploadedFileSize;
-	
+
 	@Override
-	public CommandScope getRequiredCommandScope() {	
+	public CommandScope getRequiredCommandScope() {
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
@@ -50,7 +50,7 @@ public class UpCommand extends Command {
 	public boolean canExecuteInDaemonScope() {
 		return false;
 	}
-	
+
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
@@ -69,14 +69,18 @@ public class UpCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<Void> optionForceUpload = parser.acceptsAll(asList("F", "force-upload"));
+		OptionSpec<Void> optionNoResumeUpload = parser.acceptsAll(asList("R", "no-resume"));
 
 		OptionSet options = parser.parse(operationArgs);
 
 		// status [<args>]
 		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
 
-		// --force
+		// -F, --force-upload
 		operationOptions.setForceUploadEnabled(options.has(optionForceUpload));
+		
+		// -R, --no-resume
+		operationOptions.setResume(!options.has(optionNoResumeUpload));
 
 		return operationOptions;
 	}
@@ -84,14 +88,14 @@ public class UpCommand extends Command {
 	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
 		statusCommand.setOut(out);
-		
+
 		return statusCommand.parseOptions(operationArgs);
 	}
 
 	@Override
 	public void printResults(OperationResult operationResult) {
-		UpOperationResult concreteOperationResult = (UpOperationResult)operationResult;
-		
+		UpOperationResult concreteOperationResult = (UpOperationResult) operationResult;
+
 		if (concreteOperationResult.getResultCode() == UpResultCode.NOK_UNKNOWN_DATABASES) {
 			out.println("Sync up skipped, because there are remote changes.");
 		}
@@ -116,42 +120,43 @@ public class UpCommand extends Command {
 			out.println("Sync up skipped, no local changes.");
 		}
 	}
-	
+
 	@Subscribe
 	public void onUpStartEventReceived(UpStartSyncExternalEvent syncEvent) {
-		out.printr("Starting indexing and upload ...");					
+		out.printr("Starting indexing and upload ...");
 	}
-	
+
 	@Subscribe
 	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
 		out.printr("Checking for new or altered files ...");
 	}
-	
+
 	@Subscribe
 	public void onLsRemoteStartEventReceived(LsRemoteStartSyncExternalEvent syncEvent) {
 		out.printr("Checking remote changes ...");
 	}
-	
+
 	@Subscribe
 	public void onIndexStartEventReceived(UpIndexStartSyncExternalEvent syncEvent) {
 		out.printr("Indexing " + syncEvent.getFileCount() + " new or altered file(s)...");
 	}
-	
+
 	@Subscribe
 	public void onUploadFileEventReceived(UpUploadFileSyncExternalEvent syncEvent) {
 		out.printr("Uploading " + syncEvent.getFilename() + " ...");
 	}
-	
+
 	@Subscribe
 	public void onUploadFileInTransactionEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
 		if (syncEvent.getCurrentFileIndex() <= 1) {
 			uploadedFileSize = 0;
 		}
-		
+
 		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
-		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100); 
-		
-		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total " + uploadedPercent + "%) ...");
+		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100);
+
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total "
+				+ uploadedPercent + "%) ...");
 		uploadedFileSize += syncEvent.getCurrentFileSize();
-	}	
+	}
 }

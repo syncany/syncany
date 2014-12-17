@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
@@ -29,6 +30,8 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
+import org.syncany.plugins.transfer.to.ActionTO.ActionStatus;
+import org.syncany.plugins.transfer.to.ActionTO.ActionType;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -47,9 +50,13 @@ public class RemoteTransaction {
 	private LocalEventBus eventBus;
 
 	public RemoteTransaction(Config config, TransferManager transferManager) {
+		this(config, transferManager, new TransactionTO(config.getMachineName()));
+	}
+
+	public RemoteTransaction(Config config, TransferManager transferManager, TransactionTO transactionTO) {
 		this.config = config;
 		this.transferManager = transferManager;
-		this.transactionTO = new TransactionTO(config.getMachineName());
+		this.transactionTO = transactionTO;
 		this.eventBus = LocalEventBus.getInstance();
 	}
 
@@ -70,7 +77,7 @@ public class RemoteTransaction {
 				+ ", final location: " + remoteFile);
 
 		ActionTO action = new ActionTO();
-		action.setType(ActionTO.TYPE_UPLOAD);
+		action.setType(ActionType.UPLOAD);
 		action.setLocalTempLocation(localFile);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
@@ -88,7 +95,7 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "- Adding file to TX for DELETE: " + remoteFile + "-> Temp. remote file: " + temporaryRemoteFile);
 
 		ActionTO action = new ActionTO();
-		action.setType(ActionTO.TYPE_DELETE);
+		action.setType(ActionType.DELETE);
 		action.setRemoteLocation(remoteFile);
 		action.setRemoteTempLocation(temporaryRemoteFile);
 
@@ -112,7 +119,7 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
-
+		
 		if (isEmpty()) {
 			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
 			return;
@@ -121,6 +128,17 @@ public class RemoteTransaction {
 		File localTransactionFile = writeLocalTransactionFile();
 		TransactionRemoteFile remoteTransactionFile = uploadTransactionFile(localTransactionFile);
 
+		commit(localTransactionFile, remoteTransactionFile);
+	}
+
+	/**
+	 * Does exactly the same as the paramterless version, except it does not create and upload the transactionfile. Instead
+	 * it uses the files that are passed. Used for resuming existing transactions. Only call this function if resuming
+	 * cannot cause invalid states.
+	 */
+	public void commit(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
+		logger.log(Level.INFO, "- Starting to upload data in commit.");
+
 		uploadAndMoveToTempLocation();
 		moveToFinalLocation();
 
@@ -128,13 +146,26 @@ public class RemoteTransaction {
 		deleteTempRemoteFiles();
 	}
 
+	/**
+	 * This method serializes the current state of the {@link RemoteTransaction} to a file.
+	 * 
+	 * @param transactionFile The file where the transaction will be written to.
+	 */
+	public void writeToFile(Transformer transformer, File transactionFile) throws StorageException {
+		try {
+			transactionTO.save(transformer, transactionFile);
+			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + transactionFile);
+		}
+		catch (Exception e) {
+			throw new StorageException("Could not write transaction to file: " + transactionFile, e);
+		}
+	}
+
 	private File writeLocalTransactionFile() throws StorageException {
 		try {
 			File localTransactionFile = config.getCache().createTempFile("transaction");
-
-			transactionTO.save(config.getTransformer(), localTransactionFile);
-			logger.log(Level.INFO, "Wrote transaction manifest to temporary file: " + localTransactionFile);
-
+			writeToFile(config.getTransformer(), localTransactionFile);
+			
 			return localTransactionFile;
 		}
 		catch (Exception e) {
@@ -158,27 +189,32 @@ public class RemoteTransaction {
 		int uploadFileIndex = 0;
 
 		for (ActionTO action : transactionTO.getActions()) {
-			RemoteFile tempRemoteFile = action.getTempRemoteFile();
+			if (action.getStatus().equals(ActionStatus.UNSTARTED)) {
+				// If we are resuming, this has not been started yet.
+				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
-			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
-				File localFile = action.getLocalTempLocation();
-				long localFileSize = localFile.length();
+				if (action.getType().equals(ActionType.UPLOAD)) {
+					File localFile = action.getLocalTempLocation();
+					long localFileSize = localFile.length();
 
-				eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(config.getLocalDir().getAbsolutePath(), ++uploadFileIndex,
-						stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
+					eventBus.post(new UpUploadFileInTransactionSyncExternalEvent(config.getLocalDir().getAbsolutePath(), ++uploadFileIndex,
+							stats.totalUploadFileCount, localFileSize, stats.totalUploadSize));
 
-				logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
-				transferManager.upload(localFile, tempRemoteFile);
-			}
-			else if (action.getType().equals(ActionTO.TYPE_DELETE)) {
-				RemoteFile remoteFile = action.getRemoteFile();
-
-				try {
-					logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
-					transferManager.move(remoteFile, tempRemoteFile);
+					logger.log(Level.INFO, "- Uploading {0} to temp. file {1} ...", new Object[] { localFile, tempRemoteFile });
+					transferManager.upload(localFile, tempRemoteFile);
+					action.setStatus(ActionStatus.STARTED);
 				}
-				catch (StorageMoveException e) {
-					logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
+				else if (action.getType().equals(ActionType.DELETE)) {
+					RemoteFile remoteFile = action.getRemoteFile();
+
+					try {
+						logger.log(Level.INFO, "- Moving {0} to temp. file {1} ...", new Object[] { remoteFile, tempRemoteFile });
+						transferManager.move(remoteFile, tempRemoteFile);
+					}
+					catch (StorageMoveException e) {
+						logger.log(Level.INFO, "  -> FAILED (don't care!), because the remoteFile does not exist: " + remoteFile);
+					}
+					action.setStatus(ActionStatus.STARTED);
 				}
 			}
 		}
@@ -188,9 +224,12 @@ public class RemoteTransaction {
 		TransactionStats stats = new TransactionStats();
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
-				stats.totalUploadFileCount++;
-				stats.totalUploadSize += action.getLocalTempLocation().length();
+			if (action.getStatus().equals(ActionStatus.STARTED)) {
+				// If we are resuming a transaction, this has not yet been done.
+				if (action.getType().equals(ActionType.UPLOAD)) {
+					stats.totalUploadFileCount++;
+					stats.totalUploadSize += action.getLocalTempLocation().length();
+				}
 			}
 		}
 
@@ -199,12 +238,13 @@ public class RemoteTransaction {
 
 	private void moveToFinalLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+			if (action.getType().equals(ActionType.UPLOAD)) {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 				RemoteFile finalRemoteFile = action.getRemoteFile();
 
 				logger.log(Level.INFO, "- Moving temp. file {0} to final location {1} ...", new Object[] { tempRemoteFile, finalRemoteFile });
 				transferManager.move(tempRemoteFile, finalRemoteFile);
+				action.setStatus(ActionStatus.DONE);
 			}
 		}
 	}
@@ -227,16 +267,20 @@ public class RemoteTransaction {
 
 		boolean success = true;
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getType().equals(ActionTO.TYPE_DELETE)) {
-				RemoteFile tempRemoteFile = action.getTempRemoteFile();
+			if (action.getStatus().equals(ActionStatus.STARTED)) {
+				// If we are resuming, this action has not been comopleted.
+				if (action.getType().equals(ActionType.DELETE)) {
+					RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
-				logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
-				try {
-					transferManager.delete(tempRemoteFile);
-				}
-				catch (Exception e) {
-					logger.log(Level.INFO, "Failed to delete: " + tempRemoteFile, " because of: " + e);
-					success = false;
+					logger.log(Level.INFO, "- Deleting temp. file {0}  ...", new Object[] { tempRemoteFile });
+					try {
+						transferManager.delete(tempRemoteFile);
+					}
+					catch (Exception e) {
+						logger.log(Level.INFO, "Failed to delete: " + tempRemoteFile, " because of: " + e);
+						success = false;
+					}
+					action.setStatus(ActionStatus.DONE);
 				}
 			}
 		}

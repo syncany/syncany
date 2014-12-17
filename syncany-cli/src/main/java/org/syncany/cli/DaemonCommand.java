@@ -146,7 +146,7 @@ public class DaemonCommand extends Command {
 		switch (operationResult.getResultCode()) {
 		case OK:
 			out.println("Folder successfully added to daemon config.");
-			out.println("Run 'sy restart' to apply the changes.");
+			out.println("Run 'sy daemon restart' to apply the changes.");
 			out.println();
 			break;
 			
@@ -164,7 +164,7 @@ public class DaemonCommand extends Command {
 		switch (operationResult.getResultCode()) {
 		case OK:
 			out.println("Folder successfully removed from the daemon config.");
-			out.println("Run 'sy restart' to apply the changes.");
+			out.println("Run 'sy daemon restart' to apply the changes.");
 			out.println();
 			break;
 			
