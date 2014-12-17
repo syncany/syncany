@@ -29,8 +29,8 @@ public class InitManagementResponse extends ManagementResponse {
 		// Nothing
 	}
 	
-	public InitManagementResponse(InitOperationResult result, int requestId) {
-		super(200, requestId, null);
+	public InitManagementResponse(int code, InitOperationResult result, int requestId) {
+		super(code, requestId, null);
 		this.result = result;
 	}
 

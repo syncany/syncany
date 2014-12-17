@@ -44,6 +44,8 @@ import org.syncany.operations.daemon.messages.InitManagementResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.init.InitOperation;
+import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.StringUtil;
@@ -238,8 +240,20 @@ public class WatchServer {
 	
 	@Subscribe
 	public void onInitRequestReceived(InitManagementRequest request) {
-		logger.log(Level.SEVERE, "onInitRequestReceived() not yet implemented.");
-		eventBus.post(new InitManagementResponse());									
+		logger.log(Level.SEVERE, "Executing InitOperation for folder " + request.getOptions().getLocalDir() + " ...");
+		
+		try {
+			InitOperation initOperation = new InitOperation(request.getOptions(), null);
+			InitOperationResult operationResult = initOperation.execute();
+			
+			eventBus.post(new InitManagementResponse(200, operationResult, request.getId()));
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+			eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+		}
+		
+											
 	}
 	
 	@Subscribe

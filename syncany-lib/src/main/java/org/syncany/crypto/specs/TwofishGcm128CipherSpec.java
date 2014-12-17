@@ -17,8 +17,10 @@
  */
 package org.syncany.crypto.specs;
 
+import org.syncany.crypto.CipherSpecs;
+
 public class TwofishGcm128CipherSpec extends TwofishGcmCipherSpec {
-	public TwofishGcm128CipherSpec(int id) {
-		super(id, "Twofish/GCM/NoPadding", 128, 128, false);
+	public TwofishGcm128CipherSpec() {
+		super(CipherSpecs.TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false);
 	}
 }
