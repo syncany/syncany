@@ -119,7 +119,7 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
-		
+
 		if (isEmpty()) {
 			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
 			return;
@@ -165,7 +165,7 @@ public class RemoteTransaction {
 		try {
 			File localTransactionFile = config.getCache().createTempFile("transaction");
 			writeToFile(config.getTransformer(), localTransactionFile);
-			
+
 			return localTransactionFile;
 		}
 		catch (Exception e) {
@@ -224,12 +224,9 @@ public class RemoteTransaction {
 		TransactionStats stats = new TransactionStats();
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus().equals(ActionStatus.STARTED)) {
-				// If we are resuming a transaction, this has not yet been done.
-				if (action.getType().equals(ActionType.UPLOAD)) {
-					stats.totalUploadFileCount++;
-					stats.totalUploadSize += action.getLocalTempLocation().length();
-				}
+			if (action.getType().equals(ActionType.UPLOAD)) {
+				stats.totalUploadFileCount++;
+				stats.totalUploadSize += action.getLocalTempLocation().length();
 			}
 		}
 
