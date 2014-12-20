@@ -187,8 +187,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			URI oAuthURL = oAuthGenerator.generateAuthUrl();
 			
-			out.printf("This plugin needs you to authenticate your account so that Syncany can access it. Please navigate to the URL below and enter the token:\n\n%s\n", oAuthURL.toString());			
-			out.print("- Token (copy from URL): ");
+			out.println();
+			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
+			out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());			
+			out.print("- Token (paste from URL): ");
 			
 			String token = console.readLine();
 			oAuthGenerator.checkToken(token);
@@ -228,6 +230,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 		else if (knownPluginSettings.containsKey(nestPrefix + option.getName())) {
 			settings.setField(option.getField().getName(), knownPluginSettings.get(nestPrefix + option.getName()));
+		}
+		else if (!option.isVisible()) {
+			// Do nothing. Invisible option!
 		}
 		else {
 			callAndPrintPreQueryCallback(optionCallback);

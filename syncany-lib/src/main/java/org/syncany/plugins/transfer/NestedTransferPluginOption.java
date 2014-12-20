@@ -34,10 +34,10 @@ public class NestedTransferPluginOption extends TransferPluginOption {
 	private final List<TransferPluginOption> options;
 
 	public NestedTransferPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive,
-			boolean singular, boolean required, Class<? extends TransferPluginOptionCallback> callback,
+			boolean singular, boolean visible, boolean required, Class<? extends TransferPluginOptionCallback> callback,
 			Class<? extends TransferPluginOptionConverter> converter, List<TransferPluginOption> nestedOptions) {
 
-		super(field, name, description, type, encrypted, sensitive, singular, required, callback, converter);
+		super(field, name, description, type, encrypted, sensitive, singular, visible, required, callback, converter);
 		this.options = nestedOptions;
 	}
 
