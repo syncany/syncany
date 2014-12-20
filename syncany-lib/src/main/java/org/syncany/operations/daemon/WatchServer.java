@@ -37,6 +37,8 @@ import org.syncany.operations.daemon.Watch.SyncStatus;
 import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
 import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.ConnectManagementRequest;
+import org.syncany.operations.daemon.messages.ConnectManagementResponse;
 import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.InitManagementRequest;
@@ -44,6 +46,8 @@ import org.syncany.operations.daemon.messages.InitManagementResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
+import org.syncany.operations.init.ConnectOperation;
+import org.syncany.operations.init.ConnectOperationResult;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.watch.WatchOperation;
@@ -251,9 +255,23 @@ public class WatchServer {
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
 			eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
-		}
+		}									
+	}
+	
+	@Subscribe
+	public void onConnectRequestReceived(ConnectManagementRequest request) {
+		logger.log(Level.SEVERE, "Executing ConnectOperation for folder " + request.getOptions().getLocalDir() + " ...");
 		
-											
+		try {
+			ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new WebSocketUserInteractionListener());
+			ConnectOperationResult operationResult = initOperation.execute();
+			
+			eventBus.post(new ConnectManagementResponse(200, operationResult, request.getId()));
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+			eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+		}									
 	}
 	
 	@Subscribe
@@ -296,5 +314,5 @@ public class WatchServer {
 				}
 			}
 		}
-	}	
+	}
 }
