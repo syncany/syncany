@@ -19,6 +19,7 @@ package org.syncany.cli;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.NestedTransferPluginOption;
+import org.syncany.plugins.transfer.OAuthGenerator;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
@@ -147,6 +149,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 
 		try {
+			// Show OAuth output
+			printOAuthInformation(settings);
+			
+			// Ask for plugin settings
 			List<TransferPluginOption> pluginOptions = TransferPluginOptions.getOrderedOptions(settings.getClass());
 
 			for (TransferPluginOption option : pluginOptions) {
@@ -169,6 +175,24 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		logger.log(Level.INFO, "Settings are " + settings.toString());
 
 		return settings;
+	}
+
+	private void printOAuthInformation(TransferSettings settings) throws StorageException, NoSuchMethodException, SecurityException,
+			InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Class<? extends OAuthGenerator> oAuthGeneratorClass = TransferPluginUtil.getOAuthGeneratorClass(settings.getClass());
+
+		if (oAuthGeneratorClass != null) {
+			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthGeneratorClass.getDeclaredConstructor(settings.getClass());
+			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);			
+
+			URI oAuthURL = oAuthGenerator.generateAuthUrl();
+			
+			out.printf("This plugin needs you to authenticate your account so that Syncany can access it. Please navigate to the URL below and enter the token:\n\n%s\n", oAuthURL.toString());			
+			out.print("- Token (copy from URL): ");
+			
+			String token = console.readLine();
+			oAuthGenerator.checkToken(token);
+		}
 	}
 
 	private void askPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings, String nestPrefix)

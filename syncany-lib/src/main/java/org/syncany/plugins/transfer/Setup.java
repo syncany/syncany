@@ -53,6 +53,11 @@ public @interface Setup {
 	boolean singular() default false;
 
 	/**
+	 * Visible values are shown to the user during setup, invisible one are hidden.
+	 */
+	boolean visible() default true;
+	
+	/**
 	 * @see org.syncany.plugins.transfer.TransferPluginOptionCallback
 	 */
 	Class<? extends TransferPluginOptionCallback> callback() default TransferPluginOptionCallback.class;
