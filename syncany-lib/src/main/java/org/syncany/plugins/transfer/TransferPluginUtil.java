@@ -111,6 +111,21 @@ public abstract class TransferPluginUtil {
 			}
 		}
 	}
+	
+	/**
+	 * Determines the {@link OAuthGenerator} class for the given class
+	 * if an {@link OAuth} annotation is present.
+	 */
+	public static Class<? extends OAuthGenerator> getOAuthGeneratorClass(Class<? extends TransferSettings> clazz) {
+		OAuth oauthAnnotation = clazz.getAnnotation(OAuth.class);
+		
+		if (oauthAnnotation != null) {
+			return oauthAnnotation.value();
+		}
+		else {
+			return null;
+		}		
+	}
 
 	private static String getPluginPackageName(Class<?> clazz) {
 		Matcher matcher = PLUGIN_PACKAGE_NAME_PATTERN.matcher(clazz.getPackage().getName());

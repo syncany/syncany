@@ -68,6 +68,7 @@ public class TransferPluginOptions {
 			boolean required = elementAnnotation.required();
 			boolean sensitive = setupAnnotation != null && setupAnnotation.sensitive();
 			boolean singular = setupAnnotation != null && setupAnnotation.singular();
+			boolean visible = setupAnnotation != null && setupAnnotation.visible();
 			boolean encrypted = field.getAnnotation(Encrypted.class) != null;
 
 			boolean isNestedOption = TransferSettings.class.isAssignableFrom(field.getType());
@@ -78,11 +79,11 @@ public class TransferPluginOptions {
 				}
 
 				Class<? extends TransferSettings> fieldClass = (Class<? extends TransferSettings>) field.getType();
-				options.add(new NestedTransferPluginOption(field, name, description, fieldClass, encrypted, sensitive, singular, required, callback, converter,
+				options.add(new NestedTransferPluginOption(field, name, description, fieldClass, encrypted, sensitive, singular, visible, required, callback, converter,
 						getOrderedOptions(fieldClass)));
 			}
 			else {
-				options.add(new TransferPluginOption(field, name, description, field.getType(), encrypted, sensitive, singular, required, callback, converter));
+				options.add(new TransferPluginOption(field, name, description, field.getType(), encrypted, sensitive, singular, visible, required, callback, converter));
 			}
 		}
 
