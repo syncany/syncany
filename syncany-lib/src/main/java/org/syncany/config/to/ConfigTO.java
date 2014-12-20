@@ -58,7 +58,7 @@ public class ConfigTO {
 	@Convert(SaltedSecretKeyConverter.class)
 	private SaltedSecretKey masterKey;
 
-	@Element(name = "connection", required = true)
+	@Element(name = "connection", required = false) // TODO [high] Workaround for 'connect' via GUI and syncany://link; field not needed when link is supplied
 	private TransferSettings transferSettings;
 
 	@Element(name = "cacheKeepBytes", required = false)
