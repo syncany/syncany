@@ -20,7 +20,6 @@ package org.syncany.config.to;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.convert.Registry;
@@ -46,7 +45,6 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 @Root(name = "config", strict = false)
-@Namespace(reference = "http://syncany.org/config/1")
 public class ConfigTO {
 	@Element(name = "machineName", required = true)
 	private String machineName;

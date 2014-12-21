@@ -44,7 +44,7 @@ import org.syncany.chunk.Transformer;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Pim Otte
  */
-@Root(name = "transaction")
+@Root(name = "transaction", strict = false)
 public class TransactionTO {
 	@Element(name = "machineName")
 	private String machineName;
