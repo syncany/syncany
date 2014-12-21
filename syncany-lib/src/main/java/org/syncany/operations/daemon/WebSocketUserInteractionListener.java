@@ -17,6 +17,9 @@
  */
 package org.syncany.operations.daemon;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.ConfirmUserInteractionExternalEvent;
 import org.syncany.operations.daemon.messages.ConfirmUserInteractionExternalManagementRequest;
@@ -25,7 +28,11 @@ import org.syncany.plugins.UserInteractionListener;
 import com.google.common.eventbus.Subscribe;
 
 public class WebSocketUserInteractionListener implements UserInteractionListener {
-	public LocalEventBus eventBus;
+	private static final Logger logger = Logger.getLogger(WebSocketUserInteractionListener.class.getSimpleName());
+
+	private LocalEventBus eventBus;
+	private Object waitObject;
+	private Object userResponse;
 	
 	public WebSocketUserInteractionListener() {
 		this.eventBus = LocalEventBus.getInstance();
@@ -34,14 +41,16 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	
 	@Override
 	public void onShowMessage(String message) {
-		// eventBus.post();
+		// eventBus.post(new ShowMessageUserInteractionExternalEvent(message));
 	}
 
 	@Override
 	public boolean onUserConfirm(String header, String message, String question) {
+		logger.log(Level.INFO, "User confirmation needed for '" + header + "'. Sending web socket message.");
 		eventBus.post(new ConfirmUserInteractionExternalEvent(header, message, question));
 		
-		return false;
+		ConfirmUserInteractionExternalManagementRequest userConfirmation = (ConfirmUserInteractionExternalManagementRequest) waitForUserResponse();
+		return userConfirmation.getResult();
 	}
 
 	@Override
@@ -58,7 +67,18 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	
 	@Subscribe
 	public void onConfirmUserInteractionExternalManagementRequest(ConfirmUserInteractionExternalManagementRequest response) {
-		// Do something ...
-		
+		userResponse = response;
+		waitObject.notify();
+	}
+	
+	private Object waitForUserResponse() {
+		try {
+			waitObject.wait();
+			return userResponse;
+		}
+		catch (InterruptedException e) {
+			logger.log(Level.SEVERE, "User interaction listener interrupted.", e);
+			return null;
+		}
 	}
 }
