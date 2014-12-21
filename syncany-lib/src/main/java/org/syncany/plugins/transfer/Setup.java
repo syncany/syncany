@@ -17,6 +17,7 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -56,6 +57,12 @@ public @interface Setup {
 	 * Visible values are shown to the user during setup, invisible one are hidden.
 	 */
 	boolean visible() default true;
+	
+	/**
+	 * In case the field represents a {@link File}, this option defines whether a file 
+	 * or folder is required. This value can be used by front-ends.
+	 */
+	FileType fileType() default FileType.NONE;
 	
 	/**
 	 * @see org.syncany.plugins.transfer.TransferPluginOptionCallback
