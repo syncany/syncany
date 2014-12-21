@@ -243,19 +243,27 @@ public class WatchServer {
 	}
 	
 	@Subscribe
-	public void onInitRequestReceived(InitManagementRequest request) {
+	public void onInitRequestReceived(final InitManagementRequest request) {
 		logger.log(Level.SEVERE, "Executing InitOperation for folder " + request.getOptions().getLocalDir() + " ...");
+
+		Thread initThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					InitOperation initOperation = new InitOperation(request.getOptions(), new WebSocketUserInteractionListener());
+					InitOperationResult operationResult = initOperation.execute();
+					
+					eventBus.post(new InitManagementResponse(200, operationResult, request.getId()));
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+					eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+				}		
+			}
+
+		}, "IntRq/" + request.getOptions().getLocalDir().getName());
 		
-		try {
-			InitOperation initOperation = new InitOperation(request.getOptions(), null);
-			InitOperationResult operationResult = initOperation.execute();
-			
-			eventBus.post(new InitManagementResponse(200, operationResult, request.getId()));
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-			eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
-		}									
+		initThread.start();									
 	}
 	
 	@Subscribe

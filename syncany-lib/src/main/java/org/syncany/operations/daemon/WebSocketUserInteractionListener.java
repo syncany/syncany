@@ -37,6 +37,7 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	public WebSocketUserInteractionListener() {
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
+		this.waitObject = new Object();
 	}
 	
 	@Override
@@ -73,7 +74,10 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	
 	private Object waitForUserResponse() {
 		try {
-			waitObject.wait();
+			synchronized (waitObject) {
+				waitObject.wait();	
+			}
+			
 			return userResponse;
 		}
 		catch (InterruptedException e) {

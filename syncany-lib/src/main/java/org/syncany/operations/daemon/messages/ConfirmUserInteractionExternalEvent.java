@@ -17,11 +17,17 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public class ConfirmUserInteractionExternalEvent extends ExternalEvent {
+	@Element(name = "header", required = true)
 	private String header;
+	
+	@Element(name = "message", required = true)
 	private String message;
+	
+	@Element(name = "question", required = true)
 	private String question;
 
 	public ConfirmUserInteractionExternalEvent() {
