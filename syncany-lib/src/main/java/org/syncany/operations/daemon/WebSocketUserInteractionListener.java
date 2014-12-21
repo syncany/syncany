@@ -41,11 +41,6 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	}
 	
 	@Override
-	public void onShowMessage(String message) {
-		// eventBus.post(new ShowMessageUserInteractionExternalEvent(message));
-	}
-
-	@Override
 	public boolean onUserConfirm(String header, String message, String question) {
 		logger.log(Level.INFO, "User confirmation needed for '" + header + "'. Sending web socket message.");
 		eventBus.post(new ConfirmUserInteractionExternalEvent(header, message, question));
@@ -55,21 +50,24 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	}
 
 	@Override
+	public void onShowMessage(String message) {
+		throw new RuntimeException("onShowMessage() not implemented for WebSocket init/connect.");
+	}
+
+	@Override
 	public String onUserPassword(String header, String message) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeException("onUserPassword() not implemented for WebSocket init/connect.");
 	}
 
 	@Override
 	public String onUserNewPassword() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new RuntimeException("onUserNewPassword() not implemented for WebSocket init/connect.");
 	}		
 	
 	@Subscribe
 	public void onConfirmUserInteractionExternalManagementRequest(ConfirmUserInteractionExternalManagementRequest response) {
-		userResponse = response;
-		waitObject.notify();
+		userResponse = response;		
+		fireUserResponseReady();			
 	}
 	
 	private Object waitForUserResponse() {
@@ -83,6 +81,12 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 		catch (InterruptedException e) {
 			logger.log(Level.SEVERE, "User interaction listener interrupted.", e);
 			return null;
+		}
+	}
+	
+	private void fireUserResponseReady() {
+		synchronized (waitObject) {
+			waitObject.notify();	
 		}
 	}
 }

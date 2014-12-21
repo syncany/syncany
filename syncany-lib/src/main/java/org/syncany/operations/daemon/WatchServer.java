@@ -260,26 +260,32 @@ public class WatchServer {
 					eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
 				}		
 			}
-
 		}, "IntRq/" + request.getOptions().getLocalDir().getName());
 		
 		initThread.start();									
 	}
 	
 	@Subscribe
-	public void onConnectRequestReceived(ConnectManagementRequest request) {
+	public void onConnectRequestReceived(final ConnectManagementRequest request) {
 		logger.log(Level.SEVERE, "Executing ConnectOperation for folder " + request.getOptions().getLocalDir() + " ...");
 		
-		try {
-			ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new WebSocketUserInteractionListener());
-			ConnectOperationResult operationResult = initOperation.execute();
-			
-			eventBus.post(new ConnectManagementResponse(200, operationResult, request.getId()));
-		}
-		catch (Exception e) {
-			logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-			eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
-		}									
+		Thread connectThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new WebSocketUserInteractionListener());
+					ConnectOperationResult operationResult = initOperation.execute();
+
+					eventBus.post(new ConnectManagementResponse(200, operationResult, request.getId()));
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
+					eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+				}
+			}
+		}, "ConRq/" + request.getOptions().getLocalDir().getName());
+
+		connectThread.start();										
 	}
 	
 	@Subscribe
