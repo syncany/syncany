@@ -18,8 +18,10 @@
 package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 import org.syncany.operations.watch.WatchOperationOptions;
 
+@Root(strict = false)
 public class FolderTO {
 	@Element(name="path")
 	private String path;

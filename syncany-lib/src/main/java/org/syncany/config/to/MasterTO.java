@@ -41,7 +41,7 @@ import org.syncany.util.StringUtil;
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name = "master")
+@Root(name = "master", strict = false)
 public class MasterTO {
 	@Element(name = "salt", required = false)
 	private String saltEncoded;

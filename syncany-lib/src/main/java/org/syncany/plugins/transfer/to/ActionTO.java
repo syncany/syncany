@@ -33,7 +33,7 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
  * 
  * @author Pim Otte
  */
-@Root(name = "transactionAction")
+@Root(name = "transactionAction", strict = false)
 public class ActionTO {
 	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
 
