@@ -51,7 +51,7 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 
 	@Override
 	public void onShowMessage(String message) {
-		throw new RuntimeException("onShowMessage() not implemented for WebSocket init/connect.");
+		// Ignore this!
 	}
 
 	@Override
