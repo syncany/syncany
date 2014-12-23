@@ -18,8 +18,11 @@
 package org.syncany.config.to;
 
 /**
- * @author Pim Otte (otte.pim@gmail.com)
- *
+ * This class is the interface for creation of RepoTO's. The reason this is in a factory is that
+ * repoTO's have a couple of moving and standing parts. (Chunkers, MultiChunkers and Transformers),
+ * which all may or may not be configurable.
+ * 
+ * @author Pim Otte <otte.pim@gmail.com>
  */
 public interface RepoTOFactory {
 

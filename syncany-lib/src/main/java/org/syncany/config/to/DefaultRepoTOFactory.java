@@ -37,8 +37,11 @@ import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
 /**
- * @author Pim Otte (otte.pim@gmail.com)
- *
+ * The DefaultRepoTOFactory produces RepoTO's with some sensible defaults for the Chunkers and
+ * MultiChunkers. The transformers are configurable, namely whether or not compression is used
+ * and how it is encrypted.
+ * 
+ * @author Pim Otte <otte.pim@gmail.com>
  */
 public class DefaultRepoTOFactory implements RepoTOFactory {
 	private ChunkerTO chunkerTO;
