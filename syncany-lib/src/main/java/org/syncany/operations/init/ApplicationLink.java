@@ -114,7 +114,7 @@ public class ApplicationLink {
 		this.shortUrl = shortUrl;
 	}
 
-	public ApplicationLink(String applicationLink) throws StorageException {
+	public ApplicationLink(String applicationLink) throws IllegalArgumentException, StorageException {
 		if (LINK_SHORT_URL_PATTERN.matcher(applicationLink).matches()) {
 			applicationLink = expandLink(applicationLink);
 		}
@@ -307,16 +307,26 @@ public class ApplicationLink {
 			logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
 			logger.log(Level.INFO, "- Encrypted plugin settings: " + encryptedPluginSettingsStr);
 
-			masterKeySalt = Base58.decode(masterKeySaltStr);
-			encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
-			plaintextSettingsBytes = null;
+			try {
+				masterKeySalt = Base58.decode(masterKeySaltStr);
+				encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
+				plaintextSettingsBytes = null;
+			}
+			catch (IllegalArgumentException e) {
+				throw new StorageException("Invalid syncany:// link provided. Parsing failed.", e);
+			}
 		}
 		else {
 			String plaintextEncodedSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 
-			masterKeySalt = null;
-			encryptedSettingsBytes = null;
-			plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
+			try {
+				masterKeySalt = null;
+				encryptedSettingsBytes = null;
+				plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
+			}
+			catch (IllegalArgumentException e) {
+				throw new StorageException("Invalid syncany:// link provided. Parsing failed.", e);
+			}
 		}
 	}
 
