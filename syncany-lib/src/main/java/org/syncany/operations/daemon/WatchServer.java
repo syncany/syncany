@@ -251,13 +251,25 @@ public class WatchServer {
 			public void run() {
 				try {
 					InitOperation initOperation = new InitOperation(request.getOptions(), new EventUserInteractionListener());
-					InitOperationResult operationResult = initOperation.execute();
+					InitOperationResult operationResult = initOperation.execute();									
 					
-					eventBus.post(new InitManagementResponse(200, operationResult, request.getId()));
+					switch (operationResult.getResultCode()) {
+					case OK:											
+						eventBus.post(new InitManagementResponse(InitManagementResponse.OK, operationResult, request.getId()));
+						break;
+						
+					case NOK_TEST_FAILED:						
+						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
+						break;
+						
+					default:
+						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
+						break;
+					}
 				}
 				catch (Exception e) {
 					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+					eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_OPERATION_FAILED, new InitOperationResult(), request.getId()));
 				}		
 			}
 		}, "IntRq/" + request.getOptions().getLocalDir().getName());
@@ -276,11 +288,23 @@ public class WatchServer {
 					ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new EventUserInteractionListener());
 					ConnectOperationResult operationResult = initOperation.execute();
 
-					eventBus.post(new ConnectManagementResponse(200, operationResult, request.getId()));
+					switch (operationResult.getResultCode()) {
+					case OK:											
+						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.OK, operationResult, request.getId()));
+						break;
+						
+					case NOK_TEST_FAILED:						
+						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
+						break;
+						
+					default:
+						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
+						break;
+					}				
 				}
 				catch (Exception e) {
 					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new InitManagementResponse(500, new InitOperationResult(), request.getId()));
+					eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_OPERATION_FAILED, new ConnectOperationResult(), request.getId()));
 				}
 			}
 		}, "ConRq/" + request.getOptions().getLocalDir().getName());

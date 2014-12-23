@@ -22,6 +22,11 @@ import org.syncany.operations.daemon.messages.api.ManagementResponse;
 import org.syncany.operations.init.InitOperationResult;
 
 public class InitManagementResponse extends ManagementResponse {
+	public static final int OK = 200;
+	public static final int NOK_OPERATION_FAILED = 501;
+	public static final int NOK_FAILED_TEST = 502;
+	public static final int NOK_FAILED_UNKNOWN = 502;
+	
 	@Element(required = true)
 	private InitOperationResult result;
 

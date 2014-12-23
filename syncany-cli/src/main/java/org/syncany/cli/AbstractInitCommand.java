@@ -610,9 +610,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		out.println("- Repo file exists:       " + testResult.isRepoFileExists());
 		out.println();
 
-		if (testResult.getException() != null) {
+		if (testResult.getErrorMessage() != null) {
 			out.println("Error message (see log file for details):");
-			out.println("  " + testResult.getException().getMessage());
+			out.println("  " + testResult.getErrorMessage());
 		}
 	}
 
