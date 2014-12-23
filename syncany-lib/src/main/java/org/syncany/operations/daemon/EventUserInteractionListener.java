@@ -23,18 +23,20 @@ import java.util.logging.Logger;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.messages.ConfirmUserInteractionExternalEvent;
 import org.syncany.operations.daemon.messages.ConfirmUserInteractionExternalManagementRequest;
+import org.syncany.operations.daemon.messages.GetPasswordUserInteractionExternalEvent;
+import org.syncany.operations.daemon.messages.GetPasswordUserInteractionExternalManagementRequest;
 import org.syncany.plugins.UserInteractionListener;
 
 import com.google.common.eventbus.Subscribe;
 
-public class WebSocketUserInteractionListener implements UserInteractionListener {
-	private static final Logger logger = Logger.getLogger(WebSocketUserInteractionListener.class.getSimpleName());
+public class EventUserInteractionListener implements UserInteractionListener {
+	private static final Logger logger = Logger.getLogger(EventUserInteractionListener.class.getSimpleName());
 
 	private LocalEventBus eventBus;
 	private Object waitObject;
 	private Object userResponse;
 	
-	public WebSocketUserInteractionListener() {
+	public EventUserInteractionListener() {
 		this.eventBus = LocalEventBus.getInstance();
 		this.eventBus.register(this);
 		this.waitObject = new Object();
@@ -42,7 +44,7 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	
 	@Override
 	public boolean onUserConfirm(String header, String message, String question) {
-		logger.log(Level.INFO, "User confirmation needed for '" + header + "'. Sending web socket message.");
+		logger.log(Level.INFO, "User confirmation needed for '" + header + "'. Sending message.");
 		eventBus.post(new ConfirmUserInteractionExternalEvent(header, message, question));
 		
 		ConfirmUserInteractionExternalManagementRequest userConfirmation = (ConfirmUserInteractionExternalManagementRequest) waitForUserResponse();
@@ -56,7 +58,11 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 
 	@Override
 	public String onUserPassword(String header, String message) {
-		throw new RuntimeException("onUserPassword() not implemented for WebSocket init/connect.");
+		logger.log(Level.INFO, "User password needed. Sending message.");
+		eventBus.post(new GetPasswordUserInteractionExternalEvent());
+		
+		GetPasswordUserInteractionExternalManagementRequest userConfirmation = (GetPasswordUserInteractionExternalManagementRequest) waitForUserResponse();
+		return userConfirmation.getPassword();
 	}
 
 	@Override
@@ -66,6 +72,12 @@ public class WebSocketUserInteractionListener implements UserInteractionListener
 	
 	@Subscribe
 	public void onConfirmUserInteractionExternalManagementRequest(ConfirmUserInteractionExternalManagementRequest response) {
+		userResponse = response;		
+		fireUserResponseReady();			
+	}
+	
+	@Subscribe
+	public void onGetPasswordUserInteractionExternalManagementRequest(GetPasswordUserInteractionExternalManagementRequest response) {
 		userResponse = response;		
 		fireUserResponseReady();			
 	}

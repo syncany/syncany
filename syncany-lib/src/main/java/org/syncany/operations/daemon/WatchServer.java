@@ -250,7 +250,7 @@ public class WatchServer {
 			@Override
 			public void run() {
 				try {
-					InitOperation initOperation = new InitOperation(request.getOptions(), new WebSocketUserInteractionListener());
+					InitOperation initOperation = new InitOperation(request.getOptions(), new EventUserInteractionListener());
 					InitOperationResult operationResult = initOperation.execute();
 					
 					eventBus.post(new InitManagementResponse(200, operationResult, request.getId()));
@@ -273,7 +273,7 @@ public class WatchServer {
 			@Override
 			public void run() {
 				try {
-					ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new WebSocketUserInteractionListener());
+					ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new EventUserInteractionListener());
 					ConnectOperationResult operationResult = initOperation.execute();
 
 					eventBus.post(new ConnectManagementResponse(200, operationResult, request.getId()));
