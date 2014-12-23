@@ -116,7 +116,7 @@ public class Base58 {
                 digit58 = INDEXES[c];
             }
             if (digit58 < 0) {
-                throw new RuntimeException("Illegal character " + c + " at " + i);
+                throw new IllegalArgumentException("Illegal character " + c + " at " + i);
             }
 
             input58[i] = (byte) digit58;
@@ -159,14 +159,14 @@ public class Base58 {
     public static byte[] decodeChecked(String input) {
         byte tmp [] = decode(input);
         if (tmp.length < 4)
-            throw new RuntimeException("Input too short");
+            throw new IllegalArgumentException("Input too short");
         byte[] bytes = copyOfRange(tmp, 0, tmp.length - 4);
         byte[] checksum = copyOfRange(tmp, tmp.length - 4, tmp.length);
         
         tmp = doubleDigest(bytes);
         byte[] hash = copyOfRange(tmp, 0, 4);
         if (!Arrays.equals(checksum, hash)) 
-            throw new RuntimeException("Checksum does not validate");
+            throw new IllegalArgumentException("Checksum does not validate");
         
         return bytes;
     }
