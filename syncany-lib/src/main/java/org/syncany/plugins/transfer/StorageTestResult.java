@@ -52,7 +52,7 @@ public class StorageTestResult {
 	@Element(name = "repoFileExists", required = true)
 	private boolean repoFileExists;
 
-	@Element(name = "errorMessage", required = true)
+	@Element(name = "errorMessage", required = false)
 	private String errorMessage;
 	
 	// Note: This should be an "Exception" instead of only an error message, but
