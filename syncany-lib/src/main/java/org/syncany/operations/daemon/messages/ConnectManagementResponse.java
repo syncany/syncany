@@ -25,7 +25,7 @@ public class ConnectManagementResponse extends ManagementResponse {
 	public static final int OK = 200;
 	public static final int NOK_OPERATION_FAILED = 501;
 	public static final int NOK_FAILED_TEST = 502;
-	public static final int NOK_FAILED_UNKNOWN = 502;
+	public static final int NOK_FAILED_UNKNOWN = 503;
 	
 	@Element(required = true)
 	private ConnectOperationResult result;
