@@ -239,8 +239,13 @@ public class FileSystemActionReconciliator {
 			changeSet.getNewFiles().add(winningLastVersion.getPath());
 		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.NEW)) {
-			logger.log(Level.INFO, "     -> (3) New: winning version was deleted, but local exists: "+winningLastVersion+" AND "+winningLastFile);					
-			throw new Exception("What happend here?");
+			FileSystemAction action = new DeleteFileSystemAction(config, null, winningLastVersion, winnersDatabase);
+			outFileSystemActions.add(action);
+			
+			logger.log(Level.INFO, "     -> (3) New: winning version was deleted, but local exists, winning version = "+winningLastVersion+" at "+winningLastFile);					
+			logger.log(Level.INFO, "     -> "+action);	
+			
+			changeSet.getDeletedFiles().add(winningLastVersion.getPath());
 		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_LINK_TARGET)) {					
 			FileSystemAction action = new NewSymlinkFileSystemAction(config, winningLastVersion, winnersDatabase);

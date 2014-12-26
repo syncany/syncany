@@ -286,7 +286,7 @@ public abstract class FileSystemAction {
 	}	
 	
 	protected FileVersionComparison fileChanges(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath()); // TODO [medium] This does not work for 'some\file' on windows!						
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath()); 						
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
 		
 		return fileVersionComparison;
@@ -303,7 +303,7 @@ public abstract class FileSystemAction {
 	}
 	
 	protected File getAbsolutePathFile(String relativePath) {
-		return new File(config.getLocalDir(), relativePath);
+		return new File(config.getLocalDir(), relativePath); // TODO [medium] This does not work for 'some\file' on windows!
 	}	
 	
 	public abstract FileSystemActionResult execute() throws Exception;
