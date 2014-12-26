@@ -27,7 +27,6 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.DaemonConfigHelper;
-import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
@@ -81,8 +80,6 @@ public class ConnectOperation extends AbstractInitOperation {
 
 		this.options = options;
 		this.result = new ConnectOperationResult();
-		this.listener = listener;
-		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override
