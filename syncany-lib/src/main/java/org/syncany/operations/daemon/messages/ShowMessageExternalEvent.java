@@ -15,10 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins;
+package org.syncany.operations.daemon.messages;
 
-public interface UserInteractionListener {
-	public boolean onUserConfirm(String header, String message, String question);
-	public String onUserPassword(String header, String message);
-	public String onUserNewPassword();
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
+
+public class ShowMessageExternalEvent extends ExternalEvent {
+	@Element(name = "message", required = true)
+	private String message;
+
+	public ShowMessageExternalEvent() {
+		// Nothing
+	}
+
+	public ShowMessageExternalEvent(String message) {
+		this.message = message;
+	}
+
+	public String getMessage() {
+		return message;
+	}
 }

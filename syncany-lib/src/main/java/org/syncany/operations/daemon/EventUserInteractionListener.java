@@ -52,11 +52,6 @@ public class EventUserInteractionListener implements UserInteractionListener {
 	}
 
 	@Override
-	public void onShowMessage(String message) {
-		// Ignore this!
-	}
-
-	@Override
 	public String onUserPassword(String header, String message) {
 		logger.log(Level.INFO, "User password needed. Sending message.");
 		eventBus.post(new GetPasswordUserInteractionExternalEvent());

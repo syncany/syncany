@@ -34,6 +34,7 @@ import joptsimple.OptionSpec;
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
@@ -56,6 +57,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -586,8 +588,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				out.println("This link is encrypted with the given password, so you can safely share it.");
 				out.println("using unsecure communication (chat, e-mail, etc.)");
 				out.println();
-				out.println("WARNING: The link contains the details of your repo connection which typically");
-				out.println("         consist of usernames/password of the connection (e.g. FTP user/pass).");
+				out.println("Note: The link contains the details of your repo connection which typically");
+				out.println("      consist of usernames/password of the connection (e.g. FTP user/pass).");
 			}
 			else {
 				out.println("WARNING: This link is NOT ENCRYPTED and might contain connection credentials");
@@ -637,9 +639,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 	}
 
-	@Override
-	public void onShowMessage(String message) {
-		out.println(message);
+	@Subscribe
+	public void onShowMessage(ShowMessageExternalEvent messageEvent) {
+		out.println();
+		out.println(messageEvent.getMessage());
 	}
 
 	@Override
