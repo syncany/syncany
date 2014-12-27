@@ -33,6 +33,7 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
 import org.syncany.plugins.Plugins;
@@ -70,17 +71,15 @@ public class ConnectOperation extends AbstractInitOperation {
 
 	private ConnectOperationOptions options;
 	private ConnectOperationResult result;
-	private UserInteractionListener listener;
 
 	private TransferPlugin plugin;
 	private TransferManager transferManager;
 
 	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
-		super(null, null);
+		super(null, listener);
 
 		this.options = options;
 		this.result = new ConnectOperationResult();
-		this.listener = listener;
 	}
 
 	@Override
@@ -337,7 +336,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			int triesLeft = MAX_RETRY_PASSWORD_COUNT - retryPasswordCount;
 			String triesLeftStr = triesLeft != 1 ? triesLeft + " tries left." : "Last chance.";
 
-			listener.onShowMessage("ERROR: Invalid password or corrupt ciphertext. " + triesLeftStr);
+			eventBus.post(new ShowMessageExternalEvent("ERROR: Invalid password or corrupt ciphertext. " + triesLeftStr));
 			return true;
 		}
 		else {

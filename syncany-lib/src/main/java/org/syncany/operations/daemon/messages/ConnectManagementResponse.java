@@ -15,27 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
-
-import java.util.Random;
+package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ManagementResponse;
+import org.syncany.operations.init.ConnectOperationResult;
 
-@Root(strict = false)
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
+public class ConnectManagementResponse extends ManagementResponse {
+	public static final int OK = 200;
+	public static final int NOK_OPERATION_FAILED = 501;
+	public static final int NOK_FAILED_TEST = 502;
+	public static final int NOK_FAILED_UNKNOWN = 503;
 	
-	public Request() {
-		this.id = Math.abs(new Random().nextInt());
+	@Element(required = true)
+	private ConnectOperationResult result;
+
+	public ConnectManagementResponse() {
+		// Nothing
+	}
+	
+	public ConnectManagementResponse(int code, ConnectOperationResult result, int requestId) {
+		super(code, requestId, null);
+		this.result = result;
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
+	public ConnectOperationResult getResult() {
+		return result;
 	}
 }

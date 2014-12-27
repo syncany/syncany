@@ -15,12 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.crypto.specs;
+package org.syncany.plugins.transfer;
 
-import org.syncany.crypto.CipherSpecs;
-
-public class TwofishGcm128CipherSpec extends TwofishGcmCipherSpec {
-	public TwofishGcm128CipherSpec() {
-		super(CipherSpecs.TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false);
-	}
+public enum FileType {
+	NONE, FILE, FOLDER
 }

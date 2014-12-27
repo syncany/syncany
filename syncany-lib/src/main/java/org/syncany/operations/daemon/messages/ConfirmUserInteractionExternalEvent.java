@@ -15,27 +15,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
-
-import java.util.Random;
+package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-@Root(strict = false)
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
+public class ConfirmUserInteractionExternalEvent extends ExternalEvent {
+	@Element(name = "header", required = true)
+	private String header;
 	
-	public Request() {
-		this.id = Math.abs(new Random().nextInt());
+	@Element(name = "message", required = true)
+	private String message;
+	
+	@Element(name = "question", required = true)
+	private String question;
+
+	public ConfirmUserInteractionExternalEvent() {
+		// Nothing
 	}
 
-	public int getId() {
-		return id;
+	public ConfirmUserInteractionExternalEvent(String header, String message, String question) {
+		this.header = header;
+		this.message = message;
+		this.question = question;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public String getHeader() {
+		return header;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public String getQuestion() {
+		return question;
 	}
 }

@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.api.EventResponse;
+import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 
@@ -44,7 +46,7 @@ import org.syncany.operations.daemon.messages.api.Request;
  */
 public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
-	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
+	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^(https?|wss?)://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
 	private WebServer daemonWebServer;
 	private LocalEventBus eventBus;
@@ -75,7 +77,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 			channel.getReceiveSetter().set(new AbstractReceiveListener() {
 				@Override
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
-					handleWebSocketRequest(clientChannel, message.getData());
+					handleMessage(clientChannel, message.getData());
 				}
 
 				@Override
@@ -126,18 +128,35 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		return false;
 	}
 
-	private void handleWebSocketRequest(WebSocketChannel clientSocket, String message) {
-		logger.log(Level.INFO, "Web socket message received: " + message);
+	private void handleMessage(WebSocketChannel clientSocket, String messageStr) {
+		logger.log(Level.INFO, "Web socket message received: " + messageStr);
 
 		try {
-			Request request = MessageFactory.toRequest(message);
-
-			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
-			eventBus.post(request);
+			Message message = MessageFactory.toMessage(messageStr);
+			
+			if (message instanceof Request) {
+				handleRequest(clientSocket, (Request) message);				
+			}
+			else if (message instanceof EventResponse) {
+				handleEventResponse(clientSocket, (EventResponse) message);
+			}
+			else {
+				throw new Exception("Invalid message type received: " + message.getClass());
+			}
 		}
 		catch (Exception e) {
-			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+			logger.log(Level.WARNING, "Invalid message received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestResponse(-1, "Invalid message."));
 		}
+	}
+	
+
+	private void handleRequest(WebSocketChannel clientSocket, Request request) {
+		daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
+		eventBus.post(request);
+	}
+	
+	private void handleEventResponse(WebSocketChannel clientSocket, EventResponse eventResponse) {
+		eventBus.post(eventResponse);
 	}
 }

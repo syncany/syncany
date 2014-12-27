@@ -189,9 +189,9 @@ public class ApplicationLink {
 		return String.format(LINK_SHORT_API_URL_GET_FORMAT, shortLinkId);
 	}
 
-	private String resolveLink(String httpApplicationLink, int redirectCount) throws StorageException {
+	private String resolveLink(String httpApplicationLink, int redirectCount) throws IllegalArgumentException, StorageException {
 		if (redirectCount >= LINK_HTTP_MAX_REDIRECT_COUNT) {
-			throw new StorageException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Canot find syncany:// link.");
+			throw new IllegalArgumentException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Cannot find syncany:// link.");
 		}
 
 		try {
@@ -220,6 +220,9 @@ public class ApplicationLink {
 			else {
 				return resolveLink(locationHeaderUrl, ++redirectCount);
 			}
+		}
+		catch (StorageException | IllegalArgumentException e) {
+			throw e;
 		}
 		catch (Exception e) {
 			throw new StorageException(e.getMessage(), e);
@@ -291,11 +294,11 @@ public class ApplicationLink {
 		return httpClientBuilder.build();
 	}
 
-	private void parseLink(String applicationLink) throws StorageException {
+	private void parseLink(String applicationLink) throws IllegalArgumentException {
 		Matcher linkMatcher = LINK_PATTERN.matcher(applicationLink);
 
 		if (!linkMatcher.matches()) {
-			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
+			throw new IllegalArgumentException("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 
 		encrypted = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG) == null;
@@ -313,7 +316,7 @@ public class ApplicationLink {
 				plaintextSettingsBytes = null;
 			}
 			catch (IllegalArgumentException e) {
-				throw new StorageException("Invalid syncany:// link provided. Parsing failed.", e);
+				throw new IllegalArgumentException("Invalid syncany:// link provided. Parsing failed.", e);
 			}
 		}
 		else {
@@ -325,7 +328,7 @@ public class ApplicationLink {
 				plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
 			}
 			catch (IllegalArgumentException e) {
-				throw new StorageException("Invalid syncany:// link provided. Parsing failed.", e);
+				throw new IllegalArgumentException("Invalid syncany:// link provided. Parsing failed.", e);
 			}
 		}
 	}

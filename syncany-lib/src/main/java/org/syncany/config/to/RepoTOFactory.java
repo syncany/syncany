@@ -15,12 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.crypto.specs;
+package org.syncany.config.to;
 
-import org.syncany.crypto.CipherSpecs;
-
-public class TwofishGcm128CipherSpec extends TwofishGcmCipherSpec {
-	public TwofishGcm128CipherSpec() {
-		super(CipherSpecs.TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false);
-	}
+/**
+ * This class is the interface for creation of {@link RepoTO}s. The reason this is in a factory is that
+ * repoTO's have a couple of moving and standing parts. (Chunkers, MultiChunkers and Transformers),
+ * which all may or may not be configurable.
+ * 
+ * @author Pim Otte <otte.pim@gmail.com>
+ */
+public interface RepoTOFactory {
+	public RepoTO createRepoTO();
 }

@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.crypto.specs;
+package org.syncany.operations.daemon.messages;
 
-import org.syncany.crypto.CipherSpecs;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-public class TwofishGcm128CipherSpec extends TwofishGcmCipherSpec {
-	public TwofishGcm128CipherSpec() {
-		super(CipherSpecs.TWOFISH_128_GCM, "Twofish/GCM/NoPadding", 128, 128, false);
+public class GetPasswordUserInteractionExternalEvent extends ExternalEvent {
+	public GetPasswordUserInteractionExternalEvent() {
+		// Nothing
 	}
 }
