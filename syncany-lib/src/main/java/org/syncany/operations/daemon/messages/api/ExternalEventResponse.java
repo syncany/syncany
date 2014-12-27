@@ -17,6 +17,6 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
-public abstract class ExternalEventResponse extends Message {
+public abstract class ExternalEventResponse extends EventResponse {
 	// Marker
 }
