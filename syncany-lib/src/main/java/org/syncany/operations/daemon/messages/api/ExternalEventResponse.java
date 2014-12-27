@@ -15,24 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.daemon.messages.api;
 
-import org.simpleframework.xml.Element;
-import org.syncany.operations.daemon.messages.api.ManagementRequest;
-
-public class GetPasswordUserInteractionExternalManagementRequest extends ManagementRequest {
-	@Element(name = "password", required = true)	
-	private String password;
-
-	public GetPasswordUserInteractionExternalManagementRequest() {
-		// Nothing
-	}
-
-	public GetPasswordUserInteractionExternalManagementRequest(String password) {
-		this.password = password;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
+public abstract class ExternalEventResponse extends Message {
+	// Marker
 }

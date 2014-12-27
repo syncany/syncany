@@ -23,11 +23,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The {@link org.syncany.plugins.transfer.OAuth} is used to identify 
- * OAuth plugins. It will provide a 'token' field during the initialization
- * process
+ * This annotation is used to identify OAuth plugins by marking the corresponding
+ * {@link TransferSettings} class. An OAuth plugin will provide a 'token' field
+ * during the initialization process and the {@link OAuthGenerator} (provided via the
+ * help of the {@link #value()} field) will be able to check that token. 
  *
- * @see org.syncany.plugins.transfer.TransferPluginOptions
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */

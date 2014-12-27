@@ -18,21 +18,21 @@
 package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.syncany.operations.daemon.messages.api.ManagementRequest;
+import org.syncany.operations.daemon.messages.api.ExternalEventResponse;
 
-public class ConfirmUserInteractionExternalManagementRequest extends ManagementRequest {
-	@Element(name = "result", required = true)	
-	private boolean result;
+public class GetPasswordUserInteractionExternalEventResponse extends ExternalEventResponse {
+	@Element(name = "password", required = true)	
+	private String password;
 
-	public ConfirmUserInteractionExternalManagementRequest() {
+	public GetPasswordUserInteractionExternalEventResponse() {
 		// Nothing
 	}
 
-	public ConfirmUserInteractionExternalManagementRequest(boolean result) {
-		this.result = result;
+	public GetPasswordUserInteractionExternalEventResponse(String password) {
+		this.password = password;
 	}
 	
-	public boolean getResult() {
-		return result;
+	public String getPassword() {
+		return password;
 	}
 }

@@ -17,25 +17,6 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
-import java.util.Random;
-
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
-
-@Root(strict = false)
-public abstract class Request extends Message {
-	@Element(required = true)
-	private int id;	
-	
-	public Request() {
-		this.id = Math.abs(new Random().nextInt());
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
+public abstract class EventResponse extends Message {
+	// Marker
 }

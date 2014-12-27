@@ -18,11 +18,9 @@
 package org.syncany.operations.daemon.messages.api;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 @Root(strict = false)
-@Namespace(reference = "http://syncany.org/ws/1")
 public abstract class Response extends Message {
 	@Element(required = true)
 	private int code;

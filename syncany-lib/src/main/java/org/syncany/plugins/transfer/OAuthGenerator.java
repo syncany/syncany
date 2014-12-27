@@ -20,6 +20,12 @@ package org.syncany.plugins.transfer;
 import java.net.URI;
 
 /**
+ * For {@link TransferPlugin}s that base their authentication on OAuth,
+ * a generator class can be used to create the authentication URL and 
+ * check the user-provided token. The concrete implementation of this
+ * interface should be provided to the {@link TransferSettings} class
+ * via the {@link OAuth} annotation. 
+ *  
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */

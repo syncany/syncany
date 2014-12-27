@@ -15,8 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages.api;
+package org.syncany.operations.daemon.messages;
 
-public abstract class InternalEvent extends Event {
-	// Marker
+import org.simpleframework.xml.Element;
+import org.syncany.operations.daemon.messages.api.ExternalEventResponse;
+
+public class ConfirmUserInteractionExternalEventResponse extends ExternalEventResponse {
+	@Element(name = "result", required = true)	
+	private boolean result;
+
+	public ConfirmUserInteractionExternalEventResponse() {
+		// Nothing
+	}
+
+	public ConfirmUserInteractionExternalEventResponse(boolean result) {
+		this.result = result;
+	}
+	
+	public boolean getResult() {
+		return result;
+	}
 }

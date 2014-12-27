@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import org.simpleframework.xml.Root;
+
 /**
  * A message is either a request or a response sent to 
  * or from the daemon. All messages must inherit from this
@@ -25,6 +27,7 @@ package org.syncany.operations.daemon.messages.api;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+@Root(strict = false)
 public abstract class Message {
 	// Nothing here.
 }
