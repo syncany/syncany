@@ -24,7 +24,7 @@ import org.syncany.operations.OperationResult;
 
 public class DaemonOperationResult implements OperationResult {
 	public enum DaemonResultCode {
-		OK, NOK_FOLDER_EXISTS, NOK_FOLDER_DOESNT_EXIST
+		OK, OK_PARTIAL, NOK, NOK_PARTIAL
 	}
 	
 	private DaemonResultCode resultCode;

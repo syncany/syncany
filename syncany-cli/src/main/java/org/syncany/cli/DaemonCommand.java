@@ -74,15 +74,20 @@ public class DaemonCommand extends Command {
 
 		operationOptions.setAction(action);
 
-		// add|remove <folder-path>
+		// add|remove (<folder-path> ...)
 		if (action == DaemonAction.ADD || action == DaemonAction.REMOVE) {
-			if (nonOptionArgs.size() != 2) {
+			if (nonOptionArgs.size() < 2) {
 				throw new Exception("Invalid syntax, please specify a folder path.");
 			}
 
-			// <folder-path>
-			String watchPath = nonOptionArgs.get(1).toString();
-			operationOptions.setWatchRoot(watchPath);
+			// <folder-path> ...
+			List<String> watchRoots = new ArrayList<>();
+
+			for (int i = 1; i < nonOptionArgs.size(); i++) {
+				watchRoots.add(nonOptionArgs.get(i).toString());
+			}
+			
+			operationOptions.setWatchRoots(watchRoots);
 		}
 
 		return operationOptions;
@@ -120,38 +125,40 @@ public class DaemonCommand extends Command {
 	}
 
 	private void printResultList(DaemonOperationResult operationResult) {
-		switch (operationResult.getResultCode()) {
-		case OK:
-			List<String[]> tableValues = new ArrayList<String[]>();
-			tableValues.add(new String[] { "#", "Enabled", "Path" });
+		List<String[]> tableValues = new ArrayList<String[]>();
+		tableValues.add(new String[] { "#", "Enabled", "Path" });
 
-			for (int i=0; i<operationResult.getWatchList().size(); i++) {
-				FolderTO folderTO = operationResult.getWatchList().get(i);		
-				
-				String number = Integer.toString(i+1);
-				String enabledStr = folderTO.isEnabled() ? "yes" : "no";
-				
-				tableValues.add(new String[] { number, enabledStr, folderTO.getPath()  });
-			}
+		for (int i=0; i<operationResult.getWatchList().size(); i++) {
+			FolderTO folderTO = operationResult.getWatchList().get(i);		
+			
+			String number = Integer.toString(i+1);
+			String enabledStr = folderTO.isEnabled() ? "yes" : "no";
+			
+			tableValues.add(new String[] { number, enabledStr, folderTO.getPath()  });
+		}
 
-			CliTableUtil.printTable(out, tableValues, "No managed folders found.");			
-			break;
-						
-		default:
-			throw new RuntimeException("Invalid result code for this action: " + operationResult.getResultCode());
-		}		
+		CliTableUtil.printTable(out, tableValues, "No managed folders found.");			
 	}
 	
 	private void printResultAdd(DaemonOperationResult operationResult) {
 		switch (operationResult.getResultCode()) {
 		case OK:
-			out.println("Folder successfully added to daemon config.");
-			out.println("Run 'sy daemon restart' to apply the changes.");
+			out.println("Folder(s) successfully added to daemon config.");
+			out.println("Run 'sy daemon reload' to apply the changes.");
 			out.println();
 			break;
 			
-		case NOK_FOLDER_EXISTS:
-			out.println("Folder was NOT added, because it already exists in the daemon configuration.");
+		case OK_PARTIAL:
+			out.println("Not all folder(s) were added successfully. Please check the following");
+			out.println("list to see which folders could not be added:");
+			out.println();
+			
+			printResultList(operationResult);
+			
+			break;
+
+		case NOK:
+			out.println("Folder(s) were NOT added, because they might already exists in the daemon configuration.");
 			out.println();
 			break;
 			
@@ -163,13 +170,21 @@ public class DaemonCommand extends Command {
 	private void printResultRemove(DaemonOperationResult operationResult) {
 		switch (operationResult.getResultCode()) {
 		case OK:
-			out.println("Folder successfully removed from the daemon config.");
-			out.println("Run 'sy daemon restart' to apply the changes.");
+			out.println("Folder(s) successfully removed from the daemon config.");
+			out.println("Run 'sy daemon reload' to apply the changes.");
 			out.println();
 			break;
 			
-		case NOK_FOLDER_DOESNT_EXIST:
-			out.println("Folder was NOT removed, because it does not exist in the daemon config.");
+		case NOK_PARTIAL:
+			out.println("Not all folder(s) were removed successfully. Please check the following");
+			out.println("list to see which folders could not be added:");
+			out.println();
+			
+			printResultList(operationResult);			
+			break;
+			
+		case NOK:
+			out.println("Folder(s) could not be NOT removed, because they did not exist in the daemon config.");
 			out.println();
 			break;
 			
