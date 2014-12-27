@@ -19,6 +19,7 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +29,7 @@ import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
@@ -40,6 +42,7 @@ import org.syncany.operations.daemon.messages.ControlManagementResponse;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
 
+import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -122,37 +125,71 @@ public class DaemonOperation extends Operation {
 	}
 	
 	private DaemonOperationResult executeAdd() throws Exception {
-		logger.log(Level.INFO, "Adding folder to daemon config: " + options.getWatchRoot() + " ...");
-
-		// Check if folder is valid
-		File watchRootFolder = new File(options.getWatchRoot());
-		File watchRootAppFolder = new File(watchRootFolder, Config.DIR_APPLICATION);
-		
-		if (!watchRootFolder.isDirectory() || !watchRootAppFolder.isDirectory()) {
-			throw new Exception("Given argument is not an existing folder, or a valid Syncany folder. Adding to daemon failed.");
+		// Check all folders
+		for (String watchRoot : options.getWatchRoots()) {
+			File watchRootFolder = new File(watchRoot);
+			File watchRootAppFolder = new File(watchRootFolder, Config.DIR_APPLICATION);
+			
+			if (!watchRootFolder.isDirectory() || !watchRootAppFolder.isDirectory()) {
+				throw new Exception("Given argument is not an existing folder, or a valid Syncany folder: " + watchRoot);
+			}
 		}
 		
-		boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(watchRootFolder);
+		// Add them
+		for (String watchRoot : options.getWatchRoots()) {
+			DaemonConfigHelper.addFolder(new File(watchRoot));			
+		}
+				
+		// Determine return code
+		loadOrCreateConfig();		
+		int watchedMatchingFoldersCount = countWatchedMatchingFolders();		
 
-		if (addedToDaemonConfig) {
-			return new DaemonOperationResult(DaemonResultCode.OK);			
+		if (watchedMatchingFoldersCount == options.getWatchRoots().size()) {
+			return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());	
+		}
+		else if (watchedMatchingFoldersCount > 0) {
+			return new DaemonOperationResult(DaemonResultCode.OK_PARTIAL, daemonConfig.getFolders());
 		}
 		else {
-			return new DaemonOperationResult(DaemonResultCode.NOK_FOLDER_EXISTS);
-		}		
+			return new DaemonOperationResult(DaemonResultCode.NOK, daemonConfig.getFolders());
+		}
 	}
 	
 	private DaemonOperationResult executeRemove() throws ConfigException {
-		logger.log(Level.INFO, "Removing folder from daemon config: " + options.getWatchRoot() + " ...");
+		// Sort 
+		Collections.sort(options.getWatchRoots(), Ordering.natural().reverse());
+		
+		// Remove all folders
+		for (String watchRoot : options.getWatchRoots()) {
+			logger.log(Level.INFO, "- Removing folder from daemon config: " + watchRoot + " ...");
+			DaemonConfigHelper.removeFolder(watchRoot);
+		}
+		
+		// Check if folders were removed
+		loadOrCreateConfig();		
+		int watchedMatchingFoldersCount = countWatchedMatchingFolders();		
 
-		boolean removedFromDaemonConfig = DaemonConfigHelper.removeFolder(options.getWatchRoot());
-
-		if (removedFromDaemonConfig) {
-			return new DaemonOperationResult(DaemonResultCode.OK);			
+		if (watchedMatchingFoldersCount == options.getWatchRoots().size()) {
+			return new DaemonOperationResult(DaemonResultCode.NOK, daemonConfig.getFolders());	
+		}
+		else if (watchedMatchingFoldersCount > 0) {
+			return new DaemonOperationResult(DaemonResultCode.NOK_PARTIAL, daemonConfig.getFolders());
 		}
 		else {
-			return new DaemonOperationResult(DaemonResultCode.NOK_FOLDER_DOESNT_EXIST);
-		}		
+			return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
+		}
+	}
+	
+	private int countWatchedMatchingFolders() {
+		int watchedMatchingFoldersCount = 0;
+
+		for (FolderTO folderTO : daemonConfig.getFolders()) {
+			if (options.getWatchRoots().contains(folderTO.getPath())) {
+				watchedMatchingFoldersCount++;
+			}
+		}
+		
+		return watchedMatchingFoldersCount;
 	}
 	
 	private DaemonOperationResult executeRun() throws Exception {
