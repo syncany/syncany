@@ -29,6 +29,15 @@ import org.syncany.plugins.UserInteractionListener;
 
 import com.google.common.eventbus.Subscribe;
 
+/**
+ * This implementation of a {@link UserInteractionListener} uses the {@link LocalEventBus}
+ * to broadcast interaction requests to subscribers and waits synchronously for a corresponding
+ * event response. All methods wait until the response event arrives by sending the current
+ * thread to sleep via {@link #wait()}, and waking it up via {@link #notify()}.  
+ * 
+ * @see UserInteractionListener
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class EventUserInteractionListener implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(EventUserInteractionListener.class.getSimpleName());
 
