@@ -4,12 +4,13 @@ Change Log
 ### Syncany 0.4.0-alpha (Date: Tbd.)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
+  + Implement resume functionality for up (**big!**) #141
   + Implement proper init/connect GUI wizards in GUI plugin, and supporting 
     backend REST/WS-requests in core, including OAuth support for plugins (**big!**) #297
-  + Implement folder management commands: `sy daemon (list|add|remove)` #286
   + Support S3-compatible backends in [Amazon S3 plugin](https://github.com/syncany/syncany-plugin-s3) #301
   + New [Flickr plugin](https://github.com/syncany/syncany-plugin-flickr) (store data in images) #304
-  + Implement resume functionality for up #141
+  + Implement folder management commands: `sy daemon (list|add|remove)` #286
+  + Make `sy daemon (add|remove) ..` work with multiple paths/IDs #313
 - Bugfixes and other things:
   + `sy genlink -s` now works behind a proxy #291
   + `sy genlink -s` now works when folder is daemon-managed #293
