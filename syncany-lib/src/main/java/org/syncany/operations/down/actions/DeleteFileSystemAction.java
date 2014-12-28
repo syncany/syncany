@@ -19,20 +19,46 @@ package org.syncany.operations.down.actions;
 
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
+import org.syncany.database.FileVersionComparator;
 import org.syncany.database.MemoryDatabase;
 
 public class DeleteFileSystemAction extends FileSystemAction {
 	public DeleteFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toDeleteFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, fromFileVersion, toDeleteFileVersion);
 	}
-	
+
+	/**
+	 * Deletes a file locally and/or creates a conflicting file if the
+	 * file does not match the expectations. There are two major cases:
+	 * 
+	 * <p>Normal case: The file version of the to-be-deleted file is known. If the file is 
+	 * as expected, it is deleted; if not and the file exists, a conflict file is created.
+	 * 
+	 * <p>Special case: The file version of the to-be-deleted file in unknown. 
+	 * In case to-be-deleted-file exists locally, we need to compare it to
+	 * the local file (especially its checksum!). The {@link FileVersionComparator}
+	 * does, however, perform a cancelling test in which {@link FileVersion}s marked as
+	 * 'DELETED' are not compared in detail (no checksum/attribute/etc. comparisons). To
+	 * circumvent this behavior, we pretend the file has just changed and do the comparison.
+	 * If the to-be-deleted file and file version are equal, the local file is deleted. 
+	 * Otherwise, a conflict file is created. 
+	 */
 	@Override
 	public FileSystemActionResult execute() throws Exception {
-		// Special case: locally unknown file to be deleted (= nothing to do!)
+		// Special case: locally unknown file to be deleted		
 		if (fileVersion1 == null) {
 			if (fileExists(fileVersion2)) {
-				moveToConflictFile(fileVersion2);				
-			}
+				FileVersion pretendChangedFileVersion = fileVersion2.clone();
+				pretendChangedFileVersion.setStatus(FileStatus.CHANGED); 
+				
+				if (fileAsExpected(pretendChangedFileVersion)) {
+					deleteFile(fileVersion2);					
+				}
+				else {
+					moveToConflictFile(fileVersion2);					
+				}
+			}			
 		}
 		
 		// Normal case: locally known file to be deleted
@@ -42,9 +68,11 @@ public class DeleteFileSystemAction extends FileSystemAction {
 					moveToConflictFile(fileVersion2);	
 				}
 			}
+			else {
+				deleteFile(fileVersion1);	
+			}
 		}
-			
-		deleteFile(fileVersion2);
+					
 		return new FileSystemActionResult();
 	}
 

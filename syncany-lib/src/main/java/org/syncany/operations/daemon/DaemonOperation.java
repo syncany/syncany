@@ -19,25 +19,30 @@ package org.syncany.operations.daemon;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
+import org.syncany.config.to.FolderTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.ControlServer.ControlCommand;
+import org.syncany.operations.daemon.DaemonOperationOptions.DaemonAction;
+import org.syncany.operations.daemon.DaemonOperationResult.DaemonResultCode;
 import org.syncany.operations.daemon.messages.ControlManagementRequest;
 import org.syncany.operations.daemon.messages.ControlManagementResponse;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.util.PidFileUtil;
 
+import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -69,6 +74,7 @@ public class DaemonOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DaemonOperation.class.getSimpleName());	
 	public static final String PID_FILE = "daemon.pid";
 
+	private DaemonOperationOptions options;
 	private File pidFile;
 	
 	private WebServer webServer;
@@ -76,22 +82,117 @@ public class DaemonOperation extends Operation {
 	private ControlServer controlServer;
 	private LocalEventBus eventBus;
 	private DaemonConfigTO daemonConfig;
-	private PortTO portTO;
+	private PortTO portTO;	
 
 	public DaemonOperation() {
-		super(null);		
+		this(new DaemonOperationOptions(DaemonAction.RUN));
+	}
+	
+	public DaemonOperation(DaemonOperationOptions options) {
+		super(null);	
+		
+		this.options = options;
 		this.pidFile = new File(UserConfig.getUserConfigDir(), PID_FILE);		
 	}
 
 	@Override
-	public OperationResult execute() throws Exception {		
-		logger.log(Level.INFO, "Starting daemon operation ...");
+	public DaemonOperationResult execute() throws Exception {		
+		logger.log(Level.INFO, "Starting daemon operation with action " + options.getAction() + " ...");
 		
-		startOperation();
-		return null;
+		switch (options.getAction()) {
+		case LIST:
+			return executeList();
+
+		case ADD:
+			return executeAdd();
+
+		case REMOVE:
+			return executeRemove();
+			
+		case RUN:
+			return executeRun();
+
+		default:
+			throw new Exception("Unknown action: " + options.getAction());
+		}
 	}
 
-	private void startOperation() throws Exception {
+	private DaemonOperationResult executeList() {
+		logger.log(Level.INFO, "Listing daemon-managed folders ...");
+		
+		loadOrCreateConfig();
+		return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
+	}
+	
+	private DaemonOperationResult executeAdd() throws Exception {
+		// Check all folders
+		for (String watchRoot : options.getWatchRoots()) {
+			File watchRootFolder = new File(watchRoot);
+			File watchRootAppFolder = new File(watchRootFolder, Config.DIR_APPLICATION);
+			
+			if (!watchRootFolder.isDirectory() || !watchRootAppFolder.isDirectory()) {
+				throw new Exception("Given argument is not an existing folder, or a valid Syncany folder: " + watchRoot);
+			}
+		}
+		
+		// Add them
+		for (String watchRoot : options.getWatchRoots()) {
+			DaemonConfigHelper.addFolder(new File(watchRoot));			
+		}
+				
+		// Determine return code
+		loadOrCreateConfig();		
+		int watchedMatchingFoldersCount = countWatchedMatchingFolders();		
+
+		if (watchedMatchingFoldersCount == options.getWatchRoots().size()) {
+			return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());	
+		}
+		else if (watchedMatchingFoldersCount > 0) {
+			return new DaemonOperationResult(DaemonResultCode.OK_PARTIAL, daemonConfig.getFolders());
+		}
+		else {
+			return new DaemonOperationResult(DaemonResultCode.NOK, daemonConfig.getFolders());
+		}
+	}
+	
+	private DaemonOperationResult executeRemove() throws ConfigException {
+		// Sort 
+		Collections.sort(options.getWatchRoots(), Ordering.natural().reverse());
+		
+		// Remove all folders
+		for (String watchRoot : options.getWatchRoots()) {
+			logger.log(Level.INFO, "- Removing folder from daemon config: " + watchRoot + " ...");
+			DaemonConfigHelper.removeFolder(watchRoot);
+		}
+		
+		// Check if folders were removed
+		loadOrCreateConfig();		
+		int watchedMatchingFoldersCount = countWatchedMatchingFolders();		
+
+		if (watchedMatchingFoldersCount == options.getWatchRoots().size()) {
+			return new DaemonOperationResult(DaemonResultCode.NOK, daemonConfig.getFolders());	
+		}
+		else if (watchedMatchingFoldersCount > 0) {
+			return new DaemonOperationResult(DaemonResultCode.NOK_PARTIAL, daemonConfig.getFolders());
+		}
+		else {
+			return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
+		}
+	}
+	
+	private int countWatchedMatchingFolders() {
+		int watchedMatchingFoldersCount = 0;
+
+		for (FolderTO folderTO : daemonConfig.getFolders()) {
+			if (options.getWatchRoots().contains(folderTO.getPath())) {
+				watchedMatchingFoldersCount++;
+			}
+		}
+		
+		return watchedMatchingFoldersCount;
+	}
+	
+	private DaemonOperationResult executeRun() throws Exception {
 		if (PidFileUtil.isProcessRunning(pidFile)) {
 			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
 		}
@@ -105,6 +206,8 @@ public class DaemonOperation extends Operation {
 		startWatchServer();
 		
 		enterControlLoop(); // This blocks until SHUTDOWN is received!
+		
+		return new DaemonOperationResult(DaemonResultCode.OK);
 	}
 
 	@Subscribe
@@ -162,11 +265,15 @@ public class DaemonOperation extends Operation {
 			File daemonConfigFileExample = new File(UserConfig.getUserConfigDir(), UserConfig.DAEMON_EXAMPLE_FILE);
 			
 			if (daemonConfigFile.exists()) {
+				logger.log(Level.INFO, "Loading daemon config file from " + daemonConfigFile + " ...");
 				daemonConfig = DaemonConfigTO.load(daemonConfigFile);
 			}
 			else {
-				// Write example config to daemon-example.xml, and default config to daemon.xml
+				logger.log(Level.INFO, "Daemon config file does not exist.");
+				logger.log(Level.INFO, "- Writing example config file to " + daemonConfigFileExample + " ...");				
 				DaemonConfigHelper.createAndWriteExampleDaemonConfig(daemonConfigFileExample);								
+
+				logger.log(Level.INFO, "- Creating at  " + daemonConfigFile + " ...");				
 				daemonConfig = DaemonConfigHelper.createAndWriteDefaultDaemonConfig(daemonConfigFile);
 			}
 			

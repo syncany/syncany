@@ -33,15 +33,23 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
  * 
  * @author Pim Otte
  */
-@Root(name = "transactionAction")
+@Root(name = "transactionAction", strict = false)
 public class ActionTO {
 	private static final Logger logger = Logger.getLogger(ActionTO.class.getSimpleName());
 
-	public static final String TYPE_UPLOAD = "UPLOAD";
-	public static final String TYPE_DELETE = "DELETE";
+	public enum ActionType {
+		UPLOAD, DELETE
+	}
+
+	public enum ActionStatus {
+		UNSTARTED, STARTED, DONE
+	}
 
 	@Element(name = "type", required = true)
-	private String type;
+	private ActionType type;
+
+	@Element(name = "status", required = false)
+	private ActionStatus status = ActionStatus.UNSTARTED;
 
 	@Element(name = "remoteLocation", required = true)
 	private String remoteLocation;
@@ -52,12 +60,20 @@ public class ActionTO {
 	@Element(name = "localTempLocation", required = false)
 	private String localTempLocation;
 
-	public String getType() {
+	public ActionType getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(ActionType type) {
 		this.type = type;
+	}
+
+	public ActionStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ActionStatus status) {
+		this.status = status;
 	}
 
 	public void setRemoteLocation(RemoteFile remoteFile) {
@@ -94,5 +110,5 @@ public class ActionTO {
 	public String toString() {
 		return "ActionTO [type=" + type + ", remoteLocation=" + remoteLocation + ", remoteTempLocation=" + remoteTempLocation
 				+ ", localTempLocation=" + localTempLocation + "]";
-	}		
+	}
 }

@@ -30,11 +30,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.daemon.messages.WatchEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.WatchStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.down.DownOperationResult;
 import org.syncany.operations.down.DownOperationResult.DownResultCode;
@@ -85,6 +88,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private RecursiveWatcher recursiveWatcher;
 	private NotificationListener notificationListener;
+	private LocalEventBus eventBus;
 
 	private String notificationChannel;
 	private String notificationInstanceId;
@@ -105,6 +109,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
+		this.eventBus = LocalEventBus.getInstance();
 
 		this.notificationChannel = StringUtil.toHex(config.getRepoId());
 		this.notificationInstanceId = "" + Math.abs(new Random().nextLong());
@@ -233,6 +238,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			syncRequested.set(false);
 
 			logger.log(Level.INFO, "RUNNING SYNC ...");
+			fireStartEvent();
 			
 			try {
 				boolean notifyChanges = false;
@@ -266,6 +272,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			finally {
 				logger.log(Level.INFO, "SYNC DONE.");
 				syncRunning.set(false);
+				
+				fireEndEvent();
 			}
 		}
 		else {
@@ -377,5 +385,14 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		catch (Exception e) {
 			logger.log(Level.INFO, "Forcefully stopping watch thread FAILED at " + config.getLocalDir() + ". Giving up.");
 		}
+	}
+
+	private void fireStartEvent() {
+		eventBus.post(new WatchStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));	
+	}
+
+
+	private void fireEndEvent() {
+		eventBus.post(new WatchEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));	
 	}
 }

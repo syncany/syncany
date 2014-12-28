@@ -19,6 +19,7 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
+import org.syncany.plugins.transfer.to.ActionTO.ActionType;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -96,7 +98,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 		// Find file: If the file is being deleted and the name matches, download temporary file instead.
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_DELETE) && action.getRemoteFile().equals(remoteFile)) {
+				if (action.getType().equals(ActionType.DELETE) && action.getRemoteFile().equals(remoteFile)) {
 					tempRemoteFile = action.getTempRemoteFile();
 					break;
 				}
@@ -156,7 +158,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		boolean noBlockingTransactionsExist = true;
-		
+
 		for (TransactionTO potentiallyCancelledTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyCancelledTransaction.getMachineName().equals(config.getMachineName());
 
@@ -167,7 +169,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 			else if (noBlockingTransactionsExist) {
 				// Only check if we have not yet found deleting transactions by others
 				for (ActionTO action : potentiallyCancelledTransaction.getActions()) {
-					if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+					if (action.getType().equals(ActionType.DELETE)) {
 						noBlockingTransactionsExist = false;
 					}
 				}
@@ -176,6 +178,52 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		logger.log(Level.INFO, "Done rolling back previous transactions.");
 		return noBlockingTransactionsExist;
+	}
+
+	/**
+	 * This function returns a list of all remote transaction files that belong to the client. If blocking transactions exist,
+	 * this methods returns null, because we are not allowed to proceed.
+	 */
+	public List<TransactionRemoteFile> getTransactionsByClient(String client) throws StorageException {
+		Objects.requireNonNull(config, "Cannot get transactions if config is null.");
+		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
+		List<TransactionRemoteFile> transactionsByClient = new ArrayList<TransactionRemoteFile>();
+		for (TransactionTO potentiallyResumableTransaction : transactions.keySet()) {
+			boolean isCancelledOwnTransaction = potentiallyResumableTransaction.getMachineName().equals(config.getMachineName());
+
+			if (isCancelledOwnTransaction) {
+				transactionsByClient.add(transactions.get(potentiallyResumableTransaction));
+			}
+			else {
+				// Check for blocking transactions
+				for (ActionTO action : potentiallyResumableTransaction.getActions()) {
+					if (action.getType().equals(ActionType.DELETE)) {
+						return null;
+					}
+				}
+			}
+
+		}
+
+		return transactionsByClient;
+	}
+
+	/**
+	 * This methods deletes local copies of transactions that might be resumed. This is done when
+	 * a transaction is successfully resumed, or some other operations is performed, which implies that resuming is
+	 * no longer an option.
+	 */
+	public void clearResumableTransactions() {
+		Objects.requireNonNull(config, "Cannot delete resumable transactions if config is null.");
+		File transactionFile = config.getTransactionFile();
+		if (transactionFile.exists()) {
+			transactionFile.delete();
+		}
+
+		File transactionDatabaseFile = config.getTransactionDatabaseFile();
+		if (transactionDatabaseFile.exists()) {
+			transactionFile.delete();
+		}
 	}
 
 	/**
@@ -235,13 +283,13 @@ public class TransactionAwareTransferManager implements TransferManager {
 		for (ActionTO action : unfinishedActions) {
 			logger.log(Level.INFO, "- Needs to be rolled back: " + action);
 			switch (action.getType()) {
-			case ActionTO.TYPE_UPLOAD:
+			case UPLOAD:
 				delete(action.getRemoteFile());
 				delete(action.getTempRemoteFile());
 
 				break;
 
-			case ActionTO.TYPE_DELETE:
+			case DELETE:
 				try {
 					logger.log(Level.INFO, "- Rollback action: Moving " + action.getTempRemoteFile().getName() + " to "
 							+ action.getRemoteFile().getName());
@@ -334,7 +382,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_UPLOAD)) {
+				if (action.getType().equals(ActionType.UPLOAD)) {
 					filesInTransaction.add(action.getRemoteFile());
 				}
 			}
@@ -348,7 +396,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 		for (TransactionTO transaction : transactions) {
 			for (ActionTO action : transaction.getActions()) {
-				if (action.getType().equals(ActionTO.TYPE_DELETE)) {
+				if (action.getType().equals(ActionType.DELETE)) {
 					dummyDeletedFiles.add(action.getRemoteFile());
 				}
 			}

@@ -17,9 +17,9 @@
  */
 package org.syncany.cli;
 
-import java.security.SecureRandom;
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,17 +27,10 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.chunk.Chunker;
-import org.syncany.chunk.CipherTransformer;
-import org.syncany.chunk.FixedChunker;
-import org.syncany.chunk.GzipTransformer;
-import org.syncany.chunk.MultiChunker;
-import org.syncany.chunk.ZipMultiChunker;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.config.to.DefaultRepoTOFactory;
 import org.syncany.config.to.RepoTO;
-import org.syncany.config.to.RepoTO.ChunkerTO;
-import org.syncany.config.to.RepoTO.MultiChunkerTO;
-import org.syncany.config.to.RepoTO.TransformerTO;
+import org.syncany.config.to.RepoTOFactory;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -48,10 +41,6 @@ import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.util.StringUtil;
-import org.syncany.util.StringUtil.StringJoinListener;
-
-import static java.util.Arrays.asList;
 
 public class InitCommand extends AbstractInitCommand {
 	public static final int REPO_ID_LENGTH = 32;
@@ -105,14 +94,14 @@ public class InitCommand extends AbstractInitCommand {
 		OptionSpec<String> optionPlugin = parser.acceptsAll(asList("P", "plugin")).withRequiredArg();
 		OptionSpec<String> optionPluginOpts = parser.acceptsAll(asList("o", "plugin-option")).withRequiredArg();
 		OptionSpec<Void> optionAddDaemon = parser.acceptsAll(asList("n", "add-daemon"));
-		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));		
-		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();	
+		OptionSpec<Void> optionShortUrl = parser.acceptsAll(asList("s", "short"));
+		OptionSpec<String> optionPassword = parser.acceptsAll(asList("password")).withRequiredArg();
 
 		OptionSet options = parser.parse(operationArguments);
 
 		// Set interactivity mode  
 		isInteractive = !options.has(optionPlugin);
-			
+
 		// Ask or set transfer settings
 		TransferSettings transferSettings = createTransferSettingsFromOptions(options, optionPlugin, optionPluginOpts);
 
@@ -121,28 +110,25 @@ public class InitCommand extends AbstractInitCommand {
 		boolean advancedModeEnabled = options.has(optionAdvanced);
 		boolean encryptionEnabled = !options.has(optionNoEncryption);
 		boolean compressionEnabled = !options.has(optionNoCompression);
-		
+
 		// Cipher specs: --no-encryption, --advanced
 		List<CipherSpec> cipherSpecs = getCipherSpecs(encryptionEnabled, advancedModeEnabled);
 
-		// Chunkers (not configurable)
-		ChunkerTO chunkerTO = getDefaultChunkerTO();
-		MultiChunkerTO multiChunkerTO = getDefaultMultiChunkerTO();
-
-		// Compression: --no-compression
-		List<TransformerTO> transformersTO = getTransformersTO(compressionEnabled, cipherSpecs);
+		// Compression: --no-compression 
+		// DefaultRepoTOFactory also creates default chunkers
+		RepoTOFactory repoTOFactory = new DefaultRepoTOFactory(compressionEnabled, cipherSpecs);
 
 		// Genlink options: --short
 		GenlinkOperationOptions genlinkOptions = new GenlinkOperationOptions();
 		genlinkOptions.setShortUrl(options.has(optionShortUrl));
-				
+
 		// Set repo password
 		String password = validateAndGetPassword(options, optionNoEncryption, optionPassword);
 		operationOptions.setPassword(password);
-		
+
 		// Create configTO and repoTO
 		ConfigTO configTO = createConfigTO(transferSettings);
-		RepoTO repoTO = createRepoTO(chunkerTO, multiChunkerTO, transformersTO);
+		RepoTO repoTO = repoTOFactory.createRepoTO();
 
 		operationOptions.setLocalDir(localDir);
 		operationOptions.setConfigTO(configTO);
@@ -150,14 +136,14 @@ public class InitCommand extends AbstractInitCommand {
 
 		operationOptions.setCreateTarget(createTargetPath);
 		operationOptions.setEncryptionEnabled(encryptionEnabled);
-		operationOptions.setCipherSpecs(cipherSpecs);		
+		operationOptions.setCipherSpecs(cipherSpecs);
 		operationOptions.setDaemon(options.has(optionAddDaemon));
 		operationOptions.setGenlinkOptions(genlinkOptions);
-		
+
 		return operationOptions;
 	}
-	
-	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword) {		
+
+	private String validateAndGetPassword(OptionSet options, OptionSpec<Void> optionNoEncryption, OptionSpec<String> optionPassword) {
 		if (!isInteractive) {
 			if (options.has(optionPassword) && options.has(optionNoEncryption)) {
 				throw new IllegalArgumentException("Cannot provide --password and --no-encryption. Conflicting options.");
@@ -167,17 +153,17 @@ public class InitCommand extends AbstractInitCommand {
 			}
 			else if (options.has(optionPassword) && !options.has(optionNoEncryption)) {
 				String password = options.valueOf(optionPassword);
-				
+
 				if (password.length() < PASSWORD_MIN_LENGTH) {
 					throw new IllegalArgumentException("This password is not allowed (too short, min. " + PASSWORD_MIN_LENGTH + " chars)");
 				}
-				
+
 				return options.valueOf(optionPassword);
-			}			
+			}
 			else {
 				return null; // No encryption, no password.
 			}
-		}	
+		}
 		else {
 			return null; // Will be set in callback!
 		}
@@ -240,21 +226,6 @@ public class InitCommand extends AbstractInitCommand {
 			out.println("ERROR: Cannot connect to repository. Unknown error code: " + concreteOperationResult.getResultCode());
 			out.println();
 		}
-	}
-
-	private List<TransformerTO> getTransformersTO(boolean gzipEnabled, List<CipherSpec> cipherSpecs) {
-		List<TransformerTO> transformersTO = new ArrayList<TransformerTO>();
-
-		if (gzipEnabled) {
-			transformersTO.add(getGzipTransformerTO());
-		}
-
-		if (cipherSpecs.size() > 0) {
-			TransformerTO cipherTransformerTO = getCipherTransformerTO(cipherSpecs);
-			transformersTO.add(cipherTransformerTO);
-		}
-
-		return transformersTO;
 	}
 
 	private List<CipherSpec> getCipherSpecs(boolean encryptionEnabled, boolean advancedModeEnabled) throws Exception {
@@ -348,69 +319,5 @@ public class InitCommand extends AbstractInitCommand {
 		}
 
 		return cipherSpecs;
-	}
-
-	protected RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) throws Exception {
-		// Make transfer object
-		RepoTO repoTO = new RepoTO();
-
-		// Create random repo identifier
-		byte[] newRepoId = new byte[REPO_ID_LENGTH];
-		new SecureRandom().nextBytes(newRepoId);
-
-		repoTO.setRepoId(newRepoId);
-
-		// Add to repo transfer object
-		repoTO.setChunkerTO(chunkerTO);
-		repoTO.setMultiChunker(multiChunkerTO);
-		repoTO.setTransformers(transformersTO);
-
-		return repoTO;
-	}
-
-	protected ChunkerTO getDefaultChunkerTO() {
-		ChunkerTO chunkerTO = new ChunkerTO();
-
-		chunkerTO.setType(FixedChunker.TYPE);
-		chunkerTO.setSettings(new HashMap<String, String>());
-		chunkerTO.getSettings().put(Chunker.PROPERTY_SIZE, "16");
-
-		return chunkerTO;
-	}
-
-	protected MultiChunkerTO getDefaultMultiChunkerTO() {
-		MultiChunkerTO multichunkerTO = new MultiChunkerTO();
-
-		multichunkerTO.setType(ZipMultiChunker.TYPE);
-		multichunkerTO.setSettings(new HashMap<String, String>());
-		multichunkerTO.getSettings().put(MultiChunker.PROPERTY_SIZE, "4096");
-
-		return multichunkerTO;
-	}
-
-	protected TransformerTO getGzipTransformerTO() {
-		TransformerTO gzipTransformerTO = new TransformerTO();
-		gzipTransformerTO.setType(GzipTransformer.TYPE);
-
-		return gzipTransformerTO;
-	}
-
-	private TransformerTO getCipherTransformerTO(List<CipherSpec> cipherSpec) {
-		String cipherSuitesIdStr = StringUtil.join(cipherSpec, ",", new StringJoinListener<CipherSpec>() {
-			@Override
-			public String getString(CipherSpec cipherSpec) {
-				return "" + cipherSpec.getId();
-			}
-		});
-
-		Map<String, String> cipherTransformerSettings = new HashMap<String, String>();
-		cipherTransformerSettings.put(CipherTransformer.PROPERTY_CIPHER_SPECS, cipherSuitesIdStr);
-		// Note: Property 'password' is added dynamically by CommandLineClient
-
-		TransformerTO cipherTransformerTO = new TransformerTO();
-		cipherTransformerTO.setType(CipherTransformer.TYPE);
-		cipherTransformerTO.setSettings(cipherTransformerSettings);
-
-		return cipherTransformerTO;
 	}
 }

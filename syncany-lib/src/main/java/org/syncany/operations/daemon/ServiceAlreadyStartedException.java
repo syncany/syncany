@@ -17,16 +17,12 @@
  */
 package org.syncany.operations.daemon;
 
-/**
+/** 
  * @author Vincent Wiencek <vwiencek@gmail.com>
- *
  */
 public class ServiceAlreadyStartedException extends Exception {
 	private static final long serialVersionUID = -4655279609105005191L;
 
-	/**
-	 * @param string
-	 */
 	public ServiceAlreadyStartedException(String message) {
 		super(message);
 	}

@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -352,8 +353,11 @@ public class UploadInterruptedTest {
 		// 3. Second try fails in the beginning, to see if cleanTransactions was successful
 		boolean secondUpFailed = false;
 
+		// Do not resume, since we want to clean transactions.
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(false);
 		try {
-			clientA.up();
+			clientA.up(upOptions);
 		}
 		catch (StorageException e) {
 			secondUpFailed = true;
@@ -459,8 +463,12 @@ public class UploadInterruptedTest {
 		// 3. Second try fails in the beginning, to see if cleanTransactions was successful
 		boolean secondUpFailed = false;
 
+		// Do not resume, since we want to clean transactions.
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(false);
+
 		try {
-			clientA.up();
+			clientA.up(upOptions);
 		}
 		catch (StorageException e) {
 			secondUpFailed = true;
@@ -475,7 +483,7 @@ public class UploadInterruptedTest {
 		assertEquals(1, new File(testConnection.getPath() + "/temporary/").listFiles().length);
 
 		// 4. Third try; this should finally succeed
-		clientA.up();
+		clientA.up(upOptions);
 
 		assertEquals(1, new File(testConnection.getPath() + "/databases/").listFiles().length);
 		assertEquals(2, new File(testConnection.getPath() + "/multichunks/").listFiles().length);
@@ -487,4 +495,114 @@ public class UploadInterruptedTest {
 		clientA.deleteTestData();
 	}
 
+	@Test
+	public void testUnreliableUpload_FailOnceThenResume() throws Exception {
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+						// 1st upload (= multichunk) fails
+						"rel=[345] .+upload.+multichunk", // << 3 retries!!
+
+				}
+						));
+
+		TestClient clientA = new TestClient("A", testConnection);
+
+		clientA.createNewFile("file-1.txt");
+
+		boolean failed = false;
+		try {
+			clientA.up();
+		}
+		catch (StorageException e) {
+			failed = true;
+		}
+
+		assertTrue(failed);
+
+		TestClient clientB = new TestClient("B", testConnection);
+		clientB.down();
+
+		assertEquals(0, clientB.getLocalFiles().size());
+
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(true);
+		upOptions.setForceUploadEnabled(true);
+		clientA.up(upOptions);
+
+		clientB.down();
+
+		assertEquals(1, clientB.getLocalFiles().size());
+		assertTrue(clientB.getLocalFile("file-1.txt").exists());
+
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
+
+	@Test
+	public void testUnreliableUpload_FailResume() throws Exception {
+		// Setup
+		UnreliableLocalTransferSettings testConnection = TestConfigUtil.createTestUnreliableLocalConnection(
+				Arrays.asList(new String[] {
+						// List of failing operations (regex)
+						// Format: abs=<count> rel=<count> op=<connect|init|upload|...> <operation description>
+
+						// 1st upload (= multichunk) fails
+						"rel=[345] .+upload.+multichunk", // << 3 retries!!
+
+						// In second up, the database upload fails
+						"rel=(8|9|10) .+upload.+database", // << 3 retries!!
+
+				}
+						));
+
+		TestClient clientA = new TestClient("A", testConnection);
+
+		clientA.createNewFile("file-1.txt");
+
+		boolean failed = false;
+		try {
+			clientA.up();
+		}
+		catch (StorageException e) {
+			failed = true;
+		}
+
+		assertTrue(failed);
+
+		UpOperationOptions upOptions = new UpOperationOptions();
+		upOptions.setResume(true);
+		upOptions.setForceUploadEnabled(true);
+
+		// Try to resume and fail
+		failed = false;
+		try {
+			clientA.up(upOptions);
+		}
+		catch (StorageException e) {
+			failed = true;
+		}
+
+		assertTrue(failed);
+
+		TestClient clientB = new TestClient("B", testConnection);
+		clientB.down();
+
+		assertEquals(0, clientB.getLocalFiles().size());
+
+		clientA.up(upOptions);
+
+		clientB.down();
+
+		assertEquals(1, clientB.getLocalFiles().size());
+		assertTrue(clientB.getLocalFile("file-1.txt").exists());
+
+		// Tear down
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
 }

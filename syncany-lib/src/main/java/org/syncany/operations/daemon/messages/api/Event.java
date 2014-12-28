@@ -17,6 +17,16 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+/**
+ * Events are {@link Message}s originated from the core of
+ * the application. As opposed to {@link Request}s, they are not
+ * sent from a front-end, but actively broadcasted into the application.
+ *  
+ * <p>Certain events may be broadcasted to external subscribers via
+ * web socket or other technologies.
+ *  
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public abstract class Event extends Message {
 	// Marker
 }

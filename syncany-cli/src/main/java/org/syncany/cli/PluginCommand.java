@@ -26,6 +26,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.cli.util.CliTableUtil;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
@@ -169,7 +170,7 @@ public class PluginCommand extends Command {
 				tableValues.add(new String[] { pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr });
 			}
 
-			printTable(tableValues, "No plugins found.");
+			CliTableUtil.printTable(out, tableValues, "No plugins found.");
 		}
 		else {
 			out.printf("Listing plugins failed. No connection? Try -d to get more details.\n");
@@ -234,63 +235,6 @@ public class PluginCommand extends Command {
 		out.println("- Version: " + pluginInfo.getPluginVersion());
 		out.println();
 	}
-
-	private void printTable(List<String[]> tableValues, String noRowsMessage) {
-		if (tableValues.size() > 0) {
-			Integer[] tableColumnWidths = calculateColumnWidths(tableValues);
-			String tableRowFormat = "%-" + StringUtil.join(tableColumnWidths, "s | %-") + "s\n";
-
-			printTableHeader(tableValues.get(0), tableRowFormat, tableColumnWidths);
-
-			if (tableValues.size() > 1) {
-				printTableBody(tableValues, tableRowFormat, tableColumnWidths);
-			}
-			else {
-				out.println(noRowsMessage);
-			}
-		}
-	}
-
-	private void printTableBody(List<String[]> tableValues, String tableRowFormat, Integer[] tableColumnWidths) {
-		for (int i = 1; i < tableValues.size(); i++) {
-			out.printf(tableRowFormat, (Object[]) tableValues.get(i));
-		}
-	}
-
-	private void printTableHeader(String[] tableHeader, String tableRowFormat, Integer[] tableColumnWidths) {
-		out.printf(tableRowFormat, (Object[]) tableHeader);
-
-		for (int i = 0; i < tableColumnWidths.length; i++) {
-			if (i > 0) {
-				out.print("-");
-			}
-
-			for (int j = 0; j < tableColumnWidths[i]; j++) {
-				out.print("-");
-			}
-
-			if (i < tableColumnWidths.length - 1) {
-				out.print("-");
-				out.print("+");
-			}
-		}
-
-		out.println();
-	}
-
-	private Integer[] calculateColumnWidths(List<String[]> tableValues) {
-		Integer[] tableColumnWidths = new Integer[tableValues.get(0).length];
-
-		for (String[] tableRow : tableValues) {
-			for (int i = 0; i < tableRow.length; i++) {
-				if (tableColumnWidths[i] == null || (tableRow[i] != null && tableColumnWidths[i] < tableRow[i].length())) {
-					tableColumnWidths[i] = tableRow[i].length();
-				}
-			}
-		}
-
-		return tableColumnWidths;
-	}	
 
 	@Subscribe
 	public void onPluginConnectToHostEventReceived(PluginConnectToHostExternalEvent event) {

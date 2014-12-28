@@ -121,9 +121,8 @@ public class InitOperation extends AbstractInitOperation {
 		options.getConfigTO().save(configFile);
 
 		// Make remote changes
-		logger.log(Level.INFO, "Uploading local repository");
-
-		initRemoteRepository();
+		logger.log(Level.INFO, "Uploading local repository ...");
+		initRemoteRepository(configFile);
 
 		try {
 			if (options.isEncryptionEnabled()) {
@@ -142,7 +141,7 @@ public class InitOperation extends AbstractInitOperation {
 		// Add to daemon (if requested)
 		if (options.isDaemon()) {
 			try {
-				boolean addedToDaemonConfig = DaemonConfigHelper.addToDaemonConfig(options.getLocalDir());
+				boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(options.getLocalDir());
 				result.setAddedToDaemon(addedToDaemonConfig);
 			}
 			catch (Exception e) {
@@ -184,9 +183,13 @@ public class InitOperation extends AbstractInitOperation {
 		}
 	}
 
-	private void initRemoteRepository() throws Exception {
+	private void initRemoteRepository(File configFile) throws Exception {
 		try {
+			// Create 'syncany' and 'master' file, and all the remote folders
 			transferManager.init(options.isCreateTarget());
+			
+			// Some plugins change the transfer settings, re-save
+			options.getConfigTO().save(configFile);
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created

@@ -24,7 +24,9 @@ import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.operations.Operation;
+import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.EnvironmentUtil;
 
@@ -39,10 +41,13 @@ public abstract class AbstractInitOperation extends Operation {
 	protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());
 
 	protected UserInteractionListener listener;
+	protected LocalEventBus eventBus;
 
 	public AbstractInitOperation(Config config, UserInteractionListener listener) {
 		super(config);
+		
 		this.listener = listener;
+		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	protected File createAppDirs(File localDir) throws IOException {
@@ -98,8 +103,6 @@ public abstract class AbstractInitOperation extends Operation {
 	}
 
 	protected void fireNotifyCreateMaster() {
-		if (listener != null) {
-			listener.onShowMessage("\nCreating master key from password (this might take a while) ...");
-		}
+		eventBus.post(new ShowMessageExternalEvent("Creating master key from password (this might take a while) ..."));
 	}
 }
