@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.0-alpha (Date: Tbd.)
+### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Implement resume functionality for up (**big!**) #141
