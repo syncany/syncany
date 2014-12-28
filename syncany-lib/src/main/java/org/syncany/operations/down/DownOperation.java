@@ -169,6 +169,11 @@ public class DownOperation extends AbstractTransferOperation {
 
 			// Get rid of local database
 			localDatabase.deleteAll();
+
+			// Normally, we wouldn't want to commit in the middle of an operation, but unfortunately
+			// we have to, since not committing causes hanging in database operations, since UNCOMMITTED_READ
+			// does not do enough magic to proceed. The commit in itself is not a problem, since we need
+			// to redownload all remote data anyway.
 			localDatabase.commit();
 
 			// Set last cleanup values
