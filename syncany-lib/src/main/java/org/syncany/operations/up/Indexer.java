@@ -335,7 +335,7 @@ public class Indexer {
 			FileProperties lastFileVersionProperties = fileVersionComparator.captureFileProperties(lastFileVersion);
 			FileVersionComparison lastToNewFileVersionComparison = fileVersionComparator.compare(fileProperties, lastFileVersionProperties, true);
 
-			boolean newVersionDiffersFromToLastVersion = !lastToNewFileVersionComparison.equals();
+			boolean newVersionDiffersFromToLastVersion = !lastToNewFileVersionComparison.areEqual();
 
 			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);

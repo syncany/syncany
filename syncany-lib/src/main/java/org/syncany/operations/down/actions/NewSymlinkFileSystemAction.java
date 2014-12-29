@@ -34,7 +34,7 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 		if (fileExists(fileVersion2)) {
 			FileVersionComparison fileComparison = fileChanges(fileVersion2);
 			
-			if (fileComparison.equals()) {
+			if (fileComparison.areEqual()) {
 				// Nothing to do.
 			}
 			else if (CollectionUtil.containsOnly(fileComparison.getFileChanges(), FileChange.CHANGED_LINK_TARGET)) {

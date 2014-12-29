@@ -278,7 +278,7 @@ public abstract class FileSystemAction {
 	protected boolean fileAsExpected(FileVersion expectedLocalFileVersion, FileChange... allowedFileChanges) {
 		FileVersionComparison fileVersionComparison = fileChanges(expectedLocalFileVersion);
 
-		if (fileVersionComparison.equals()) {
+		if (fileVersionComparison.areEqual()) {
 			return true;
 		}
 		else if (allowedFileChanges.length > 0) {

@@ -522,7 +522,7 @@ public class FileVersionComparator {
 		private FileProperties actualFileProperties;
 		private FileProperties expectedFileProperties;
 
-		public boolean equals() {
+		public boolean areEqual() {
 			return fileChanges.size() == 0;
 		}
 
