@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,10 @@ import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.daemon.messages.CleanUpStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
+
+import com.google.common.eventbus.Subscribe;
 
 public class CleanupCommand extends Command {
 	@Override
@@ -75,7 +78,7 @@ public class CleanupCommand extends Command {
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
-		// -k=<count>, --keep-versions=<count>		
+		// -k=<count>, --keep-versions=<count>
 		if (options.has(optionKeepVersions)) {
 			int keepVersionCount = options.valueOf(optionKeepVersions);
 
@@ -86,7 +89,7 @@ public class CleanupCommand extends Command {
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));
 		}
 
-		// -t=<count>, --time-between-cleanups=<count>		
+		// -t=<count>, --time-between-cleanups=<count>
 		if (options.has(optionSecondsBetweenCleanups)) {
 			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
 
@@ -171,5 +174,10 @@ public class CleanupCommand extends Command {
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
 		}
+	}
+
+	@Subscribe
+	public void onCleanUpStartEventReceived(CleanUpStartSyncExternalEvent syncEvent) {
+		out.printr("Starting cleanup ...");
 	}
 }
