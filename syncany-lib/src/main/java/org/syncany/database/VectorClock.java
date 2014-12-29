@@ -114,13 +114,14 @@ public class VectorClock extends TreeMap<String, Long> {
 		Object[] lIDs = keySet().toArray();
 		Object[] lRequests = values().toArray();
 
-		StringBuilder builder = new StringBuilder('(');
+		StringBuilder builder = new StringBuilder();
+		builder.append('(');
 		for (int i = 0; i < lRequests.length; i++) {
 			builder.append(lIDs[i]);
 			builder.append(lRequests[i].toString());
 
 			if (i + 1 < lRequests.length) {
-				builder.append(' ');
+				builder.append(',');
 			}
 		}
 
