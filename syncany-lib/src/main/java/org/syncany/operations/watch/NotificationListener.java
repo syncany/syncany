@@ -240,7 +240,8 @@ public class NotificationListener {
 					processIncomingMessage(socketIn.readLine());
 				}
 				catch (SocketTimeoutException e) {
-					logger.log(Level.FINE, "Socket timed out", e);
+					// Nothing. Do not log the exception either.
+					//logger.log(Level.FINE, "Socket timed out", e);
 				}
 				catch (InterruptedException e) {
 					logger.log(Level.INFO, "Notification listener interrupted.", e);

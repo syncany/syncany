@@ -247,22 +247,27 @@ public class FrameworkCombinationTest {
 
 			@Override
 			public void onFileEnd(File file, byte[] checksum) {
+				//Empty
 			}
 
 			@Override
 			public void onMultiChunkOpen(MultiChunk multiChunk) {
+				//Empty
 			}
 
 			@Override
 			public void onMultiChunkClose(MultiChunk multiChunk) {
+				//Empty
 			}
 
 			@Override
 			public void onStart(int fileCount) {
+				//Empty
 			}
 
 			@Override
 			public void onFinish() {
+				//Empty
 			}
 		});
 
