@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -57,8 +58,12 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected TransactionAwareTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
+	protected LocalEventBus eventBus;
+
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
+
+		this.eventBus = LocalEventBus.getInstance();
 
 		// Do NOT reuse TransferManager for action file renewal; see #140
 
@@ -161,7 +166,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	 */
 	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// TODO [low] This could be done via the "known_databases" database table
-		
+
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
 

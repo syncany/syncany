@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
-import org.syncany.config.LocalEventBus;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
@@ -91,8 +90,6 @@ public class UpOperation extends AbstractTransferOperation {
 
 	public static final String ACTION_ID = "up";
 
-	private LocalEventBus eventBus;
-
 	private UpOperationOptions options;
 	private UpOperationResult result;
 
@@ -106,7 +103,6 @@ public class UpOperation extends AbstractTransferOperation {
 	public UpOperation(Config config, UpOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance();
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.localDatabase = new SqlDatabase(config);
@@ -362,8 +358,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 * @param resuming boolean indicating if the current transaction is in the process of being resumed.
 	 */
 	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion, boolean resuming) throws InterruptedException, StorageException,
-	IOException,
-	SQLException {
+			IOException,
+			SQLException {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
 
@@ -516,7 +512,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private void addLocalDatabaseToTransaction(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException,
-	StorageException {
+			StorageException {
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
 	}
