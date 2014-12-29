@@ -107,7 +107,10 @@ _sy() {
 		restart\
 		start\
 		status\
-		stop"
+		stop\
+		list\
+		add\
+		remove"
 
 	GENLINK_OPTIONS="\
 		-s --short\
@@ -213,6 +216,7 @@ _sy() {
 		-f --force-checksum"
 
 	UP_OPTIONS="\
+		-R --no-resume\
 		$STATUS_OPTIONS"
 
 	WATCH_OPTIONS="\
@@ -275,7 +279,16 @@ _sy() {
 
 	daemon)
 		case "${lastword}" in
-			force-stop|reload|restart|start|status|stop)
+			force-stop|reload|restart|start|status|stop|list)
+				;;
+				
+			add|remove)
+				# Special handling: return directories, no space at the end
+
+				compopt -o nospace
+				COMPREPLY=( $( compgen -d -S "/" -- $cur ) )
+
+				return 0
 				;;
 
 			*)

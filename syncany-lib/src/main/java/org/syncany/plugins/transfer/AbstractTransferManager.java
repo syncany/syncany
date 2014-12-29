@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.util.StringUtil;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
@@ -89,9 +90,9 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 			result.setTargetCanConnect(true);
 		}
-		catch (StorageException e) {
+		catch (StorageException e) {			
 			result.setTargetCanConnect(false);
-			result.setException(e);
+			result.setErrorMessage(StringUtil.getStackTrace(e));
 
 			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}

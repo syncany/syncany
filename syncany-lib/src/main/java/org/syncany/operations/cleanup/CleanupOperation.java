@@ -150,6 +150,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		// If we do cleanup, we are no longer allowed to resume a transaction
+		transferManager.clearResumableTransactions();
+
 		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
@@ -222,6 +225,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return statusOperationResult.getChangeSet().hasChanges();
 	}
 
+	/**
+	 * This method checks if there exist {@link FileVersion}s which are to be deleted because the history they are a part 
+	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
+	 */
 	private void removeOldVersions() throws Exception {
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 
@@ -253,6 +260,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setRemovedMultiChunks(unusedMultiChunks);
 	}
 
+	/**
+	 * This method adds unusedMultiChunks to the @{link RemoteTransaction} for deletion.
+	 * 
+	 * @param unusedMultiChunks which are to be deleted because all references to them are gone.
+	 */
 	private void deleteUnusedRemoteMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
 		logger.log(Level.INFO, "- Deleting remote multichunks ...");
 
@@ -272,6 +284,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
 
+	/**
+	 * Checks if Cleanup has been performed less then a configurable time ago. 
+	 */
 	private boolean wasCleanedRecently() throws Exception {
 		Long lastCleanupTime = localDatabase.getCleanupTime();
 
@@ -283,6 +298,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 	}
 
+	/**
+	 * This method deletes all remote database files and writes new ones for each client using the local database.
+	 * To make the state clear and prevent issues with replacing files, new database files are given a higher number
+	 * than all existing database files.
+	 * Both the deletions and the new files added to the current @{link RemoteTransaction}.
+	 */
 	private void mergeRemoteFiles() throws Exception {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
@@ -310,7 +331,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			allToDeleteDatabaseFiles.addAll(toDeleteDatabaseFiles);
 
 			// 2. Write new database file and save it in allMergedDatabaseFiles
-			writeMergeFile(client, clientDatabaseFiles.get(0).getClientVersion(), allMergedDatabaseFiles);
+			writeMergeFile(client, allMergedDatabaseFiles);
 
 		}
 
@@ -340,6 +361,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setMergedDatabaseFilesCount(allToDeleteDatabaseFiles.size());
 	}
 
+	/**
+	 * This method decides if a merge is needed. Most of the time it will be, since we need to merge every time we remove
+	 * any FileVersions to delete them remotely. Another reason for merging is if the number of files exceeds a certain threshold.
+	 * This threshold scales linearly with the number of clients that have database files.
+	 * 
+	 * @param allDatabaseFilesMap used to determine if there are too many database files.
+	 * 
+	 * @return true if there are too many database files or we have removed FileVersions, false otherwise.
+	 */
 	private boolean needMerge(Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap) {
 		int numberOfDatabaseFiles = 0;
 
@@ -355,7 +385,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return removedOldVersions || tooManyDatabaseFiles;
 	}
 
-	private void writeMergeFile(String clientName, long firstClientVersion, Map<File, DatabaseRemoteFile> allMergedDatabaseFiles)
+	/**
+	 * This method writes the file with merged databases for a single client and adds it to a Map containing all merged
+	 * database files. This is done by querying the local database for all {@link DatabaseVersion}s by this client and
+	 * serializing them.
+	 * 
+	 * @param clientName for which we want to write the merged dataabse file.
+	 * @param allMergedDatabaseFiles Map where we add the merged file once it is written.
+	 */
+	private void writeMergeFile(String clientName, Map<File, DatabaseRemoteFile> allMergedDatabaseFiles)
 			throws StorageException, IOException {
 
 		// Increment the version by 1, to signal cleanup has occurred
@@ -365,8 +403,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		File newLocalMergeDatabaseFile = config.getCache().getDatabaseFile(newRemoteMergeDatabaseFile.getName());
 
-		logger.log(Level.INFO, "   + Writing new merge file (from {0}, to {1}) to {2} ...", new Object[] {
-				firstClientVersion, lastClientVersion, newLocalMergeDatabaseFile });
+		logger.log(Level.INFO, "   + Writing new merge file (all files up to {0}) to {1} ...", new Object[] { lastClientVersion,
+				newLocalMergeDatabaseFile });
 
 		Iterator<DatabaseVersion> lastNDatabaseVersions = localDatabase.getDatabaseVersionsTo(clientName, lastClientVersion);
 
@@ -375,6 +413,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		allMergedDatabaseFiles.put(newLocalMergeDatabaseFile, newRemoteMergeDatabaseFile);
 	}
 
+	/**
+	 * This method locally remembers which databases were newly uploaded, such that they will not be downloaded in
+	 * future Downs.
+	 */
 	private void rememberDatabases(Map<File, DatabaseRemoteFile> allMergedDatabaseFiles) throws SQLException {
 		// Remember newly written files as so not to redownload them later.
 		List<DatabaseRemoteFile> newRemoteMergeDatabaseFiles = new ArrayList<DatabaseRemoteFile>();
@@ -386,6 +428,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		localDatabase.writeKnownRemoteDatabases(newRemoteMergeDatabaseFiles);
 	}
 
+	/**
+	 * This method finishes the merging of remote files, by attempting to commit the {@link RemoteTransaction}.
+	 * If this fails, it will roll back the local database.
+	 */
 	private void finishMerging() throws Exception {
 		updateCleanupFileInTransaction();
 
@@ -406,8 +452,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * retrieveAllRemoteDatabaseFiles returns a Map with clientNames as keys and
-	 * lists of corresponding DatabaseRemoteFiles as values.
+	 * This method obtains a Map with Lists of {@link DatabaseRemoteFile}s as values, by listing them in the remote repo and
+	 * collecting the files per client.
+	 * 
+	 * @return a Map with clientNames as keys and lists of corresponding DatabaseRemoteFiles as values.
 	 */
 	private Map<String, List<DatabaseRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
 		SortedMap<String, List<DatabaseRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DatabaseRemoteFile>>();
@@ -426,6 +474,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return allDatabaseRemoteFilesMap;
 	}
 
+	/**
+	 * This method checks what the current cleanup number is, increments it by one and adds
+	 * a new cleanup file to the transaction, to signify to other clients that Cleanup has occurred.
+	 */
 	private void updateCleanupFileInTransaction() throws StorageException, IOException {
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);

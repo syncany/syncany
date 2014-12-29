@@ -17,6 +17,8 @@
  */
 package org.syncany.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,6 +151,13 @@ public class StringUtil {
     	}
     	
 		return count;
+    }
+    
+    public static String getStackTrace(Exception exception) {
+    	StringWriter stackTraceStringWriter = new StringWriter();
+    	exception.printStackTrace(new PrintWriter(stackTraceStringWriter));
+    	
+    	return stackTraceStringWriter.toString();
     }
 	
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {

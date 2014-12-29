@@ -1,13 +1,12 @@
 #!/bin/sh
 
 for name in /usr/share/java/syncany/*.jar ; do
-  CP=$CP:$name
+  CLASSPATH=$CLASSPATH:$name
 done
 
 for name in $HOME/.config/syncany/plugins/lib/*.jar ; do
-  CP=$CP:$name
+  CLASSPATH=$CLASSPATH:$name
 done
-
 
 ### Daemon script begin #########################################SYNCANY_INCL_4#
 
@@ -16,7 +15,7 @@ DAEMON_NAME=syncanyd
 DAEMON_APPDIR=~/.config/syncany
 DAEMON_CONTROLFILE=$DAEMON_APPDIR/daemon.ctrl
 DAEMON_PIDFILE=$DAEMON_APPDIR/daemon.pid
-DAEMON_CMD="daemon"
+DAEMON_CMD="daemon run"
 
 # Daemon functions
 daemon_get_pid() {
@@ -46,7 +45,7 @@ daemon_start() {
 	if [ $DAEMON_RUNNING -eq 1 ]; then
 		echo "$DAEMON_NAME already running (pid $DAEMON_PID)"
 	else
-        nohup "$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$DAEMON_CMD"> /dev/null 2>&1 &
+	    nohup "$JAVA_HOME/bin/java" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_CMD > /dev/null 2>&1 &
 
 		DAEMON_PID=-1
 		TRIES=10
@@ -152,9 +151,12 @@ export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 mkdir -p $DAEMON_APPDIR
 DAEMON_PID=$(daemon_get_pid)
 
-case "$1" in                 
+case "$1" in      
 	daemon)                   
 		case "$2" in         
+			"")
+				echo "Usage: sy daemon (start|stop|reload|status|force-stop|add|remove|list)"
+				;;        
 			start) 
 				daemon_start
 				;;     
@@ -175,12 +177,12 @@ case "$1" in
 				daemon_force_stop
 				;; 
 			*) 
-				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
+                exec "$JAVA_HOME/bin/java" -classpath $CLASSPATH org.syncany.Syncany "$@"
 				;;
 		esac
 		;;  
 	
-	*)                       
-        exec "$JAVA_HOME/bin/java" -cp $CP org.syncany.Syncany "$@"
+	*)
+        exec "$JAVA_HOME/bin/java" -classpath $CLASSPATH org.syncany.Syncany "$@"
 		;;
-esac
+esac   

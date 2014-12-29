@@ -26,9 +26,8 @@ import org.simpleframework.xml.ElementList;
 import org.syncany.plugins.local.LocalTransferSettings;
 
 public class UnreliableLocalTransferSettings extends LocalTransferSettings {
-
-  @ElementList(required = false)
-  private List<String> failingOperationPatterns;
+	@ElementList(required = false)
+	private List<String> failingOperationPatterns;
 
 	private int totalOperationCounter;
 	private Map<String, Integer> typeOperationCounters;

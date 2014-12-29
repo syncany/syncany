@@ -5,7 +5,7 @@ DAEMON_NAME=syncanyd
 DAEMON_APPDIR=~/.config/syncany
 DAEMON_CONTROLFILE=$DAEMON_APPDIR/daemon.ctrl
 DAEMON_PIDFILE=$DAEMON_APPDIR/daemon.pid
-DAEMON_CMD="daemon"
+DAEMON_CMD="daemon run"
 
 # Daemon functions
 daemon_get_pid() {
@@ -141,9 +141,12 @@ export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 mkdir -p $DAEMON_APPDIR
 DAEMON_PID=$(daemon_get_pid)
 
-case "$1" in                 
+case "$1" in      
 	daemon)                   
 		case "$2" in         
+			"")
+				echo "Usage: sy daemon (start|stop|reload|status|force-stop|add|remove|list)"
+				;;        
 			start) 
 				daemon_start
 				;;     
@@ -164,7 +167,7 @@ case "$1" in
 				daemon_force_stop
 				;; 
 			*) 
-				echo "Usage: sy daemon (start/stop/reload/status/force-stop)"
+				#JAVA_EXEC_REPLACEMENT_MARKER#
 				;;
 		esac
 		;;  

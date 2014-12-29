@@ -22,6 +22,7 @@ import io.undertow.server.HttpServerExchange;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,34 +60,42 @@ public class InternalRestHandler implements HttpHandler {
 		exchange.startBlocking();			
 
 		if (exchange.getRelativePath().startsWith("/file/")) {	
-			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-			File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
-			
-			if (tempFile != null) {
-				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-				
-				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());				
-				exchange.endExchange();
-			}
-			else {
-				logger.log(Level.WARNING, "Invalid request received; Cannot find file token " + tempFileToken);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
+			handleFileRequest(exchange);			
 		}
 		else {	
-			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
-			logger.log(Level.INFO, "REST message received: " + message);
-	
-			try {
-				Request request = MessageFactory.toRequest(message);
-	
-				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
-				eventBus.post(request);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
+			handleNormalRequest(exchange);			
+		}
+	}
+
+	private void handleNormalRequest(HttpServerExchange exchange) throws IOException {
+		String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
+		logger.log(Level.INFO, "REST message received: " + message);
+
+		try {
+			Request request = MessageFactory.toRequest(message);
+
+			daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
+			eventBus.post(request);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+		}
+	}
+
+	private void handleFileRequest(HttpServerExchange exchange) throws FileNotFoundException, IOException {
+		String tempFileToken = exchange.getRelativePath().substring("/file/".length());
+		File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
+		
+		if (tempFile != null) {
+			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
+			
+			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());				
+			exchange.endExchange();
+		}
+		else {
+			logger.log(Level.WARNING, "Invalid request received; Cannot find file token " + tempFileToken);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
 		}
 	}
 }
