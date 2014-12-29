@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,12 @@
  */
 package org.syncany.operations.daemon;
 
-/**
+/** 
  * @author Vincent Wiencek <vwiencek@gmail.com>
- *
  */
 public class ServiceAlreadyStartedException extends Exception {
 	private static final long serialVersionUID = -4655279609105005191L;
 
-	/**
-	 * @param string
-	 */
 	public ServiceAlreadyStartedException(String message) {
 		super(message);
 	}

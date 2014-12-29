@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import org.simpleframework.xml.Root;
+
 /**
  * A message is either a request or a response sent to 
  * or from the daemon. All messages must inherit from this
@@ -25,6 +27,7 @@ package org.syncany.operations.daemon.messages.api;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+@Root(strict = false)
 public abstract class Message {
 	// Nothing here.
 }

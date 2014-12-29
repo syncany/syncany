@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import org.syncany.crypto.specs.AesGcm128CipherSpec;
 import org.syncany.crypto.specs.AesGcm256CipherSpec;
 import org.syncany.crypto.specs.TwofishGcm128CipherSpec;
+import org.syncany.crypto.specs.TwofishGcm256CipherSpec;
 
 /**
  * Defines and identifies the application supported {@link CipherSpec}s.
@@ -65,12 +66,12 @@ public class CipherSpecs {
 	static {
 		CipherSpec[] tmpCipherSpecs = new CipherSpec[] {
 				// Standard
-				new AesGcm128CipherSpec(AES_128_GCM),
-				new TwofishGcm128CipherSpec(TWOFISH_128_GCM),
+				new AesGcm128CipherSpec(),
+				new TwofishGcm128CipherSpec(),
 
 				// Unlimited crypto
-				new AesGcm256CipherSpec(AES_256_GCM),
-				new TwofishGcm128CipherSpec(TWOFISH_256_GCM) 
+				new AesGcm256CipherSpec(),
+				new TwofishGcm256CipherSpec() 
 			};
 
 		for (CipherSpec cipherSpec : tmpCipherSpecs) {

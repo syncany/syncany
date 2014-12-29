@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ public class ApplicationLink {
 		this.shortUrl = shortUrl;
 	}
 
-	public ApplicationLink(String applicationLink) throws StorageException {
+	public ApplicationLink(String applicationLink) throws IllegalArgumentException, StorageException {
 		if (LINK_SHORT_URL_PATTERN.matcher(applicationLink).matches()) {
 			applicationLink = expandLink(applicationLink);
 		}
@@ -189,9 +189,9 @@ public class ApplicationLink {
 		return String.format(LINK_SHORT_API_URL_GET_FORMAT, shortLinkId);
 	}
 
-	private String resolveLink(String httpApplicationLink, int redirectCount) throws StorageException {
+	private String resolveLink(String httpApplicationLink, int redirectCount) throws IllegalArgumentException, StorageException {
 		if (redirectCount >= LINK_HTTP_MAX_REDIRECT_COUNT) {
-			throw new StorageException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Canot find syncany:// link.");
+			throw new IllegalArgumentException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Cannot find syncany:// link.");
 		}
 
 		try {
@@ -220,6 +220,9 @@ public class ApplicationLink {
 			else {
 				return resolveLink(locationHeaderUrl, ++redirectCount);
 			}
+		}
+		catch (StorageException | IllegalArgumentException e) {
+			throw e;
 		}
 		catch (Exception e) {
 			throw new StorageException(e.getMessage(), e);
@@ -291,11 +294,11 @@ public class ApplicationLink {
 		return httpClientBuilder.build();
 	}
 
-	private void parseLink(String applicationLink) throws StorageException {
+	private void parseLink(String applicationLink) throws IllegalArgumentException {
 		Matcher linkMatcher = LINK_PATTERN.matcher(applicationLink);
 
 		if (!linkMatcher.matches()) {
-			throw new StorageException("Invalid link provided, must start with syncany:// and match link pattern.");
+			throw new IllegalArgumentException("Invalid link provided, must start with syncany:// and match link pattern.");
 		}
 
 		encrypted = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_FLAG) == null;
@@ -307,16 +310,26 @@ public class ApplicationLink {
 			logger.log(Level.INFO, "- Master salt: " + masterKeySaltStr);
 			logger.log(Level.INFO, "- Encrypted plugin settings: " + encryptedPluginSettingsStr);
 
-			masterKeySalt = Base58.decode(masterKeySaltStr);
-			encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
-			plaintextSettingsBytes = null;
+			try {
+				masterKeySalt = Base58.decode(masterKeySaltStr);
+				encryptedSettingsBytes = Base58.decode(encryptedPluginSettingsStr);
+				plaintextSettingsBytes = null;
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid syncany:// link provided. Parsing failed.", e);
+			}
 		}
 		else {
 			String plaintextEncodedSettingsStr = linkMatcher.group(LINK_PATTERN_GROUP_NOT_ENCRYPTED_PLUGIN_ENCODED);
 
-			masterKeySalt = null;
-			encryptedSettingsBytes = null;
-			plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
+			try {
+				masterKeySalt = null;
+				encryptedSettingsBytes = null;
+				plaintextSettingsBytes = Base58.decode(plaintextEncodedSettingsStr);
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid syncany:// link provided. Parsing failed.", e);
+			}
 		}
 	}
 

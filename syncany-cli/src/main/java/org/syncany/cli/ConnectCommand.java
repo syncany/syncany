@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,6 +135,7 @@ public class ConnectCommand extends AbstractInitCommand {
 			return null; // Will be set in callback!
 		}
 	}
+	
 	@Override
 	public void printResults(OperationResult operationResult) {
 		ConnectOperationResult concreteOperationResult = (ConnectOperationResult) operationResult;
@@ -142,7 +143,7 @@ public class ConnectCommand extends AbstractInitCommand {
 		if (concreteOperationResult.getResultCode() == ConnectResultCode.OK) {
 			out.println();
 			out.println("Repository connected, and local folder initialized.");
-			out.println("You can now use the 'syncany' command to sync your files.");
+			out.println("You can now use 'sy up' and 'sy down' to sync your files.");
 			out.println();
 
 			if (concreteOperationResult.isAddedToDaemon()) {

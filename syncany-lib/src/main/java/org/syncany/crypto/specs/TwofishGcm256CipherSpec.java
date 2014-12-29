@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,10 @@
  */
 package org.syncany.crypto.specs;
 
+import org.syncany.crypto.CipherSpecs;
+
 public class TwofishGcm256CipherSpec extends TwofishGcmCipherSpec {
-	public TwofishGcm256CipherSpec(int id) {
-		super(id, "Twofish/GCM/NoPadding", 256, 128, false);
+	public TwofishGcm256CipherSpec() {
+		super(CipherSpecs.TWOFISH_256_GCM, "Twofish/GCM/NoPadding", 256, 128, false);
 	}
 }

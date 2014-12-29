@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,9 +121,8 @@ public class InitOperation extends AbstractInitOperation {
 		options.getConfigTO().save(configFile);
 
 		// Make remote changes
-		logger.log(Level.INFO, "Uploading local repository");
-
-		initRemoteRepository();
+		logger.log(Level.INFO, "Uploading local repository ...");
+		initRemoteRepository(configFile);
 
 		try {
 			if (options.isEncryptionEnabled()) {
@@ -184,9 +183,13 @@ public class InitOperation extends AbstractInitOperation {
 		}
 	}
 
-	private void initRemoteRepository() throws Exception {
+	private void initRemoteRepository(File configFile) throws Exception {
 		try {
+			// Create 'syncany' and 'master' file, and all the remote folders
 			transferManager.init(options.isCreateTarget());
+			
+			// Some plugins change the transfer settings, re-save
+			options.getConfigTO().save(configFile);
 		}
 		catch (StorageException e) {
 			// Storing remotely failed. Remove all the directories and files we just created

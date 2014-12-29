@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -169,6 +169,11 @@ public class DownOperation extends AbstractTransferOperation {
 
 			// Get rid of local database
 			localDatabase.deleteAll();
+
+			// Normally, we wouldn't want to commit in the middle of an operation, but unfortunately
+			// we have to, since not committing causes hanging in database operations, since UNCOMMITTED_READ
+			// does not do enough magic to proceed. The commit in itself is not a problem, since we need
+			// to redownload all remote data anyway.
 			localDatabase.commit();
 
 			// Set last cleanup values
@@ -324,6 +329,17 @@ public class DownOperation extends AbstractTransferOperation {
 		return remoteDatabaseHeaders;
 	}
 
+	/**
+	 * This methods takes a Map containing DatabaseVersions (headers only) and loads these headers into {@link DatabaseBranches}.
+	 * In addition, the local branch is added to this. The resulting DatabaseBranches will contain all headers exactly once,
+	 * for the client that created that version.
+	 * 
+	 * @param localBranch {@link DatabaseBranch} containing the locally known headers.
+	 * @param remoteDatabaseHeaders Map from {@link DatabaseRemoteFile}s (important for client names) to the {@link DatabaseVersion}s that are
+	 *        contained in these files.
+	 *        
+	 * @return DatabaseBranches filled with all the headers that originated from either of the parameters.
+	 */
 	private DatabaseBranches populateDatabaseBranches(DatabaseBranch localBranch,
 			TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
 		DatabaseBranches allBranches = new DatabaseBranches();
@@ -649,6 +665,15 @@ public class DownOperation extends AbstractTransferOperation {
 		localDatabase.removeNonMuddyMultiChunks();
 	}
 
+	/**
+	 * This methods takes a Map from {@link DatabaseRemoteFile}s to Lists of {@link DatabaseVersion}s and produces more or less
+	 * the reverse Map, which can be used to find the cached copy of a remote databasefile, given a {@link DatabaseVersionHeader}.
+	 * 
+	 * @param remoteDatabaseHeaders mapping remote database files to the versions they contain.
+	 * @param databaseRemoteFilesInCache mapping files to the database remote file that is cached in it.
+	 * 
+	 * @return databaseVersionLocations a Map from {@link DatabaseVersionHeader}s to the local File in which that version can be found.
+	 */
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
 			Map<File, DatabaseRemoteFile> databaseRemoteFilesInCache) {
 
@@ -668,6 +693,10 @@ public class DownOperation extends AbstractTransferOperation {
 		return transferManager.list(CleanupRemoteFile.class);
 	}
 
+	/**
+	 * This method queries the local database and compares the result to existing remoteCleanupFiles to determine
+	 * if cleanup has occurred since the last time it was locally handled. The cleanupNumber is a simple count.
+	 */
 	private boolean cleanupOccurred(Map<String, CleanupRemoteFile> remoteCleanupFiles) throws Exception {
 		Long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
 		Long lastLocalCleanupNumber = localDatabase.getCleanupNumber();

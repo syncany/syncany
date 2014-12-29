@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
  */
 package org.syncany.operations.daemon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.syncany.operations.OperationOptions;
 
 public class DaemonOperationOptions implements OperationOptions {
@@ -24,11 +27,12 @@ public class DaemonOperationOptions implements OperationOptions {
 		RUN, LIST, ADD, REMOVE
 	}
 	
-	private DaemonAction action = null;
-	private String watchRoot = null;
+	private DaemonAction action;
+	private List<String> watchRoots;
 	
 	public DaemonOperationOptions() {
-		// Nothing
+		this.action = null;
+		this.watchRoots = new ArrayList<>();
 	}
 	
 	public DaemonOperationOptions(DaemonAction action) {
@@ -43,11 +47,11 @@ public class DaemonOperationOptions implements OperationOptions {
 		this.action = action;
 	}
 	
-	public String getWatchRoot() {
-		return watchRoot;
+	public List<String> getWatchRoots() {
+		return watchRoots;
 	}
 	
-	public void setWatchRoot(String watchRoot) {
-		this.watchRoot = watchRoot;
+	public void setWatchRoots(List<String> watchRoots) {
+		this.watchRoots = watchRoots;
 	}
 }

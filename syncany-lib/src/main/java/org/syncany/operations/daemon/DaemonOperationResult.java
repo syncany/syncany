@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import org.syncany.operations.OperationResult;
 
 public class DaemonOperationResult implements OperationResult {
 	public enum DaemonResultCode {
-		OK, NOK_FOLDER_EXISTS, NOK_FOLDER_DOESNT_EXIST
+		OK, OK_PARTIAL, NOK, NOK_PARTIAL
 	}
 	
 	private DaemonResultCode resultCode;

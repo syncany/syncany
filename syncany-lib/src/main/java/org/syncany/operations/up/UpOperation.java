@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,6 +134,7 @@ public class UpOperation extends AbstractTransferOperation {
 		boolean resuming = false;
 
 		if (options.isResume()) {
+			// If we want to resume, we look for the local files that contain data about a resumable transaction.
 			newDatabaseVersion = attemptResumeTransaction();
 
 			if (newDatabaseVersion != null) {
@@ -165,6 +166,7 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		if (!resuming) {
+			// If we are not resuming, we need to clean transactions and index local files.
 			boolean blockingTransactionExist = !transferManager.cleanTransactions();
 
 			if (blockingTransactionExist) {
@@ -197,6 +199,9 @@ public class UpOperation extends AbstractTransferOperation {
 		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
 		boolean committingFailed = true;
+
+		// This thread is to be run when the transaction is interrupted for connectivity reasons. It will serialize
+		// the transaction and metadata in memory such that the transaction can be resumed later.
 		Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(newDatabaseVersion);
 
 		try {
@@ -211,10 +216,13 @@ public class UpOperation extends AbstractTransferOperation {
 			committingFailed = false;
 		}
 		catch (Exception e) {
+			// The operation did not go as expected. To ensure local atomicity, we rollback the local database.
 			localDatabase.rollback();
 			throw e;
 		}
 		finally {
+			// The JVM has not shut down, so we can remove the shutdown hook.
+			// If it turns out that committing has failed, we run it explicitly.
 			removeShutdownHook(writeResumeFilesShutDownHook);
 
 			if (committingFailed) {
@@ -243,6 +251,14 @@ public class UpOperation extends AbstractTransferOperation {
 		return result;
 	}
 
+	/**
+	 * This method creates a Thread, which serializes the {@link remoteTransaction} in the state at the time the thread is run,
+	 * as well as the {@link DatabaseVersion} that contains the metadata about what is uploaded in this transaction.
+	 * 
+	 * @param newDatabaseVersion DatabaseVersion that contains everything that should be locally saved when current transaction is resumed.
+	 * 
+	 * @return Thread which is attached as a shutdownHook.
+	 */
 	private Thread createAndAddShutdownHook(final DatabaseVersion newDatabaseVersion) {
 		Thread writeResumeFilesShutDownHook = new Thread(new Runnable() {
 			@Override
@@ -284,6 +300,9 @@ public class UpOperation extends AbstractTransferOperation {
 		eventBus.post(new UpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode(), result.getChangeSet()));
 	}
 
+	/**
+	 * This method sets the correct {@link UpResultCode} when another client has a transaction in progress with deletions.
+	 */
 	private void stopBecauseOfBlockingTransactions() throws StorageException {
 		logger.log(Level.INFO, "Another client is blocking the repo with unfinished cleanup.");
 		result.setResultCode(UpResultCode.NOK_REPO_BLOCKED);
@@ -292,6 +311,17 @@ public class UpOperation extends AbstractTransferOperation {
 		fireEndEvent();
 	}
 
+	/**
+	 * This method checks if:
+	 * 
+	 * <ul>
+	 * 	<li>If there are local changes => No need for Up.</li>
+	 *  <li>If another clients is running Cleanup => Not allowed to upload.</li>
+	 *  <li>If remote changes exist => Should Down first.</li>
+	 * </ul>
+	 * 
+	 * @returns boolean true if Up can and should be done, false otherwise. 
+	 */
 	private boolean checkPreconditions() throws Exception {
 		// Find local changes
 		StatusOperation statusOperation = new StatusOperation(config, options.getStatusOptions());
@@ -338,6 +368,14 @@ public class UpOperation extends AbstractTransferOperation {
 		return true;
 	}
 
+	/**
+	 * This method takes the metadata that is to be uploaded, loads it into a {@link MemoryDatabase} and serializes
+	 * it to a file. If this is not a resumption of a previous transaction, this file is added to the transaction.
+	 * Finally, databaseversions that are uploaded are remembered as known, such that they are not downloaded in future Downs.
+	 * 
+	 * @param newDatabaseVersion {@link DatabaseVersion} containing all metadata that would be locally persisted if the transaction succeeds.
+	 * @param resuming boolean indicating if the current transaction is in the process of being resumed.
+	 */
 	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion, boolean resuming) throws InterruptedException, StorageException,
 			IOException,
 			SQLException {
@@ -364,7 +402,7 @@ public class UpOperation extends AbstractTransferOperation {
 		if (!resuming) {
 			// Upload delta database, if we are not resuming (in which case the db is in the transaction already)
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
-			uploadLocalDatabase(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+			addLocalDatabaseToTransaction(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 		}
 		// Remember uploaded database as known.
 		List<DatabaseRemoteFile> newDatabaseRemoteFiles = new ArrayList<DatabaseRemoteFile>();
@@ -372,6 +410,9 @@ public class UpOperation extends AbstractTransferOperation {
 		localDatabase.writeKnownRemoteDatabases(newDatabaseRemoteFiles);
 	}
 
+	/**
+	 * Serializes a {@link MemoryDatabase} to a file, using the configured transformer.
+	 */
 	protected void saveDeltaDatabase(MemoryDatabase db, File localDatabaseFile) throws IOException {
 		logger.log(Level.INFO, "- Saving database to " + localDatabaseFile + " ...");
 
@@ -379,6 +420,13 @@ public class UpOperation extends AbstractTransferOperation {
 		dao.save(db.getDatabaseVersions(), localDatabaseFile);
 	}
 
+	/**
+	 * This methods iterates over all {@link DatabaseVersion}s that are dirty. Dirty means that they are not in the winning
+	 * branch. All data which is contained in these dirty DatabaseVersions is added to the newDatabaseVersion, so that it
+	 * is included in the new Up. Note that only metadata is reuploaded, the actual multichunks are still in the repository.
+	 * 
+	 * @param newDatabaseVersion {@link DatabaseVersion} to which dirty data should be added.
+	 */
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
 		Iterator<DatabaseVersion> dirtyDatabaseVersions = localDatabase.getDirtyDatabaseVersions();
 
@@ -408,6 +456,13 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
+	/**
+	 * This method extracts the files that are new or changed from a {@link ChangeSet} of local changes.
+	 * 
+	 * @param localChanges {@link ChangeSet} that was the result from a StatusOperation.
+	 * 
+	 * @return a list of Files that are new or have been changed.
+	 */
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {
 		List<File> locallyUpdatedFiles = new ArrayList<File>();
 
@@ -422,6 +477,13 @@ public class UpOperation extends AbstractTransferOperation {
 		return locallyUpdatedFiles;
 	}
 
+	/**
+	 * This method fills a {@link ChangeSet} with the files and changes that are uploaded, to include in 
+	 * the {@link UpOperationResult}.
+	 * 
+	 * @param newDatabaseVersion {@link DatabaseVersion} that contains the changes.
+	 * @param resultChanges {@ChangeSet} to which these changes are to be added.
+	 */
 	private void addNewDatabaseChangesToResultChanges(DatabaseVersion newDatabaseVersion, ChangeSet resultChanges) {
 		for (PartialFileHistory partialFileHistory : newDatabaseVersion.getFileHistories()) {
 			FileVersion lastFileVersion = partialFileHistory.getLastVersion();
@@ -443,6 +505,12 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
+	/**
+	 * This methods adds the multichunks that are not yet present in the remote repo to the {@link RemoteTransaction} for
+	 * uploading. Multichunks are not uploaded if they are dirty.
+	 * 
+	 * @param multiChunkEntries Collection of multiChunkEntries that are included in the new {@link DatabaseVersion}
+	 */
 	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 
@@ -462,13 +530,20 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
-	private void uploadLocalDatabase(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException, StorageException {
+	private void addLocalDatabaseToTransaction(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException,
+			StorageException {
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
 	}
 
+	/**
+	 * This method starts the indexing process, using the configured Chunker, MultiChunker and Transformer.
+	 * 
+	 * @param localFiles List of Files that have been altered in some way.
+	 * 
+	 * @return @{link DatabaseVersion} containing the indexed data.
+	 */
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
-
 		// Index
 		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
 		Indexer indexer = new Indexer(config, deduper);

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ public class RemoteTransaction {
 	 */
 	public void commit() throws StorageException {
 		logger.log(Level.INFO, "Starting TX.commit() ...");
-		
+
 		if (isEmpty()) {
 			logger.log(Level.INFO, "- Empty transaction, not committing anything.");
 			return;
@@ -132,7 +132,7 @@ public class RemoteTransaction {
 	}
 
 	/**
-	 * Does exactly the same as the paramterless version, except it does not create and upload the transactionfile. Instead
+	 * Does exactly the same as the parameterless version, except it does not create and upload the transactionfile. Instead
 	 * it uses the files that are passed. Used for resuming existing transactions. Only call this function if resuming
 	 * cannot cause invalid states.
 	 */
@@ -161,11 +161,14 @@ public class RemoteTransaction {
 		}
 	}
 
+	/**
+	 * This method serializes the transaction to a local temporary file.
+	 */
 	private File writeLocalTransactionFile() throws StorageException {
 		try {
 			File localTransactionFile = config.getCache().createTempFile("transaction");
 			writeToFile(config.getTransformer(), localTransactionFile);
-			
+
 			return localTransactionFile;
 		}
 		catch (Exception e) {
@@ -173,6 +176,10 @@ public class RemoteTransaction {
 		}
 	}
 
+	/**
+	 * This method uploads a local copy of the transaction to the repository. This is done at the begin of commit()
+	 * and is the starting point of the transaction itself.
+	 */
 	private TransactionRemoteFile uploadTransactionFile(File localTransactionFile) throws StorageException {
 		TransactionRemoteFile remoteTransactionFile = new TransactionRemoteFile(this);
 
@@ -184,6 +191,16 @@ public class RemoteTransaction {
 		return remoteTransactionFile;
 	}
 
+	/**
+	 * This method performs the first step for all files in the committing process. 
+	 * For UPLOADs, this is uploading the file to the temporary remote location.
+	 * For DELETEs, this is moving the file from the original remote location to a temporary remote location.
+	 * If this is a transaction that is being resumed, the {@link ActionStatus} will show that this part has
+	 * already been done. In this case, we do not repeat it.
+	 * 
+	 * This is the expensive part of the committing process, when we are talking about I/O. Hence this is also
+	 * the most likely part to be interrupted on weak connections.
+	 */
 	private void uploadAndMoveToTempLocation() throws StorageException {
 		TransactionStats stats = gatherTransactionStats();
 		int uploadFileIndex = 0;
@@ -194,6 +211,7 @@ public class RemoteTransaction {
 				RemoteFile tempRemoteFile = action.getTempRemoteFile();
 
 				if (action.getType().equals(ActionType.UPLOAD)) {
+					// The action is an UPLOAD, upload file to temporary remote location
 					File localFile = action.getLocalTempLocation();
 					long localFileSize = localFile.length();
 
@@ -205,6 +223,7 @@ public class RemoteTransaction {
 					action.setStatus(ActionStatus.STARTED);
 				}
 				else if (action.getType().equals(ActionType.DELETE)) {
+					// The action is a DELETE, move file to temporary remote location.
 					RemoteFile remoteFile = action.getRemoteFile();
 
 					try {
@@ -220,22 +239,28 @@ public class RemoteTransaction {
 		}
 	}
 
+	/**
+	 * This method gathers the total number of files and size that is to be uploaded.
+	 * 
+	 * This is used in displays to the user.
+	 */
 	private TransactionStats gatherTransactionStats() {
 		TransactionStats stats = new TransactionStats();
 
 		for (ActionTO action : transactionTO.getActions()) {
-			if (action.getStatus().equals(ActionStatus.STARTED)) {
-				// If we are resuming a transaction, this has not yet been done.
-				if (action.getType().equals(ActionType.UPLOAD)) {
-					stats.totalUploadFileCount++;
-					stats.totalUploadSize += action.getLocalTempLocation().length();
-				}
+			if (action.getType().equals(ActionType.UPLOAD)) {
+				stats.totalUploadFileCount++;
+				stats.totalUploadSize += action.getLocalTempLocation().length();
 			}
 		}
 
 		return stats;
 	}
 
+	/**
+	 * This method constitutes the second step in the committing process. All files have been uploaded, and they are
+	 * now moved to their final location.
+	 */
 	private void moveToFinalLocation() throws StorageException {
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionType.UPLOAD)) {
@@ -249,6 +274,10 @@ public class RemoteTransaction {
 		}
 	}
 
+	/**
+	 * This method deletes the transaction file. The deletion of the transaction file is the moment the transaction
+	 * is considered to be finished and successful.
+	 */
 	private void deleteTransactionFile(File localTransactionFile, TransactionRemoteFile remoteTransactionFile) throws StorageException {
 		// After this deletion, the transaction is final!
 		logger.log(Level.INFO, "- Deleting remote transaction file {0} ...", remoteTransactionFile);
@@ -259,12 +288,15 @@ public class RemoteTransaction {
 		logger.log(Level.INFO, "END of TX.commmit(): Succesfully committed transaction.");
 	}
 
+	/**
+	 * This method deletes the temporary remote files that were the result of deleted files.
+	 * 
+	 * Actually deleting remote files is done after finishing the transaction, because
+	 * it cannot be rolled back! If this fails, the temporary files will eventually
+	 * be cleaned up by Cleanup and download will not download these, because
+	 * they are not in any transaction file.
+	 */
 	private void deleteTempRemoteFiles() throws StorageException {
-		// Actually deleting remote files is done after finishing the transaction, because
-		// it cannot be rolled back! If this fails, the temporary files will eventually
-		// be cleaned up by CleanUp and download will not download these, because
-		// they are not in any transaction file.
-
 		boolean success = true;
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getStatus().equals(ActionStatus.STARTED)) {

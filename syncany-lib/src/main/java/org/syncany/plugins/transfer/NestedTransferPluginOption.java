@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@ import java.util.List;
 public class NestedTransferPluginOption extends TransferPluginOption {
 	private final List<TransferPluginOption> options;
 
-	public NestedTransferPluginOption(Field field, String name, String description, Type type, boolean encrypted, boolean sensitive,
-			boolean singular, boolean required, Class<? extends TransferPluginOptionCallback> callback,
+	public NestedTransferPluginOption(Field field, String name, String description, Type type, FileType fileType, boolean encrypted, boolean sensitive,
+			boolean singular, boolean visible, boolean required, Class<? extends TransferPluginOptionCallback> callback,
 			Class<? extends TransferPluginOptionConverter> converter, List<TransferPluginOption> nestedOptions) {
 
-		super(field, name, description, type, encrypted, sensitive, singular, required, callback, converter);
+		super(field, name, description, type, fileType, encrypted, sensitive, singular, visible, required, callback, converter);
 		this.options = nestedOptions;
 	}
 

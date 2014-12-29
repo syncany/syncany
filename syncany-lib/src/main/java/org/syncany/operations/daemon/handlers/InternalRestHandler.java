@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package org.syncany.operations.daemon.handlers;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,47 +64,55 @@ public class InternalRestHandler implements HttpHandler {
 		exchange.startBlocking();
 
 		if (exchange.getRelativePath().startsWith("/file/")) {
-			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
-			File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
-
-			if (tempFile != null) {
-				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-
-				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
-				exchange.endExchange();
-			}
-			else {
-				logger.log(Level.WARNING, "Invalid request received; Cannot find file token " + tempFileToken);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
+			handleFileRequest(exchange);
 		}
 		else {
-			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
-			logger.log(Level.INFO, "REST message received: " + message);
+			handleNormalRequest(exchange);
+		}
+	}
 
-			try {
-				Request request;
-				switch (requestFormatType) {
-					case JSON:
-						request = JsonMessageFactory.toRequest(message);
-						break;
+	private void handleNormalRequest(HttpServerExchange exchange) throws IOException {
+		String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
+		logger.log(Level.INFO, "REST message received: " + message);
 
-					case XML:
-						request = XmlMessageFactory.toRequest(message);
-						break;
+		try {
+			Request request;
+			switch (requestFormatType) {
+				case JSON:
+					request = JsonMessageFactory.toRequest(message);
+					break;
 
-					default:
-						throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
-				}
+				case XML:
+					request = XmlMessageFactory.toRequest(message);
+					break;
 
-				daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
-				daemonWebServer.putCacheRestRequest(request.getId(), exchange);
-				eventBus.post(request);
+				default:
+					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
 			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
-				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
-			}
+
+			daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
+			daemonWebServer.putCacheRestRequest(request.getId(), exchange);
+			eventBus.post(request);
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid request received; cannot serialize to Request.", e);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
+		}
+	}
+
+	private void handleFileRequest(HttpServerExchange exchange) throws FileNotFoundException, IOException {
+		String tempFileToken = exchange.getRelativePath().substring("/file/".length());
+		File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
+
+		if (tempFile != null) {
+			logger.log(Level.INFO, "- Temp file: " + tempFileToken);
+
+			IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
+			exchange.endExchange();
+		}
+		else {
+			logger.log(Level.WARNING, "Invalid request received; Cannot find file token " + tempFileToken);
+			eventBus.post(new BadRequestResponse(-1, "Invalid request."));
 		}
 	}
 }

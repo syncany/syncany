@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,8 @@ import org.syncany.tests.scenarios.Issue143ScenarioTest;
 import org.syncany.tests.scenarios.Issue227_2_ScenarioTest;
 import org.syncany.tests.scenarios.Issue247ScenarioTest;
 import org.syncany.tests.scenarios.Issue288ScenarioTest;
+import org.syncany.tests.scenarios.Issue303ScenarioTest;
+import org.syncany.tests.scenarios.Issue316ScenarioTest;
 import org.syncany.tests.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
 import org.syncany.tests.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
@@ -86,6 +88,8 @@ import org.syncany.tests.scenarios.SymlinkSyncScenarioTest;
 		Issue227_2_ScenarioTest.class,
 		Issue247ScenarioTest.class,
 		Issue288ScenarioTest.class,
+		Issue303ScenarioTest.class,
+		Issue316ScenarioTest.class,
 		ManyRenamesScenarioTest.class,
 		ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
 		ManySyncUpsLargeFileScenarioTest.class,

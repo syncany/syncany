@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@ package org.syncany.config.to;
 import java.io.File;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.convert.Registry;
@@ -46,7 +45,6 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 @Root(name = "config", strict = false)
-@Namespace(reference = "http://syncany.org/config/1")
 public class ConfigTO {
 	@Element(name = "machineName", required = true)
 	private String machineName;
@@ -58,7 +56,7 @@ public class ConfigTO {
 	@Convert(SaltedSecretKeyConverter.class)
 	private SaltedSecretKey masterKey;
 
-	@Element(name = "connection", required = true)
+	@Element(name = "connection", required = false) // TODO [high] Workaround for 'connect' via GUI and syncany://link; field not needed when link is supplied
 	private TransferSettings transferSettings;
 
 	@Element(name = "cacheKeepBytes", required = false)

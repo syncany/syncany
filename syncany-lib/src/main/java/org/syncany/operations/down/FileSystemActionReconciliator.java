@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -239,8 +239,13 @@ public class FileSystemActionReconciliator {
 			changeSet.getNewFiles().add(winningLastVersion.getPath());
 		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.NEW)) {
-			logger.log(Level.INFO, "     -> (3) New: winning version was deleted, but local exists: "+winningLastVersion+" AND "+winningLastFile);					
-			throw new Exception("What happend here?");
+			FileSystemAction action = new DeleteFileSystemAction(config, null, winningLastVersion, winnersDatabase);
+			outFileSystemActions.add(action);
+			
+			logger.log(Level.INFO, "     -> (3) New: winning version was deleted, but local exists, winning version = "+winningLastVersion+" at "+winningLastFile);					
+			logger.log(Level.INFO, "     -> "+action);	
+			
+			changeSet.getDeletedFiles().add(winningLastVersion.getPath());
 		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_LINK_TARGET)) {					
 			FileSystemAction action = new NewSymlinkFileSystemAction(config, winningLastVersion, winnersDatabase);

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 package org.syncany.plugins.transfer;
 
+import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -52,6 +53,17 @@ public @interface Setup {
 	 */
 	boolean singular() default false;
 
+	/**
+	 * Visible values are shown to the user during setup, invisible one are hidden.
+	 */
+	boolean visible() default true;
+	
+	/**
+	 * In case the field represents a {@link File}, this option defines whether a file 
+	 * or folder is required. This value can be used by front-ends.
+	 */
+	FileType fileType() default FileType.NONE;
+	
 	/**
 	 * @see org.syncany.plugins.transfer.TransferPluginOptionCallback
 	 */
