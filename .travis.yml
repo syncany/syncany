@@ -11,11 +11,11 @@ env:
     - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
     - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
 
-    # Syncany SonarQube credentials (SYNCANY_SONARQUBE_* environment variables)
-    - secure: "JkiWRBAQi77JT6SlJ8d1n53D/uKlzeHmSIFhMR/zhth1XdWZ3o0xnMt0l8jBonw9NLaSPVlVrb9CZnZIf5x1MKNUAa4bV2kVZZClvzRpkYvrlpbqoAJMhmRPwd21Ksc9v/AQ4q02d9DnucyWQSo4zW9WrwJgp2WGB1Nv+QedBuA="
-    - secure: "OLbALQjg3aof2OQWjjgtn+2YDYvzfJnNjy+BQLxiCOoAU4EJ5z704WJE8vVLmagTCESXuLWqYzvP8k7FRxprxl13GfZRnsnGWPGqYlpWLBmB0wsip2h1V7Tll++ug1lJgy3Eof7Jl8V2mXnTYA7PJqv9u3yfHkIHyC1mRF65P1Y="    
-    - secure: "UjvIje8i70IzTOsc2+aR+/v3UTl+IE9edSn6USLXAUnqjU+d05joL8QjdwalZylX8t0bsLKukDUxqqJEbXaql28lv6tBulg1NZrNrU+dujMbLskgqSdzho0fNjE4wb+xE9Lq0eSvvMe8sige6Sv9EVvSMnso6qcWcmE57tT0FLk="
-    - secure: "koSsHxOg4a9dX049etY5TBuDUN6sHUxq/g/6CrDB/T1m1dNnMARzu2P1dGon1SOiI55Fg6R/UmMnxxQmi8Mg8YraaJf88wz2OSTi8IhqfWdEdgMn38dpY0k4/dkkUwklzTWLIRSQ0Q7GmTEyRJvRlDQ8rZEMUSiLNNfPSnlsaPs="
+    # Syncany SonarQube credentials (SYNCANY_SONARQUBE_* environment variables)    
+    - secure: "BDo4IO82sX64vRCxZx3voQ4HcbuTAfTiuNR3MsXlTrBhULAjLU8+EtD+RuXLqYSTEvpzIskiV2EWS4IRHsjYt5lAXl1/YrZsAU6v8UDNh9jkm6TVkxVlACTcEyBHU1SIxn14gXW405sxIAxPZ4YqVwVGNL41rauKXIj0jNp/5Q0="
+    - secure: "KPZ/bsv+Wdbz61YJeZnO1wQ0yZ4No7VUZ9U61I7P908aAcblRgkpdmPopf59rhFWoRjc74rDb9b2mkPwoNzUvLA0S7GynyTCGh339jWoqVu3YM3jM3HPN4zarcbCTu5Ge4+xDDf8I/ghzsZHSJduqUMp3N0yytoG79tV4tSfhBA="
+    - secure: "d7/TQzfKg94GlYsuRvcf1tdI6F3JKKKf/QS7spDy4OWTFeUyj+K+stPWXw1BeZLK5YnYbe7tsdQdBpxl0Az+YZgZZMJ3B9hVMr1yo5N+QXo3/wvbrm+CWEjDPNCK3iVP63w9KAxOkcZ6+7eHl0zSpEoPZEX+6wMJH57cQk33kO0="
+    - secure: "Wu1VTR/AOjAZhcKJ4xkauhZWMzbu/lIW3j/sQScv1p4vPWK9Eu930c714+M2JUymPQQuJY0q2Lb8+sBOyJumM34SCyEvEq7Pq7Bu2evtobekRo7ICiDSqy98+hCMbI0rU7qaYOckhCVC/Oqe3OjO4tB33gauVF0L4bwpKPvVeks="
 
 branches:
   only:
