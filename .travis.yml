@@ -11,6 +11,12 @@ env:
     - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
     - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
 
+    # Syncany SonarQube credentials (SYNCANY_SONARQUBE_* environment variables)
+    - secure: "JkiWRBAQi77JT6SlJ8d1n53D/uKlzeHmSIFhMR/zhth1XdWZ3o0xnMt0l8jBonw9NLaSPVlVrb9CZnZIf5x1MKNUAa4bV2kVZZClvzRpkYvrlpbqoAJMhmRPwd21Ksc9v/AQ4q02d9DnucyWQSo4zW9WrwJgp2WGB1Nv+QedBuA="
+    - secure: "OLbALQjg3aof2OQWjjgtn+2YDYvzfJnNjy+BQLxiCOoAU4EJ5z704WJE8vVLmagTCESXuLWqYzvP8k7FRxprxl13GfZRnsnGWPGqYlpWLBmB0wsip2h1V7Tll++ug1lJgy3Eof7Jl8V2mXnTYA7PJqv9u3yfHkIHyC1mRF65P1Y="    
+    - secure: "UjvIje8i70IzTOsc2+aR+/v3UTl+IE9edSn6USLXAUnqjU+d05joL8QjdwalZylX8t0bsLKukDUxqqJEbXaql28lv6tBulg1NZrNrU+dujMbLskgqSdzho0fNjE4wb+xE9Lq0eSvvMe8sige6Sv9EVvSMnso6qcWcmE57tT0FLk="
+    - secure: "koSsHxOg4a9dX049etY5TBuDUN6sHUxq/g/6CrDB/T1m1dNnMARzu2P1dGon1SOiI55Fg6R/UmMnxxQmi8Mg8YraaJf88wz2OSTi8IhqfWdEdgMn38dpY0k4/dkkUwklzTWLIRSQ0Q7GmTEyRJvRlDQ8rZEMUSiLNNfPSnlsaPs="
+
 branches:
   only:
     - master
