@@ -1,0 +1,12 @@
+
+apply plugin: 'sonar-runner'
+sonarRunner {
+    toolVersion = '2.4'
+		sonarProperties {
+			property "sonar.host.url", "http://my.server.com"
+			property "sonar.jdbc.url", "jdbc:mysql://my.server.com/sonar"
+			property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
+			property "sonar.jdbc.username", ${SONARQUBE_USER}
+			property "sonar.jdbc.password", ${SONARQUBE_PASS}
+		}
+}
