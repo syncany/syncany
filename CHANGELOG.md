@@ -5,6 +5,8 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Bugfixes and other things:
   + Fix Dropbox plugin bug when deleting non-existing files #325
+  + Cleanup status information / status texts in tray #317/#329
+  + Code refactoring based on SonarQube output #302/#326
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
