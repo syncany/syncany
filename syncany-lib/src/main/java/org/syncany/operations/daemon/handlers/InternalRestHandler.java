@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,6 @@
  */
 package org.syncany.operations.daemon.handlers;
 
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,42 +27,49 @@ import org.apache.commons.io.IOUtils;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+import com.google.common.base.Joiner;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
 
 /**
  * InteralRestHandler handles the REST requests sent to the daemon.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InternalRestHandler implements HttpHandler {
 	private static final Logger logger = Logger.getLogger(InternalRestHandler.class.getSimpleName());
-	private WebServer daemonWebServer;
-	private LocalEventBus eventBus;
-	
-	public InternalRestHandler(WebServer daemonWebServer) {
+
+	private final WebServer daemonWebServer;
+	private final LocalEventBus eventBus;
+	private final WebServer.RequestFormatType requestFormatType;
+
+	public InternalRestHandler(WebServer daemonWebServer, WebServer.RequestFormatType requestFormatType) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
+		this.requestFormatType = requestFormatType;
 	}
-	
+
 	@Override
 	public void handleRequest(final HttpServerExchange exchange) throws Exception {
 		handleRestRequest(exchange);
 	}
-	
+
 	private void handleRestRequest(HttpServerExchange exchange) throws IOException {
 		logger.log(Level.INFO, "HTTP request received:" + exchange.getRelativePath());
 
-		exchange.startBlocking();			
+		exchange.startBlocking();
 
-		if (exchange.getRelativePath().startsWith("/file/")) {	
+		if (exchange.getRelativePath().startsWith("/file/")) {
 			String tempFileToken = exchange.getRelativePath().substring("/file/".length());
 			File tempFile = daemonWebServer.getFileTokenTempFileFromCache(tempFileToken);
-			
+
 			if (tempFile != null) {
 				logger.log(Level.INFO, "- Temp file: " + tempFileToken);
-				
-				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());				
+
+				IOUtils.copy(new FileInputStream(tempFile), exchange.getOutputStream());
 				exchange.endExchange();
 			}
 			else {
@@ -73,14 +77,27 @@ public class InternalRestHandler implements HttpHandler {
 				eventBus.post(new BadRequestResponse(-1, "Invalid request."));
 			}
 		}
-		else {	
+		else {
 			String message = IOUtils.toString(exchange.getInputStream()); // TODO [high] Read entire file to memory. Dangerous!
 			logger.log(Level.INFO, "REST message received: " + message);
-	
+
 			try {
-				Request request = MessageFactory.toRequest(message);
-	
-				daemonWebServer.putCacheRestRequest(request.getId(), exchange);				
+				Request request;
+				switch (requestFormatType) {
+					case JSON:
+						request = JsonMessageFactory.toRequest(message);
+						break;
+
+					case XML:
+						request = XmlMessageFactory.toRequest(message);
+						break;
+
+					default:
+						throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
+				}
+
+				daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
+				daemonWebServer.putCacheRestRequest(request.getId(), exchange);
 				eventBus.post(request);
 			}
 			catch (Exception e) {

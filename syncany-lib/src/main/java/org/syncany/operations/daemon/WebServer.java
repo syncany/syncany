@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2013 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,8 @@ package org.syncany.operations.daemon;
 
 import static io.undertow.Handlers.path;
 import static io.undertow.Handlers.websocket;
-import io.undertow.Undertow;
-import io.undertow.security.api.AuthenticationMechanism;
-import io.undertow.security.api.AuthenticationMode;
-import io.undertow.security.handlers.AuthenticationCallHandler;
-import io.undertow.security.handlers.AuthenticationConstraintHandler;
-import io.undertow.security.handlers.AuthenticationMechanismsHandler;
-import io.undertow.security.handlers.SecurityInitialHandler;
-import io.undertow.security.idm.IdentityManager;
-import io.undertow.security.impl.BasicAuthenticationMechanism;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.websockets.core.WebSocketChannel;
-import io.undertow.websockets.core.WebSockets;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -41,11 +29,10 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.net.ssl.SSLContext;
 
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -66,36 +53,55 @@ import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
 import org.syncany.operations.daemon.messages.GetFileFolderResponse;
 import org.syncany.operations.daemon.messages.GetFileFolderResponseInternal;
 import org.syncany.operations.daemon.messages.api.ExternalEvent;
-import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
+import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
 import org.syncany.plugins.web.WebInterfacePlugin;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import io.undertow.Undertow;
+import io.undertow.security.api.AuthenticationMechanism;
+import io.undertow.security.api.AuthenticationMode;
+import io.undertow.security.handlers.AuthenticationCallHandler;
+import io.undertow.security.handlers.AuthenticationConstraintHandler;
+import io.undertow.security.handlers.AuthenticationMechanismsHandler;
+import io.undertow.security.handlers.SecurityInitialHandler;
+import io.undertow.security.idm.IdentityManager;
+import io.undertow.security.impl.BasicAuthenticationMechanism;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.websockets.core.WebSocketChannel;
+import io.undertow.websockets.core.WebSockets;
 
 /**
- * The web server provides a HTTP/REST and WebSocket API to thin clients, 
- * as well as a mechanism to run a web interface by implementing a 
- * {@link WebInterfacePlugin}. 
- * 
+ * The web server provides a HTTP/REST and WebSocket API to thin clients,
+ * as well as a mechanism to run a web interface by implementing a
+ * {@link WebInterfacePlugin}.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WebServer {
+	public enum RequestFormatType {
+		XML, JSON
+	}
+
 	private static final Logger logger = Logger.getLogger(WebServer.class.getSimpleName());
+	private static final RequestFormatType DEFAULT_RESPONSE_FORMAT = RequestFormatType.XML;
 
 	private Undertow webServer;
 	private LocalEventBus eventBus;
 
 	private Cache<Integer, WebSocketChannel> requestIdWebSocketCache;
 	private Cache<Integer, HttpServerExchange> requestIdRestSocketCache;
+	private Cache<Integer, RequestFormatType> requestIdRestFormatCache;
 	private Cache<String, File> fileTokenTempFileCache;
-	
-	private List<WebSocketChannel> clientChannels;
+
+	private Map<WebSocketChannel, RequestFormatType> clientChannels = Maps.newHashMap();
 
 	public WebServer(DaemonConfigTO daemonConfig) throws Exception {
-		this.clientChannels = new ArrayList<WebSocketChannel>();
-		
 		initCaches();
 		initEventBus();
 		initServer(daemonConfig);
@@ -114,16 +120,19 @@ public class WebServer {
 			logger.log(Level.SEVERE, "Could not stop websocket server.", e);
 		}
 	}
-	
+
 	private void initCaches() {
 		requestIdWebSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
-				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
-		
+						.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+
 		requestIdRestSocketCache = CacheBuilder.newBuilder().maximumSize(10000)
-				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
-		
+						.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+
 		fileTokenTempFileCache = CacheBuilder.newBuilder().maximumSize(10000)
-				.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+						.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
+
+		requestIdRestFormatCache = CacheBuilder.newBuilder().maximumSize(10000)
+						.concurrencyLevel(2).expireAfterAccess(1, TimeUnit.MINUTES).build();
 	}
 
 	private void initEventBus() {
@@ -133,7 +142,7 @@ public class WebServer {
 
 	private void initServer(DaemonConfigTO daemonConfigTO) throws Exception {
 		WebServerTO webServerConfig = daemonConfigTO.getWebServer();
-		
+
 		// Bind address and port
 		String bindAddress = webServerConfig.getBindAddress();
 		int bindPort = webServerConfig.getBindPort();
@@ -141,90 +150,92 @@ public class WebServer {
 		// Users (incl. CLI user!)
 		List<UserTO> users = readWebServerUsers(daemonConfigTO);
 		IdentityManager identityManager = new MapIdentityManager(users);
-		
+
 		// (Re-)generate keypair/certificate (if requested)
 		boolean certificateAutoGenerate = webServerConfig.isCertificateAutoGenerate();
 		String certificateCommonName = webServerConfig.getCertificateCommonName();
-		
+
 		if (certificateAutoGenerate && certificateCommonNameChanged(certificateCommonName)) {
-			generateNewKeyPairAndCertificate(certificateCommonName);	
-		}		
-		
-		// Set up the handlers for WebSocket, REST and the web interface		
+			generateNewKeyPairAndCertificate(certificateCommonName);
+		}
+
+		// Set up the handlers for WebSocket, REST and the web interface
 		HttpHandler pathHttpHandler = path()
-			.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this, certificateCommonName)))
-			.addPrefixPath("/api/rs", new InternalRestHandler(this))
-			.addPrefixPath("/", new InternalWebInterfaceHandler());
-		
+						.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.XML)))
+						.addPrefixPath("/api/ws/json", websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.JSON)))
+						.addPrefixPath("/api/rs", new InternalRestHandler(this, RequestFormatType.XML))
+						.addPrefixPath("/api/rs/json", new InternalRestHandler(this, RequestFormatType.JSON))
+						.addPrefixPath("/", new InternalWebInterfaceHandler());
+
 		// Add some security spices
 		HttpHandler securityPathHttpHandler = addSecurity(pathHttpHandler, identityManager);
 		SSLContext sslContext = UserConfig.createUserSSLContext();
-		
+
 		// And go for it!
 		webServer = Undertow
-			.builder()
-			.addHttpsListener(bindPort, bindAddress, sslContext)
-			.setHandler(securityPathHttpHandler)
-			.build();
-		
+						.builder()
+						.addHttpsListener(bindPort, bindAddress, sslContext)
+						.setHandler(securityPathHttpHandler)
+						.build();
+
 		logger.log(Level.INFO, "Initialized web server.");
 	}
 
 	private List<UserTO> readWebServerUsers(DaemonConfigTO daemonConfigTO) {
 		List<UserTO> users = daemonConfigTO.getUsers();
-		
+
 		if (users == null) {
 			users = new ArrayList<UserTO>();
 		}
-		
+
 		// Add CLI credentials
 		if (daemonConfigTO.getPortTO() != null) {
 			users.add(daemonConfigTO.getPortTO().getUser());
 		}
-		
+
 		return users;
 	}
-	
+
 	private boolean certificateCommonNameChanged(String certificateCommonName) {
-		try { 
+		try {
 			KeyStore userKeyStore = UserConfig.getUserKeyStore();
 			X509Certificate currentCertificate = (X509Certificate) userKeyStore.getCertificate(CipherParams.CERTIFICATE_IDENTIFIER);
-			
+
 			if (currentCertificate != null) {
 				X500Name currentCertificateSubject = new JcaX509CertificateHolder(currentCertificate).getSubject();
 				RDN currentCertificateSubjectCN = currentCertificateSubject.getRDNs(BCStyle.CN)[0];
 
 				String currentCertificateSubjectCnStr = IETFUtils.valueToString(currentCertificateSubjectCN.getFirst().getValue());
-				
+
 				if (!certificateCommonName.equals(currentCertificateSubjectCnStr)) {
 					logger.log(Level.INFO, "- Certificate regeneration necessary: Cert common name in daemon config changed from " + currentCertificateSubjectCnStr + " to " + certificateCommonName + ".");
 					return true;
-				}				
+				}
 			}
 			else {
 				logger.log(Level.INFO, "- Certificate regeneration necessary, because no certificate found in key store.");
 				return true;
-			}			
-			
+			}
+
 			return false;
 		}
 		catch (Exception e) {
-			throw new RuntimeException("Cannot (re-)generate server certificate for hostname: " + certificateCommonName, e);		
+			throw new RuntimeException("Cannot (re-)generate server certificate for hostname: " + certificateCommonName, e);
 		}
 	}
 
 	public static void generateNewKeyPairAndCertificate(String certificateCommonName) {
 		try {
 			logger.log(Level.INFO, "(Re-)generating keypair and certificate for hostname " + certificateCommonName + " ...");
-			
+
 			// Generate key pair and certificate
 			KeyPair keyPair = CipherUtil.generateRsaKeyPair();
 			X509Certificate certificate = CipherUtil.generateSelfSignedCertificate(certificateCommonName, keyPair);
-			
+
 			// Add key and certificate to key store
-			UserConfig.getUserKeyStore().setKeyEntry(CipherParams.CERTIFICATE_IDENTIFIER, keyPair.getPrivate(), new char[0], new Certificate[] { certificate });
+			UserConfig.getUserKeyStore().setKeyEntry(CipherParams.CERTIFICATE_IDENTIFIER, keyPair.getPrivate(), new char[0], new Certificate[]{certificate});
 			UserConfig.storeUserKeyStore();
-			
+
 			// Add certificate to trust store (for CLI->API connection)
 			UserConfig.getUserTrustStore().setCertificateEntry(CipherParams.CERTIFICATE_IDENTIFIER, certificate);
 			UserConfig.storeTrustStore();
@@ -232,27 +243,27 @@ public class WebServer {
 		catch (Exception e) {
 			throw new RuntimeException("Unable to read key store or generate self-signed certificate.", e);
 		}
-	}		
+	}
 
-	private static HttpHandler addSecurity(final HttpHandler toWrap, IdentityManager identityManager) {		
-		List<AuthenticationMechanism> mechanisms = 
-				Collections.<AuthenticationMechanism> singletonList(new BasicAuthenticationMechanism("Syncany"));
+	private static HttpHandler addSecurity(final HttpHandler toWrap, IdentityManager identityManager) {
+		List<AuthenticationMechanism> mechanisms =
+						Collections.<AuthenticationMechanism>singletonList(new BasicAuthenticationMechanism("Syncany"));
 
 		HttpHandler handler = toWrap;
 
 		handler = new AuthenticationCallHandler(handler);
-		handler = new AuthenticationConstraintHandler(handler);		
+		handler = new AuthenticationConstraintHandler(handler);
 		handler = new AuthenticationMechanismsHandler(handler, mechanisms);
 		handler = new SecurityInitialHandler(AuthenticationMode.PRO_ACTIVE, identityManager, handler);
-		
+
 		return handler;
-	}		
+	}
 
 	@Subscribe
 	public void onGetFileResponseInternal(GetFileFolderResponseInternal fileResponseInternal) {
 		File tempFile = fileResponseInternal.getTempFile();
 		GetFileFolderResponse fileResponse = fileResponseInternal.getFileResponse();
-		
+
 		fileTokenTempFileCache.asMap().put(fileResponse.getTempToken(), tempFile);
 		eventBus.post(fileResponse);
 	}
@@ -260,37 +271,34 @@ public class WebServer {
 	@Subscribe
 	public void onEvent(ExternalEvent event) {
 		try {
-			sendBroadcast(MessageFactory.toXml(event));
+			sendBroadcast(event);
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Cannot send event.", e);
 		}
 	}
-	
+
 	@Subscribe
 	public void onResponse(Response response) {
 		try {
-			// Serialize response
-			String responseMessage = MessageFactory.toJson(response);
-			
 			// Send to one or many receivers
 			boolean responseWithoutRequest = response.getRequestId() == null || response.getRequestId() <= 0;
 
 			if (responseWithoutRequest) {
-				sendBroadcast(responseMessage);
+				sendBroadcast(response);
 			}
 			else {
 				HttpServerExchange responseToHttpServerExchange = requestIdRestSocketCache.asMap().get(response.getRequestId());
 				WebSocketChannel responseToWebSocketChannel = requestIdWebSocketCache.asMap().get(response.getRequestId());
 
 				if (responseToHttpServerExchange != null) {
-					sendTo(responseToHttpServerExchange, responseMessage);
-				}				
+					sendTo(responseToHttpServerExchange, response);
+				}
 				else if (responseToWebSocketChannel != null) {
-					sendTo(responseToWebSocketChannel, responseMessage);
+					sendTo(responseToWebSocketChannel, response);
 				}
 				else {
-					logger.log(Level.WARNING, "Cannot send message, because request ID in response is unknown or timed out." + responseMessage);
+					logger.log(Level.WARNING, "Cannot send message, because request ID in response is unknown or timed out." + response);
 				}
 			}
 		}
@@ -298,58 +306,107 @@ public class WebServer {
 			logger.log(Level.SEVERE, "Cannot send response.", e);
 		}
 	}
-	
-	private void sendBroadcast(String message) {
+
+	private void sendBroadcast(Message message) throws Exception {
 		logger.log(Level.INFO, "Sending broadcast message to " + clientChannels.size() + " websocket client(s)");
 
 		synchronized (clientChannels) {
-			for (WebSocketChannel clientChannel : clientChannels) {
+			for (WebSocketChannel clientChannel : clientChannels.keySet()) {
 				sendTo(clientChannel, message);
 			}
 		}
 	}
 
-	private void sendTo(WebSocketChannel clientChannel, String message) {
+	private void sendTo(WebSocketChannel clientChannel, Message message) throws Exception {
 		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + message);
-		WebSockets.sendText(message, clientChannel, null);
+		WebSockets.sendText(makeMessage(clientChannel, message), clientChannel, null);
 	}
-	
-	private void sendTo(HttpServerExchange serverExchange, String message) {
+
+	private String makeMessage(WebSocketChannel channel, Message message) throws Exception {
+		// it's always there, be cool
+		RequestFormatType requestFormatType = clientChannels.get(channel);
+
+		if (requestFormatType == null) {
+			requestFormatType = DEFAULT_RESPONSE_FORMAT;
+		}
+
+		switch (requestFormatType) {
+			case JSON:
+				return JsonMessageFactory.toJson(message);
+
+			default:
+				return XmlMessageFactory.toXml(message);
+		}
+	}
+
+	private void sendTo(HttpServerExchange serverExchange, Response message) throws Exception {
 		logger.log(Level.INFO, "Sending message to " + serverExchange.getHostAndPort() + ": " + message);
-		
-		serverExchange.getResponseSender().send(message);
+
+		serverExchange.getResponseSender().send(makeMessage(message));
 		serverExchange.endExchange();
 	}
 
-	// Client channel access methods
-	
-	public void addClientChannel(WebSocketChannel clientChannel) {
-		synchronized (clientChannels) {
-			clientChannels.add(clientChannel);
+	private String makeMessage(Response message) throws Exception {
+		// it's always there, be cool
+		RequestFormatType requestFormatType = requestIdRestFormatCache.getIfPresent(message.getRequestId());
+
+		if (requestFormatType == null) {
+			requestFormatType = DEFAULT_RESPONSE_FORMAT;
+		}
+
+		switch (requestFormatType) {
+			case JSON:
+				return JsonMessageFactory.toJson(message);
+
+			default:
+				return XmlMessageFactory.toXml(message);
 		}
 	}
-	
+
+	// Client channel access methods
+
+	public void addClientChannel(WebSocketChannel clientChannel, RequestFormatType format) {
+		synchronized (clientChannels) {
+			clientChannels.put(clientChannel, format);
+		}
+	}
+
 	public void removeClientChannel(WebSocketChannel clientChannel) {
 		synchronized (clientChannels) {
 			clientChannels.remove(clientChannel);
 		}
 	}
-	
+
+	public RequestFormatType getRequestFormatTypeFromWebSocketChannel(WebSocketChannel channel) {
+		if (channel.getUrl().toLowerCase().contains("json")) {
+			return RequestFormatType.JSON;
+		}
+		else {
+			return RequestFormatType.XML;
+		}
+	}
+
 	// Cache access methods
-	
+
 	public void putCacheRestRequest(int id, HttpServerExchange exchange) {
 		synchronized (requestIdRestSocketCache) {
-			requestIdRestSocketCache.put(id, exchange);	
+			requestIdRestSocketCache.put(id, exchange);
 		}
 	}
-	
+
 	public void putCacheWebSocketRequest(int id, WebSocketChannel clientSocket) {
 		synchronized (requestIdWebSocketCache) {
-			requestIdWebSocketCache.put(id, clientSocket);	
+			requestIdWebSocketCache.put(id, clientSocket);
 		}
 	}
-	
+
+	public void putRequestFormatType(int id, RequestFormatType requestFormatType) {
+		synchronized (requestIdRestFormatCache) {
+			requestIdRestFormatCache.put(id, requestFormatType);
+		}
+	}
+
 	public File getFileTokenTempFileFromCache(String fileToken) {
-		 return fileTokenTempFileCache.asMap().get(fileToken);
+		return fileTokenTempFileCache.asMap().get(fileToken);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,144 +17,34 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
-import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.Converter;
-import org.simpleframework.xml.convert.Registry;
-import org.simpleframework.xml.convert.RegistryStrategy;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.InputNode;
-import org.simpleframework.xml.stream.OutputNode;
-import org.syncany.database.FileContent.FileChecksum;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.util.StringUtil;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * The message factory serializes and deserializes messages sent to
  * or from the daemon via the REST/WS API.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MessageFactory {
-	private static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
-	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
-	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
-	
-	private static final Serializer serializer;
-	
-	static {
-		try {
-			Registry registry = new Registry();
-			
-			registry.bind(FileHistoryId.class, new FileHistoryIdConverter());
-			registry.bind(FileChecksum.class, new FileChecksumConverter());
-			
-			serializer = new Persister(new RegistryStrategy(registry));
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public static Request toRequest(String requestMessageXml) throws Exception {
-		Message requestMessage = toMessage(requestMessageXml);
+	protected static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 
-		if (!(requestMessage instanceof Request)) {
-			throw new Exception("Invalid class: Message is not a request type.");
-		}
-		
-		return (Request) requestMessage;
-	}
-	
-	public static Response toResponse(String responseMessageXml) throws Exception {
-		Message responseMessage = toMessage(responseMessageXml);
-
-		if (!(responseMessage instanceof Response)) {
-			throw new Exception("Invalid class: Message is not a response type.");
-		}
-		
-		return (Response) responseMessage;
-	}
-	
-	public static Message toMessage(String messageStr) throws Exception {
-		String messageType = getMessageType(messageStr);			
-		Class<? extends Message> messageClass = getMessageClass(messageType);
-		
-		Message message = serializer.read(messageClass, messageStr);
-		logger.log(Level.INFO, "Message created: " + message);
-		
-		return message;
-	}
-	
-	public static String toXml(Message response) throws Exception {
-		StringWriter messageWriter = new StringWriter();
-		serializer.write(response, messageWriter);
-
-		return messageWriter.toString();
-	}
-	
-	private static String getMessageType(String message) throws Exception {
-		Matcher messageTypeMatcher = MESSAGE_TYPE_PATTERN.matcher(message);
-		
-		if (messageTypeMatcher.find()) {
-			return messageTypeMatcher.group(MESSAGE_TYPE_PATTERN_GROUP);
-		}
-		else {
-			throw new Exception("Cannot find type of message. Invalid XML: " + message);
-		}
-	}
-	
-	private static Class<? extends Message> getMessageClass(String requestType) throws Exception {
+	protected static Class<? extends Message> getMessageClass(String requestType) throws Exception {
 		String thisPackage = Message.class.getPackage().getName();
 		String parentPackage = thisPackage.substring(0, thisPackage.lastIndexOf("."));
 		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
 		String fqMessageClassName = parentPackage + "." + camelCaseMessageType;
-		
+
 		// Try to load!
-		try {		
+		try {
 			Class<? extends Message> MessageClass = Class.forName(fqMessageClassName).asSubclass(Message.class);
 			return MessageClass;
-		} 
+		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
 			throw new Exception("Cannot read request class from request type: " + requestType, e);
-		}		
-	}
-	
-	private static class FileHistoryIdConverter implements Converter<FileHistoryId> {
-		@Override
-		public FileHistoryId read(InputNode node) throws Exception {
-			return FileHistoryId.parseFileId(node.getValue());
 		}
-
-		@Override
-		public void write(OutputNode node, FileHistoryId value) throws Exception {
-			node.setValue(value.toString());
-		}
-	}
-	
-	private static class FileChecksumConverter implements Converter<FileChecksum> {
-		@Override
-		public FileChecksum read(InputNode node) throws Exception {
-			return FileChecksum.parseFileChecksum(node.getValue());
-		}
-
-		@Override
-		public void write(OutputNode node, FileChecksum value) throws Exception {
-			node.setValue(value.toString());
-		}
-	}
-
-	public static String toJson(Response response) {
-		Gson gson = new Gson();
-		return gson.toJson(response);
 	}
 }

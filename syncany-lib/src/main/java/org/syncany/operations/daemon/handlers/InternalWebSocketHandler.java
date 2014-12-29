@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,13 +17,6 @@
  */
 package org.syncany.operations.daemon.handlers;
 
-import io.undertow.websockets.WebSocketConnectionCallback;
-import io.undertow.websockets.core.AbstractReceiveListener;
-import io.undertow.websockets.core.BufferedTextMessage;
-import io.undertow.websockets.core.StreamSourceFrameChannel;
-import io.undertow.websockets.core.WebSocketChannel;
-import io.undertow.websockets.spi.WebSocketHttpExchange;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.logging.Level;
@@ -33,11 +26,19 @@ import java.util.regex.Pattern;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.api.MessageFactory;
+import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+import com.google.common.base.Joiner;
+import io.undertow.websockets.WebSocketConnectionCallback;
+import io.undertow.websockets.core.AbstractReceiveListener;
+import io.undertow.websockets.core.BufferedTextMessage;
+import io.undertow.websockets.core.StreamSourceFrameChannel;
+import io.undertow.websockets.core.WebSocketChannel;
+import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 /**
- * InternalWebSocketHandler handles the web socket requests 
+ * InternalWebSocketHandler handles the web socket requests
  * sent to the daemon.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -46,32 +47,34 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
 	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^https?://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
-	private WebServer daemonWebServer;
-	private LocalEventBus eventBus;
-	private String certificateCommonName;
-	
-	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName) {
+	private final WebServer daemonWebServer;
+	private final LocalEventBus eventBus;
+	private final String certificateCommonName;
+	private final WebServer.RequestFormatType requestFormatType;
+
+	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName, WebServer.RequestFormatType requestFormatType) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
 		this.certificateCommonName = certificateCommonName;
-		
+		this.requestFormatType = requestFormatType;
+
 		this.eventBus.register(this);
 	}
-	
+
 	@Override
 	public void onConnect(WebSocketHttpExchange exchange, WebSocketChannel channel) {
 		logger.log(Level.INFO, "Connecting to websocket server.");
-		
+
 		// Validate origin header (security!)
 		String originHeader = exchange.getRequestHeader("Origin");
-		
+
 		if (!allowedOriginHeader(originHeader)) {
 			logger.log(Level.INFO, channel.toString() + " disconnected due to invalid origin header: " + originHeader);
 			exchange.close();
 		}
 		else {
 			logger.log(Level.INFO, "Valid origin header, setting up connection.");
-			
+
 			channel.getReceiveSetter().set(new AbstractReceiveListener() {
 				@Override
 				protected void onFullTextMessage(WebSocketChannel clientChannel, BufferedTextMessage message) {
@@ -90,18 +93,19 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 				}
 			});
 
-			daemonWebServer.addClientChannel(channel);
+			logger.log(Level.INFO, "A new client (" + channel.hashCode() + ") connected using format " + requestFormatType);
+			daemonWebServer.addClientChannel(channel, requestFormatType);
 
 			channel.resumeReceives();
 		}
 	}
-	
+
 	private boolean allowedOriginHeader(String originHeader) {
 		// Allow all non-browser clients (no "Origin:" header!)
 		if (originHeader == null) {
 			return true;
 		}
-		
+
 		// Allow localhost's hostname
 		try {
 			if (originHeader.equals(InetAddress.getLocalHost().getHostName())) {
@@ -111,17 +115,17 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		catch (Exception e) {
 			// Continue trying.
 		}
-		
+
 		// Allow by whitelist
 		if (WEBSOCKET_ALLOWED_ORIGIN_HEADER.matcher(originHeader).matches()) {
 			return true;
 		}
-		
+
 		// Additional allowed origin header (certificate CN)
 		if (certificateCommonName != null && originHeader.startsWith("https://" + certificateCommonName + ":")) {
 			return true;
 		}
-		
+
 		// Otherwise, we fail
 		return false;
 	}
@@ -130,9 +134,22 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		logger.log(Level.INFO, "Web socket message received: " + message);
 
 		try {
-			Request request = MessageFactory.toRequest(message);
+			Request request;
+			switch (requestFormatType) {
+				case JSON:
+					request = JsonMessageFactory.toRequest(message);
+					break;
 
-			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
+				case XML:
+					request = XmlMessageFactory.toRequest(message);
+					break;
+
+				default:
+					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
+			}
+
+			daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
+			daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
 			eventBus.post(request);
 		}
 		catch (Exception e) {
