@@ -46,6 +46,7 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.daemon.messages.CleanupEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
 import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
@@ -130,6 +131,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 			return new CleanupOperationResult(preconditionResult);
 		}
 
+		fireCleanupNeededEvent();
+
 		// At this point, the operation will lock the repository
 		startOperation();
 
@@ -199,6 +202,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void fireStartEvent() {
 		eventBus.post(new CleanupStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+	}
+
+	private void fireCleanupNeededEvent() {
+		eventBus.post(new CleanupStartCleaningSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
 	private void fireEndEvent() {

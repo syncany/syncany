@@ -26,6 +26,7 @@ import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
 import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 
@@ -156,7 +157,8 @@ public class CleanupCommand extends Command {
 
 			if (concreteOperationResult.getRemovedMultiChunksCount() > 0) {
 				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n",
-						concreteOperationResult.getRemovedMultiChunksCount(), (double) concreteOperationResult.getRemovedMultiChunksSize() / 1024 / 1024);
+						concreteOperationResult.getRemovedMultiChunksCount(),
+						(double) concreteOperationResult.getRemovedMultiChunksSize() / 1024 / 1024);
 			}
 
 			if (concreteOperationResult.getRemovedOldVersionsCount() > 0) {
@@ -178,6 +180,11 @@ public class CleanupCommand extends Command {
 
 	@Subscribe
 	public void onCleanUpStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
-		out.printr("Starting cleanup ...");
+		out.printr("Checking if cleanup is needed ...");
+	}
+
+	@Subscribe
+	public void onCleanUpStartCleaningEventReceived(CleanupStartCleaningSyncExternalEvent syncEvent) {
+		out.printr("Cleanup is needed, starting to clean ...");
 	}
 }
