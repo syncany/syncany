@@ -105,7 +105,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(11, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(5, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(5, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(3, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// 2 versions for "file.jpg", 2 versions for "otherfile.txt" and one version for "someotherfile.jpg"
@@ -171,7 +171,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientB.cleanup(cleanupOptions);
 		assertEquals(CleanupResultCode.NOK_LOCAL_CHANGES, cleanupOperationResult.getResultCode());
 		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
@@ -210,7 +210,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
 		assertEquals(CleanupResultCode.NOK_REMOTE_CHANGES, cleanupOperationResult.getResultCode());
 		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
@@ -245,7 +245,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientB.cleanup(options);
 		assertEquals(CleanupResultCode.OK_NOTHING_DONE, cleanupOperationResult.getResultCode());
 		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
@@ -280,7 +280,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(4, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(2, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(2, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(1, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// A: Continue to upload stuff ! <<<<<<<<<<<<<<<<<<<<<
@@ -349,7 +349,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientB.cleanup(removeOldCleanupOperationOptions);
 		assertEquals(CleanupResultCode.NOK_DIRTY_LOCAL, cleanupOperationResult.getResultCode());
 		assertEquals(0, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
@@ -421,7 +421,7 @@ public class CleanupOperationTest {
 		// 6. Call 'cleanup' manually (Nothing happens, since transaction was cleaned on second up)
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup();
 		assertEquals(CleanupOperationResult.CleanupResultCode.OK_NOTHING_DONE, cleanupOperationResult.getResultCode());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, repoActionsDir.listFiles().length);
 
 		// Tear down
@@ -454,7 +454,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(4, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		TestClient clientB = new TestClient("B", testConnection);
@@ -471,7 +471,7 @@ public class CleanupOperationTest {
 		cleanupOperationResult = clientB.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(7, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
@@ -502,7 +502,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(16, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		for (int i = 1; i <= 15; i++) {
@@ -520,7 +520,7 @@ public class CleanupOperationTest {
 		cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(16, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(0, cleanupOperationResult.getRemovedMultiChunks().size());
+		assertEquals(0, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(0, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// Tear down
