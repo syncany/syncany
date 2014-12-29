@@ -2,7 +2,7 @@
 pkgname=syncany
 pkgver=0.4.0_alpha
 _realver=0.4.0-alpha
-pkgrel=1
+pkgrel=2
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
 url="http://www.syncany.org/"
@@ -12,7 +12,7 @@ source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
         syncany
         syncany.bash-completion)
 sha256sums=('cdd34cbfc8201de9615bc0c829d7f9b7c777aee390afe0ac05cdfd398b267550'
-            'df627b5306967f6e0d9a4bf264bdac44caee14ff8e9e7df93fc291339a1d353e'
+            '6f63daf343a8288487bd916189ac05f99464a9892121ec053e410498c0f63b16'
             'f2458567e2686fb8fb596a5dd9de5f3af3c8eaba1f39fd6157f67806cca5ec99')
 
 package() {
