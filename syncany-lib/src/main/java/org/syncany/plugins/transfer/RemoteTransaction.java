@@ -325,7 +325,7 @@ public class RemoteTransaction {
 		}
 	}
 
-	private class TransactionStats {
+	private static class TransactionStats {
 		private long totalUploadSize;
 		private int totalUploadFileCount;
 	}

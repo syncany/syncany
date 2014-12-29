@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,31 +62,31 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  * The purpose of the cleanup operation is to keep the local database and the
  * remote repository clean -- thereby allowing it to be used indefinitely without
  * any performance issues or storage shortage.
- * 
+ *
  * <p>The responsibilities of the cleanup operations include:
  * <ul>
  *   <li>Remove old {@link FileVersion} and their corresponding database entities.
  *       In particular, it also removes {@link PartialFileHistory}s, {@link FileContent}s,
  *       {@link Chunk}s and {@link MultiChunk}s.</li>
  *   <li>Merge metadata of a single client and remove old database version files
- *       from the remote storage.</li>   
+ *       from the remote storage.</li>
  * </ul>
- * 
+ *
  * <p>High level strategy:
  * <ul>
  *    <ol>Lock repo and start thread that renews the lock every X seconds</ol>
  *    <ol>Find old versions / contents / ... from database</ol>
  *    <ol>Delete these versions and contents locally</ol>
  *    <ol>Delete all remote metadata</ol>
- *    <ol>Obtain consistent database files from local database</ol> 
+ *    <ol>Obtain consistent database files from local database</ol>
  *    <ol>Upload new database files to repo</ol>
- *    <ol>Remotely delete unused multichunks</ol> 
+ *    <ol>Remotely delete unused multichunks</ol>
  *    <ol>Stop lock renewal thread and unlock repo</ol>
  * </ul>
- * 
+ *
  * <p><b>Important issues:</b>
  * All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CleanupOperation extends AbstractTransferOperation {
@@ -174,7 +175,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * This method checks if we have changed anything and sets the
 	 * {@link CleanupResultCode} of the given result accordingly.
-	 * 
+	 *
 	 * @param result The result so far in this operation.
 	 * @return result The original result, with the relevant {@link CleanupResultCode}
 	 */
@@ -192,7 +193,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * This method inspects the local database and remote repository to
 	 * see if cleanup should be performed.
-	 * 
+	 *
 	 * @return {@link CleanupResultCode.OK} if nothing prevents continuing, another relevant code otherwise.
 	 */
 	private CleanupResultCode checkPreconditions() throws Exception {
@@ -457,7 +458,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * @return a Map with clientNames as keys and lists of corresponding DatabaseRemoteFiles as values.
 	 */
 	private Map<String, List<DatabaseRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
-		TreeMap<String, List<DatabaseRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DatabaseRemoteFile>>();
+		SortedMap<String, List<DatabaseRemoteFile>> allDatabaseRemoteFilesMap = new TreeMap<String, List<DatabaseRemoteFile>>();
 		Map<String, DatabaseRemoteFile> allDatabaseRemoteFiles = transferManager.list(DatabaseRemoteFile.class);
 
 		for (Map.Entry<String, DatabaseRemoteFile> entry : allDatabaseRemoteFiles.entrySet()) {
