@@ -17,19 +17,22 @@
  */
 package org.syncany.operations.ls_remote;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 public class LsRemoteOperationResult implements OperationResult {
-	private List<DatabaseRemoteFile> unknownRemoteDatabases;
+	@Element(name = "unknownRemoteDatabases")
+	private ArrayList<DatabaseRemoteFile> unknownRemoteDatabases;
 
 	public LsRemoteOperationResult() {
 		// Nothing.
 	}
 
-	public LsRemoteOperationResult(List<DatabaseRemoteFile> unknownRemoteDatabases) {
+	public LsRemoteOperationResult(ArrayList<DatabaseRemoteFile> unknownRemoteDatabases) {
 		this.unknownRemoteDatabases = unknownRemoteDatabases;
 	}
 
