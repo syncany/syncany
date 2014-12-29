@@ -109,8 +109,8 @@ public class CleanupOperation extends AbstractTransferOperation {
 		super(config, ACTION_ID);
 
 		this.options = options;
-		result = new CleanupOperationResult();
-		localDatabase = new SqlDatabase(config);
+		this.result = new CleanupOperationResult();
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override

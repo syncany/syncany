@@ -83,12 +83,12 @@ public class NotificationListener {
 		this.port = port;
 		this.listener = listener;
 
-		subscribedChannels = new HashSet<String>();
-		incomingMessageThread = null;
-		outgoingMessageQueue = new LinkedList<String>();
+		this.subscribedChannels = new HashSet<String>();
+		this.incomingMessageThread = null;
+		this.outgoingMessageQueue = new LinkedList<String>();
 
-		connected = new AtomicBoolean(false);
-		running = new AtomicBoolean(false);
+		this.connected = new AtomicBoolean(false);
+		this.running = new AtomicBoolean(false);
 	}
 
 	public void start() {

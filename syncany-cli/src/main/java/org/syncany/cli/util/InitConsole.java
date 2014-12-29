@@ -36,9 +36,9 @@ public class InitConsole {
 	private PrintWriter systemOut;
 
 	private InitConsole() {
-		console = System.console();
-		systemIn = null;
-		systemOut = null;
+		this.console = System.console();
+		this.systemIn = null;
+		this.systemOut = null;
 	}
 
 	public static InitConsole getInstance() {

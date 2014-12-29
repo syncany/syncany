@@ -44,7 +44,7 @@ public class LsOperation extends Operation {
 		super(config);
 
 		this.options = options;
-		localDatabase = new SqlDatabase(config);
+		this.localDatabase = new SqlDatabase(config);
 	}
 
 	@Override

@@ -57,10 +57,10 @@ public class WatchRunner {
 	public WatchRunner(Config config, WatchOperationOptions watchOperationOptions, PortTO portTO) throws ConfigException {
 		this.config = config;
 		this.portTO = portTO;
-		watchOperation = new WatchOperation(config, watchOperationOptions);
+		this.watchOperation = new WatchOperation(config, watchOperationOptions);
 
-		eventBus = LocalEventBus.getInstance();
-		eventBus.register(this);
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
 	}
 
 	public void start() {

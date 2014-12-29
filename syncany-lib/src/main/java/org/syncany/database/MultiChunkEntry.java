@@ -42,7 +42,7 @@ public class MultiChunkEntry {
 	public MultiChunkEntry(MultiChunkId id, long size) {
 		this.id = id;
 		this.size = size;
-		chunks = new ArrayList<ChunkChecksum>();
+		this.chunks = new ArrayList<ChunkChecksum>();
 	}
 
 	public void addChunk(ChunkChecksum chunk) {

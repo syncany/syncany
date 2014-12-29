@@ -60,7 +60,7 @@ public abstract class RecursiveWatcher {
 		this.settleDelay = settleDelay;
 		this.listener = listener;
 
-		running = new AtomicBoolean(false);
+		this.running = new AtomicBoolean(false);
 	}
 
 	/**

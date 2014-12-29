@@ -39,7 +39,7 @@ public class DatabaseBranch {
 	private ArrayList<DatabaseVersionHeader> branch;
 
 	public DatabaseBranch() {
-		branch = new ArrayList<DatabaseVersionHeader>();
+		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
 
 	public void add(DatabaseVersionHeader header) {

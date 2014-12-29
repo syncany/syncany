@@ -60,8 +60,8 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	public DefaultRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		super(root, ignorePaths, settleDelay, listener);
 
-		watchService = null;
-		watchPathKeyMap = new HashMap<Path, WatchKey>();
+		this.watchService = null;
+		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
 	}
 
 	@Override

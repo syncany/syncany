@@ -55,10 +55,10 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 
 	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName) {
 		this.daemonWebServer = daemonWebServer;
-		eventBus = LocalEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance();
 		this.certificateCommonName = certificateCommonName;
 
-		eventBus.register(this);
+		this.eventBus.register(this);
 	}
 
 	@Override

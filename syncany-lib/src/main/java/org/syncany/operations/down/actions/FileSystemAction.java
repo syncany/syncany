@@ -68,9 +68,9 @@ public abstract class FileSystemAction {
 	public FileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
 		this.config = config;
 		this.winningDatabase = winningDatabase;
-		fileVersion1 = file1;
-		fileVersion2 = file2;
-		fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
+		this.fileVersion1 = file1;
+		this.fileVersion2 = file2;
+		this.fileVersionHelper = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 	}
 
 	public FileVersion getFile1() {

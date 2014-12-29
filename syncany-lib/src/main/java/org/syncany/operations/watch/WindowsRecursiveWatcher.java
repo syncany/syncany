@@ -56,8 +56,8 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	public WindowsRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		super(root, ignorePaths, settleDelay, listener);
 
-		watchService = null;
-		rootWatchKey = null;
+		this.watchService = null;
+		this.rootWatchKey = null;
 	}
 
 	@Override

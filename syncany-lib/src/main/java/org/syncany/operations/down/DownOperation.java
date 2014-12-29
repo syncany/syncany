@@ -109,14 +109,14 @@ public class DownOperation extends AbstractTransferOperation {
 	public DownOperation(Config config, DownOperationOptions options) {
 		super(config, ACTION_ID);
 
-		eventBus = LocalEventBus.getInstance();
+		this.eventBus = LocalEventBus.getInstance();
 
 		this.options = options;
-		result = new DownOperationResult();
+		this.result = new DownOperationResult();
 
-		localDatabase = new SqlDatabase(config);
-		databaseReconciliator = new DatabaseReconciliator();
-		databaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
+		this.localDatabase = new SqlDatabase(config);
+		this.databaseReconciliator = new DatabaseReconciliator();
+		this.databaseSerializer = new DatabaseXmlSerializer(config.getTransformer());
 	}
 
 	/**

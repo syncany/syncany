@@ -60,7 +60,7 @@ public class PartialFileHistory {
 		}
 
 		this.fileHistoryId = fileHistoryId;
-		versions = new TreeMap<Long, FileVersion>();
+		this.versions = new TreeMap<Long, FileVersion>();
 	}
 
 	/**

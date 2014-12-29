@@ -44,7 +44,7 @@ public class FileContent {
 	private List<ChunkChecksum> chunkChecksums;
 
 	public FileContent() {
-		chunkChecksums = new ArrayList<ChunkChecksum>();
+		this.chunkChecksums = new ArrayList<ChunkChecksum>();
 	}
 
 	public void addChunk(ChunkChecksum chunk) {

@@ -68,7 +68,7 @@ public class MimeTypeChunker extends Chunker {
 		this.regularChunker = regularChunker;
 		this.specialChunker = specialChunker;
 		this.specialChunkerMimeTypes = initMimeTypePatterns(specialChunkerMimeTypes);
-		delegatedChunker = null;
+		this.delegatedChunker = null;
 	}
 
 	@Override

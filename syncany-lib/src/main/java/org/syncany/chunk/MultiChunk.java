@@ -59,7 +59,7 @@ public abstract class MultiChunk {
 	public MultiChunk(MultiChunkId id, int minSize) {
 		this.id = id;
 		this.minSize = minSize;
-		size = 0;
+		this.size = 0;
 	}
 
 	/**

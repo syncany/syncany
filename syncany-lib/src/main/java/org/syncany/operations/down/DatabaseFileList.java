@@ -39,7 +39,7 @@ public class DatabaseFileList {
 
 	public DatabaseFileList(SortedMap<File, DatabaseRemoteFile> newRemoteDatabases) {
 		this.newRemoteDatabases = newRemoteDatabases;
-		shortFilenameToFileMap = initLookupMap();
+		this.shortFilenameToFileMap = initLookupMap();
 	}
 
 	private Map<String, File> initLookupMap() {

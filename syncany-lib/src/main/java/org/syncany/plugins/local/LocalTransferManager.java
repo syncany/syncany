@@ -73,12 +73,12 @@ public class LocalTransferManager extends AbstractTransferManager {
 	public LocalTransferManager(LocalTransferSettings connection, Config config) {
 		super(connection, config);
 
-		repoPath = connection.getPath().getAbsoluteFile(); // absolute file to get abs. path!
-		multichunksPath = new File(connection.getPath().getAbsolutePath(), "multichunks");
-		databasesPath = new File(connection.getPath().getAbsolutePath(), "databases");
-		actionsPath = new File(connection.getPath().getAbsolutePath(), "actions");
-		transactionsPath = new File(connection.getPath().getAbsolutePath(), "transactions");
-		temporaryPath = new File(connection.getPath().getAbsolutePath(), "temporary");
+		this.repoPath = connection.getPath().getAbsoluteFile(); // absolute file to get abs. path!
+		this.multichunksPath = new File(connection.getPath().getAbsolutePath(), "multichunks");
+		this.databasesPath = new File(connection.getPath().getAbsolutePath(), "databases");
+		this.actionsPath = new File(connection.getPath().getAbsolutePath(), "actions");
+		this.transactionsPath = new File(connection.getPath().getAbsolutePath(), "transactions");
+		this.temporaryPath = new File(connection.getPath().getAbsolutePath(), "temporary");
 	}
 
 	@Override

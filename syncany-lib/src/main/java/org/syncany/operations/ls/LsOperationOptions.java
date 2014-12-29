@@ -45,11 +45,11 @@ public class LsOperationOptions implements OperationOptions {
 	private boolean fetchHistories;
 
 	public LsOperationOptions() {
-		date = null;
-		pathExpression = null;
-		recursive = false;
-		fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
-		fetchHistories = false;
+		this.date = null;
+		this.pathExpression = null;
+		this.recursive = false;
+		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
+		this.fetchHistories = false;
 	}
 
 	public Date getDate() {

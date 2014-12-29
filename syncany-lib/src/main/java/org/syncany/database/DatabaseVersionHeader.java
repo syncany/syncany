@@ -35,9 +35,9 @@ public class DatabaseVersionHeader {
 	private String client;
 
 	public DatabaseVersionHeader() {
-		date = new Date();
-		vectorClock = new VectorClock();
-		client = "UnknownMachine";
+		this.date = new Date();
+		this.vectorClock = new VectorClock();
+		this.client = "UnknownMachine";
 	}
 
 	public Date getDate() {

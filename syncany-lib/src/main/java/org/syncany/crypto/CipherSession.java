@@ -95,10 +95,10 @@ public class CipherSession {
 	public CipherSession(SaltedSecretKey masterKey, int secretKeyReadCacheSize, int secretKeyWriteReuseCount) {
 		this.masterKey = masterKey;
 
-		secretKeyReadCache = new LinkedHashMap<CipherSpecWithSalt, SecretKeyCacheEntry>();
+		this.secretKeyReadCache = new LinkedHashMap<CipherSpecWithSalt, SecretKeyCacheEntry>();
 		this.secretKeyReadCacheSize = secretKeyReadCacheSize;
 
-		secretKeyWriteCache = new HashMap<CipherSpec, SecretKeyCacheEntry>();
+		this.secretKeyWriteCache = new HashMap<CipherSpec, SecretKeyCacheEntry>();
 		this.secretKeyWriteReuseCount = secretKeyWriteReuseCount;
 	}
 
@@ -215,7 +215,7 @@ public class CipherSession {
 
 		public SecretKeyCacheEntry(SaltedSecretKey saltedSecretKey) {
 			this.saltedSecretKey = saltedSecretKey;
-			useCount = 1;
+			this.useCount = 1;
 		}
 
 		public SaltedSecretKey getSaltedSecretKey() {

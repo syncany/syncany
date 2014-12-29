@@ -73,11 +73,11 @@ public class WatchServer {
 	private LocalEventBus eventBus;
 
 	public WatchServer() {
-		daemonConfig = null;
-		watchOperations = new TreeMap<File, WatchRunner>();
+		this.daemonConfig = null;
+		this.watchOperations = new TreeMap<File, WatchRunner>();
 
-		eventBus = LocalEventBus.getInstance();
-		eventBus.register(this);
+		this.eventBus = LocalEventBus.getInstance();
+		this.eventBus.register(this);
 	}
 
 	public void start(DaemonConfigTO daemonConfigTO) {

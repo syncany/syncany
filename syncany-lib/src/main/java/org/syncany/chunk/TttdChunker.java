@@ -106,8 +106,8 @@ public class TttdChunker extends Chunker {
 		this.D = D;
 		this.Ddash = Ddash;
 		this.windowSize = windowSize;
-		checksumAlgorithm = digestAlg;
-		fingerprintAlgorithm = fingerprintAlg;
+		this.checksumAlgorithm = digestAlg;
+		this.fingerprintAlgorithm = fingerprintAlg;
 		this.name = name;
 
 		if (windowSize > Tmin) {
@@ -143,10 +143,10 @@ public class TttdChunker extends Chunker {
 
 		public TTTDEnumeration(InputStream in) throws IOException {
 			this.in = in;
-			closed = false;
-			c = new byte[8192];
-			clen = -1;
-			cpos = -1;
+			this.closed = false;
+			this.c = new byte[8192];
+			this.clen = -1;
+			this.cpos = -1;
 
 			try {
 				fingerprinter = Fingerprinter.getInstance(fingerprintAlgorithm);

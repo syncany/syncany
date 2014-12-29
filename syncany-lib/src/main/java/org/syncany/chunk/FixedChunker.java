@@ -93,14 +93,14 @@ public class FixedChunker extends Chunker {
 
 		public FixedChunkEnumeration(InputStream in) {
 			this.in = in;
-			buffer = new byte[chunkSize];
-			closed = false;
+			this.buffer = new byte[chunkSize];
+			this.closed = false;
 
 			try {
-				digest = MessageDigest.getInstance(checksumAlgorithm);
-				fileDigest = MessageDigest.getInstance(checksumAlgorithm);
+				this.digest = MessageDigest.getInstance(checksumAlgorithm);
+				this.fileDigest = MessageDigest.getInstance(checksumAlgorithm);
 
-				fileDigest.reset();
+				this.fileDigest.reset();
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);

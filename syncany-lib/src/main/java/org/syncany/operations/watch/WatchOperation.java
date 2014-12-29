@@ -98,21 +98,21 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 		this.options = options;
 
-		localDatabase = new SqlDatabase(config);
+		this.localDatabase = new SqlDatabase(config);
 
-		watchThread = null;
-		syncRunning = new AtomicBoolean(false);
-		syncRequested = new AtomicBoolean(false);
-		stopRequested = new AtomicBoolean(false);
-		pauseRequested = new AtomicBoolean(false);
-		upCount = new AtomicInteger(0);
+		this.watchThread = null;
+		this.syncRunning = new AtomicBoolean(false);
+		this.syncRequested = new AtomicBoolean(false);
+		this.stopRequested = new AtomicBoolean(false);
+		this.pauseRequested = new AtomicBoolean(false);
+		this.upCount = new AtomicInteger(0);
 
 		this.recursiveWatcher = null;
 		this.notificationListener = null;
 		this.eventBus = LocalEventBus.getInstance();
 
-		notificationChannel = StringUtil.toHex(config.getRepoId());
-		notificationInstanceId = "" + Math.abs(new Random().nextLong());
+		this.notificationChannel = StringUtil.toHex(config.getRepoId());
+		this.notificationInstanceId = "" + Math.abs(new Random().nextLong());
 	}
 
 	@Override
