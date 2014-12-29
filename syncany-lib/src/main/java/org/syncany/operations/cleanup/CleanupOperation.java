@@ -45,8 +45,8 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
-import org.syncany.operations.daemon.messages.CleanUpEndSyncExternalEvent;
-import org.syncany.operations.daemon.messages.CleanUpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
@@ -198,11 +198,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void fireStartEvent() {
-		eventBus.post(new CleanUpStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+		eventBus.post(new CleanupStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
 	private void fireEndEvent() {
-		eventBus.post(new CleanUpEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result.getResultCode()));
+		eventBus.post(new CleanupEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));
 	}
 
 	/**

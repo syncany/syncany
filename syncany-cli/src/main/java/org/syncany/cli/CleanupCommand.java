@@ -26,7 +26,7 @@ import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
-import org.syncany.operations.daemon.messages.CleanUpStartSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
 
 import com.google.common.eventbus.Subscribe;
@@ -177,7 +177,7 @@ public class CleanupCommand extends Command {
 	}
 
 	@Subscribe
-	public void onCleanUpStartEventReceived(CleanUpStartSyncExternalEvent syncEvent) {
+	public void onCleanUpStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
 		out.printr("Starting cleanup ...");
 	}
 }
