@@ -15,21 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Element;
+import org.syncany.operations.cleanup.CleanupOperationResult;
 
-/**
- * Marker interface to indicate a result for a given {@link Operation}.
- * 
- * <p>{@link OperationOptions} are passed to an operation (similar to method parameters).
- * Onve an operation returns, it returns an instance of an operation result.
- * 
- * @see Operation
- * @see OperationOptions
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-@Root(strict = false)
-public interface OperationResult {
-	// Marker interface for type safety
+public class CleanupEndSyncExternalEvent extends SyncExternalEvent {
+	@Element(name = "result", required = true)
+	private CleanupOperationResult result;
+
+	public CleanupEndSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public CleanupEndSyncExternalEvent(String root, CleanupOperationResult result) {
+		super(root);		
+		this.result = result;
+	}
+	
+	public CleanupOperationResult getResult() {
+		return result;
+	}
 }

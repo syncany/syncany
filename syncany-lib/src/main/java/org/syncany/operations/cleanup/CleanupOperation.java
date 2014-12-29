@@ -180,7 +180,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * @return result The original result, with the relevant {@link CleanupResultCode}
 	 */
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
-		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
+		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunksCount() > 0 || result.getRemovedOldVersionsCount() > 0) {
 			result.setResultCode(CleanupResultCode.OK);
 		}
 		else {
@@ -256,8 +256,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		deleteUnusedRemoteMultiChunks(unusedMultiChunks);
 
 		// Update stats
+		long unusedMultiChunkSize = 0;
+
+		for (MultiChunkEntry removedMultiChunk : unusedMultiChunks.values()) {
+			unusedMultiChunkSize += removedMultiChunk.getSize();
+		}
+
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
-		result.setRemovedMultiChunks(unusedMultiChunks);
+		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
+		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
 	}
 
 	/**
