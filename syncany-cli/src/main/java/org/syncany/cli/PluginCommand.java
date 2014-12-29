@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,6 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.List;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
 import org.syncany.cli.util.CliTableUtil;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
@@ -38,17 +34,21 @@ import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 public class PluginCommand extends Command {
 	private PluginAction action;
-	
+
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.ANY;
 	}
-	
+
 	@Override
 	public boolean canExecuteInDaemonScope() {
 		return false; // TODO [low] Doesn't have an impact if command scope is ANY
@@ -136,29 +136,35 @@ public class PluginCommand extends Command {
 	@Override
 	public void printResults(OperationResult operationResult) {
 		PluginOperationResult concreteOperationResult = (PluginOperationResult) operationResult;
-		
+
 		switch (action) {
-		case LIST:
-			printResultList(concreteOperationResult);
-			return;
+			case LIST:
+				printResultList(concreteOperationResult);
+				return;
 
-		case INSTALL:
-			printResultInstall(concreteOperationResult);
-			return;
+			case INSTALL:
+				printResultInstall(concreteOperationResult);
+				return;
 
-		case REMOVE:
-			printResultRemove(concreteOperationResult);
-			return;
+			case REMOVE:
+				printResultRemove(concreteOperationResult);
+				return;
 
-		default:
-			out.println("Unknown action: " + action);
+			case UPDATE:
+				printResultUpdate(concreteOperationResult);
+				return;
+
+			default:
+				out.println("Unknown action: " + action);
 		}
 	}
 
 	private void printResultList(PluginOperationResult operationResult) {
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
 			List<String[]> tableValues = new ArrayList<String[]>();
-			tableValues.add(new String[] { "Id", "Name", "Local Version", "Type", "Remote Version" });
+			tableValues.add(new String[]{"Id", "Name", "Local Version", "Type", "Remote Version", "Updatable"});
+			int outdated = 0;
+			int updatable = 0;
 
 			for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
 				PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
@@ -166,11 +172,29 @@ public class PluginCommand extends Command {
 				String localVersionStr = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "";
 				String installedStr = extPluginInfo.isInstalled() ? (extPluginInfo.canUninstall() ? "User" : "Global") : "";
 				String remoteVersionStr = (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "";
+				String isOutdated = "";
 
-				tableValues.add(new String[] { pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr });
+				if (extPluginInfo.isInstalled() && extPluginInfo.isOutdated()) {
+					if (extPluginInfo.canUninstall()) {
+						isOutdated = "Auto";
+						updatable++;
+					}
+					else {
+						isOutdated = "Manual";
+					}
+
+					outdated++;
+				}
+
+				tableValues.add(new String[]{pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr, isOutdated});
 			}
 
 			CliTableUtil.printTable(out, tableValues, "No plugins found.");
+
+			if (outdated > 0) {
+				String isare = outdated == 1 ? "is" : "are";
+				out.printf("\nThere %s %d outdated %s, %d of them %s automatically updatable.\n", isare, outdated, outdated == 1 ? "plugin" : "plugins", updatable, isare);
+			}
 		}
 		else {
 			out.printf("Listing plugins failed. No connection? Try -d to get more details.\n");
@@ -194,9 +218,36 @@ public class PluginCommand extends Command {
 		}
 	}
 
+	private void printResultUpdate(final PluginOperationResult operationResult) {
+		// Print regular result
+		if (operationResult.getResultCode() == PluginResultCode.OK) {
+			if (operationResult.getUpdatedPluginIds().size() == 0) {
+				out.println("All plugins are up to date.");
+			}
+			else {
+				Iterables.removeIf(operationResult.getUpdatedPluginIds(), new Predicate<String>() {
+					@Override
+					public boolean apply(String pluginId) {
+						return operationResult.getErroneousPluginIds().contains(pluginId);
+					}
+				});
+
+				out.printf("Plugins successfully updated: %s\n", StringUtil.join(operationResult.getUpdatedPluginIds(), ", "));
+
+				if (operationResult.getErroneousPluginIds().size() > 0) {
+					out.printf("Failed to update %s. Try -d to get more details\n", StringUtil.join(operationResult.getErroneousPluginIds(), ", "));
+				}
+			}
+		}
+		else {
+			out.println("Plugin update failed. Try -d to get more details.");
+			out.println();
+		}
+	}
+
 	private void printPluginConflictWarning(PluginOperationResult operationResult) {
 		List<String> conflictingPluginIds = operationResult.getConflictingPluginIds();
-		
+
 		if (conflictingPluginIds != null && conflictingPluginIds.size() > 0) {
 			out.println("---------------------------------------------------------------------------");
 			out.printf(" WARNING: The installed plugin '%s' conflicts with other installed:\n", operationResult.getAffectedPluginInfo().getPluginId());
@@ -240,9 +291,9 @@ public class PluginCommand extends Command {
 	public void onPluginConnectToHostEventReceived(PluginConnectToHostExternalEvent event) {
 		out.printr("Connecting to " + event.getHost() + " ...");
 	}
-	
+
 	@Subscribe
 	public void onPluginInstallEventReceived(PluginInstallExternalEvent event) {
 		out.printr("Installing plugin from " + event.getSource() + " ...");
-	}	
+	}
 }
