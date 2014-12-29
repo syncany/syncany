@@ -205,7 +205,7 @@ public class WatchServer {
 
 	@Subscribe
 	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
-		List<Watch> watchList = new ArrayList<>();
+		List<Watch> watchList = new ArrayList<Watch>();
 
 		for (File watchFolder : watchOperations.keySet()) {
 			boolean syncRunning = watchOperations.get(watchFolder).isSyncRunning();
@@ -227,7 +227,7 @@ public class WatchServer {
 		else {
 			try {
 				boolean folderAdded = DaemonConfigHelper.addFolder(rootFolder);
-				
+
 				if (folderAdded) {
 					eventBus.post(new AddWatchManagementResponse(AddWatchManagementResponse.OKAY, request.getId(), "Successfully added."));
 				}
@@ -253,17 +253,17 @@ public class WatchServer {
 			public void run() {
 				try {
 					InitOperation initOperation = new InitOperation(request.getOptions(), new EventUserInteractionListener());
-					InitOperationResult operationResult = initOperation.execute();									
-					
+					InitOperationResult operationResult = initOperation.execute();
+
 					switch (operationResult.getResultCode()) {
-					case OK:											
+					case OK:
 						eventBus.post(new InitManagementResponse(InitManagementResponse.OK, operationResult, request.getId()));
 						break;
-						
-					case NOK_TEST_FAILED:						
+
+					case NOK_TEST_FAILED:
 						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
 						break;
-						
+
 					default:
 						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
 						break;
@@ -272,17 +272,17 @@ public class WatchServer {
 				catch (Exception e) {
 					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
 					eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_OPERATION_FAILED, new InitOperationResult(), request.getId()));
-				}		
+				}
 			}
 		}, "IntRq/" + request.getOptions().getLocalDir().getName());
-		
-		initThread.start();									
+
+		initThread.start();
 	}
-	
+
 	@Subscribe
 	public void onConnectRequestReceived(final ConnectManagementRequest request) {
 		logger.log(Level.SEVERE, "Executing ConnectOperation for folder " + request.getOptions().getLocalDir() + " ...");
-		
+
 		Thread connectThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -291,29 +291,30 @@ public class WatchServer {
 					ConnectOperationResult operationResult = initOperation.execute();
 
 					switch (operationResult.getResultCode()) {
-					case OK:											
+					case OK:
 						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.OK, operationResult, request.getId()));
 						break;
-						
-					case NOK_TEST_FAILED:						
+
+					case NOK_TEST_FAILED:
 						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
 						break;
-						
+
 					default:
 						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
 						break;
-					}				
+					}
 				}
 				catch (Exception e) {
 					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_OPERATION_FAILED, new ConnectOperationResult(), request.getId()));
+					eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_OPERATION_FAILED, new ConnectOperationResult(), request
+							.getId()));
 				}
 			}
 		}, "ConRq/" + request.getOptions().getLocalDir().getName());
 
-		connectThread.start();										
+		connectThread.start();
 	}
-	
+
 	@Subscribe
 	public void onPostDownOperation(DownEndSyncExternalEvent downEndSyncEvent) {
 		if (daemonConfig.getHooks() != null) {
