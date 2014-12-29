@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.4.1-alpha (Date: Tbd.)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Bugfixes and other things:
+  + Fix Dropbox plugin bug when deleting non-existing files #325
+  
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
