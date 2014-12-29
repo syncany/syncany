@@ -179,12 +179,12 @@ public class CleanupCommand extends Command {
 	}
 
 	@Subscribe
-	public void onCleanUpStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
+	public void onCleanupStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
 		out.printr("Checking if cleanup is needed ...");
 	}
 
 	@Subscribe
-	public void onCleanUpStartCleaningEventReceived(CleanupStartCleaningSyncExternalEvent syncEvent) {
+	public void onCleanupStartCleaningEventReceived(CleanupStartCleaningSyncExternalEvent syncEvent) {
 		out.printr("Cleanup is needed, starting to clean ...");
 	}
 }
