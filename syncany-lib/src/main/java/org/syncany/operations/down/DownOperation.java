@@ -33,7 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.config.LocalEventBus;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MemoryDatabase;
@@ -93,8 +92,6 @@ public class DownOperation extends AbstractTransferOperation {
 
 	public static final String ACTION_ID = "down";
 
-	private LocalEventBus eventBus;
-
 	private DownOperationOptions options;
 	private DownOperationResult result;
 
@@ -108,8 +105,6 @@ public class DownOperation extends AbstractTransferOperation {
 
 	public DownOperation(Config config, DownOperationOptions options) {
 		super(config, ACTION_ID);
-
-		this.eventBus = LocalEventBus.getInstance();
 
 		this.options = options;
 		this.result = new DownOperationResult();
@@ -334,11 +329,11 @@ public class DownOperation extends AbstractTransferOperation {
 	 * This methods takes a Map containing DatabaseVersions (headers only) and loads these headers into {@link DatabaseBranches}.
 	 * In addition, the local branch is added to this. The resulting DatabaseBranches will contain all headers exactly once,
 	 * for the client that created that version.
-	 * 
+	 *
 	 * @param localBranch {@link DatabaseBranch} containing the locally known headers.
 	 * @param remoteDatabaseHeaders Map from {@link DatabaseRemoteFile}s (important for client names) to the {@link DatabaseVersion}s that are
 	 *        contained in these files.
-	 *        
+	 *
 	 * @return DatabaseBranches filled with all the headers that originated from either of the parameters.
 	 */
 	private DatabaseBranches populateDatabaseBranches(DatabaseBranch localBranch,
@@ -669,10 +664,10 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * This methods takes a Map from {@link DatabaseRemoteFile}s to Lists of {@link DatabaseVersion}s and produces more or less
 	 * the reverse Map, which can be used to find the cached copy of a remote databasefile, given a {@link DatabaseVersionHeader}.
-	 * 
+	 *
 	 * @param remoteDatabaseHeaders mapping remote database files to the versions they contain.
 	 * @param databaseRemoteFilesInCache mapping files to the database remote file that is cached in it.
-	 * 
+	 *
 	 * @return databaseVersionLocations a Map from {@link DatabaseVersionHeader}s to the local File in which that version can be found.
 	 */
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,
