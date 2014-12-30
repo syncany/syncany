@@ -176,6 +176,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		mergeRemoteFiles();
 
+		// We went succesfully through the entire operation and checked everything. Hence we update the last cleanup time.
+		updateLastCleanupTime();
+
 		finishOperation();
 		fireEndEvent();
 
@@ -523,9 +526,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		long newCleanupNumber = lastRemoteCleanupNumber + 1;
 
 		remoteTransaction.upload(newCleanupFile, new CleanupRemoteFile(newCleanupNumber));
+		localDatabase.writeCleanupNumber(newCleanupNumber);
+	}
 
+	/**
+	 * The cleanup time is used to check if cleanup has been done recently. If it has, we do not need
+	 * to clean again.
+	 */
+	private void updateLastCleanupTime() {
 		// Set cleanup number locally
 		localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
-		localDatabase.writeCleanupNumber(newCleanupNumber);
 	}
 }
