@@ -32,7 +32,7 @@ public abstract class FolderRequestHandler extends RequestHandler {
 	public abstract Response handleRequest(FolderRequest request);
 
 	// TODO [low] Fix "throws Exception"
-	public static FolderRequestHandler createFolderRequestHandler(Request request, Config config) throws Exception {
+	public static FolderRequestHandler createFolderRequestHandler(FolderRequest request, Config config) throws Exception {
 		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
 		Class<?> clazz = Class.forName(fqClassName);
 

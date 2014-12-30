@@ -45,6 +45,9 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
+import org.syncany.operations.daemon.messages.CleanupEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
@@ -122,9 +125,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 		// Do initial check out remote repository preconditions
 		CleanupResultCode preconditionResult = checkPreconditions();
 
+		fireStartEvent();
 		if (preconditionResult != CleanupResultCode.OK) {
+			fireEndEvent();
 			return new CleanupOperationResult(preconditionResult);
 		}
+
+		fireCleanupNeededEvent();
 
 		// At this point, the operation will lock the repository
 		startOperation();
@@ -135,6 +142,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		if (blockingTransactionExist) {
 			finishOperation();
+			fireEndEvent();
 			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
 		}
 
@@ -147,6 +155,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		if (preconditionResult != CleanupResultCode.OK) {
 			finishOperation();
+			fireEndEvent();
 			return new CleanupOperationResult(preconditionResult);
 		}
 
@@ -168,6 +177,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		mergeRemoteFiles();
 
 		finishOperation();
+		fireEndEvent();
 
 		return updateResultCode(result);
 	}
@@ -180,7 +190,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * @return result The original result, with the relevant {@link CleanupResultCode}
 	 */
 	private CleanupOperationResult updateResultCode(CleanupOperationResult result) {
-		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunks().size() > 0 || result.getRemovedOldVersionsCount() > 0) {
+		if (result.getMergedDatabaseFilesCount() > 0 || result.getRemovedMultiChunksCount() > 0 || result.getRemovedOldVersionsCount() > 0) {
 			result.setResultCode(CleanupResultCode.OK);
 		}
 		else {
@@ -188,6 +198,18 @@ public class CleanupOperation extends AbstractTransferOperation {
 		}
 
 		return result;
+	}
+
+	private void fireStartEvent() {
+		eventBus.post(new CleanupStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+	}
+
+	private void fireCleanupNeededEvent() {
+		eventBus.post(new CleanupStartCleaningSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+	}
+
+	private void fireEndEvent() {
+		eventBus.post(new CleanupEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), result));
 	}
 
 	/**
@@ -226,7 +248,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * This method checks if there exist {@link FileVersion}s which are to be deleted because the history they are a part 
+	 * This method checks if there exist {@link FileVersion}s which are to be deleted because the history they are a part
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
@@ -256,13 +278,20 @@ public class CleanupOperation extends AbstractTransferOperation {
 		deleteUnusedRemoteMultiChunks(unusedMultiChunks);
 
 		// Update stats
+		long unusedMultiChunkSize = 0;
+
+		for (MultiChunkEntry removedMultiChunk : unusedMultiChunks.values()) {
+			unusedMultiChunkSize += removedMultiChunk.getSize();
+		}
+
 		result.setRemovedOldVersionsCount(purgeFileVersions.size());
-		result.setRemovedMultiChunks(unusedMultiChunks);
+		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
+		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
 	}
 
 	/**
 	 * This method adds unusedMultiChunks to the @{link RemoteTransaction} for deletion.
-	 * 
+	 *
 	 * @param unusedMultiChunks which are to be deleted because all references to them are gone.
 	 */
 	private void deleteUnusedRemoteMultiChunks(Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks) throws StorageException {
@@ -285,7 +314,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Checks if Cleanup has been performed less then a configurable time ago. 
+	 * Checks if Cleanup has been performed less then a configurable time ago.
 	 */
 	private boolean wasCleanedRecently() throws Exception {
 		Long lastCleanupTime = localDatabase.getCleanupTime();
@@ -365,9 +394,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * This method decides if a merge is needed. Most of the time it will be, since we need to merge every time we remove
 	 * any FileVersions to delete them remotely. Another reason for merging is if the number of files exceeds a certain threshold.
 	 * This threshold scales linearly with the number of clients that have database files.
-	 * 
+	 *
 	 * @param allDatabaseFilesMap used to determine if there are too many database files.
-	 * 
+	 *
 	 * @return true if there are too many database files or we have removed FileVersions, false otherwise.
 	 */
 	private boolean needMerge(Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap) {
@@ -389,7 +418,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * This method writes the file with merged databases for a single client and adds it to a Map containing all merged
 	 * database files. This is done by querying the local database for all {@link DatabaseVersion}s by this client and
 	 * serializing them.
-	 * 
+	 *
 	 * @param clientName for which we want to write the merged dataabse file.
 	 * @param allMergedDatabaseFiles Map where we add the merged file once it is written.
 	 */
@@ -454,7 +483,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * This method obtains a Map with Lists of {@link DatabaseRemoteFile}s as values, by listing them in the remote repo and
 	 * collecting the files per client.
-	 * 
+	 *
 	 * @return a Map with clientNames as keys and lists of corresponding DatabaseRemoteFiles as values.
 	 */
 	private Map<String, List<DatabaseRemoteFile>> retrieveAllRemoteDatabaseFiles() throws StorageException {
