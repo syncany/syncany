@@ -249,8 +249,10 @@ public class RemoteTransaction {
 
 		for (ActionTO action : transactionTO.getActions()) {
 			if (action.getType().equals(ActionType.UPLOAD)) {
-				stats.totalUploadFileCount++;
-				stats.totalUploadSize += action.getLocalTempLocation().length();
+				if (action.getStatus().equals(ActionStatus.UNSTARTED)) {
+					stats.totalUploadFileCount++;
+					stats.totalUploadSize += action.getLocalTempLocation().length();
+				}
 			}
 		}
 
