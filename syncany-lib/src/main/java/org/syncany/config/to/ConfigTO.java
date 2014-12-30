@@ -56,7 +56,8 @@ public class ConfigTO {
 	@Convert(SaltedSecretKeyConverter.class)
 	private SaltedSecretKey masterKey;
 
-	@Element(name = "connection", required = false) // TODO [high] Workaround for 'connect' via GUI and syncany://link; field not needed when link is supplied
+	@Element(name = "connection", required = false)
+	// TODO [high] Workaround for 'connect' via GUI and syncany://link; field not needed when link is supplied
 	private TransferSettings transferSettings;
 
 	@Element(name = "cacheKeepBytes", required = false)
@@ -70,6 +71,19 @@ public class ConfigTO {
 			registry.bind(String.class, new EncryptedTransferSettingsConverter());
 
 			return new Persister(strategy).read(ConfigTO.class, file);
+		}
+		catch (ClassNotFoundException ex) {
+			// Ugly hack to catch common case of non-existing plugin
+			String message = ex.getMessage();
+
+			if (!message.startsWith("org.syncany.plugins.")) {
+				// Apparently there are other ClassNotFoundExceptions possible.
+				throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
+			}
+
+			message = message.replaceFirst("org.syncany.plugins.", "");
+			message = message.replaceAll("\\..*", "");
+			throw new ConfigException("Is the " + message + " plugin installed?");
 		}
 		catch (Exception ex) {
 			throw new ConfigException("Config file does not exist or is invalid: " + file, ex);
