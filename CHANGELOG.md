@@ -5,6 +5,8 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + New 'Remove folder' function in tray menu #330
+  + New 'Preferences' dialog with ability to remove/add plugins, 
+    and enable/disable notifications #334
 - Bugfixes and other things:
   + Fix Dropbox plugin bug when deleting non-existing files #325
   + Cleanup status information / status texts in tray #317/#329
