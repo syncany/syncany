@@ -34,7 +34,7 @@ public class PluginOperationResult implements OperationResult {
 	private PluginInfo affectedPluginInfo;
 	private List<String> conflictingPluginIds;
 
-	public PluginOperationAction getRequestAction() {
+	public PluginOperationAction getAction() {
 		return action;
 	}
 	

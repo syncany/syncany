@@ -135,7 +135,7 @@ public class PluginCommand extends Command {
 	public void printResults(OperationResult operationResult) {
 		PluginOperationResult concreteOperationResult = (PluginOperationResult) operationResult;
 		
-		switch (concreteOperationResult.getRequestAction()) {
+		switch (concreteOperationResult.getAction()) {
 		case LIST:
 			printResultList(concreteOperationResult);
 			return;
@@ -149,7 +149,7 @@ public class PluginCommand extends Command {
 			return;
 
 		default:
-			out.println("Unknown action: " + concreteOperationResult.getRequestAction());
+			out.println("Unknown action: " + concreteOperationResult.getAction());
 		}
 	}
 
