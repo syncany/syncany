@@ -37,19 +37,16 @@ import org.syncany.operations.daemon.Watch.SyncStatus;
 import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
 import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
-import org.syncany.operations.daemon.messages.ConnectManagementRequest;
-import org.syncany.operations.daemon.messages.ConnectManagementResponse;
 import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
 import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
-import org.syncany.operations.daemon.messages.InitManagementRequest;
-import org.syncany.operations.daemon.messages.InitManagementResponse;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
+import org.syncany.operations.daemon.messages.RemoveWatchManagementRequest;
+import org.syncany.operations.daemon.messages.RemoveWatchManagementResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
-import org.syncany.operations.init.ConnectOperation;
-import org.syncany.operations.init.ConnectOperationResult;
-import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperationResult;
+import org.syncany.operations.daemon.messages.api.ManagementRequest;
+import org.syncany.operations.daemon.messages.api.ManagementRequestHandler;
+import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.util.StringUtil;
@@ -202,6 +199,27 @@ public class WatchServer {
 			eventBus.post(new BadRequestResponse(folderRequest.getId(), "Unknown root folder."));
 		}
 	}
+	
+	@Subscribe
+	public void onManagementRequestReceived(ManagementRequest managementRequest) {
+		logger.log(Level.INFO, "Received " + managementRequest);
+
+		try {
+			ManagementRequestHandler handler = ManagementRequestHandler.createManagementRequestHandler(managementRequest);
+			Response response = handler.handleRequest(managementRequest);
+
+			if (response != null) {
+				eventBus.post(response);
+			}
+		}
+		catch (ClassNotFoundException e) {
+			logger.log(Level.FINE, "No handler found for management request class " + managementRequest.getClass() + ". Ignoring.", e);
+		}
+		catch (Exception e) {
+			logger.log(Level.FINE, "Failed to process request", e);
+			eventBus.post(new BadRequestResponse(managementRequest.getId(), "Invalid request."));
+		}
+	}
 
 	@Subscribe
 	public void onListWatchesRequestReceived(ListWatchesManagementRequest request) {
@@ -243,76 +261,32 @@ public class WatchServer {
 			}
 		}
 	}
-
+	
 	@Subscribe
-	public void onInitRequestReceived(final InitManagementRequest request) {
-		logger.log(Level.SEVERE, "Executing InitOperation for folder " + request.getOptions().getLocalDir() + " ...");
+	public void onRemoveWatchRequestReceived(RemoveWatchManagementRequest request) {
+		File rootFolder = request.getWatch();
 
-		Thread initThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					InitOperation initOperation = new InitOperation(request.getOptions(), new EventUserInteractionListener());
-					InitOperationResult operationResult = initOperation.execute();
+		if (!watchOperations.containsKey(rootFolder)) {
+			eventBus.post(new RemoveWatchManagementResponse(RemoveWatchManagementResponse.ERR_DOES_NOT_EXIST, request.getId(), "Watch does not exist."));
+		}
+		else {
+			try {
+				boolean folderRemoved = DaemonConfigHelper.removeFolder(rootFolder);
 
-					switch (operationResult.getResultCode()) {
-					case OK:
-						eventBus.post(new InitManagementResponse(InitManagementResponse.OK, operationResult, request.getId()));
-						break;
-
-					case NOK_TEST_FAILED:
-						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
-						break;
-
-					default:
-						eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
-						break;
-					}
+				if (folderRemoved) {
+					eventBus.post(new RemoveWatchManagementResponse(RemoveWatchManagementResponse.OKAY, request.getId(), "Successfully removed."));
 				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_OPERATION_FAILED, new InitOperationResult(), request.getId()));
+				else {
+					eventBus.post(new RemoveWatchManagementResponse(RemoveWatchManagementResponse.ERR_DOES_NOT_EXIST, request.getId(),
+							"Watch does not exist (inactive/disabled)."));
 				}
 			}
-		}, "IntRq/" + request.getOptions().getLocalDir().getName());
-
-		initThread.start();
-	}
-
-	@Subscribe
-	public void onConnectRequestReceived(final ConnectManagementRequest request) {
-		logger.log(Level.SEVERE, "Executing ConnectOperation for folder " + request.getOptions().getLocalDir() + " ...");
-
-		Thread connectThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					ConnectOperation initOperation = new ConnectOperation(request.getOptions(), new EventUserInteractionListener());
-					ConnectOperationResult operationResult = initOperation.execute();
-
-					switch (operationResult.getResultCode()) {
-					case OK:
-						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.OK, operationResult, request.getId()));
-						break;
-
-					case NOK_TEST_FAILED:
-						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_TEST, operationResult, request.getId()));
-						break;
-
-					default:
-						eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
-						break;
-					}
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new ConnectManagementResponse(ConnectManagementResponse.NOK_OPERATION_FAILED, new ConnectOperationResult(), request
-							.getId()));
-				}
+			catch (ConfigException e) {
+				logger.log(Level.WARNING, "Error removing watch from daemon config.", e);
+				eventBus.post(new RemoveWatchManagementResponse(RemoveWatchManagementResponse.ERR_OTHER, request.getId(), "Error removing to config: "
+						+ e.getMessage()));
 			}
-		}, "ConRq/" + request.getOptions().getLocalDir().getName());
-
-		connectThread.start();
+		}
 	}
 
 	@Subscribe
