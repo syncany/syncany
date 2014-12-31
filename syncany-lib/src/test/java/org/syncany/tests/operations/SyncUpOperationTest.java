@@ -39,6 +39,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
+import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
@@ -67,7 +68,7 @@ public class SyncUpOperationTest {
 				fileAmount);
 
 		// Run!
-		UpOperation op = new UpOperation(testConfig);
+		AbstractTransferOperation op = new UpOperation(testConfig);
 		op.execute();
 
 		// Get databases (for comparison)

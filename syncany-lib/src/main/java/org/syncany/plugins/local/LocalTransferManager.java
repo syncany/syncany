@@ -228,9 +228,9 @@ public class LocalTransferManager extends AbstractTransferManager {
 				T remoteFile = RemoteFile.createRemoteFile(file.getName(), remoteFileClass);
 				remoteFiles.put(file.getName(), remoteFile);
 			}
-			catch (Exception e) {
+			catch (StorageException e) {
 				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + file
-						+ "; maybe invalid file name pattern. Ignoring file.");
+						+ "; maybe invalid file name pattern. Ignoring file.", e);
 			}
 		}
 

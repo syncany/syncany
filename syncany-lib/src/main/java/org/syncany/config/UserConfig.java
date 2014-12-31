@@ -25,6 +25,7 @@ import java.security.KeyStore;
 import java.util.Map;
 
 import org.syncany.config.to.UserConfigTO;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.EnvironmentUtil;
@@ -201,8 +202,15 @@ public class UserConfig {
 			userConfigTO.setConfigEncryptionKey(configEncryptionKey);
 			userConfigTO.save(userConfigFile);
 		}
-		catch (Exception e) {
-			// Don't care!
+		catch (CipherException e) {
+			System.err.println("ERROR: " + e.getMessage());
+			System.err.println("       Failed to create masterkey.");
+			System.err.println();
+		}
+		catch (ConfigException e) {
+			System.err.println("ERROR: " + e.getMessage());
+			System.err.println("       Failed to save to file.");
+			System.err.println();
 		}
 	}
 

@@ -19,6 +19,7 @@ package org.syncany.operations.daemon.handlers;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -114,8 +115,8 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 				return true;
 			}
 		}
-		catch (Exception e) {
-			// Continue trying.
+		catch (UnknownHostException e) {
+			logger.log(Level.FINE, "Could not get the localhost ip", e);
 		}
 
 		// Allow by whitelist

@@ -15,21 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations;
+package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ManagementResponse;
 
-/**
- * Marker interface to indicate a result for a given {@link Operation}.
- * 
- * <p>{@link OperationOptions} are passed to an operation (similar to method parameters).
- * Onve an operation returns, it returns an instance of an operation result.
- * 
- * @see Operation
- * @see OperationOptions
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- */
-@Root(strict = false)
-public interface OperationResult {
-	// Marker interface for type safety
+public class RemoveWatchManagementResponse extends ManagementResponse {
+	public static final int OKAY = 200;
+	public static final int ERR_DOES_NOT_EXIST = 501;
+	public static final int ERR_OTHER = 502;
+	
+	public RemoveWatchManagementResponse() {
+		// Nothing
+	}
+	
+	public RemoveWatchManagementResponse(int code, Integer requestId, String message) {
+		super(code, requestId, message);
+	}
 }

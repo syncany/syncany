@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,14 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.CommandLineUtil;
-import org.syncany.database.MultiChunkEntry;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
+
+import com.google.common.eventbus.Subscribe;
 
 public class CleanupCommand extends Command {
 	@Override
@@ -76,7 +79,7 @@ public class CleanupCommand extends Command {
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
-		// -k=<count>, --keep-versions=<count>		
+		// -k=<count>, --keep-versions=<count>
 		if (options.has(optionKeepVersions)) {
 			int keepVersionCount = options.valueOf(optionKeepVersions);
 
@@ -87,7 +90,7 @@ public class CleanupCommand extends Command {
 			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));
 		}
 
-		// -t=<count>, --time-between-cleanups=<count>		
+		// -t=<count>, --time-between-cleanups=<count>
 		if (options.has(optionSecondsBetweenCleanups)) {
 			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
 
@@ -152,15 +155,10 @@ public class CleanupCommand extends Command {
 				out.println(concreteOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
 			}
 
-			if (concreteOperationResult.getRemovedMultiChunks().size() > 0) {
-				long totalRemovedMultiChunkSize = 0;
-
-				for (MultiChunkEntry removedMultiChunk : concreteOperationResult.getRemovedMultiChunks().values()) {
-					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
-				}
-
+			if (concreteOperationResult.getRemovedMultiChunksCount() > 0) {
 				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n",
-						concreteOperationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
+						concreteOperationResult.getRemovedMultiChunksCount(),
+						(double) concreteOperationResult.getRemovedMultiChunksSize() / 1024 / 1024);
 			}
 
 			if (concreteOperationResult.getRemovedOldVersionsCount() > 0) {
@@ -178,5 +176,15 @@ public class CleanupCommand extends Command {
 		default:
 			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
 		}
+	}
+
+	@Subscribe
+	public void onCleanupStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
+		out.printr("Checking if cleanup is needed ...");
+	}
+
+	@Subscribe
+	public void onCleanupStartCleaningEventReceived(CleanupStartCleaningSyncExternalEvent syncEvent) {
+		out.printr("Cleanup is needed, starting to clean ...");
 	}
 }

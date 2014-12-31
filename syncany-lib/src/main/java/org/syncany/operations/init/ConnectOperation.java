@@ -95,6 +95,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			configTO = createConfigTO();
 		}
 		catch (CipherException e) {
+			logger.log(Level.FINE, "Could not create config", e);
 			return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
 		}
 
@@ -102,7 +103,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		String pluginId = options.getConfigTO().getTransferSettings().getType();
 		plugin = Plugins.get(pluginId, TransferPlugin.class);
 
-		TransferSettings transferSettings = (TransferSettings) options.getConfigTO().getTransferSettings();
+		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
 		transferSettings.setUserInteractionListener(listener);
 
 		transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
@@ -206,6 +207,7 @@ public class ConnectOperation extends AbstractInitOperation {
 			return true;
 		}
 		catch (CipherException e) {
+			logger.log(Level.FINE, "Could not decrypt the repository file", e);
 			return false;
 		}
 	}

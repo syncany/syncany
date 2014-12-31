@@ -204,7 +204,7 @@ public class FileVersionComparatorTest {
 		FileVersionComparison fileComparison = versionComparator.compare(fileVersion, somefile, null, true); 
 		
 		// Test
-		assertFalse(fileComparison.equals());
+		assertFalse(fileComparison.areEqual());
 		assertTrue(CollectionUtil.containsExactly(fileComparison.getFileChanges(), FileChange.CHANGED_CHECKSUM));
 		
 		// Tear down
