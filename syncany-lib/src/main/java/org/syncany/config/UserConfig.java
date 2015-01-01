@@ -193,8 +193,7 @@ public class UserConfig {
 	private static void writeExampleUserConfigFile(File userConfigFile) {
 		UserConfigTO userConfigTO = new UserConfigTO();
 
-		userConfigTO.getSystemProperties().put("example.property", "This is a demo property. You can delete it.");
-		userConfigTO.getSystemProperties().put("syncany.rocks", "Yes, it does!");
+		userConfigTO.getSystemProperties().put("java.net.useSystemProxies", "true");
 
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
