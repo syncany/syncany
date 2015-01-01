@@ -175,7 +175,8 @@ public class UserConfig {
 
 			// System properties
 			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
-				System.setProperty(systemProperty.getKey(), systemProperty.getValue());
+				String propertyValue = (systemProperty.getValue() != null) ? systemProperty.getValue() : ""; 
+				System.setProperty(systemProperty.getKey(), propertyValue);
 			}
 
 			// Other options
