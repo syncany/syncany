@@ -193,8 +193,6 @@ public class UserConfig {
 	private static void writeExampleUserConfigFile(File userConfigFile) {
 		UserConfigTO userConfigTO = new UserConfigTO();
 
-		userConfigTO.getSystemProperties().put("java.net.useSystemProxies", "true");
-
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
 			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
