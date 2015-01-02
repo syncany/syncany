@@ -84,6 +84,8 @@ public class PluginCommand extends Command {
 		// <action>
 		String actionStr = nonOptionArgs.get(0).toString();
 		PluginOperationAction action = parsePluginAction(actionStr);
+		
+		operationOptions.setAction(action);
 
 		// --snapshots
 		operationOptions.setSnapshots(options.has(optionSnapshots));
