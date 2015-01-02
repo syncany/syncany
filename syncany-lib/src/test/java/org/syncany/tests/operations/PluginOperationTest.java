@@ -28,8 +28,8 @@ import java.util.List;
 import org.junit.Test;
 import org.syncany.config.UserConfig;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
+import org.syncany.operations.plugin.PluginOperationAction;
 import org.syncany.operations.plugin.PluginOperationOptions;
-import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
@@ -51,7 +51,7 @@ public class PluginOperationTest {
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.LIST);
+		pluginOptions.setAction(PluginOperationAction.LIST);
 		pluginOptions.setListMode(PluginListMode.LOCAL);
 
 		// Run
@@ -93,7 +93,7 @@ public class PluginOperationTest {
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.LIST);
+		pluginOptions.setAction(PluginOperationAction.LIST);
 		pluginOptions.setListMode(PluginListMode.REMOTE);
 		pluginOptions.setSnapshots(false);
 
@@ -116,7 +116,7 @@ public class PluginOperationTest {
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.LIST);
+		pluginOptions.setAction(PluginOperationAction.LIST);
 		pluginOptions.setListMode(PluginListMode.REMOTE);
 		pluginOptions.setSnapshots(true);
 
@@ -150,7 +150,7 @@ public class PluginOperationTest {
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.INSTALL);
+		pluginOptions.setAction(PluginOperationAction.INSTALL);
 		pluginOptions.setPluginId("ftp");
 
 		PluginOperationResult pluginResult = client.plugin(pluginOptions);
@@ -184,7 +184,7 @@ public class PluginOperationTest {
 		TestClient client = new TestClient("A", testConnection);
 
 		PluginOperationOptions pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.LIST);
+		pluginOptions.setAction(PluginOperationAction.LIST);
 		pluginOptions.setListMode(PluginListMode.REMOTE);
 		pluginOptions.setSnapshots(false);
 
@@ -198,7 +198,7 @@ public class PluginOperationTest {
 		}
 
 		pluginOptions = new PluginOperationOptions();
-		pluginOptions.setAction(PluginAction.INSTALL);
+		pluginOptions.setAction(PluginOperationAction.INSTALL);
 		pluginOptions.setPluginId(pluginDownloadUrl);
 
 		pluginResult = client.plugin(pluginOptions);

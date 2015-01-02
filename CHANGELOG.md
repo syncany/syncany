@@ -4,7 +4,11 @@ Change Log
 ### Syncany 0.4.1-alpha (Date: Tbd.)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
-  + New 'Remove folder' function in tray menu #330
+  + New 'Preferences' dialog with ability to remove/add plugins, 
+    enable/disable notifications, and change the proxy settings #334
+  + New 'Remove folder' feature in tray menu #330
+  + New 'Copy link' feature in tray menu #336
+  + Added recent changes command 'sy log' #298
 - Bugfixes and other things:
   + Fix Dropbox plugin bug when deleting non-existing files #325
   + Cleanup status information / status texts in tray #317/#329

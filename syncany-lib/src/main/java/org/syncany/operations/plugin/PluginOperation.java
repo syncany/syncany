@@ -50,7 +50,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
-import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
@@ -66,10 +65,10 @@ import com.google.common.collect.Lists;
 
 /**
  * The plugin operation installs, removes and lists storage {@link Plugin}s.
- * <p/>
+ *
  * <p>The plugin implements these three functionalities as different
- * {@link PluginAction}:
- * <p/>
+ * {@link PluginOperationAction}:
+ *
  * <ul>
  * <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
  * as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed
@@ -110,6 +109,8 @@ public class PluginOperation extends Operation {
 
 	@Override
 	public PluginOperationResult execute() throws Exception {
+		result.setAction(options.getAction());
+
 		switch (options.getAction()) {
 			case LIST:
 				return executeList();

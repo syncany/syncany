@@ -60,6 +60,7 @@ _sy() {
 		down\
 		genlink\
 		init\
+		log\
 		ls\
 		ls-remote\
 		plugin\
@@ -127,6 +128,10 @@ _sy() {
 		-s --short\
 		   --password"
 
+	LOG_OPTIONS="\
+		-n --max-count\
+		-x --exclude-empty"
+		
 	LS_OPTIONS="\
 		-V --versions\
 		-t --types\
@@ -320,6 +325,10 @@ _sy() {
 				complete_options="$INIT_OPTIONS"
 				;;
 		esac
+		;;
+		
+	log)
+		complete_options="$LOG_OPTIONS"
 		;;
 
 	ls)

@@ -327,6 +327,20 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxCount) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersions.sql")) {
+			preparedStatement.setMaxRows(maxCount);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return new DatabaseVersionIterator(preparedStatement.executeQuery());
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 	private class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 		private ResultSet resultSet;
@@ -418,7 +432,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	private DatabaseVersionHeader createDatabaseVersionHeaderFromRow(ResultSet resultSet) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 

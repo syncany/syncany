@@ -181,28 +181,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	/**
-	 * Queries the database for the {@link FileVersion}s active at the given date and
-	 * returns it as a map.
-	 *
-	 * <p>Keys in the returned map correspond to the file version's relative file path,
-	 * and values to the actual {@link FileVersion} object.
-	 *
-	 * @param date Date for which the file tree should be queried
-	 * @return Returns the file tree at the given date as a map of relative paths to {@link FileVersion} objects
-	 */
-	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileTreeAtDate.sql")) {
-			preparedStatement.setTimestamp(1, new Timestamp(date.getTime()));
-			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
-
-			return getFileTree(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileHistoryById.sql")) {
 			preparedStatement.setString(1, fileHistoryId.toString());
