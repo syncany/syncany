@@ -8,6 +8,7 @@ Change Log
     enable/disable notifications, and change the proxy settings #334
   + New 'Remove folder' feature in tray menu #330
   + New 'Copy link' feature in tray menu #336
+  + Added recent changes command 'sy log' #298
 - Bugfixes and other things:
   + Fix Dropbox plugin bug when deleting non-existing files #325
   + Cleanup status information / status texts in tray #317/#329
