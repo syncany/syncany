@@ -22,29 +22,29 @@ import org.syncany.operations.OperationOptions;
 
 public class LogOperationOptions implements OperationOptions {
 	@Element(required = false)
-	private int maxCount;
+	private int maxDatabaseVersionCount;
 	
 	@Element(required = false)
-	private boolean excludeChunkData;
+	private int maxFileHistoryCount;
 
 	public LogOperationOptions() {
-		this.maxCount = 10;
-		this.excludeChunkData = true;
+		this.maxDatabaseVersionCount = 10;
+		this.maxFileHistoryCount = 100;
 	}
 
-	public int getMaxCount() {
-		return maxCount;
+	public int getMaxDatabaseVersionCount() {
+		return maxDatabaseVersionCount;
 	}
 
-	public void setMaxCount(int maxCount) {
-		this.maxCount = maxCount;
+	public void setMaxDatabaseVersionCount(int maxDatabaseVersionCount) {
+		this.maxDatabaseVersionCount = maxDatabaseVersionCount;
 	}
 
-	public boolean isExcludeChunkData() {
-		return excludeChunkData;
+	public int getMaxFileHistoryCount() {
+		return maxFileHistoryCount;
 	}
 
-	public void setExcludeChunkData(boolean excludeChunkData) {
-		this.excludeChunkData = excludeChunkData;
+	public void setMaxFileHistoryCount(int maxFileHistoryCount) {
+		this.maxFileHistoryCount = maxFileHistoryCount;
 	}
 }

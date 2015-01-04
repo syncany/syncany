@@ -129,7 +129,8 @@ _sy() {
 		   --password"
 
 	LOG_OPTIONS="\
-		-n --max-count\
+		-n --database-count\
+		-f --file-count\
 		-x --exclude-empty"
 		
 	LS_OPTIONS="\
