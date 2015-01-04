@@ -22,7 +22,6 @@ import static java.util.Arrays.asList;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -30,21 +29,16 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.database.DatabaseVersion;
-import org.syncany.database.FileVersion;
-import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.log.LightweightDatabaseVersion;
 import org.syncany.operations.log.LogOperationOptions;
 import org.syncany.operations.log.LogOperationResult;
-
-import com.google.common.collect.Lists;
 
 public class LogCommand extends Command {	
 	protected static final Logger logger = Logger.getLogger(LogCommand.class.getSimpleName());
 	
 	private static final String DATE_FORMAT_PATTERN = "yy-MM-dd HH:mm:ss";
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_PATTERN);
-	private static final FileVersionComparator FILE_VERSION_COMPARATOR = new FileVersionComparator();
 	
 	private boolean excludeEmpty; 
 	
@@ -75,20 +69,23 @@ public class LogCommand extends Command {
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
 		
-		OptionSpec<Integer> optionMaxCountStr = parser.acceptsAll(asList("n", "count")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Integer> optionMaxDatabaseVersionCountStr = parser.acceptsAll(asList("n", "database-count")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Integer> optionMaxFileHistoryCountStr = parser.acceptsAll(asList("f", "file-count")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<Void> optionExcludeEmpty = parser.acceptsAll(asList("x", "exclude-empty"));
 
 		OptionSet options = parser.parse(operationArgs);
 		
-		// Disable chunk data retrieval
-		operationOptions.setExcludeChunkData(true);
-		
 		// -x, --exclude-empty
 		excludeEmpty = options.has(optionExcludeEmpty);
 		
-		// -n, --count=..
-		if (options.has(optionMaxCountStr)) {			
-			operationOptions.setMaxCount(options.valueOf(optionMaxCountStr));
+		// -n, --database-count=..
+		if (options.has(optionMaxDatabaseVersionCountStr)) {			
+			operationOptions.setMaxDatabaseVersionCount(options.valueOf(optionMaxDatabaseVersionCountStr));
+		}
+		
+		// -n, --database-count=..
+		if (options.has(optionMaxFileHistoryCountStr)) {			
+			operationOptions.setMaxFileHistoryCount(options.valueOf(optionMaxFileHistoryCountStr));
 		}
 		
 		return operationOptions;
@@ -97,13 +94,13 @@ public class LogCommand extends Command {
 	@Override
 	public void printResults(OperationResult operationResult) {
 		LogOperationResult concreteOperationResult = (LogOperationResult) operationResult;
-		List<DatabaseVersion> databaseVersions = concreteOperationResult.getDatabaseVersions();
+		List<LightweightDatabaseVersion> databaseVersions = concreteOperationResult.getDatabaseVersions();
 		
 		Collections.reverse(databaseVersions);
 		
-		for (DatabaseVersion databaseVersion : databaseVersions) {
-			boolean hasFileHistories = databaseVersion.getFileHistories().size() > 0;
-			boolean printDatabaseVersion = hasFileHistories || !excludeEmpty;
+		for (LightweightDatabaseVersion databaseVersion : databaseVersions) {
+			boolean hasChanges = databaseVersion.getChangeSet().hasChanges();
+			boolean printDatabaseVersion = hasChanges || !excludeEmpty;
 			
 			if (printDatabaseVersion) {
 				printDatabaseVersion(databaseVersion);
@@ -111,51 +108,29 @@ public class LogCommand extends Command {
 		}
 	}
 
-	private void printDatabaseVersion(DatabaseVersion databaseVersion) {
-		String dateStr = DATE_FORMAT.format(databaseVersion.getTimestamp());
+	private void printDatabaseVersion(LightweightDatabaseVersion databaseVersion) {
+		String dateStr = DATE_FORMAT.format(databaseVersion.getDate());
 		String clientStr = databaseVersion.getClient();
 				
 		out.println(String.format("Database version from %s, by client %s", dateStr, clientStr));
 		
-		if (!databaseVersion.getFileHistories().isEmpty()) {	
-			// Collect all file versions
-			List<FileVersion> fileVersions = Lists.newArrayList();
+		if (databaseVersion.getChangeSet().hasChanges()) {	
+			for (String newFile : databaseVersion.getChangeSet().getNewFiles()) {
+				out.println("  A "+newFile);
+			}
 
-			for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
-				fileVersions.addAll(fileHistory.getFileVersions().values());
+			for (String changedFile : databaseVersion.getChangeSet().getChangedFiles()) {
+				out.println("  M "+changedFile);
 			}
 			
-			Collections.sort(fileVersions, FILE_VERSION_COMPARATOR);
-			
-			// Print them
-			for (FileVersion fileVersion : fileVersions) {			
-				switch (fileVersion.getStatus()) {
-				case NEW:
-					out.println("  A " + fileVersion.getPath());
-					break;
-					
-				case CHANGED:
-				case RENAMED:
-					out.println("  M " + fileVersion.getPath());
-					break;
-
-				case DELETED:
-					out.println("  D " + fileVersion.getPath());
-					break;
-				}
-			}
+			for (String deletedFile : databaseVersion.getChangeSet().getDeletedFiles()) {
+				out.println("  D "+deletedFile);
+			}	
 		}
 		else {
 			out.println("  (empty)");
 		}
 		
 		out.println();		
-	}	
-	
-	private static class FileVersionComparator implements Comparator<FileVersion> {
-	    @Override
-	    public int compare(FileVersion fileVersion1, FileVersion fileVersion2) {	        
-	    	return fileVersion1.getPath().compareTo(fileVersion2.getPath());
-	    }
-	}
+	}		
 }

@@ -20,26 +20,25 @@ package org.syncany.operations.log;
 import java.util.List;
 
 import org.simpleframework.xml.ElementList;
-import org.syncany.database.DatabaseVersion;
 import org.syncany.operations.OperationResult;
 
 public class LogOperationResult implements OperationResult {
 	@ElementList(name = "databaseVersions", entry = "databaseVersion", required = true)
-	private List<DatabaseVersion> databaseVersions;
+	private List<LightweightDatabaseVersion> databaseVersions;
 	
 	public LogOperationResult() {
 		// Nothing
 	}
 	
-	public LogOperationResult(List<DatabaseVersion> databaseVersions) {
+	public LogOperationResult(List<LightweightDatabaseVersion> databaseVersions) {
 		this.databaseVersions = databaseVersions;
 	}
 
-	public List<DatabaseVersion> getDatabaseVersions() {
+	public List<LightweightDatabaseVersion> getDatabaseVersions() {
 		return databaseVersions;
 	}
 
-	public void setDatabaseVersions(List<DatabaseVersion> databaseVersions) {
+	public void setDatabaseVersions(List<LightweightDatabaseVersion> databaseVersions) {
 		this.databaseVersions = databaseVersions;
 	}
 }
