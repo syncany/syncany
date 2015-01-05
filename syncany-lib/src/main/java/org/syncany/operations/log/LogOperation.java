@@ -19,7 +19,6 @@ package org.syncany.operations.log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,7 +48,7 @@ public class LogOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Log' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		List<LightweightDatabaseVersion> databaseVersions = new ArrayList<>();
+		ArrayList<LightweightDatabaseVersion> databaseVersions = new ArrayList<>();
 		Iterator<DatabaseVersion> databaseVersionsIterator = localDatabase.getLastDatabaseVersions(options.getMaxDatabaseVersionCount(),
 				options.getMaxFileHistoryCount());
 				

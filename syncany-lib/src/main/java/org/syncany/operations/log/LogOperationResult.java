@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.simpleframework.xml.ElementList;
@@ -24,13 +25,13 @@ import org.syncany.operations.OperationResult;
 
 public class LogOperationResult implements OperationResult {
 	@ElementList(name = "databaseVersions", entry = "databaseVersion", required = true)
-	private List<LightweightDatabaseVersion> databaseVersions;
+	private ArrayList<LightweightDatabaseVersion> databaseVersions;
 	
 	public LogOperationResult() {
 		// Nothing
 	}
 	
-	public LogOperationResult(List<LightweightDatabaseVersion> databaseVersions) {
+	public LogOperationResult(ArrayList<LightweightDatabaseVersion> databaseVersions) {
 		this.databaseVersions = databaseVersions;
 	}
 
@@ -38,7 +39,7 @@ public class LogOperationResult implements OperationResult {
 		return databaseVersions;
 	}
 
-	public void setDatabaseVersions(List<LightweightDatabaseVersion> databaseVersions) {
+	public void setDatabaseVersions(ArrayList<LightweightDatabaseVersion> databaseVersions) {
 		this.databaseVersions = databaseVersions;
 	}
 }
