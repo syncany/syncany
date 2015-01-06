@@ -5,7 +5,7 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + New 'Preferences' dialog with ability to remove/add plugins, 
-    enable/disable notifications, and change the proxy settings #334
+    enable/disable notifications, and change the proxy settings #334/#321
   + New 'Remove folder' feature in tray menu #330
   + New 'Copy link' feature in tray menu #336
   + Added recent changes command 'sy log' #298
