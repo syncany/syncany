@@ -5,7 +5,7 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + New 'Preferences' dialog with ability to remove/add plugins, 
-    enable/disable notifications, and change the proxy settings #334
+    enable/disable notifications, and change the proxy settings #334/#321
   + New 'Remove folder' feature in tray menu #330
   + New 'Copy link' feature in tray menu #336
   + Added recent changes command 'sy log' #298
@@ -15,6 +15,7 @@ Change Log
   + Code refactoring based on SonarQube output #302/#326
   + Fix invalid "uploading" status message #314
   + Fix confusing error message when plugin not installed #328
+  + Fix sync-forever issue with Windows watcher #338
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

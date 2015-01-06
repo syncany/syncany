@@ -87,8 +87,8 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 				boolean ignoreEvent = false;
 
 				name.pachler.nio.file.Path extLibFilePath = (name.pachler.nio.file.Path) watchEvent.context();
-				Path filePath = Paths.get(extLibFilePath.toString()).toAbsolutePath().normalize();
-
+				Path filePath = toAbsoluteNormalizedPath(extLibFilePath.toString());				
+				
 				for (Path ignorePath : ignorePaths) {
 					if (filePath.startsWith(ignorePath.toAbsolutePath().normalize())) {
 						ignoreEvent = true;
@@ -105,6 +105,17 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 
 		watchKey.reset();
 		return hasRelevantEvents;
+	}
+
+	private Path toAbsoluteNormalizedPath(String potentiallyRelativePathStr) {
+		Path filePath = Paths.get(potentiallyRelativePathStr);
+		
+		if (!filePath.isAbsolute()) {
+			return Paths.get(root.toString(), filePath.toString()).normalize();
+		}
+		else {
+			return filePath.normalize();
+		}
 	}
 
 	@Override
