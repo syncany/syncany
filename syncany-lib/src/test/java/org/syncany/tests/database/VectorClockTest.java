@@ -164,6 +164,14 @@ public class VectorClockTest {
 	}	
 	
 	@Test
+	public void testParseClock() {
+		VectorClock vc1 = VectorClock.parseVectorClock("(UnitBBB5,UnitAAA4)");
+		
+		assertEquals(4L, (long) vc1.get("UnitAAA"));
+		assertEquals(5L, (long) vc1.get("UnitBBB"));
+	}	
+	
+	@Test
 	public void testClone() {
 		VectorClock vc1 = new  VectorClock();
 		vc1.setClock("UnitA", 4L);
