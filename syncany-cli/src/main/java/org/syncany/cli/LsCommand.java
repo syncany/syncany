@@ -91,7 +91,7 @@ public class LsCommand extends Command {
 		OptionSpec<Void> optionLongChecksums = parser.acceptsAll(asList("f", "full-checksums"));
 		OptionSpec<Void> optionWithVersions = parser.acceptsAll(asList("V", "versions"));
 		OptionSpec<Void> optionGroupedVersions = parser.acceptsAll(asList("g", "group"));
-		OptionSpec<String> optionFileHistoryPrefix = parser.acceptsAll(asList("H", "file-history")).withRequiredArg();
+		OptionSpec<Void> optionFileHistoryId = parser.acceptsAll(asList("H", "file-history"));
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -125,17 +125,17 @@ public class LsCommand extends Command {
 		}
 				
 		// --versions
-		fetchHistories = options.has(optionWithVersions);
+		fetchHistories = options.has(optionWithVersions) || options.has(optionFileHistoryId);
 		operationOptions.setFetchHistories(fetchHistories);
+
+		// --file-history
+		operationOptions.setFileHistoryId(options.has(optionFileHistoryId));
 		
 		// --long-checksums (display option)
 		checksumLength = (options.has(optionLongChecksums)) ? CHECKSUM_LENGTH_LONG : CHECKSUM_LENGTH_SHORT;
 
 		// --group (display option)
 		groupedVersions = options.has(optionGroupedVersions);
-		
-		// --file-history
-		operationOptions.setFileHistoryPrefix(options.valueOf(optionFileHistoryPrefix));
 		
 		// <path-expr>
 		List<?> nonOptionArgs = options.nonOptionArguments();

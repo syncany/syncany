@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
   sy ls [-V | --versions] [-t | --types=<types>] [-D | --date=<date>]
         [-r | --recursive] [-f | --full-checksums] [-g | --group]
-        [-H | --file-history=<history-id>] [<path-expression>]
+        [-H | --file-history] [<path-expression>]
   
 DESCRIPTION 
   This command lists and filters the file tree based on the local database. 
@@ -20,8 +20,8 @@ DESCRIPTION
   files and symlinks. (4) The -D option selects the date/time at which to
   select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
   ago or `sy ls -D2014-05-02` to select the file tree at May 2. (5) The -H
-  option can be used to select a specific file only. It defines a prefix for
-  the file history. 
+  option can be used to select a specific file only. If the option is given,
+  the <path-expression> is interpreted as a file history identifier.
   
   Using the --versions flag, the command also displays the entire version 
   history for the selected files. Using --group, the result can be grouped by
@@ -49,9 +49,10 @@ OPTIONS
     m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
     shortened if they are unique. Examples: 5h30m or 1y1mo2d
         
-  -H, --file-history=<history-id>
-    Selects only file histories with the defined file history prefix. This
-    option can be used to select one specific file history.
+  -H, --file-history
+    If the option is given, the <path-expression> is interpreted as a file
+    history identifier. This option can be used to select one specific
+    file history. If -H is given, -V is automatically switched on.
  
   -r, --recursive
     Not only selects the folder relative to the <path-expression>, but to all
