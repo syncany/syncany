@@ -38,4 +38,8 @@ public class GetDatabaseVersionHeadersFolderResponse extends FolderResponse {
 		this.root = root;
 		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
 	}
+	
+	public ArrayList<DatabaseVersionHeader> getDatabaseVersionHeaders() {
+		return databaseVersionHeaders;
+	}
 }
