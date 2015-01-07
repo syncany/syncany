@@ -42,7 +42,6 @@ public abstract class Plugin {
 	private static final String PLUGIN_PROPERTIES_NAME_KEY = "pluginName";
 	private static final String PLUGIN_PROPERTIES_VERSION_KEY = "pluginVersion";
 	private static final String PLUGIN_PROPERTIES_DATE_KEY = "pluginDate";
-	private static final String PLUGIN_PROPERTIES_REVISION_KEY = "pluginRevision";
 
 	private String pluginId;
 	private Properties pluginProperties;
@@ -82,13 +81,6 @@ public abstract class Plugin {
 	 */
 	public String getDateStr() {
 		return pluginProperties.getProperty(PLUGIN_PROPERTIES_DATE_KEY);
-	}
-
-	/**
-	 * Returns the Git commit of the plugin
-	 */
-	public String getRevision() {
-		return pluginProperties.getProperty(PLUGIN_PROPERTIES_REVISION_KEY);
 	}
 
 	/**
