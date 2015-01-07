@@ -34,7 +34,9 @@ import org.syncany.plugins.transfer.TransferPlugin;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalTransferPlugin extends TransferPlugin {
+	public static final String ID = "local";
+
 	public LocalTransferPlugin() {
-		super("local");
+		super(ID);
 	}
 }
