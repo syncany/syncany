@@ -17,7 +17,9 @@
  */
 package org.syncany.operations.ls;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.simpleframework.xml.ElementMap;
 import org.syncany.database.FileVersion;
@@ -27,18 +29,18 @@ import org.syncany.operations.OperationResult;
 
 public class LsOperationResult implements OperationResult {
 	@ElementMap(required = false, key = "filePath", value = "fileVersion")
-	private Map<String, FileVersion> fileTree;
+	private TreeMap<String, FileVersion> fileTree;
 	
 	@ElementMap(required = false, key = "fileHistoryId", value = "partialFileHistory")
-	private Map<FileHistoryId, PartialFileHistory> fileVersions;
+	private HashMap<FileHistoryId, PartialFileHistory> fileVersions;
 	
 	public LsOperationResult() {
 		// Nothing
 	}
 	
 	public LsOperationResult(Map<String, FileVersion> fileTree, Map<FileHistoryId, PartialFileHistory> fileVersions) {
-		this.fileTree = fileTree;
-		this.fileVersions = fileVersions;
+		this.fileTree = (fileTree != null) ? new TreeMap<>(fileTree) : null;
+		this.fileVersions = (fileVersions != null) ? new HashMap<>(fileVersions) : null;
 	}
 
 	public Map<String, FileVersion> getFileTree() {

@@ -54,9 +54,10 @@ public class LsOperation extends Operation {
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		String pathExpression = parsePathExpression(options.getPathExpression());
+		String fileHistoryPrefix = parseFileHistoryPrefix(options.getFileHistoryPrefix());
 		Set<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes);
+		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, fileHistoryPrefix, options.getDate(), options.isRecursive(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 
 		if (options.isFetchHistories()) {
@@ -64,6 +65,15 @@ public class LsOperation extends Operation {
 		}
 
 		return new LsOperationResult(fileTree, fileHistories);
+	}
+
+	private String parseFileHistoryPrefix(String fileHistoryPrefix) {
+		if (fileHistoryPrefix != null) {
+			return fileHistoryPrefix + "%";
+		}
+		else {
+			return null;
+		}
 	}
 
 	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(Map<String, FileVersion> fileTree) {

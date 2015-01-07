@@ -139,7 +139,8 @@ _sy() {
 		-D --date\
 		-r --recursive\
 		-f --full-checksums\
-		-g --group"
+		-g --group\
+		-H --file-history"
 
 	LS_TYPES="\
 		t\

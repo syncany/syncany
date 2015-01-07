@@ -248,8 +248,8 @@ public class SqlDatabase {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
-	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, Set<FileType> fileTypes) {
-		return fileVersionDao.getFileTree(filter, date, recursive, fileTypes);
+	public Map<String, FileVersion> getFileTree(String pathExpression, String fileHistoryPrefix, Date date, boolean recursive, Set<FileType> fileTypes) {
+		return fileVersionDao.getFileTree(pathExpression, fileHistoryPrefix, date, recursive, fileTypes);
 	}
 
 	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
