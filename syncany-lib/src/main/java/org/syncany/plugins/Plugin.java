@@ -20,8 +20,8 @@ package org.syncany.plugins;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferSettings;
 
 /**
  * A plugin can be used to store Syncany's repository files on any remote location. 
@@ -41,6 +41,8 @@ import org.syncany.plugins.transfer.TransferManager;
 public abstract class Plugin {
 	private static final String PLUGIN_PROPERTIES_NAME_KEY = "pluginName";
 	private static final String PLUGIN_PROPERTIES_VERSION_KEY = "pluginVersion";
+	private static final String PLUGIN_PROPERTIES_DATE_KEY = "pluginDate";
+	private static final String PLUGIN_PROPERTIES_REVISION_KEY = "pluginRevision";
 
 	private String pluginId;
 	private Properties pluginProperties;
@@ -73,6 +75,20 @@ public abstract class Plugin {
 	 */
 	public String getVersion() {
 		return pluginProperties.getProperty(PLUGIN_PROPERTIES_VERSION_KEY);
+	}
+	
+	/**
+	 * Returns the date the plugin was compiled
+	 */
+	public String getDateStr() {
+		return pluginProperties.getProperty(PLUGIN_PROPERTIES_DATE_KEY);
+	}
+
+	/**
+	 * Returns the Git commit of the plugin
+	 */
+	public String getRevision() {
+		return pluginProperties.getProperty(PLUGIN_PROPERTIES_REVISION_KEY);
 	}
 
 	/**
