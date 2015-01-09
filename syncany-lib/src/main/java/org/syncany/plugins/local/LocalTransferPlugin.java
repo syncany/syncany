@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,9 @@ import org.syncany.plugins.transfer.TransferPlugin;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LocalTransferPlugin extends TransferPlugin {
+	public static final String ID = "local";
+
 	public LocalTransferPlugin() {
-		super("local");
+		super(ID);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,15 +28,15 @@ import java.util.logging.Logger;
 /**
  * This class serves as a container of patterns of filenames
  * that should be ignored.
- * 
- * @author Pim Otte 
+ *
+ * @author Pim Otte
  */
 public class IgnoredFiles {
-	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());	
+	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
 	private Set<String> ignorePatterns;
 	private Set<String> ignorePaths;
 	private File ignoreFile;
-	
+
 	public IgnoredFiles(File ignoreFile) {
 		this.ignoreFile = ignoreFile;
 		this.ignorePatterns = new HashSet<String>();
@@ -44,7 +44,7 @@ public class IgnoredFiles {
 
 		loadPatterns();
 	}
-	
+
 	/**
 	 * Method to check whether a file should be ignored.
 	 * Should only be called at indexing time.
@@ -55,26 +55,26 @@ public class IgnoredFiles {
 			if (path.equals(filePath)) {
 				return true;
 			}
-		} 
-		
+		}
+
 		// Check all regular expressions
 		for (String pattern : ignorePatterns) {
 			if (filePath.matches(pattern)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public void loadPatterns() {
 		if (ignoreFile != null && ignoreFile.exists()) {
 			try {
 				Scanner scanner = new Scanner(ignoreFile);
-				
+
 				while (scanner.hasNextLine()) {
 					String ignorePattern = scanner.nextLine();
-					
+
 					if (!ignorePattern.isEmpty()) {
 						if (ignorePattern.startsWith("regex:")) {
 							// Chop off regex: indicator
@@ -94,7 +94,7 @@ public class IgnoredFiles {
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
-				logger.log(Level.INFO, "Ignore file not found (existed before).");
+				logger.log(Level.INFO, "Ignore file not found (existed before).", e);
 			}
 		}
 		else {
@@ -103,33 +103,42 @@ public class IgnoredFiles {
 			ignorePaths = new HashSet<String>();
 		}
 	}
-        
+
 	private static String convertWildcardsToRegexp(String in) {
 		StringBuilder out = new StringBuilder("^");
-		
+
 		for (int i = 0; i < in.length(); ++i) {
 			char c = in.charAt(i);
-			
+
 			switch (c) {
-				case '*':
-					out.append(".*");
-					break;
-				case '?':
-					out.append(".");
-					break;
-				case '.': case '$': case '^':
-				case '{': case '}': case '[': case ']': case '(': case ')':
-				case '|': case '+': case '\\':
-					out.append("\\");
-					out.append(c);
-					break;
-				default:
-					out.append(c);
+			case '*':
+				out.append(".*");
+				break;
+			case '?':
+				out.append('.');
+				break;
+			case '.':
+			case '$':
+			case '^':
+			case '{':
+			case '}':
+			case '[':
+			case ']':
+			case '(':
+			case ')':
+			case '|':
+			case '+':
+			case '\\':
+				out.append('\\');
+				out.append(c);
+				break;
+			default:
+				out.append(c);
 			}
 		}
-		
+
 		out.append('$');
-		
+
 		return out.toString();
 	}
-} 
+}

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,33 +50,33 @@ import org.syncany.util.StringUtil;
 
 /**
  * The watch operation implements the constant synchronization known from other
- * sync tools. 
- * 
+ * sync tools.
+ *
  * <p>In order to sync instantly, it offers the following strategies:
  * <ul>
  *  <li>It monitors the local file system using the {@link DefaultRecursiveWatcher}.
  *      Whenever a file or folder changes, the sync is started (after a short
  *      settlement wait period).</li>
  *  <li>It subscribes to a repo-specific channel on the Syncany pub/sub server,
- *      using the {@link NotificationListener}, and publishes updates to this 
+ *      using the {@link NotificationListener}, and publishes updates to this
  *      channel.</li>
- *  <li>It periodically runs the sync, i.e. the {@link DownOperation} and 
+ *  <li>It periodically runs the sync, i.e. the {@link DownOperation} and
  *      subsequently the {@link UpOperation}. If the other two mechanisms are
  *      disabled or fail to register changes, this method will make sure that
  *      changes are synced eventually.</li>
  * </ul>
- * 
+ *
  * As of now, this operation never returns, because it runs in a loop. The user
  * has to manually abort the operation on the command line.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WatchOperation extends Operation implements NotificationListenerListener, WatchListener {
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());
-	private static final int STOP_GRACE_PERIOD = 15*1000; 
-	
+	private static final int STOP_GRACE_PERIOD = 15 * 1000;
+
 	private WatchOperationOptions options;
-	
+
 	private SqlDatabase localDatabase;
 
 	private Thread watchThread;
@@ -99,7 +99,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		this.options = options;
 
 		this.localDatabase = new SqlDatabase(config);
-		
+
 		this.watchThread = null;
 		this.syncRunning = new AtomicBoolean(false);
 		this.syncRequested = new AtomicBoolean(false);
@@ -118,7 +118,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	@Override
 	public WatchOperationResult execute() {
 		watchThread = Thread.currentThread();
-		
+
 		if (options.announcementsEnabled()) {
 			startNotificationListener();
 		}
@@ -150,7 +150,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			}
 			catch (Exception e) {
 				if (pauseRequested.get()) {
-					logger.log(Level.INFO, "Sync FAILED, but PAUSE requested. Normally we would wait a bit and try again, but in this case we don't.", e);					
+					logger.log(Level.INFO,
+							"Sync FAILED, but PAUSE requested. Normally we would wait a bit and try again, but in this case we don't.", e);
 				}
 				else if (stopRequested.get()) {
 					logger.log(Level.INFO, "Sync FAILED, but STOP requested.", e);
@@ -169,7 +170,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				}
 			}
 		}
-		
+
 		if (options.announcementsEnabled()) {
 			stopNotificationListener();
 		}
@@ -177,15 +178,15 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 		if (options.watcherEnabled()) {
 			stopRecursiveWatcher();
 		}
-		
+
 		localDatabase.shutdown();
-		
+
 		return new WatchOperationResult();
 	}
 
 	private void startRecursiveWatcher() {
 		logger.log(Level.INFO, "Starting recursive watcher for " + config.getLocalDir() + " ...");
-		
+
 		Path localDir = Paths.get(config.getLocalDir().getAbsolutePath());
 		List<Path> ignorePaths = new ArrayList<Path>();
 
@@ -206,13 +207,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private void startNotificationListener() {
 		logger.log(Level.INFO, "Starting notification listener for " + config.getLocalDir() + " ...");
-		
+
 		notificationListener = new NotificationListener(options.getAnnouncementsHost(), options.getAnnouncementsPort(), this);
 		notificationListener.start();
 
 		notificationListener.subscribe(notificationChannel);
 	}
-	
+
 	private void stopRecursiveWatcher() {
 		try {
 			logger.log(Level.INFO, "Stopping recursive watcher for " + config.getLocalDir() + " ...");
@@ -230,7 +231,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	/**
 	 * Runs one iteration of the main synchronization loop, containing a {@link DownOperation},
-	 * an {@link UpOperation} and (if required), a {@link CleanupOperation}. 
+	 * an {@link UpOperation} and (if required), a {@link CleanupOperation}.
 	 */
 	private void runSync() throws Exception {
 		if (!syncRunning.get()) {
@@ -239,32 +240,31 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 			logger.log(Level.INFO, "RUNNING SYNC ...");
 			fireStartEvent();
-			
 			try {
 				boolean notifyChanges = false;
-				
+
 				// Run down
 				DownOperationResult downResult = new DownOperation(config, options.getDownOptions()).execute();
-				
+
 				if (downResult.getResultCode() == DownResultCode.OK_WITH_REMOTE_CHANGES) {
 					// TODO [low] Do something?
 				}
-				
+
 				// Run up
 				UpOperationResult upOperationResult = new UpOperation(config, options.getUpOptions()).execute();
 
 				if (upOperationResult.getResultCode() == UpResultCode.OK_CHANGES_UPLOADED && upOperationResult.getChangeSet().hasChanges()) {
 					upCount.incrementAndGet();
 					notifyChanges = true;
-				}		
+				}
 
 				CleanupOperationResult cleanupOperationResult = new CleanupOperation(config, options.getCleanupOptions()).execute();
-				
+
 				if (cleanupOperationResult.getResultCode() == CleanupResultCode.OK) {
 					notifyChanges = true;
 				}
-				
-				// Fire change event if up and/or cleanup  
+
+				// Fire change event if up and/or cleanup
 				if (notifyChanges) {
 					notifyChanges();
 				}
@@ -277,9 +277,9 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			}
 		}
 		else {
-			// Can't do a log message here, because this bit is called thousand 
+			// Can't do a log message here, because this bit is called thousand
 			// of times when file system events occur.
-			
+
 			syncRequested.set(true);
 		}
 	}
@@ -292,7 +292,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 				runSync();
 			}
 			catch (Exception e) {
-				logger.log(Level.INFO, "Sync FAILED (event-triggered).");
+				logger.log(Level.INFO, "Sync FAILED (event-triggered).", e);
 			}
 		}
 	}
@@ -304,7 +304,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			runSync();
 		}
 		catch (Exception e) {
-			logger.log(Level.INFO, "Sync FAILED (event-triggered).");
+			logger.log(Level.INFO, "Sync FAILED (event-triggered).", e);
 		}
 	}
 
@@ -327,7 +327,8 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			stopRequested.set(true);
 
 			if (syncRunning.get()) {
-				logger.log(Level.INFO, "Stop requested, but sync process currently running. Waiting max. " + STOP_GRACE_PERIOD + "ms for sync to finish.");
+				logger.log(Level.INFO, "Stop requested, but sync process currently running. Waiting max. " + STOP_GRACE_PERIOD
+						+ "ms for sync to finish.");
 				scheduleForceKill();
 			}
 			else {
@@ -339,7 +340,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			logger.log(Level.INFO, "Stop requested AGAIN, but was requested before. IGNORING.");
 		}
 	}
-	
+
 	public boolean isSyncRunning() {
 		return syncRunning.get();
 	}
@@ -347,7 +348,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	public boolean isSyncRequested() {
 		return syncRequested.get();
 	}
-	
+
 	private void waitWhilePaused() throws InterruptedException {
 		while (pauseRequested.get()) {
 			Thread.sleep(1000);
@@ -356,13 +357,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 
 	private void scheduleForceKill() {
 		String killTimerName = "Kill/" + config.getLocalDir().getName();
-		
+
 		new Timer(killTimerName).schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
 					logger.log(Level.INFO, "STOP GRACE PERIOD OVER. STOPPING WATCH " + config.getLocalDir() + " ...");
-					
+
 					if (watchThread != null && !watchThread.isInterrupted()) {
 						watchThread.interrupt();
 					}
@@ -377,13 +378,13 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	private void forceKillWatchThread() {
 		try {
 			logger.log(Level.INFO, "STOPPING WATCH " + config.getLocalDir() + " ...");
-			
+
 			if (watchThread != null && !watchThread.isInterrupted()) {
 				watchThread.interrupt();
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.INFO, "Forcefully stopping watch thread FAILED at " + config.getLocalDir() + ". Giving up.");
+			logger.log(Level.INFO, "Forcefully stopping watch thread FAILED at " + config.getLocalDir() + ". Giving up.", e);
 		}
 	}
 

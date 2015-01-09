@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@ package org.syncany.database;
 
 /**
  * The chunk entry represents a single chunk reference in the database model
- * and is identified by the chunk's checksum. Due to the fact that the chunk 
+ * and is identified by the chunk's checksum. Due to the fact that the chunk
  * entry is a reference, it does not contain the chunk's actual data.
- *  
+ *
  * <p>A chunk can appear in a {@link MultiChunkEntry} and in a {@link FileContent}.
- * 
+ *
  * @see MultiChunkEntry
- * @see FileContent 
+ * @see FileContent
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChunkEntry {
@@ -38,7 +38,7 @@ public class ChunkEntry {
 	}
 
 	public void setSize(int chunksize) {
-		this.size = chunksize;
+		size = chunksize;
 	}
 
 	public int getSize() {
@@ -56,7 +56,7 @@ public class ChunkEntry {
 	@Override
 	public String toString() {
 		return "ChunkEntry [checksum=" + checksum + ", size=" + size + "]";
-	}	
+	}
 
 	@Override
 	public int hashCode() {
@@ -69,21 +69,27 @@ public class ChunkEntry {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof ChunkEntry)) {
 			return false;
+		}
 		ChunkEntry other = (ChunkEntry) obj;
 		if (checksum == null) {
-			if (other.checksum != null)
+			if (other.checksum != null) {
 				return false;
+			}
 		}
-		else if (!checksum.equals(other.checksum))
+		else if (!checksum.equals(other.checksum)) {
 			return false;
-		if (size != other.size)
+		}
+		if (size != other.size) {
 			return false;
+		}
 		return true;
 	}
 
@@ -94,6 +100,6 @@ public class ChunkEntry {
 
 		public static ChunkChecksum parseChunkChecksum(String s) {
 			return new ChunkChecksum(ObjectId.parseObjectId(s));
-		}		
+		}
 	}
 }

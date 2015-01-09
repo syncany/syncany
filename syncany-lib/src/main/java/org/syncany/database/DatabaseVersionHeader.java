@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,42 +20,42 @@ package org.syncany.database;
 import java.util.Date;
 
 /**
- * The database version header identifies a {@link DatabaseVersion} using 
+ * The database version header identifies a {@link DatabaseVersion} using
  * a {@link VectorClock}, a local timestamp and the client's machine name.
- * 
- * <p>The database version header plays a significant role in the 
- * reconciliation process, in particular when trying to find a winning 
- * branch. 
- * 
+ *
+ * <p>The database version header plays a significant role in the
+ * reconciliation process, in particular when trying to find a winning
+ * branch.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersionHeader {
 	private Date date;
-    private VectorClock vectorClock;
-    private String client;
-    
-    public DatabaseVersionHeader() {
-    	this.date = new Date();
-    	this.vectorClock = new VectorClock();
-    	this.client = "UnknownMachine";
-    }    
+	private VectorClock vectorClock;
+	private String client;
 
-    public Date getDate() {
+	public DatabaseVersionHeader() {
+		this.date = new Date();
+		this.vectorClock = new VectorClock();
+		this.client = "UnknownMachine";
+	}
+
+	public Date getDate() {
 		return date;
 	}
-	
+
 	public void setDate(Date timestamp) {
-		this.date = timestamp;
+		date = timestamp;
 	}
-	
+
 	public VectorClock getVectorClock() {
 		return vectorClock;
-	}	
-	
+	}
+
 	public void setVectorClock(VectorClock vectorClock) {
 		this.vectorClock = vectorClock;
 	}
-	
+
 	public String getClient() {
 		return client;
 	}
@@ -63,7 +63,7 @@ public class DatabaseVersionHeader {
 	public void setClient(String client) {
 		this.client = client;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -73,44 +73,56 @@ public class DatabaseVersionHeader {
 		result = prime * result + ((vectorClock == null) ? 0 : vectorClock.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof DatabaseVersionHeader)) {
 			return false;
+		}
 		DatabaseVersionHeader other = (DatabaseVersionHeader) obj;
 		if (date == null) {
-			if (other.date != null)
+			if (other.date != null) {
 				return false;
-		} else if (!date.equals(other.date))
+			}
+		}
+		else if (!date.equals(other.date)) {
 			return false;
+		}
 		if (client == null) {
-			if (other.client != null)
+			if (other.client != null) {
 				return false;
-		} else if (!client.equals(other.client))
+			}
+		}
+		else if (!client.equals(other.client)) {
 			return false;
+		}
 		if (vectorClock == null) {
-			if (other.vectorClock != null)
+			if (other.vectorClock != null) {
 				return false;
-		} else if (!vectorClock.equals(other.vectorClock))
+			}
+		}
+		else if (!vectorClock.equals(other.vectorClock)) {
 			return false;
+		}
 		return true;
 	}
 
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-				
+
 		sb.append(client);
-		sb.append("/");
+		sb.append('/');
 		sb.append(vectorClock.toString());
 		sb.append("/T=");
 		sb.append(date.getTime());
-		
+
 		return sb.toString();
-	}  
+	}
 }

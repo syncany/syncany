@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,18 @@ public class GetDatabaseVersionHeadersFolderResponse extends FolderResponse {
 	@ElementList(required = true, entry="databaseVersionHeader")
 	private ArrayList<DatabaseVersionHeader> databaseVersionHeaders;	
 	
+	public GetDatabaseVersionHeadersFolderResponse() {
+		// Nothing
+	}
+	
 	public GetDatabaseVersionHeadersFolderResponse(int requestId, String root, List<DatabaseVersionHeader> databaseVersionHeaders) {
 		super(200, requestId, null);
 		
 		this.root = root;
 		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
+	}
+	
+	public ArrayList<DatabaseVersionHeader> getDatabaseVersionHeaders() {
+		return databaseVersionHeaders;
 	}
 }

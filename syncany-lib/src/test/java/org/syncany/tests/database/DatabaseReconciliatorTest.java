@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -340,7 +340,7 @@ public class DatabaseReconciliatorTest {
 				"A/(A3,B3,C4)/T=17",
 				"A/(A3,B4,C4)/T=18", // db-b-4
 				"A/(A3,B5,C4)/T=20", // db-b-5
-				"B/(A3,B6,C4)/T=23", // db-b-6			
+				"B/(A3,B6,C4)/T=23", // db-b-6
 		}));
 
 		// C
@@ -388,7 +388,7 @@ public class DatabaseReconciliatorTest {
 
 				"A/(A3,C4)/T=10", // same as in B
 				"A/(A4,C4)/T=11", // second conflict, wins, winners winner
-				"A/(A5,C4)/T=15" // <<---- WINNERS WINNERS LAST DBV 
+				"A/(A5,C4)/T=15" // <<---- WINNERS WINNERS LAST DBV
 		}));
 
 		// B
@@ -433,7 +433,7 @@ public class DatabaseReconciliatorTest {
 
 				"A/(A3,C4)/T=10", // same as in B
 				"A/(A4,C4)/T=11", // second conflict, wins, winners winner
-				"A/(A5,B1,C4)/T=14" // <<---- WINNERS WINNERS LAST DBV 
+				"A/(A5,B1,C4)/T=14" // <<---- WINNERS WINNERS LAST DBV
 		}));
 
 		// B
@@ -453,11 +453,11 @@ public class DatabaseReconciliatorTest {
 				"C/(C3)/T=3",
 				"C/(C4)/T=4",
 				"A/(A1,C4)/T=8", // last common - current DBV in B!
-		//				"A/(A2,C4)/T=9",     // new from here -> first conflicting, wins
-				//				
+				//				"A/(A2,C4)/T=9",     // new from here -> first conflicting, wins
+				//
 				//				"A/(A3,C4)/T=10",    // same as in A
 				//				"B/(A4,B1,C4)/T=12", // second conflict, loses = winners loser
-				//				"B/(A4,B2,C4)/T=15"		
+				//				"B/(A4,B2,C4)/T=15"
 		}));
 
 		/// Expected results ///
@@ -519,7 +519,7 @@ public class DatabaseReconciliatorTest {
 				"A/(A2)/T=1376074225230",
 				"A/(A3)/T=1376074225256",
 
-				// Conflicts with A -> A3,B1; also: SAME timestamp! 
+				// Conflicts with A -> A3,B1; also: SAME timestamp!
 				"A/(A4)/T=9999999999999",
 		}));
 
@@ -749,7 +749,7 @@ public class DatabaseReconciliatorTest {
 		}
 	}
 
-	private class TestResult {
+	private static class TestResult {
 		Map.Entry<String, DatabaseVersionHeader> winnersLastDatabaseVersionHeader;
 	}
 }

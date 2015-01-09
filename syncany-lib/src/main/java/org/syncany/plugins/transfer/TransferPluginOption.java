@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -147,13 +147,10 @@ public class TransferPluginOption {
 		}
 		else if (type == File.class) {
 			if (isRequired()) {
-				try {
-					new File(value);
+				if (value != null) {
 					return true;
 				}
-				catch (NullPointerException e) {
-					return false;
-				}
+				return false;
 			}
 			else {
 				return true;

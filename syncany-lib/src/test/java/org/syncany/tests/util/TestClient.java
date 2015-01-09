@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,72 +36,72 @@ public class TestClient extends Client {
 		Config testConfig = TestConfigUtil.createTestLocalConfig(machineName, connection);
 		testConfig.setMachineName(machineName);
 		testConfig.setDisplayName(machineName);
-		
-		this.setConfig(testConfig);
-	}	
-	
+
+		setConfig(testConfig);
+	}
+
 	public UpOperationResult upWithForceChecksum() throws Exception {
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
-		
+
 		UpOperationOptions upOptions = new UpOperationOptions();
 		upOptions.setStatusOptions(statusOptions);
-		
+
 		return up(upOptions);
 	}
-	
+
 	public void sync() throws Exception {
 		up();
 		down();
 	}
-	
+
 	public Thread watchAsThread(final int interval) {
 		return new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					WatchOperationOptions watchOperationOptions = new WatchOperationOptions();
-					
+
 					watchOperationOptions.setAnnouncements(false);
 					watchOperationOptions.setWatcher(false);
 					watchOperationOptions.setInterval(interval);
-					
+
 					watch(watchOperationOptions);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
 				}
-			}			
-		});
+			}
+		}, "watchOperationsThread");
 	}
-	
+
 	public void createNewFiles() throws IOException {
-		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25*1024, 20);		
+		TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 25 * 1024, 20);
 	}
-	
+
 	public void createNewFiles(String inFolder) throws IOException {
-		TestFileUtil.createRandomFilesInDirectory(getLocalFile(inFolder), 25*1024, 20);		
+		TestFileUtil.createRandomFilesInDirectory(getLocalFile(inFolder), 25 * 1024, 20);
 	}
-	
+
 	public File createNewFile(String name) throws IOException {
-		return createNewFile(name, 50*1024);
+		return createNewFile(name, 50 * 1024);
 	}
-	
+
 	public File createNewFile(String name, long size) throws IOException {
-		File localFile = getLocalFile(name);		
+		File localFile = getLocalFile(name);
 		TestFileUtil.createNonRandomFile(localFile, size);
-		
+
 		return localFile;
 	}
-	
+
 	public void createNewFolder(String name) {
-		getLocalFile(name).mkdirs();		
-	}	
-	
+		getLocalFile(name).mkdirs();
+	}
+
 	public void moveFile(String fileFrom, String fileTo) throws Exception {
 		File fromLocalFile = getLocalFile(fileFrom);
 		File toLocalFile = getLocalFile(fileTo);
-		
+
 		try {
 			if (fromLocalFile.isDirectory()) {
 				FileUtils.moveDirectory(fromLocalFile, toLocalFile);
@@ -110,44 +110,44 @@ public class TestClient extends Client {
 				FileUtils.moveFile(fromLocalFile, toLocalFile);
 			}
 		}
-		catch (Exception e) {		
-			throw new Exception("Move failed: "+fileFrom+" --> "+fileTo, e);
-		}		
-	}	
-	
+		catch (Exception e) {
+			throw new Exception("Move failed: " + fileFrom + " --> " + fileTo, e);
+		}
+	}
+
 	public void copyFile(String fileFrom, String fileTo) throws IOException {
-		FileUtils.copyFile(getLocalFile(fileFrom), getLocalFile(fileTo));		
-	}	
+		FileUtils.copyFile(getLocalFile(fileFrom), getLocalFile(fileTo));
+	}
 
 	public void changeFile(String name) throws IOException {
-		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));		
-	}	
-	
+		TestFileUtil.changeRandomPartOfBinaryFile(getLocalFile(name));
+	}
+
 	public boolean deleteFile(String name) {
-		return FileUtils.deleteQuietly(getLocalFile(name));		
-	}	
-	
+		return FileUtils.deleteQuietly(getLocalFile(name));
+	}
+
 	public void deleteTestData() {
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
-	
+
 	public File getLocalFile(String name) {
-		return new File(config.getLocalDir()+"/"+name);
+		return new File(config.getLocalDir() + "/" + name);
 	}
-	
+
 	public Map<String, File> getLocalFiles() throws FileNotFoundException {
-		return TestFileUtil.getLocalFiles(config.getLocalDir());		
+		return TestFileUtil.getLocalFiles(config.getLocalDir());
 	}
-	
+
 	public Map<String, File> getLocalFilesExcludeLockedAndNoRead() throws FileNotFoundException {
-		return TestFileUtil.getLocalFilesExcludeLockedAndNoRead(config.getLocalDir());		
+		return TestFileUtil.getLocalFilesExcludeLockedAndNoRead(config.getLocalDir());
 	}
- 
+
 	public File getDatabaseFile() {
 		return config.getDatabaseFile();
 	}
-	
+
 	public TestSqlDatabase loadLocalDatabase() throws IOException {
 		return new TestSqlDatabase(config);
-	}	
+	}
 }

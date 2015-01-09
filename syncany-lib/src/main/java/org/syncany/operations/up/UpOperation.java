@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
-import org.syncany.config.LocalEventBus;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
@@ -71,27 +70,25 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
  * folder, deduplicates new or changed files and uploads newly packed multichunks to the remote
  * storage. The up operation is the complement to the {@link DownOperation}.
- * 
+ *
  * <p>The general operation flow is as follows:
  * <ol>
  *   <li>Load local database (if not already loaded)</li>
  *   <li>Analyze local directory using the {@link StatusOperation} to determine any changed/new/deleted files</li>
  *   <li>Determine if there are unknown remote databases using the {@link LsRemoteOperation}, and skip the rest if there are</li>
- *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion} 
+ *   <li>If there are changes, use the {@link Deduper} and {@link Indexer} to create a new {@link DatabaseVersion}
  *       (including new chunks, multichunks, file contents and file versions).</li>
  *   <li>Upload new multichunks (if any) using a {@link TransferManager}</li>
  *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link MemoryDatabase} and upload it</li>
  *   <li>Add delta database to local database and store it locally</li>
  * </ol>
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());
 
 	public static final String ACTION_ID = "up";
-
-	private LocalEventBus eventBus;
 
 	private UpOperationOptions options;
 	private UpOperationResult result;
@@ -106,7 +103,6 @@ public class UpOperation extends AbstractTransferOperation {
 	public UpOperation(Config config, UpOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance();
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.localDatabase = new SqlDatabase(config);
@@ -226,7 +222,7 @@ public class UpOperation extends AbstractTransferOperation {
 			removeShutdownHook(writeResumeFilesShutDownHook);
 
 			if (committingFailed) {
-				writeResumeFilesShutDownHook.run();
+				serializeRemoteTransactionAndMetadata(newDatabaseVersion);
 			}
 		}
 
@@ -254,31 +250,16 @@ public class UpOperation extends AbstractTransferOperation {
 	/**
 	 * This method creates a Thread, which serializes the {@link remoteTransaction} in the state at the time the thread is run,
 	 * as well as the {@link DatabaseVersion} that contains the metadata about what is uploaded in this transaction.
-	 * 
+	 *
 	 * @param newDatabaseVersion DatabaseVersion that contains everything that should be locally saved when current transaction is resumed.
-	 * 
+	 *
 	 * @return Thread which is attached as a shutdownHook.
 	 */
 	private Thread createAndAddShutdownHook(final DatabaseVersion newDatabaseVersion) {
 		Thread writeResumeFilesShutDownHook = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
-
-					// Writing transaction file to state dir
-					remoteTransaction.writeToFile(null, config.getTransactionFile());
-
-					// Writing database representation of new database version to state dir
-					MemoryDatabase memoryDatabase = new MemoryDatabase();
-					memoryDatabase.addDatabaseVersion(newDatabaseVersion);
-
-					DatabaseXmlSerializer dao = new DatabaseXmlSerializer();
-					dao.save(memoryDatabase.getDatabaseVersions(), config.getTransactionDatabaseFile());
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
-				}
+				serializeRemoteTransactionAndMetadata(newDatabaseVersion);
 			}
 		}, "ResumeShtdwn");
 
@@ -313,14 +294,14 @@ public class UpOperation extends AbstractTransferOperation {
 
 	/**
 	 * This method checks if:
-	 * 
+	 *
 	 * <ul>
 	 * 	<li>If there are local changes => No need for Up.</li>
 	 *  <li>If another clients is running Cleanup => Not allowed to upload.</li>
 	 *  <li>If remote changes exist => Should Down first.</li>
 	 * </ul>
-	 * 
-	 * @returns boolean true if Up can and should be done, false otherwise. 
+	 *
+	 * @returns boolean true if Up can and should be done, false otherwise.
 	 */
 	private boolean checkPreconditions() throws Exception {
 		// Find local changes
@@ -372,7 +353,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 * This method takes the metadata that is to be uploaded, loads it into a {@link MemoryDatabase} and serializes
 	 * it to a file. If this is not a resumption of a previous transaction, this file is added to the transaction.
 	 * Finally, databaseversions that are uploaded are remembered as known, such that they are not downloaded in future Downs.
-	 * 
+	 *
 	 * @param newDatabaseVersion {@link DatabaseVersion} containing all metadata that would be locally persisted if the transaction succeeds.
 	 * @param resuming boolean indicating if the current transaction is in the process of being resumed.
 	 */
@@ -424,7 +405,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 * This methods iterates over all {@link DatabaseVersion}s that are dirty. Dirty means that they are not in the winning
 	 * branch. All data which is contained in these dirty DatabaseVersions is added to the newDatabaseVersion, so that it
 	 * is included in the new Up. Note that only metadata is reuploaded, the actual multichunks are still in the repository.
-	 * 
+	 *
 	 * @param newDatabaseVersion {@link DatabaseVersion} to which dirty data should be added.
 	 */
 	private void addDirtyData(DatabaseVersion newDatabaseVersion) {
@@ -458,9 +439,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 	/**
 	 * This method extracts the files that are new or changed from a {@link ChangeSet} of local changes.
-	 * 
+	 *
 	 * @param localChanges {@link ChangeSet} that was the result from a StatusOperation.
-	 * 
+	 *
 	 * @return a list of Files that are new or have been changed.
 	 */
 	private List<File> extractLocallyUpdatedFiles(ChangeSet localChanges) {
@@ -478,9 +459,9 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * This method fills a {@link ChangeSet} with the files and changes that are uploaded, to include in 
+	 * This method fills a {@link ChangeSet} with the files and changes that are uploaded, to include in
 	 * the {@link UpOperationResult}.
-	 * 
+	 *
 	 * @param newDatabaseVersion {@link DatabaseVersion} that contains the changes.
 	 * @param resultChanges {@ChangeSet} to which these changes are to be added.
 	 */
@@ -508,7 +489,7 @@ public class UpOperation extends AbstractTransferOperation {
 	/**
 	 * This methods adds the multichunks that are not yet present in the remote repo to the {@link RemoteTransaction} for
 	 * uploading. Multichunks are not uploaded if they are dirty.
-	 * 
+	 *
 	 * @param multiChunkEntries Collection of multiChunkEntries that are included in the new {@link DatabaseVersion}
 	 */
 	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
@@ -538,9 +519,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 	/**
 	 * This method starts the indexing process, using the configured Chunker, MultiChunker and Transformer.
-	 * 
+	 *
 	 * @param localFiles List of Files that have been altered in some way.
-	 * 
+	 *
 	 * @return @{link DatabaseVersion} containing the indexed data.
 	 */
 	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
@@ -560,15 +541,15 @@ public class UpOperation extends AbstractTransferOperation {
 
 	/**
 	 * Finds the next vector clock
-	 * 
+	 *
 	 * <p>There are two causes for not having a previous vector clock:
 	 * <ul>
 	 *   <li>This is the initial version
 	 *   <li>A cleanup has wiped *all* database versions
 	 * </ul>
-	 * 
-	 * In the latter case, the method looks at the previous database version numbers 
-	 * to determine a new vector clock		
+	 *
+	 * In the latter case, the method looks at the previous database version numbers
+	 * to determine a new vector clock
 	 */
 	private VectorClock findNewVectorClock() {
 		// Get last vector clock
@@ -609,7 +590,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 	/**
 	 * This method will try to load a local transaction and the corresponding database file.
-	 * 
+	 *
 	 * Side-effect: A resumable transaction will be loaded into remoteTransaction, if it exists.
 	 * @return the loaded databaseVersion if found. Null otherwise.
 	 */
@@ -653,5 +634,29 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		return memoryDatabase.getLastDatabaseVersion();
+	}
+
+	/**
+	 * Serializes both the remote transaction and the current database version
+	 * that would be added if Up was successful.
+	 * @param newDatabaseVersion the current metadata
+	 */
+	private void serializeRemoteTransactionAndMetadata(final DatabaseVersion newDatabaseVersion) {
+		try {
+			logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
+
+			// Writing transaction file to state dir
+			remoteTransaction.writeToFile(null, config.getTransactionFile());
+
+			// Writing database representation of new database version to state dir
+			MemoryDatabase memoryDatabase = new MemoryDatabase();
+			memoryDatabase.addDatabaseVersion(newDatabaseVersion);
+
+			DatabaseXmlSerializer dao = new DatabaseXmlSerializer();
+			dao.save(memoryDatabase.getDatabaseVersions(), config.getTransactionDatabaseFile());
+		}
+		catch (Exception e) {
+			logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
+		}
 	}
 }

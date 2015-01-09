@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,25 @@
 package org.syncany.operations.ls_remote;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 public class LsRemoteOperationResult implements OperationResult {
+	@Element(name = "unknownRemoteDatabases")
 	private ArrayList<DatabaseRemoteFile> unknownRemoteDatabases;
 
 	public LsRemoteOperationResult() {
 		// Nothing.
 	}
-	
+
 	public LsRemoteOperationResult(ArrayList<DatabaseRemoteFile> unknownRemoteDatabases) {
 		this.unknownRemoteDatabases = unknownRemoteDatabases;
 	}
 
-	public ArrayList<DatabaseRemoteFile> getUnknownRemoteDatabases() {
+	public List<DatabaseRemoteFile> getUnknownRemoteDatabases() {
 		return unknownRemoteDatabases;
 	}
 }

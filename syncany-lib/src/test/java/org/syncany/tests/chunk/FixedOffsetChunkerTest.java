@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,96 +55,96 @@ public class FixedOffsetChunkerTest {
 
 	@Test
 	public void testStringSerialization() {
-		final int CHUNK_SIZE = 512*1024;
-		
+		final int CHUNK_SIZE = 512 * 1024;
+
 		Chunker chunker = new FixedChunker(CHUNK_SIZE);
-		assertEquals("Other toString() result expected.", "Fixed-"+CHUNK_SIZE+"-"+FixedChunker.DEFAULT_DIGEST_ALG, chunker.toString());
+		assertEquals("Other toString() result expected.", "Fixed-" + CHUNK_SIZE + "-" + FixedChunker.DEFAULT_DIGEST_ALG, chunker.toString());
 	}
-	
+
 	@Test
 	public void testCreateChunksFrom5MBFileAndTestChunkSize() throws Exception {
 		// Test Constants
-		final int TOTAL_FILE_SIZE = 5*1024*1024;
-		final int EXACT_CHUNK_SIZE = 512*1024;
-		final int EXPECTED_NUMBER_OF_CHUNKS = TOTAL_FILE_SIZE/EXACT_CHUNK_SIZE;
+		final int TOTAL_FILE_SIZE = 5 * 1024 * 1024;
+		final int EXACT_CHUNK_SIZE = 512 * 1024;
+		final int EXPECTED_NUMBER_OF_CHUNKS = TOTAL_FILE_SIZE / EXACT_CHUNK_SIZE;
 		final int EXPECTED_CHUNK_SIZE = EXACT_CHUNK_SIZE;
-		
-		// Setup				
+
+		// Setup
 		File inputRandom5MBFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);
-		
+
 		File outputCopyOfRandom5MBFile = TestFileUtil.getRandomFilenameInDirectory(tempDir);
 		FileOutputStream outputCopyOfRandom5MBFileOutputStream = new FileOutputStream(outputCopyOfRandom5MBFile);
-		
+
 		Chunker chunker = new FixedChunker(EXACT_CHUNK_SIZE, FixedChunker.DEFAULT_DIGEST_ALG);
-		
+
 		// Create chunks
 		int actualChunkCount = 0;
 		Enumeration<Chunk> chunkEnumeration = chunker.createChunks(inputRandom5MBFile);
 		Chunk lastChunk = null;
-		
+
 		while (chunkEnumeration.hasMoreElements()) {
 			actualChunkCount++;
 			lastChunk = chunkEnumeration.nextElement();
-			
+
 			// Chunk size & checksum
 			assertEquals("Chunk does not have the expected size.", EXPECTED_CHUNK_SIZE, lastChunk.getSize());
 			assertNotNull("Chunk checksum should not be null.", lastChunk.getChecksum());
-			
+
 			outputCopyOfRandom5MBFileOutputStream.write(lastChunk.getContent());
 		}
-		
+
 		outputCopyOfRandom5MBFileOutputStream.close();
-		
+
 		// Number of chunks
 		assertEquals("Unexpected number of chunks when chunking", EXPECTED_NUMBER_OF_CHUNKS, actualChunkCount);
 
 		// Checksums
 		byte[] inputFileChecksum = FileUtil.createChecksum(inputRandom5MBFile, FixedChunker.DEFAULT_DIGEST_ALG);
 		byte[] outputFileChecksum = FileUtil.createChecksum(outputCopyOfRandom5MBFile, FixedChunker.DEFAULT_DIGEST_ALG);
-		
+
 		assertArrayEquals("Checksums of input and output file do not match.", inputFileChecksum, outputFileChecksum);
 		assertArrayEquals("Last chunk's getFileChecksum() should be the file checksum.", inputFileChecksum, lastChunk.getFileChecksum());
 	}
-	
+
 	@Test
 	@Ignore
 	public void testChunkChecksum() {
 		fail("Not yet implemented");
-	}	
-	
+	}
+
 	@Test
 	public void testNextChunkEvenIfThereAreNone() throws IOException {
 		// Test Constants
-		final int TOTAL_FILE_SIZE = 5*1024;
-		final int EXACT_CHUNK_SIZE = 512*1024;
-		
-		// Setup				
-		File inputFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);		
+		final int TOTAL_FILE_SIZE = 5 * 1024;
+		final int EXACT_CHUNK_SIZE = 512 * 1024;
+
+		// Setup
+		File inputFile = TestFileUtil.createRandomFileInDirectory(tempDir, TOTAL_FILE_SIZE);
 		Chunker chunker = new FixedChunker(EXACT_CHUNK_SIZE);
-		
+
 		// Create chunks
 		Enumeration<Chunk> chunkEnumeration = chunker.createChunks(inputFile);
-		
+
 		while (chunkEnumeration.hasMoreElements()) {
 			chunkEnumeration.nextElement();
 		}
-		
+
 		// This should lead to an IOException
 		assertNull("No chunk expected, but data received.", chunkEnumeration.nextElement());
 		assertFalse("hasElements() should return 'false' if no chunk available.", chunkEnumeration.hasMoreElements());
 	}
-	
+
 	@Test
 	public void testExceptionInvalidDigestAlgorithm() {
 		boolean exceptionThrown = false;
-		
+
 		try {
 			new FixedChunker(1337, "does-not-exist").createChunks(new File("/some/file"));
 		}
 		catch (Exception e) {
 			exceptionThrown = true;
 		}
-		
+
 		assertTrue("Exception expected.", exceptionThrown);
 	}
 

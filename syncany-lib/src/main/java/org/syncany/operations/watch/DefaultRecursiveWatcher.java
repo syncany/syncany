@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,14 @@ import java.util.logging.Level;
  * The default recursive file watcher monitors a folder (and its sub-folders)
  * by registering a watch on each of the sub-folders. This class is used on
  * Linux/Unix-based operating systems and uses the Java 7 {@link WatchService}.
- * 
+ *
  * <p>The class walks through the file tree and registers to a watch to every sub-folder.
  * For new folders, a new watch is registered, and stale watches are removed.
- * 
+ *
  * <p>When a file event occurs, a timer is started to wait for the file operations
  * to settle. It is reset whenever a new event occurs. When the timer times out,
  * an event is thrown through the {@link WatchListener}.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DefaultRecursiveWatcher extends RecursiveWatcher {
@@ -59,7 +59,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 
 	public DefaultRecursiveWatcher(Path root, List<Path> ignorePaths, int settleDelay, WatchListener listener) {
 		super(root, ignorePaths, settleDelay, listener);
-		
+
 		this.watchService = null;
 		this.watchPathKeyMap = new HashMap<Path, WatchKey>();
 	}
@@ -68,22 +68,22 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	public void beforeStart() throws Exception {
 		watchService = FileSystems.getDefault().newWatchService();
 	}
-	
+
 	@Override
 	protected void beforePollEventLoop() {
 		walkTreeAndSetWatches();
 	}
-	
+
 	@Override
-	protected boolean pollEvents() throws Exception {
+	protected boolean pollEvents() throws InterruptedException {
 		// Take events, but don't care what they are!
 		WatchKey watchKey = watchService.take();
-		
-		watchKey.pollEvents(); 
+
+		watchKey.pollEvents();
 		watchKey.reset();
-		
+
 		// Events are always relevant; ignored paths are not monitored
-		return true; 
+		return true;
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public void afterStop() throws Exception {
+	public void afterStop() throws IOException {
 		watchService.close();
 	}
 
@@ -130,23 +130,23 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 			});
 		}
 		catch (IOException e) {
-			// Don't care
+			logger.log(Level.FINE, "IO failed", e);
 		}
 	}
 
 	private synchronized void unregisterStaleWatches() {
 		Set<Path> paths = new HashSet<Path>(watchPathKeyMap.keySet());
 		Set<Path> stalePaths = new HashSet<Path>();
-		
+
 		for (Path path : paths) {
 			if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
 				stalePaths.add(path);
 			}
 		}
-		
+
 		if (stalePaths.size() > 0) {
 			logger.log(Level.INFO, "Cancelling stale path watches ...");
-			
+
 			for (Path stalePath : stalePaths) {
 				unregisterWatch(stalePath);
 			}
@@ -162,7 +162,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 				watchPathKeyMap.put(dir, watchKey);
 			}
 			catch (IOException e) {
-				// Don't care!
+				logger.log(Level.FINE, "IO Failed", e);
 			}
 		}
 	}
@@ -172,7 +172,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 
 		if (watchKey != null) {
 			logger.log(Level.INFO, "- Cancelling " + dir);
-			
+
 			watchKey.cancel();
 			watchPathKeyMap.remove(dir);
 		}

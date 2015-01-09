@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,44 +25,44 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 
 /**
  * A file version represents a version of a file at a certain time and captures
- * all of a file's properties. 
- * 
- * <p>A {@link PartialFileHistory} typically consists of multiple <tt>FileVersion</tt>s,  
+ * all of a file's properties.
+ *
+ * <p>A {@link PartialFileHistory} typically consists of multiple <tt>FileVersion</tt>s,
  * each of which is the incarnation of the same file, but with either changed properties,
  * or changed content.
- * 
+ *
  * <p>The <tt>FileVersion</tt>'s checksum attribute implicitly links to a {@link FileContent},
  * which represents the content of a file. Multiple file versions can link to the same file content.
- * 
+ *
  * @see PartialFileHistory
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersion implements Cloneable {
 	// Optional
 	private FileHistoryId fileHistoryId;
-	
+
 	// Mandatory
-    private Long version; // TODO [low] This can be an Integer. No need for a long!
-    private String path;
-    private FileType type; 
-    private FileStatus status;    
-    private Long size; 
-    private Date lastModified;
+	private Long version; // TODO [low] This can be an Integer. No need for a long!
+	private String path;
+	private FileType type;
+	private FileStatus status;
+	private Long size;
+	private Date lastModified;
 
-    // Mandatory (if type is symlink)
-    private String linkTarget;
-    
-    // Optional
-    private FileChecksum checksum;
-    private Date updated;
-    private String posixPermissions;
-    private String dosAttributes;
-    
-    public FileVersion() {
-        // Fressen.
-    }      
+	// Mandatory (if type is symlink)
+	private String linkTarget;
 
-    public FileHistoryId getFileHistoryId() {
+	// Optional
+	private FileChecksum checksum;
+	private Date updated;
+	private String posixPermissions;
+	private String dosAttributes;
+
+	public FileVersion() {
+		// Fressen.
+	}
+
+	public FileHistoryId getFileHistoryId() {
 		return fileHistoryId;
 	}
 
@@ -71,14 +71,14 @@ public class FileVersion implements Cloneable {
 	}
 
 	public Long getVersion() {
-        return version;
-    }
+		return version;
+	}
 
-    public void setVersion(Long version) {
-        this.version = version;
-    }
+	public void setVersion(Long version) {
+		this.version = version;
+	}
 
-    public FileType getType() {
+	public FileType getType() {
 		return type;
 	}
 
@@ -86,43 +86,43 @@ public class FileVersion implements Cloneable {
 		this.type = type;
 	}
 
-    public Date getLastModified() {
-        return lastModified;
-    }
+	public Date getLastModified() {
+		return lastModified;
+	}
 
-    public void setLastModified(Date lastModified) {
-        this.lastModified = lastModified;
-    }
+	public void setLastModified(Date lastModified) {
+		this.lastModified = lastModified;
+	}
 
-    public Date getUpdated() {
-        return updated;
-    }
+	public Date getUpdated() {
+		return updated;
+	}
 
-    public void setUpdated(Date updated) {
-        this.updated = updated;
-    }
+	public void setUpdated(Date updated) {
+		this.updated = updated;
+	}
 
-    public FileStatus getStatus() {
-        return status;
-    }
+	public FileStatus getStatus() {
+		return status;
+	}
 
-    public void setStatus(FileStatus status) {
-        this.status = status;
-    }
-    
-    public String getPath() {
-    	return path;  	
-    }
+	public void setStatus(FileStatus status) {
+		this.status = status;
+	}
+
+	public String getPath() {
+		return path;
+	}
 
 	public String getName() {
 		return new File(path).getName();
 	}
-    
-    public void setPath(String path) {
+
+	public void setPath(String path) {
 		this.path = path;
 	}
-    
-    public FileChecksum getChecksum() {
+
+	public FileChecksum getChecksum() {
 		return checksum;
 	}
 
@@ -130,18 +130,18 @@ public class FileVersion implements Cloneable {
 		this.checksum = checksum;
 	}
 
-	public Long getSize() { // TODO [low] Redundant field 'size', this field should not exist. Instead the content's size should be used. This was introduced as a convenience field. 
+	public Long getSize() { // TODO [low] Redundant field 'size', this field should not exist. Instead the content's size should be used. This was introduced as a convenience field.
 		return size;
 	}
 
 	public void setSize(Long size) {
 		this.size = size;
 	}
-	
+
 	public String getLinkTarget() {
 		return linkTarget;
 	}
-	
+
 	public void setLinkTarget(String linkTarget) {
 		this.linkTarget = linkTarget;
 	}
@@ -170,29 +170,29 @@ public class FileVersion implements Cloneable {
 	}
 
 	@Override
-    public FileVersion clone() {
-        try {
-            FileVersion clone = (FileVersion) super.clone();
-            
-            clone.setChecksum(getChecksum());
-            clone.setLastModified(getLastModified());
-            clone.setUpdated(getUpdated());
-            clone.setPath(getPath());
-            clone.setType(getType());
-            clone.setVersion(getVersion());
-            clone.setSize(getSize());
-            clone.setDosAttributes(getDosAttributes());
-            clone.setPosixPermissions(getPosixPermissions());
-            clone.setLinkTarget(getLinkTarget());
-            clone.setStatus(getStatus());
-            
-            return clone;
-        }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }        
-    }	
-	
+	public FileVersion clone() {
+		try {
+			FileVersion clone = (FileVersion) super.clone();
+
+			clone.setChecksum(getChecksum());
+			clone.setLastModified(getLastModified());
+			clone.setUpdated(getUpdated());
+			clone.setPath(getPath());
+			clone.setType(getType());
+			clone.setVersion(getVersion());
+			clone.setSize(getSize());
+			clone.setDosAttributes(getDosAttributes());
+			clone.setPosixPermissions(getPosixPermissions());
+			clone.setLinkTarget(getLinkTarget());
+			clone.setStatus(getStatus());
+
+			return clone;
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -213,116 +213,141 @@ public class FileVersion implements Cloneable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof FileVersion)) {
 			return false;
+		}
 		FileVersion other = (FileVersion) obj;
 		if (checksum == null) {
-			if (other.checksum != null)
+			if (other.checksum != null) {
 				return false;
+			}
 		}
-		else if (!checksum.equals(other.checksum))
+		else if (!checksum.equals(other.checksum)) {
 			return false;
+		}
 		if (dosAttributes == null) {
-			if (other.dosAttributes != null)
+			if (other.dosAttributes != null) {
 				return false;
+			}
 		}
-		else if (!dosAttributes.equals(other.dosAttributes))
+		else if (!dosAttributes.equals(other.dosAttributes)) {
 			return false;
+		}
 		if (lastModified == null) {
-			if (other.lastModified != null)
+			if (other.lastModified != null) {
 				return false;
+			}
 		}
-		else if (!lastModified.equals(other.lastModified))
+		else if (!lastModified.equals(other.lastModified)) {
 			return false;
+		}
 		if (linkTarget == null) {
-			if (other.linkTarget != null)
+			if (other.linkTarget != null) {
 				return false;
+			}
 		}
-		else if (!linkTarget.equals(other.linkTarget))
+		else if (!linkTarget.equals(other.linkTarget)) {
 			return false;
+		}
 		if (path == null) {
-			if (other.path != null)
+			if (other.path != null) {
 				return false;
+			}
 		}
-		else if (!path.equals(other.path))
+		else if (!path.equals(other.path)) {
 			return false;
+		}
 		if (posixPermissions == null) {
-			if (other.posixPermissions != null)
+			if (other.posixPermissions != null) {
 				return false;
+			}
 		}
-		else if (!posixPermissions.equals(other.posixPermissions))
+		else if (!posixPermissions.equals(other.posixPermissions)) {
 			return false;
+		}
 		if (size == null) {
-			if (other.size != null)
+			if (other.size != null) {
 				return false;
+			}
 		}
-		else if (!size.equals(other.size))
+		else if (!size.equals(other.size)) {
 			return false;
-		if (status != other.status)
+		}
+		if (status != other.status) {
 			return false;
-		if (type != other.type)
+		}
+		if (type != other.type) {
 			return false;
+		}
 		if (updated == null) {
-			if (other.updated != null)
+			if (other.updated != null) {
 				return false;
+			}
 		}
-		else if (!updated.equals(other.updated))
+		else if (!updated.equals(other.updated)) {
 			return false;
+		}
 		if (version == null) {
-			if (other.version != null)
+			if (other.version != null) {
 				return false;
+			}
 		}
-		else if (!version.equals(other.version))
+		else if (!version.equals(other.version)) {
 			return false;
+		}
 		return true;
 	}
 
 	public enum FileStatus {
-		NEW ("NEW"), 
-		CHANGED ("CHANGED"), 
-		RENAMED ("RENAMED"), 
-		DELETED ("DELETED");
-		
-		private String name;       
-		
+		NEW("NEW"),
+		CHANGED("CHANGED"),
+		RENAMED("RENAMED"),
+		DELETED("DELETED");
+
+		private String name;
+
 		private FileStatus(String name) {
 			this.name = name;
 		}
-		
-		public boolean equalsName(String otherName){
+
+		public boolean equalsName(String otherName) {
 			return (otherName == null) ? false : name.equals(otherName);
 		}
-		
+
+		@Override
 		public String toString() {
 			return name;
-		}	
+		}
 	}
-	
+
 	/**
 	 * A {@link FileVersion} can be of either one of the types in this enum.
 	 * Types are treated differently during the index and synchronization process.
 	 */
 	public enum FileType {
-		FILE ("FILE"), 
-		FOLDER ("FOLDER"),
-		SYMLINK ("SYMLINK");
-		
-		private String name;       
-		
+		FILE("FILE"),
+		FOLDER("FOLDER"),
+		SYMLINK("SYMLINK");
+
+		private String name;
+
 		private FileType(String name) {
 			this.name = name;
 		}
-		
-		public boolean equalsName(String otherName){
+
+		public boolean equalsName(String otherName) {
 			return (otherName == null) ? false : name.equals(otherName);
 		}
-		
+
+		@Override
 		public String toString() {
 			return name;
-		}	
+		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,33 +43,33 @@ public class TestSqlUtil {
 
 	public static String runSqlSelect(String sqlQuery, Connection databaseConnection) throws SQLException {
 		StringBuilder queryResult = new StringBuilder();
-		
+
 		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
 			try (ResultSet actualResultSet = preparedStatement.executeQuery()) {
 				ResultSetMetaData metaData = actualResultSet.getMetaData();
-		
+
 				boolean isFirstRow = true;
 				int columnsCount = metaData.getColumnCount();
-				
-				while (actualResultSet.next()) {					
+
+				while (actualResultSet.next()) {
 					if (!isFirstRow) {
-						queryResult.append("\n");						
+						queryResult.append('\n');
 					}
 					else {
 						isFirstRow = false;
 					}
-					
-					for (int i=1; i<=columnsCount; i++) {
+
+					for (int i = 1; i <= columnsCount; i++) {
 						queryResult.append(actualResultSet.getString(i));
-						
+
 						if (i != columnsCount) {
-							queryResult.append(",");
+							queryResult.append(',');
 						}
 					}
 				}
 			}
 		}
-		
+
 		return queryResult.toString();
 	}
 }

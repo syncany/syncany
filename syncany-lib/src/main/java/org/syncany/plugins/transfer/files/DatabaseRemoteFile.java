@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,14 @@ import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The database file represents a delta database.
- * 
+ *
  * <p><b>Name pattern:</b> The name pattern of a database file is
- * <b>db-&lt;clientname&gt;-&lt;clientversion&gt;</b>. Initializing an 
+ * <b>db-&lt;clientname&gt;-&lt;clientversion&gt;</b>. Initializing an
  * instance with a non-matching name will throw an exception.
- * 
+ *
  * <p><b>Note:</b> The class implements a {@link Comparable} interface and
- * can be sorted by name and client version. 
- * 
+ * can be sorted by name and client version.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseRemoteFile extends RemoteFile implements Comparable<DatabaseRemoteFile> {
@@ -42,14 +42,14 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 	private long clientVersion;
 
 	/**
-	 * Initializes a new database file, given a name. This constructor might 
+	 * Initializes a new database file, given a name. This constructor might
 	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}. 
-	 * 
-	 * <p>If the pattern matches, the client name and the client version are set, and can be 
+	 * method of the {@link RemoteFileFactory}.
+	 *
+	 * <p>If the pattern matches, the client name and the client version are set, and can be
 	 * queried by {@link #getClientName()} and {@link #getClientVersion()}.
-	 *  
-	 * @param name Database file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 *
+	 * @param name Database file name; <b>must</b> always match the {@link #NAME_PATTERN}
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public DatabaseRemoteFile(String name) throws StorageException {
@@ -58,8 +58,8 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 
 	/**
 	 * Initializes a new database file, given a client name and version
-	 *  
-	 * @param clientName The name of the client/machine for this delta database file 
+	 *
+	 * @param clientName The name of the client/machine for this delta database file
 	 * @param version The client version for this delta database file
 	 * @throws StorageException Never throws an exception
 	 */
@@ -97,13 +97,49 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 
 	@Override
 	public int compareTo(DatabaseRemoteFile r2) {
-		int clientNameCompare = this.getClientName().compareTo(r2.getClientName());
+		int clientNameCompare = getClientName().compareTo(r2.getClientName());
 
 		if (clientNameCompare != 0) {
 			return clientNameCompare;
 		}
 		else {
-			return (int) (this.getClientVersion() - r2.getClientVersion());
+			return (int) (getClientVersion() - r2.getClientVersion());
 		}
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((clientName == null) ? 0 : clientName.hashCode());
+		result = prime * result + (int) (clientVersion ^ (clientVersion >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!super.equals(obj)) {
+			return false;
+		}
+		if (!(obj instanceof DatabaseRemoteFile)) {
+			return false;
+		}
+		DatabaseRemoteFile other = (DatabaseRemoteFile) obj;
+		if (clientName == null) {
+			if (other.clientName != null) {
+				return false;
+			}
+		}
+		else if (!clientName.equals(other.clientName)) {
+			return false;
+		}
+		if (clientVersion != other.clientVersion) {
+			return false;
+		}
+		return true;
+	}
+
 }

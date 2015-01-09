@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.VectorClock;
 
 /**
- * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a 
- * the history of a client's database. It can be compared to a sorted list of 
- * {@link DatabaseVersion} pointers. 
- * 
+ * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a
+ * the history of a client's database. It can be compared to a sorted list of
+ * {@link DatabaseVersion} pointers.
+ *
  * <p>Branches are used mainly in the {@link DatabaseReconciliator} to compare database
- * versions and reconcile conflicts. 
- *    
+ * versions and reconcile conflicts.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseBranch {
@@ -55,12 +55,10 @@ public class DatabaseBranch {
 	}
 
 	public DatabaseVersionHeader get(int index) {
-		try {
+		if (index >= 0 && index < branch.size()) {
 			return branch.get(index);
 		}
-		catch (ArrayIndexOutOfBoundsException e) {
-			return null;
-		}
+		return null;
 	}
 
 	// TODO [medium] Performance: Use map instead of list
@@ -108,19 +106,24 @@ public class DatabaseBranch {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof DatabaseBranch)) {
 			return false;
+		}
 		DatabaseBranch other = (DatabaseBranch) obj;
 		if (branch == null) {
-			if (other.branch != null)
+			if (other.branch != null) {
 				return false;
+			}
 		}
-		else if (!branch.equals(other.branch))
+		else if (!branch.equals(other.branch)) {
 			return false;
+		}
 		return true;
 	}
 }

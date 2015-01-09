@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,13 +53,13 @@ import org.syncany.tests.util.TestSqlUtil;
 public class DirtyDatabaseScenarioTest {
 	@Test
 	public void testDirtyDatabase() throws Exception {
-		// Setup 
+		// Setup
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
 		TestClient clientB = new TestClient("B", testConnection);
 
-		// Run 
+		// Run
 		UpOperationOptions upOptionsForceEnabled = new UpOperationOptions();
 		upOptionsForceEnabled.setForceUploadEnabled(true);
 
@@ -69,9 +69,9 @@ public class DirtyDatabaseScenarioTest {
 		clientB.createNewFile("A-file1.jpg", 51 * 1024);
 		clientB.up(upOptionsForceEnabled);
 
-		clientB.down(); // This creates a dirty database				
+		clientB.down(); // This creates a dirty database
 
-		// Test (for dirty database existence) 
+		// Test (for dirty database existence)
 		Config configB = clientB.getConfig();
 		java.sql.Connection databaseConnectionB = configB.createDatabaseConnection();
 
@@ -121,7 +121,7 @@ public class DirtyDatabaseScenarioTest {
 
 	@Test
 	public void testDirtyCleanupDirty() throws Exception {
-		// Setup 
+		// Setup
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
 
 		TestClient clientA = new TestClient("A", testConnection);
@@ -139,7 +139,7 @@ public class DirtyDatabaseScenarioTest {
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
 
-		// Run 
+		// Run
 
 		//// 1. CREATE FIRST DIRTY VERSION
 
@@ -148,7 +148,7 @@ public class DirtyDatabaseScenarioTest {
 
 		clientB.down();
 		clientB.changeFile("A-file1.jpg");
-		;
+
 		clientB.up(upOptionsForceEnabled); // (A1,B1)
 
 		clientA.down();

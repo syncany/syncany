@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ public class FileSystemActionReconciliator {
 				FileVersionComparison localFileToVersionComparison = fileVersionComparator.compare(localLastVersion, localLastFile, true);
 				
 				// Local file on disk as expected
-				if (localFileToVersionComparison.equals()) { 
+				if (localFileToVersionComparison.areEqual()) { 
 					determineActionWithLocalVersionAndLocalFileAsExpected(winningLastVersion, winningLastFile, localLastVersion, localLastFile,
 							winnersDatabase, fileSystemActions);
 				}
@@ -226,7 +226,7 @@ public class FileSystemActionReconciliator {
 		boolean contentChanged = winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_CHECKSUM)
 				|| winningFileToVersionComparison.getFileChanges().contains(FileChange.CHANGED_SIZE);
 		
-		if (winningFileToVersionComparison.equals()) {
+		if (winningFileToVersionComparison.areEqual()) {
 			logger.log(Level.INFO, "     -> (1) Equals: Nothing to do, winning version equals winning file: "+winningLastVersion+" AND "+winningLastFile);	
 		}
 		else if (winningFileToVersionComparison.getFileChanges().contains(FileChange.DELETED)) {					
@@ -290,7 +290,7 @@ public class FileSystemActionReconciliator {
 		boolean contentChanged = winningVersionToLocalVersionComparison.getFileChanges().contains(FileChange.CHANGED_CHECKSUM)
 				|| winningVersionToLocalVersionComparison.getFileChanges().contains(FileChange.CHANGED_SIZE);					
 		
-		if (winningVersionToLocalVersionComparison.equals()) { // Local file = local version = winning version!
+		if (winningVersionToLocalVersionComparison.areEqual()) { // Local file = local version = winning version!
 			logger.log(Level.INFO, "     -> (8) Equals: Nothing to do, local file equals local version equals winning version: local file = "+localLastFile+", local version = "+localLastVersion+", winning version = "+winningLastVersion);
 		}
 		else if (winningVersionToLocalVersionComparison.getFileChanges().contains(FileChange.DELETED)) {

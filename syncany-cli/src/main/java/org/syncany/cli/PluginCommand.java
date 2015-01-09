@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,9 @@ import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
+import org.syncany.operations.plugin.PluginOperationAction;
 import org.syncany.operations.plugin.PluginInfo;
 import org.syncany.operations.plugin.PluginOperationOptions;
-import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
@@ -42,8 +42,6 @@ import org.syncany.util.StringUtil;
 import com.google.common.eventbus.Subscribe;
 
 public class PluginCommand extends Command {
-	private PluginAction action;
-	
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.ANY;
@@ -84,7 +82,7 @@ public class PluginCommand extends Command {
 
 		// <action>
 		String actionStr = nonOptionArgs.get(0).toString();
-		action = parsePluginAction(actionStr);
+		PluginOperationAction action = parsePluginAction(actionStr);
 
 		operationOptions.setAction(action);
 
@@ -92,7 +90,7 @@ public class PluginCommand extends Command {
 		operationOptions.setSnapshots(options.has(optionSnapshots));
 
 		// install|remove <plugin-id>
-		if (action == PluginAction.INSTALL || action == PluginAction.REMOVE) {
+		if (action == PluginOperationAction.INSTALL || action == PluginOperationAction.REMOVE) {
 			if (nonOptionArgs.size() != 2) {
 				throw new Exception("Invalid syntax, please specify a plugin ID.");
 			}
@@ -103,7 +101,7 @@ public class PluginCommand extends Command {
 		}
 
 		// --local-only, --remote-only
-		else if (action == PluginAction.LIST) {
+		else if (action == PluginOperationAction.LIST) {
 			if (options.has(optionLocal)) {
 				operationOptions.setListMode(PluginListMode.LOCAL);
 			}
@@ -124,9 +122,9 @@ public class PluginCommand extends Command {
 		return operationOptions;
 	}
 
-	private PluginAction parsePluginAction(String actionStr) throws Exception {
+	private PluginOperationAction parsePluginAction(String actionStr) throws Exception {
 		try {
-			return PluginAction.valueOf(actionStr.toUpperCase());
+			return PluginOperationAction.valueOf(actionStr.toUpperCase());
 		}
 		catch (Exception e) {
 			throw new Exception("Invalid syntax, unknown action '" + actionStr + "'");
@@ -137,7 +135,7 @@ public class PluginCommand extends Command {
 	public void printResults(OperationResult operationResult) {
 		PluginOperationResult concreteOperationResult = (PluginOperationResult) operationResult;
 		
-		switch (action) {
+		switch (concreteOperationResult.getAction()) {
 		case LIST:
 			printResultList(concreteOperationResult);
 			return;
@@ -151,7 +149,7 @@ public class PluginCommand extends Command {
 			return;
 
 		default:
-			out.println("Unknown action: " + action);
+			out.println("Unknown action: " + concreteOperationResult.getAction());
 		}
 	}
 

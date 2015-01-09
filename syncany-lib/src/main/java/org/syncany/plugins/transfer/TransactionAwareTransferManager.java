@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
  * The TransactionAwareTransferManager adds all functionality regarding transactions
- * to existing transfer managers. 
- * 
+ * to existing transfer managers.
+ *
  * @author Pim Otte
  */
 public class TransactionAwareTransferManager implements TransferManager {
@@ -77,15 +77,16 @@ public class TransactionAwareTransferManager implements TransferManager {
 			underlyingTransferManager.download(remoteFile, localFile);
 		}
 		catch (StorageFileNotFoundException e) {
+			logger.log(Level.FINE, "Could not find the Storage file", e);
 			downloadDeletedTempFileInTransaction(remoteFile, localFile);
 		}
 	}
 
 	/**
-	 * Downloads all transaction files and looks for the corresponding temporary file 
-	 * for the given remote file. If there is a temporary file, the file is downloaded 
-	 * instead of the original file. 
-	 * 
+	 * Downloads all transaction files and looks for the corresponding temporary file
+	 * for the given remote file. If there is a temporary file, the file is downloaded
+	 * instead of the original file.
+	 *
 	 * <p>This method is <b>expensive</b>, but it is only called by {@link #download(RemoteFile, File) download()}
 	 * if a file does not exist.
 	 */
@@ -140,18 +141,18 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 	/**
 	 * Checks if any transactions of the local machine were not completed and performs
-	 * a rollback if any transactions were found. The rollback itself is performed in 
+	 * a rollback if any transactions were found. The rollback itself is performed in
 	 * a transaction.
-	 * 
+	 *
 	 * <p>The method uses {@link #retrieveRemoteTransactions()} to download all transaction
-	 * files and then rolls back the local machines's transactions: 
-	 * 
+	 * files and then rolls back the local machines's transactions:
+	 *
 	 * <ul>
 	 *  <li>Files in the transaction marked "UPLOAD" are deleted.</li>
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
-	 * 
-	 * @return false if we cannot proceed (Deleting transaction by another client exists). 
+	 *
+	 * @return false if we cannot proceed (Deleting transaction by another client exists).
 	 */
 	public boolean cleanTransactions() throws StorageException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
@@ -228,8 +229,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 	/**
 	 * Removes temporary files on the offsite storage that are not listed in any
-	 * of the {@link TransactionRemoteFile}s available remotely. 
-	 * 
+	 * of the {@link TransactionRemoteFile}s available remotely.
+	 *
 	 * <p>Temporary files might be left over from unfinished transactions.
 	 */
 	public void removeUnreferencedTemporaryFiles() throws StorageException {
@@ -258,11 +259,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 
 	/**
 	 * This method is called when the machine wants to rollback one of their own transactions.
-	 * 
+	 *
 	 * @param rollbackTransaction is the transaction that composes the rollback.
 	 * @param cancelledTransaction is the transaction that is cancelled.
-	 * @param remoteCancelledTransaction is the remote file location of the cancelled transaction. 
-	 *        This file will be deleted as part of the rollback. 
+	 * @param remoteCancelledTransaction is the remote file location of the cancelled transaction.
+	 *        This file will be deleted as part of the rollback.
 	 */
 	private void rollbackSingleTransaction(TransactionTO cancelledTransaction,
 			TransactionRemoteFile remoteCancelledTransaction) throws StorageException {
@@ -276,8 +277,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 	}
 
 	/**
-	 * Adds the opposite actions (rollback actions) for the given unfinished actions 
-	 * to the rollback transaction.  
+	 * Adds the opposite actions (rollback actions) for the given unfinished actions
+	 * to the rollback transaction.
 	 */
 	private void rollbackActions(List<ActionTO> unfinishedActions) throws StorageException {
 		for (ActionTO action : unfinishedActions) {
@@ -297,7 +298,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 				}
 				catch (StorageMoveException e) {
 					logger.log(Level.WARNING, "Restoring deleted file failed. This might be a problem if the original: " + action.getRemoteFile()
-							+ " also does not exist.");
+							+ " also does not exist.", e);
 				}
 
 				break;
@@ -334,7 +335,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	}
 
 	/**
-	 * Returns a list of remote files, excluding the files in transactions. 
+	 * Returns a list of remote files, excluding the files in transactions.
 	 * The method is used to hide unfinished transactions from other clients.
 	 */
 	protected <T extends RemoteFile> Map<String, T> addAndFilterFilesInTransaction(Class<T> remoteFileClass, Map<String, T> remoteFiles)
@@ -374,7 +375,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	}
 
 	/**
-	 * Returns a Set of all files that are not temporary, but are listed in a 
+	 * Returns a Set of all files that are not temporary, but are listed in a
 	 * transaction file. These belong to an unfinished transaction and should be ignored.
 	 */
 	protected Set<RemoteFile> getFilesInTransactions(Set<TransactionTO> transactions) throws StorageException {
@@ -432,7 +433,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	}
 
 	/**
-	 * Creates a temporary file, either using the config (if initialized) or 
+	 * Creates a temporary file, either using the config (if initialized) or
 	 * using the global temporary directory.
 	 */
 	protected File createTempFile(String name) throws IOException {

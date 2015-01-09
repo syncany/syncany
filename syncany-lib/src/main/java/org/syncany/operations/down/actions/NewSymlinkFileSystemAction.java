@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 		if (fileExists(fileVersion2)) {
 			FileVersionComparison fileComparison = fileChanges(fileVersion2);
 			
-			if (fileComparison.equals()) {
+			if (fileComparison.areEqual()) {
 				// Nothing to do.
 			}
 			else if (CollectionUtil.containsOnly(fileComparison.getFileChanges(), FileChange.CHANGED_LINK_TARGET)) {

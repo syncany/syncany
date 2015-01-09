@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,41 +64,41 @@ import org.syncany.util.StringUtil;
 
 public class FrameworkCombinationTest {
 	private static final Logger logger = Logger.getLogger(FrameworkCombinationTest.class.getSimpleName());
-	
-	private File tempDir;	
+
+	private File tempDir;
 	private List<FrameworkCombination> combinations;
 
 	private SaltedSecretKey masterKey;
-	
+
 	static {
 		Logging.init();
-	}		
-	
+	}
+
 	@Before
 	public void initMasterKey() throws CipherException {
 		masterKey = CipherUtil.createMasterKey("some password");
 	}
-	
+
 	@Test
-	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {		
+	public void testBlackBoxCombinationsWith50KBInputFile() throws Exception {
 		// Setup
 		setup();
-		
+
 		// Test
-		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempDir, 10*1024, 5);
-		
-		for(FrameworkCombination combination : combinations) {
+		List<File> inputFiles = TestFileUtil.createRandomFilesInDirectory(tempDir, 10 * 1024, 5);
+
+		for (FrameworkCombination combination : combinations) {
 			logger.info("");
-			logger.info("Testing framework combination "+combination.name+" ...");
+			logger.info("Testing framework combination " + combination.name + " ...");
 			logger.info("---------------------------------------------------------------");
-			
+
 			testBlackBoxCombination(inputFiles, combination);
 		}
-		
+
 		// Tear down (if success)
 		teardown();
 	}
-	
+
 	public void setup() throws Exception {
 		tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		combinations = new ArrayList<FrameworkCombination>();
@@ -121,8 +121,8 @@ public class FrameworkCombinationTest {
 		List<Chunker> chunkers = new LinkedList<Chunker>();
 
 		int[] chunkSizes = new int[] { 8000, 16000 };
-		String[] digestAlgs = new String[] { /*"MD5" ,*/ "SHA1" };
-		String[] fingerprinters = new String[] { "Adler32" /*, "Plain", "Rabin"*/ };
+		String[] digestAlgs = new String[] { /*"MD5" ,*/"SHA1" };
+		String[] fingerprinters = new String[] { "Adler32" /*, "Plain", "Rabin"*/};
 
 		for (int i = 0; i < chunkSizes.length; i++) {
 			for (int j = 0; j < digestAlgs.length; j++) {
@@ -159,25 +159,25 @@ public class FrameworkCombinationTest {
 	public void teardown() throws Exception {
 		TestFileUtil.deleteDirectory(tempDir);
 	}
-		
-	private void testBlackBoxCombination(List<File> inputFiles, FrameworkCombination combination) throws Exception {		
+
+	private void testBlackBoxCombination(List<File> inputFiles, FrameworkCombination combination) throws Exception {
 		// Deduplicate
 		ChunkIndex chunkIndex = deduplicateAndCreateChunkIndex(inputFiles, combination);
-		
+
 		// Assemble
 		Map<ChunkChecksum, File> extractedChunkIDToChunkFile = extractChunksFromMultiChunks(chunkIndex.outputMultiChunkFiles, combination);
-		Map<File, File> inputFilesToReassembledOutputFiles = reassembleFiles(chunkIndex.inputFileToChunkIDs, extractedChunkIDToChunkFile);		
-		
+		Map<File, File> inputFilesToReassembledOutputFiles = reassembleFiles(chunkIndex.inputFileToChunkIDs, extractedChunkIDToChunkFile);
+
 		// Compare checksums of files
 		for (Map.Entry<File, File> inputFilesToReassembledOutputFilesEntry : inputFilesToReassembledOutputFiles.entrySet()) {
 			File inputFile = inputFilesToReassembledOutputFilesEntry.getKey();
 			File outputFile = inputFilesToReassembledOutputFilesEntry.getValue();
-			
+
 			byte[] inputFileChecksum = TestFileUtil.createChecksum(inputFile);
 			byte[] outputFileChecksum = TestFileUtil.createChecksum(outputFile);
-			
+
 			assertArrayEquals("Input file and output file checksums do not match" +
-					"for files "+inputFile+" and "+outputFile, inputFileChecksum, outputFileChecksum);
+					"for files " + inputFile + " and " + outputFile, inputFileChecksum, outputFileChecksum);
 		}
 	}
 
@@ -185,45 +185,47 @@ public class FrameworkCombinationTest {
 		logger.log(Level.INFO, "- Deduplicate and create chunk index ...");
 
 		final ChunkIndex chunkIndex = new ChunkIndex();
-		
+
 		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer);
-		deduper.deduplicate(inputFiles, new DeduperListener() {			
+		deduper.deduplicate(inputFiles, new DeduperListener() {
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
-				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to multichunk "+multiChunk.getId()+" ...");
-				chunkIndex.chunkIDToMultiChunkID.put(new ChunkChecksum(chunk.getChecksum()), multiChunk.getId());				
-			}								
-			
+				logger.log(Level.INFO, "    - Adding chunk " + StringUtil.toHex(chunk.getChecksum()) + " to multichunk " + multiChunk.getId()
+						+ " ...");
+				chunkIndex.chunkIDToMultiChunkID.put(new ChunkChecksum(chunk.getChecksum()), multiChunk.getId());
+			}
+
 			@Override
 			public void onFileAddChunk(File file, Chunk chunk) {
-				logger.log(Level.INFO, "    - Adding chunk "+StringUtil.toHex(chunk.getChecksum())+" to inputFileToChunkIDs-map for file "+file+" ...");
+				logger.log(Level.INFO, "    - Adding chunk " + StringUtil.toHex(chunk.getChecksum()) + " to inputFileToChunkIDs-map for file " + file
+						+ " ...");
 				List<ChunkChecksum> chunkIDsForFile = chunkIndex.inputFileToChunkIDs.get(file);
-				
+
 				if (chunkIDsForFile == null) {
 					chunkIDsForFile = new ArrayList<ChunkChecksum>();
 				}
-				
+
 				chunkIDsForFile.add(new ChunkChecksum(chunk.getChecksum()));
 				chunkIndex.inputFileToChunkIDs.put(file, chunkIDsForFile);
 			}
-			
+
 			@Override
 			public boolean onChunk(Chunk chunk) {
 				if (chunkIndex.chunkIDToMultiChunkID.containsKey(new ChunkChecksum(chunk.getChecksum()))) {
-					logger.log(Level.INFO, "  + Known chunk "+StringUtil.toHex(chunk.getChecksum()));
+					logger.log(Level.INFO, "  + Known chunk " + StringUtil.toHex(chunk.getChecksum()));
 					return false;
 				}
 				else {
-					logger.log(Level.INFO, "  + New chunk "+StringUtil.toHex(chunk.getChecksum()));
+					logger.log(Level.INFO, "  + New chunk " + StringUtil.toHex(chunk.getChecksum()));
 					return true;
 				}
 			}
-			
+
 			@Override
 			public File getMultiChunkFile(MultiChunkId multiChunkId) {
-				File outputMultiChunk = new File(tempDir+"/multichunk-"+multiChunkId);
+				File outputMultiChunk = new File(tempDir + "/multichunk-" + multiChunkId);
 				chunkIndex.outputMultiChunkFiles.add(outputMultiChunk);
-				
+
 				return outputMultiChunk;
 			}
 
@@ -232,85 +234,114 @@ public class FrameworkCombinationTest {
 				// Note: In the real implementation, this should be random
 				return new MultiChunkId(firstChunk.getChecksum());
 			}
-			
-			@Override public boolean onFileFilter(File file) { return true; } 
-			@Override public boolean onFileStart(File file, int index) { return file.isFile() && !FileUtil.isSymlink(file); }
-			@Override public void onFileEnd(File file, byte[] checksum) { }				
-			@Override public void onMultiChunkOpen(MultiChunk multiChunk) { }
-			@Override public void onMultiChunkClose(MultiChunk multiChunk) { }
-			@Override public void onStart(int fileCount) { }
-			@Override public void onFinish() { }
+
+			@Override
+			public boolean onFileFilter(File file) {
+				return true;
+			}
+
+			@Override
+			public boolean onFileStart(File file, int index) {
+				return file.isFile() && !FileUtil.isSymlink(file);
+			}
+
+			@Override
+			public void onFileEnd(File file, byte[] checksum) {
+				// Empty
+			}
+
+			@Override
+			public void onMultiChunkOpen(MultiChunk multiChunk) {
+				// Empty
+			}
+
+			@Override
+			public void onMultiChunkClose(MultiChunk multiChunk) {
+				// Empty
+			}
+
+			@Override
+			public void onStart(int fileCount) {
+				// Empty
+			}
+
+			@Override
+			public void onFinish() {
+				// Empty
+			}
 		});
-		
+
 		return chunkIndex;
 	}
-	
 
-	private Map<ChunkChecksum, File> extractChunksFromMultiChunks(List<File> outputMultiChunkFiles, FrameworkCombination combination) throws IOException {
+	private Map<ChunkChecksum, File> extractChunksFromMultiChunks(List<File> outputMultiChunkFiles, FrameworkCombination combination)
+			throws IOException {
 		Map<ChunkChecksum, File> extractedChunks = new HashMap<ChunkChecksum, File>();
-		
+
 		for (File outputMultiChunkFile : outputMultiChunkFiles) {
-			logger.log(Level.INFO, "- Extracting multichunk "+outputMultiChunkFile+" ...");
-			
+			logger.log(Level.INFO, "- Extracting multichunk " + outputMultiChunkFile + " ...");
+
 			MultiChunk outputMultiChunk = combination.multiChunker.createMultiChunk(
 					combination.transformer.createInputStream(new FileInputStream(outputMultiChunkFile)));
-			
-			Chunk outputChunkInMultiChunk = null;
-			
-			while (null != (outputChunkInMultiChunk = outputMultiChunk.read())) {
-				File extractedChunkFile = new File(tempDir+"/chunk-"+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+"-from-multichunk-"+outputMultiChunk.getId());
 
-				logger.log(Level.INFO, "  + Writing chunk "+StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))+" to "+extractedChunkFile+" ...");
+			Chunk outputChunkInMultiChunk = null;
+
+			while (null != (outputChunkInMultiChunk = outputMultiChunk.read())) {
+				File extractedChunkFile = new File(tempDir + "/chunk-" + StringUtil.toHex((outputChunkInMultiChunk.getChecksum()))
+						+ "-from-multichunk-" + outputMultiChunk.getId());
+
+				logger.log(Level.INFO, "  + Writing chunk " + StringUtil.toHex((outputChunkInMultiChunk.getChecksum())) + " to " + extractedChunkFile
+						+ " ...");
 				TestFileUtil.writeToFile(outputChunkInMultiChunk.getContent(), extractedChunkFile);
 
 				extractedChunks.put(new ChunkChecksum(outputChunkInMultiChunk.getChecksum()), extractedChunkFile);
 			}
-		}		
-		
+		}
+
 		return extractedChunks;
 	}
-	
 
-	private Map<File, File> reassembleFiles(Map<File, List<ChunkChecksum>> inputFileToChunkIDs, Map<ChunkChecksum, File> extractedChunkIDToChunkFile) throws IOException {
+	private Map<File, File> reassembleFiles(Map<File, List<ChunkChecksum>> inputFileToChunkIDs, Map<ChunkChecksum, File> extractedChunkIDToChunkFile)
+			throws IOException {
 		Map<File, File> inputFileToOutputFile = new HashMap<File, File>();
-		
+
 		for (Map.Entry<File, List<ChunkChecksum>> inputFileToChunkIDsEntry : inputFileToChunkIDs.entrySet()) {
-			File inputFile = inputFileToChunkIDsEntry.getKey();			
+			File inputFile = inputFileToChunkIDsEntry.getKey();
 			List<ChunkChecksum> chunkIDs = inputFileToChunkIDsEntry.getValue();
-			
-			File outputFile = new File(tempDir+"/reassembledfile-"+inputFile.getName());
+
+			File outputFile = new File(tempDir + "/reassembledfile-" + inputFile.getName());
 			FileOutputStream outputFileOutputStream = new FileOutputStream(outputFile);
-			
-			logger.log(Level.INFO, "- Reassemble file "+inputFile+" to "+outputFile+" ...");				
-			
+
+			logger.log(Level.INFO, "- Reassemble file " + inputFile + " to " + outputFile + " ...");
+
 			for (ChunkChecksum chunkID : chunkIDs) {
 				File extractedChunkFile = extractedChunkIDToChunkFile.get(chunkID);
 
-				logger.log(Level.INFO, "  + Appending "+chunkID+" (file: "+extractedChunkFile+") to "+outputFile+" ...");				
+				logger.log(Level.INFO, "  + Appending " + chunkID + " (file: " + extractedChunkFile + ") to " + outputFile + " ...");
 				IOUtils.copy(new FileInputStream(extractedChunkFile), outputFileOutputStream);
 			}
-			
+
 			inputFileToOutputFile.put(inputFile, outputFile);
 		}
-		
+
 		return inputFileToOutputFile;
 	}
 
-	private class FrameworkCombination {
+	private static class FrameworkCombination {
 		private String name;
 		private Chunker chunker;
 		private MultiChunker multiChunker;
 		private Transformer transformer;
 
-		public FrameworkCombination(String name, Chunker chunker, MultiChunker multiChunker, Transformer transformerChain) {		
+		public FrameworkCombination(String name, Chunker chunker, MultiChunker multiChunker, Transformer transformerChain) {
 			this.name = name;
 			this.chunker = chunker;
 			this.multiChunker = multiChunker;
-			this.transformer = transformerChain;
+			transformer = transformerChain;
 		}
 	}
-	
-	private class ChunkIndex {
+
+	private static class ChunkIndex {
 		private Map<File, List<ChunkChecksum>> inputFileToChunkIDs = new HashMap<File, List<ChunkChecksum>>();
 		private Map<ChunkChecksum, MultiChunkId> chunkIDToMultiChunkID = new HashMap<ChunkChecksum, MultiChunkId>();
 		private List<File> outputMultiChunkFiles = new ArrayList<File>();

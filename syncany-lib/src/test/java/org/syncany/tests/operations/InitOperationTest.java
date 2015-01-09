@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,16 @@
  */
 package org.syncany.tests.operations;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.init.InitOperation;
@@ -34,10 +38,7 @@ import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Lists;
 
 /**
  * This test goes through the creation of a local repo and verifies
@@ -92,7 +93,7 @@ public class InitOperationTest {
 			op.execute();
 		}
 		catch (StorageException e) {
-			logger.log(Level.INFO, "This operation failed because of the unreliable connection.");
+			logger.log(Level.INFO, "This operation failed because of the unreliable connection.", e);
 		}
 
 		// The local directory should not exist, since the uploading of the repo file fails

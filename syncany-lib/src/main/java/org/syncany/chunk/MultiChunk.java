@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,130 +25,130 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
 /**
  * A multichunk represents the container format that stores one to many {@link Chunk}s.
  * Multichunks are created during the chunking/deduplication process by a {@link MultiChunker}.
- * 
+ *
  * <p>There are two modes to handle multichunks:
- * 
+ *
  * <ul>
  *  <li>When a new multichunk is <i>written</i> and filled up with chunks, the {@link Deduper} makes sure that
  *      chunks are only added until a multichunk's minimum size has been reached, and closes the
  *      multichunk afterwards. During that process, the {@link #write(Chunk) write()} method is called
- *      for each chunk, and {@link #isFull()} is checked for the size. 
- * 
+ *      for each chunk, and {@link #isFull()} is checked for the size.
+ *
  *  <li>When a multichunk is <i>read</i> from a file or an input stream, it can be processed sequentially using
- *      the {@link #read()} method (not used in current code!), or in a random order using the 
+ *      the {@link #read()} method (not used in current code!), or in a random order using the
  *      {@link #getChunkInputStream(byte[]) getChunkInputStream()} method. Because of the latter method,
  *      <b>it is essential that random read access on a multichunk is possible</b>.
  * </ul>
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class MultiChunk {
-    protected MultiChunkId id;
-    protected long size;
-    protected int minSize; // in KB
-    
-    /**
-     * Creates a new multichunk. 
-     * 
-     * <p>This method should be used if the multichunk identifier is known to the 
-     * calling method. This is typically the case if a new multichunk is written.
-     * 
-     * @param id Unique multichunk identifier (can be randomly chosen)
-     * @param minSize Minimum multichunk size, used to determine if chunks can still be added
-     */
-    public MultiChunk(MultiChunkId id, int minSize) {
-        this.id = id;
-        this.minSize = minSize;
-        this.size = 0;
-    }
-    
-    /**
-     * Creates a new multichunk.
-     * 
-     * <p>This method should be used if the multichunk identifier is <i>not</i> known to the 
-     * calling method. This is typically the case if a multichunk is read from a file.
-     *  
-     * @param minSize Minimum multichunk size, used to determine if chunks can still be added
-     */
-    public MultiChunk(int minSize) {
-    	this(null, minSize);
-    }
-    
-    /**
-     * In write mode, this method can be used to write {@link Chunk}s to a multichunk. 
-     * 
-     * <p>Implementations must increase the {@link #size} by the amount written to the multichunk
-     * (input size sufficient) and make sure that (if required) a header is written for the first 
-     * chunk. 
-     * 
-     * <p>Implementations do not have to check whether or not a multichunk is full. This should be
-     * done outside the multichunker/multichunk as part of the deduplication algorithm in the {@link Deduper}.
-     *   
-     * @param chunk Chunk to be written to the multichunk container
-     * @throws IOException If an exception occurs when writing to the multichunk
-     */
-    public abstract void write(Chunk chunk) throws IOException;
-    
-    /**
-     * In read mode, this method can be used to <b>sequentially</b> read {@link Chunk}s from a multichunk.
-     * The method returns a chunk until no more chunks are available, at which point it will return
-     * <tt>null</tt>.
-     * 
-     * <p>If random read access on a multichunk is desired, the 
-     * {@link #getChunkInputStream(byte[]) getChunkInputStream()} method should be used instead.
-     * 
-     * @return Returns the next chunk in the opened multichunk, or <tt>null</tt> if no chunk is available (anymore) 
-     * @throws IOException If an exception occurs when reading from the multichunk
-     */
-    // TODO [low] Method is only used by tests, not necessary anymore? Required for 'cleanup'?
-    public abstract Chunk read() throws IOException; 
+	protected MultiChunkId id;
+	protected long size;
+	protected int minSize; // in KB
 
-    /** 
-     * In read mode, this method can be used to read {@link Chunk}s in <b>random access mode</b>, using a chunk 
-     * checksum as identifier. The method returns a chunk input stream (the chunk's data) if the chunk is
-     * found, and <tt>null</tt> otherwise.
-     * 
-     * <p>If all chunks are read from a multichunk sequentially, the {@link #read()} method should be used instead.  
-     * 
-     * @param checksum The checksum identifying a chunk instance 
-     * @return Returns a chunk input stream (chunk data) if the chunk can be found in the multichunk, or <tt>null</tt> otherwise
-     * @throws IOException If an exception occurs when reading from the multichunk
-     */
-    // TODO [low] Method should be named 'read(checksum)' and return a Chunk object, not an input stream, right?!
-    public abstract InputStream getChunkInputStream(byte[] checksum) throws IOException;
+	/**
+	 * Creates a new multichunk.
+	 *
+	 * <p>This method should be used if the multichunk identifier is known to the
+	 * calling method. This is typically the case if a new multichunk is written.
+	 *
+	 * @param id Unique multichunk identifier (can be randomly chosen)
+	 * @param minSize Minimum multichunk size, used to determine if chunks can still be added
+	 */
+	public MultiChunk(MultiChunkId id, int minSize) {
+		this.id = id;
+		this.minSize = minSize;
+		this.size = 0;
+	}
 
-    /**
-     * Closes a multichunk after writing/reading. 
-     * 
-     * <p>Implementations should close the underlying input/output stream (depending on
-     * whether the chunk was opened in read or write mode.
-     * 
-     * @throws IOException If an exception occurs when closing the multichunk
-     */
-    public abstract void close() throws IOException;
+	/**
+	 * Creates a new multichunk.
+	 *
+	 * <p>This method should be used if the multichunk identifier is <i>not</i> known to the
+	 * calling method. This is typically the case if a multichunk is read from a file.
+	 *
+	 * @param minSize Minimum multichunk size, used to determine if chunks can still be added
+	 */
+	public MultiChunk(int minSize) {
+		this(null, minSize);
+	}
 
-    /**
-     * In write mode, this method determines the fill state of the multichunk and
-     * returns whether or not a new chunk can still be added. It is used by the 
-     * {@link Deduper}.
-     *  
-     * @return Returns <tt>true</tt> if no more chunks should be added and the chunk should be closed, <tt>false</tt> otherwise 
-     */
-    public boolean isFull() {
-        return size >= minSize;
-    }
+	/**
+	 * In write mode, this method can be used to write {@link Chunk}s to a multichunk.
+	 *
+	 * <p>Implementations must increase the {@link #size} by the amount written to the multichunk
+	 * (input size sufficient) and make sure that (if required) a header is written for the first
+	 * chunk.
+	 *
+	 * <p>Implementations do not have to check whether or not a multichunk is full. This should be
+	 * done outside the multichunker/multichunk as part of the deduplication algorithm in the {@link Deduper}.
+	 *
+	 * @param chunk Chunk to be written to the multichunk container
+	 * @throws IOException If an exception occurs when writing to the multichunk
+	 */
+	public abstract void write(Chunk chunk) throws IOException;
 
-    public long getSize() {
-        return size;
-    }
+	/**
+	 * In read mode, this method can be used to <b>sequentially</b> read {@link Chunk}s from a multichunk.
+	 * The method returns a chunk until no more chunks are available, at which point it will return
+	 * <tt>null</tt>.
+	 *
+	 * <p>If random read access on a multichunk is desired, the
+	 * {@link #getChunkInputStream(byte[]) getChunkInputStream()} method should be used instead.
+	 *
+	 * @return Returns the next chunk in the opened multichunk, or <tt>null</tt> if no chunk is available (anymore)
+	 * @throws IOException If an exception occurs when reading from the multichunk
+	 */
+	// TODO [low] Method is only used by tests, not necessary anymore? Required for 'cleanup'?
+	public abstract Chunk read() throws IOException;
 
-    public MultiChunkId getId() {
-        return id;
-    }
+	/**
+	 * In read mode, this method can be used to read {@link Chunk}s in <b>random access mode</b>, using a chunk
+	 * checksum as identifier. The method returns a chunk input stream (the chunk's data) if the chunk is
+	 * found, and <tt>null</tt> otherwise.
+	 *
+	 * <p>If all chunks are read from a multichunk sequentially, the {@link #read()} method should be used instead.
+	 *
+	 * @param checksum The checksum identifying a chunk instance
+	 * @return Returns a chunk input stream (chunk data) if the chunk can be found in the multichunk, or <tt>null</tt> otherwise
+	 * @throws IOException If an exception occurs when reading from the multichunk
+	 */
+	// TODO [low] Method should be named 'read(checksum)' and return a Chunk object, not an input stream, right?!
+	public abstract InputStream getChunkInputStream(byte[] checksum) throws IOException;
 
-    public void setId(MultiChunkId id) {
-        this.id = id;
-    }
+	/**
+	 * Closes a multichunk after writing/reading.
+	 *
+	 * <p>Implementations should close the underlying input/output stream (depending on
+	 * whether the chunk was opened in read or write mode.
+	 *
+	 * @throws IOException If an exception occurs when closing the multichunk
+	 */
+	public abstract void close() throws IOException;
+
+	/**
+	 * In write mode, this method determines the fill state of the multichunk and
+	 * returns whether or not a new chunk can still be added. It is used by the
+	 * {@link Deduper}.
+	 *
+	 * @return Returns <tt>true</tt> if no more chunks should be added and the chunk should be closed, <tt>false</tt> otherwise
+	 */
+	public boolean isFull() {
+		return size >= minSize;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public MultiChunkId getId() {
+		return id;
+	}
+
+	public void setId(MultiChunkId id) {
+		this.id = id;
+	}
 
 	@Override
 	public int hashCode() {
@@ -162,23 +162,30 @@ public abstract class MultiChunk {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof MultiChunk)) {
 			return false;
+		}
 		MultiChunk other = (MultiChunk) obj;
 		if (id == null) {
-			if (other.id != null)
+			if (other.id != null) {
 				return false;
+			}
 		}
-		else if (!id.equals(other.id))
+		else if (!id.equals(other.id)) {
 			return false;
-		if (minSize != other.minSize)
+		}
+		if (minSize != other.minSize) {
 			return false;
-		if (size != other.size)
+		}
+		if (size != other.size) {
 			return false;
+		}
 		return true;
 	}
 }

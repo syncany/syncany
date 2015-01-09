@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,44 +23,44 @@ import java.util.List;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 
 /**
- * The multichunk entry represents the chunk container in which a set of 
+ * The multichunk entry represents the chunk container in which a set of
  * {@link ChunkEntry}s is stored. On a file, level, a multichunk is represented
  * by a file (container format) and chunks are added to this file.
- * 
+ *
  * <p>A multichunk is identified by a unique identifier (random, not a checksum),
- * and contains references to {@link ChunkEntry}s. 
- * 
+ * and contains references to {@link ChunkEntry}s.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class MultiChunkEntry  {
+public class MultiChunkEntry {
 	private static final byte MULTICHUNK_ID_LENGTH = 20;
-	
-    private MultiChunkId id;    
-    private long size;
-    private List<ChunkChecksum> chunks;
-        
-    public MultiChunkEntry(MultiChunkId id, long size) {
-        this.id = id;
-        this.size = size;
-        this.chunks = new ArrayList<ChunkChecksum>();
-    }
-    
-    public void addChunk(ChunkChecksum chunk) {
-        chunks.add(chunk);
-    }    
 
-    public MultiChunkId getId() {
-        return id;
-    }
+	private MultiChunkId id;
+	private long size;
+	private List<ChunkChecksum> chunks;
 
-    public void setId(MultiChunkId id) {
-        this.id = id;
-    }
+	public MultiChunkEntry(MultiChunkId id, long size) {
+		this.id = id;
+		this.size = size;
+		this.chunks = new ArrayList<ChunkChecksum>();
+	}
 
-    public List<ChunkChecksum> getChunks() {
-        return chunks;
-    }   
-    
+	public void addChunk(ChunkChecksum chunk) {
+		chunks.add(chunk);
+	}
+
+	public MultiChunkId getId() {
+		return id;
+	}
+
+	public void setId(MultiChunkId id) {
+		this.id = id;
+	}
+
+	public List<ChunkChecksum> getChunks() {
+		return chunks;
+	}
+
 	public long getSize() {
 		return size;
 	}
@@ -80,25 +80,32 @@ public class MultiChunkEntry  {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof MultiChunkEntry)) {
 			return false;
+		}
 		MultiChunkEntry other = (MultiChunkEntry) obj;
 		if (chunks == null) {
-			if (other.chunks != null)
+			if (other.chunks != null) {
 				return false;
+			}
 		}
-		else if (!chunks.equals(other.chunks))
+		else if (!chunks.equals(other.chunks)) {
 			return false;
+		}
 		if (id == null) {
-			if (other.id != null)
+			if (other.id != null) {
 				return false;
+			}
 		}
-		else if (!id.equals(other.id))
+		else if (!id.equals(other.id)) {
 			return false;
+		}
 		return true;
 	}
 
@@ -106,16 +113,16 @@ public class MultiChunkEntry  {
 	public String toString() {
 		return "MultiChunkEntry [id=" + id + ", chunks=" + chunks + "]";
 	}
-	
+
 	public static class MultiChunkId extends ObjectId {
 		public MultiChunkId(byte[] array) {
 			super(array);
 		}
-		
+
 		public static MultiChunkId secureRandomMultiChunkId() {
 			return new MultiChunkId(ObjectId.secureRandomBytes(MULTICHUNK_ID_LENGTH));
 		}
-		
+
 		public static MultiChunkId parseMultiChunkId(String s) {
 			return new MultiChunkId(ObjectId.parseObjectId(s));
 		}

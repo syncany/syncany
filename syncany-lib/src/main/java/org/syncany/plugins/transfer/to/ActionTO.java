@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 /**
  * A TransactionActionTO describes a single action on a file, which is to be bundled
  * with other actions to describe a full transaction.
- * 
+ *
  * @author Pim Otte
  */
 @Root(name = "transactionAction", strict = false)
@@ -93,7 +93,7 @@ public class ActionTO {
 			return RemoteFile.createRemoteFile(remoteTempLocation, TempRemoteFile.class);
 		}
 		catch (StorageException e) {
-			logger.log(Level.INFO, "Invalid remote temporary filename: " + remoteTempLocation);
+			logger.log(Level.INFO, "Invalid remote temporary filename: " + remoteTempLocation, e);
 			return null;
 		}
 	}

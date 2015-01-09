@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,13 +36,13 @@ import org.syncany.util.FileUtil;
 import org.syncany.util.SqlRunner;
 
 /**
- * This class is a helper class that provides the connection to the embedded 
+ * This class is a helper class that provides the connection to the embedded
  * HSQLDB database. It is mainly used by the data access objects.
- * 
+ *
  * <p>The class provides methods to create {@link Connection} objects, retrieve
- * SQL statements from the resources, and create the initial tables when the 
- * application is first started.   
- * 
+ * SQL statements from the resources, and create the initial tables when the
+ * application is first started.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseConnectionFactory {
@@ -69,9 +69,9 @@ public class DatabaseConnectionFactory {
 	 * Creates a database connection using the given database file. If the database exists and the
 	 * application tables are present, a valid connection is returned. If not, the database is created
 	 * and the application tables are created.
-	 * 
+	 *
 	 * @param databaseFile File at which to create/load the database
-	 * @return Returns a valid database connection 
+	 * @return Returns a valid database connection
 	 */
 	public static Connection createConnection(File databaseFile) {
 		String databaseFilePath = FileUtil.getDatabasePath(databaseFile.toString());
@@ -87,10 +87,10 @@ public class DatabaseConnectionFactory {
 	/**
 	 * Retrieves a SQL statement template from a resource using the given resource identifier. From
 	 * this template, a {@link PreparedStatement} can be created.
-	 * 
+	 *
 	 * <p>The statement is either loaded from the resource (if it is first encountered),
 	 * or loaded from the cache if it has been seen before.
-	 * 
+	 *
 	 * @param resourceIdentifier Path to the resource, e.g. "create.all.sql"
 	 * @return Returns the SQL statement read from the resource
 	 */
@@ -152,14 +152,10 @@ public class DatabaseConnectionFactory {
 		try {
 			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
 
-			if (resultSet.next()) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return resultSet.next();
 		}
 		catch (SQLException e) {
+			logger.log(Level.FINE, "Failed to execute SQL", e);
 			return false;
 		}
 	}
@@ -189,7 +185,7 @@ public class DatabaseConnectionFactory {
 				String trimmedLine = line.trim();
 
 				if (!trimmedLine.startsWith("--")) {
-					preparedStatementStr.append(" ");
+					preparedStatementStr.append(' ');
 					preparedStatementStr.append(trimmedLine);
 				}
 			}

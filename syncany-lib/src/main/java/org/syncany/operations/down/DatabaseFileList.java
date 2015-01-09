@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.syncany.operations.down;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.SortedMap;
 
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.plugins.transfer.StorageException;
@@ -29,15 +29,15 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 /**
  * Helper class to help map a database version header to its corresponding
  * downloaded remote database. This class is used by the {@link DownOperation}
- * to read the new/unknown remote databases. 
- *  
+ * to read the new/unknown remote databases.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseFileList {
-	private TreeMap<File, DatabaseRemoteFile> newRemoteDatabases;
+	private SortedMap<File, DatabaseRemoteFile> newRemoteDatabases;
 	private Map<String, File> shortFilenameToFileMap;
-	
-	public DatabaseFileList(TreeMap<File, DatabaseRemoteFile> newRemoteDatabases) {
+
+	public DatabaseFileList(SortedMap<File, DatabaseRemoteFile> newRemoteDatabases) {
 		this.newRemoteDatabases = newRemoteDatabases;
 		this.shortFilenameToFileMap = initLookupMap();
 	}
@@ -49,18 +49,18 @@ public class DatabaseFileList {
 		for (File remoteDatabase : newRemoteDatabases.keySet()) {
 			shortFilenameToFileMap.put(remoteDatabase.getName(), remoteDatabase);
 		}
-		
+
 		return shortFilenameToFileMap;
 	}
 
 	/**
-	 * Returns the database file for a given database version header, or <tt>null</tt> 
+	 * Returns the database file for a given database version header, or <tt>null</tt>
 	 * if for this database version header no file has been downloaded.
-	 * 
+	 *
 	 * <p>Unlike {@link #getNextDatabaseVersionFile(DatabaseVersionHeader, Map) getNextDatabaseVersionFile()},
 	 * this method does <b>not</b> try to find a database file by counting up the local version. It returns
 	 * null if the exact version has not been found!
-	 * 
+	 *
 	 * <p><b>Example:</b> given database version header is A/(A3,B2)/T=..
 	 * <pre>
 	 *   - Does db-A-0003 exist? No, return null.
@@ -69,19 +69,19 @@ public class DatabaseFileList {
 	public File getExactDatabaseVersionFile(DatabaseVersionHeader databaseVersionHeader) throws StorageException {
 		String clientName = databaseVersionHeader.getClient();
 		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
-		
-		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);				
+
+		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);
 		return shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
 	}
 
 	/**
 	 * Returns a database file for a given database version header, or throws an error if
 	 * no file has been found.
-	 * 
+	 *
 	 * <p><b>Note:</b> Unlike {@link #getExactDatabaseVersionFile(DatabaseVersionHeader, Map) getExactDatabaseVersionFile()},
 	 * this method tries to find a database file by counting up the local version, i.e. if the exact version cannot be found,
 	 * it increases the local client version by one until a matching version is found.
-	 * 
+	 *
 	 * <p><b>Example:</b> given database version header is A/(A3,B2)/T=..
 	 * <pre>
 	 *   - Does db-A-0003 exist? No, continue.
@@ -92,27 +92,27 @@ public class DatabaseFileList {
 	public File getNextDatabaseVersionFile(DatabaseVersionHeader databaseVersionHeader) throws StorageException {
 		String clientName = databaseVersionHeader.getClient();
 		long clientFileClock = databaseVersionHeader.getVectorClock().getClock(clientName);
-		
+
 		DatabaseRemoteFile potentialDatabaseRemoteFileForRange = null;
 		File databaseFileForRange = null;
-		
+
 		int maxRounds = 100000; // TODO [medium] This is ugly and potentially dangerous. Can this lead to incorrect results?
 		boolean isLoadableDatabaseFile = false;
-		
+
 		while (!isLoadableDatabaseFile && maxRounds > 0) {
 			potentialDatabaseRemoteFileForRange = new DatabaseRemoteFile(clientName, clientFileClock);
-			
+
 			databaseFileForRange = shortFilenameToFileMap.get(potentialDatabaseRemoteFileForRange.getName());
-			isLoadableDatabaseFile = databaseFileForRange != null;	
-			
+			isLoadableDatabaseFile = databaseFileForRange != null;
+
 			maxRounds--;
 			clientFileClock++;
 		}
-		
+
 		if (!isLoadableDatabaseFile) {
 			throw new StorageException("Cannot find suitable database remote file to load range.");
 		}
-		
+
 		return databaseFileForRange;
 	}
 }

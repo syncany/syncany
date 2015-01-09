@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,6 +161,14 @@ public class VectorClockTest {
 		vc1.setClock("UnitAAA", 4L);
 		
 		assertEquals("Expected different serialization", "(UnitAAA4,UnitBBB5)", vc1.toString());
+	}	
+	
+	@Test
+	public void testParseClock() {
+		VectorClock vc1 = VectorClock.parseVectorClock("(UnitBBB5,UnitAAA4)");
+		
+		assertEquals(4L, (long) vc1.get("UnitAAA"));
+		assertEquals(5L, (long) vc1.get("UnitBBB"));
 	}	
 	
 	@Test

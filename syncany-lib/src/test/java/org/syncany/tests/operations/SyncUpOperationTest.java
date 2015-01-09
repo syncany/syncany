@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
+import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestConfigUtil;
@@ -67,7 +68,7 @@ public class SyncUpOperationTest {
 				fileAmount);
 
 		// Run!
-		UpOperation op = new UpOperation(testConfig);
+		AbstractTransferOperation op = new UpOperation(testConfig);
 		op.execute();
 
 		// Get databases (for comparison)

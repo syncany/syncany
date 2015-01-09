@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
+import org.syncany.operations.log.LogOperation;
+import org.syncany.operations.log.LogOperationOptions;
+import org.syncany.operations.log.LogOperationResult;
 import org.syncany.operations.ls.LsOperation;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
@@ -140,6 +143,10 @@ public class Client {
 
 	public LsOperationResult ls(LsOperationOptions options) throws Exception {
 		return new LsOperation(config, options).execute();
+	}
+
+	public LogOperationResult log(LogOperationOptions options) throws Exception {
+		return new LogOperation(config, options).execute();
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {

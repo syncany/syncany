@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,22 @@ package org.syncany.operations.daemon.messages.api;
 
 import java.util.logging.Logger;
 
+import org.syncany.config.LocalEventBus;
+
 public abstract class ManagementRequestHandler {
 	protected static final Logger logger = Logger.getLogger(ManagementRequestHandler.class.getSimpleName());
+	protected LocalEventBus eventBus;
+	
+	public ManagementRequestHandler() {
+		this.eventBus = LocalEventBus.getInstance();
+	}
 	
 	public abstract Response handleRequest(ManagementRequest request);
 	
 	public static ManagementRequestHandler createManagementRequestHandler(Request request) throws Exception {		
-		String fqClassName = request.getClass().getName()+ManagementRequestHandler.class.getSimpleName();		
+		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
 		Class<?> clazz = Class.forName(fqClassName);
-		
+
 		return (ManagementRequestHandler) clazz.newInstance();
 	}    
 }

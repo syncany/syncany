@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,10 +38,10 @@ import org.syncany.operations.watch.WatchOperationResult;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * The watch operation thread runs a {@link WatchOperation} in a thread. The 
+ * The watch operation thread runs a {@link WatchOperation} in a thread. The
  * underlying thred can be started using the {@link #start()} method, and stopped
- * gracefully using {@link #stop()}. 
- * 
+ * gracefully using {@link #stop()}.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WatchRunner {
@@ -103,30 +103,30 @@ public class WatchRunner {
 	public boolean hasStopped() {
 		return watchOperationResult != null;
 	}
-	
+
 	public boolean isSyncRunning() {
 		return watchOperation.isSyncRunning();
 	}
 
 	@Subscribe
-	public void onRequestReceived(FolderRequest folderRequest) {		
+	public void onRequestReceived(FolderRequest folderRequest) {
 		File requestRootFolder = new File(folderRequest.getRoot());
 		boolean localDirMatches = requestRootFolder.equals(config.getLocalDir());
 
 		if (localDirMatches) {
 			logger.log(Level.INFO, "Received " + folderRequest);
-			
+
 			try {
 				if (!watchOperation.isSyncRunning() && !watchOperation.isSyncRequested()) {
 					watchOperation.pause();
-					
+
 					FolderRequestHandler handler = FolderRequestHandler.createFolderRequestHandler(folderRequest, config);
 					Response response = handler.handleRequest(folderRequest);
-					
+
 					if (response != null) {
 						eventBus.post(response);
 					}
-					
+
 					watchOperation.resume();
 				}
 				else {
@@ -135,8 +135,9 @@ public class WatchRunner {
 				}
 			}
 			catch (Exception e) {
+				logger.log(Level.FINE, "Failed to process request", e);
 				eventBus.post(new BadRequestResponse(folderRequest.getId(), "Invalid request."));
 			}
-		}		
-	}	
+		}
+	}
 }

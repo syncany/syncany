@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.config.LocalEventBus;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.database.MemoryDatabase;
@@ -66,7 +66,7 @@ import com.google.common.collect.Sets.SetView;
  * whether other clients have uploaded new changes, downloads and compares these changes to
  * the local database, and applies them locally. The down operation is the complement to the
  * {@link UpOperation}.
- * 
+ *
  * <p>The general operation flow is as follows:
  * <ol>
  *  <li>List all database versions on the remote storage using the {@link LsRemoteOperation}
@@ -80,10 +80,10 @@ import com.google.common.collect.Sets.SetView;
  *      findLosersPruneBranch()})</li>
  *  <li>If the apply-changes-flag is switched on, changes are applied to the local file system using the
  *      {@link ApplyChangesOperation}.</li>
- *  <li>Save local database and update known database list (database files that do not need to be 
- *      downloaded anymore</li>  
+ *  <li>Save local database and update known database list (database files that do not need to be
+ *      downloaded anymore</li>
  * </ol>
- *     
+ *
  * @see DatabaseReconciliator
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -91,8 +91,6 @@ public class DownOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
 
 	public static final String ACTION_ID = "down";
-
-	private LocalEventBus eventBus;
 
 	private DownOperationOptions options;
 	private DownOperationResult result;
@@ -108,8 +106,6 @@ public class DownOperation extends AbstractTransferOperation {
 	public DownOperation(Config config, DownOperationOptions options) {
 		super(config, ACTION_ID);
 
-		this.eventBus = LocalEventBus.getInstance();
-
 		this.options = options;
 		this.result = new DownOperationResult();
 
@@ -120,7 +116,7 @@ public class DownOperation extends AbstractTransferOperation {
 
 	/**
 	 * Executes the down operation, roughly following these steps:
-	 * 
+	 *
 	 * <ul>
 	 *  <li>Download the remote databases to the local cache folder
 	 *  <li>Read version headers (vector clocks)
@@ -152,8 +148,8 @@ public class DownOperation extends AbstractTransferOperation {
 		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
 		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
 
-		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
-		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
+		SortedMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
+		SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
 		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
 
 		Map<String, CleanupRemoteFile> remoteCleanupFiles = getRemoteCleanupFiles();
@@ -169,6 +165,11 @@ public class DownOperation extends AbstractTransferOperation {
 
 			// Get rid of local database
 			localDatabase.deleteAll();
+
+			// Normally, we wouldn't want to commit in the middle of an operation, but unfortunately
+			// we have to, since not committing causes hanging in database operations, since UNCOMMITTED_READ
+			// does not do enough magic to proceed. The commit in itself is not a problem, since we need
+			// to redownload all remote data anyway.
 			localDatabase.commit();
 
 			// Set last cleanup values
@@ -220,11 +221,11 @@ public class DownOperation extends AbstractTransferOperation {
 
 	/**
 	 * Checks whether any new databases are only and whether any other conflicting
-	 * actions are running.  
-	 * 
-	 * <p>This method sets the result code in <tt>result</tt> according to the 
-	 * checking result and returns <tt>true</tt> if the rest of the operation can 
-	 * continue, <tt>false</tt> otherwise. 
+	 * actions are running.
+	 *
+	 * <p>This method sets the result code in <tt>result</tt> according to the
+	 * checking result and returns <tt>true</tt> if the rest of the operation can
+	 * continue, <tt>false</tt> otherwise.
 	 */
 	private boolean checkPreconditions() throws Exception {
 		// Check strategies
@@ -258,7 +259,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Lists unknown/new remote databases using the {@link LsRemoteOperation}. 
+	 * Lists unknown/new remote databases using the {@link LsRemoteOperation}.
 	 */
 	private LsRemoteOperationResult listUnknownRemoteDatabases() throws Exception {
 		return new LsRemoteOperation(config, transferManager).execute();
@@ -266,15 +267,15 @@ public class DownOperation extends AbstractTransferOperation {
 
 	/**
 	 * Downloads the previously identified new/unknown remote databases to the local cache
-	 * and returns a map with the local cache files mapped to the given remote database 
+	 * and returns a map with the local cache files mapped to the given remote database
 	 * files. The method additionally fires events for every database it downloads.
 	 */
-	private TreeMap<File, DatabaseRemoteFile> downloadUnknownRemoteDatabases(List<DatabaseRemoteFile> unknownRemoteDatabases)
+	private SortedMap<File, DatabaseRemoteFile> downloadUnknownRemoteDatabases(List<DatabaseRemoteFile> unknownRemoteDatabases)
 			throws StorageException {
 
 		logger.log(Level.INFO, "Downloading unknown databases.");
 
-		TreeMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
+		SortedMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = new TreeMap<File, DatabaseRemoteFile>();
 		int downloadFileIndex = 0;
 
 		for (DatabaseRemoteFile remoteFile : unknownRemoteDatabases) {
@@ -297,17 +298,17 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * Read the given database files into individual per-user {@link DatabaseBranch}es. This method only
 	 * reads the headers from the local database files, and not the entire databases into memory.
-	 * 
+	 *
 	 * <p>The returned database branches contain only the per-client {@link DatabaseVersionHeader}s, and not
 	 * the entire stitched branches, i.e. A's database branch will only contain database version headers from A.
 	 */
-	private TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> readUnknownDatabaseVersionHeaders(TreeMap<File, DatabaseRemoteFile> remoteDatabases)
+	private SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> readUnknownDatabaseVersionHeaders(SortedMap<File, DatabaseRemoteFile> remoteDatabases)
 			throws IOException,
 			StorageException {
 		logger.log(Level.INFO, "Loading database headers, creating branches ...");
 
 		// Read database files
-		TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = new TreeMap<DatabaseRemoteFile, List<DatabaseVersion>>();
+		SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = new TreeMap<DatabaseRemoteFile, List<DatabaseVersion>>();
 
 		for (Map.Entry<File, DatabaseRemoteFile> remoteDatabaseFileEntry : remoteDatabases.entrySet()) {
 			MemoryDatabase remoteDatabase = new MemoryDatabase(); // Database cannot be reused, since these might be different clients
@@ -328,15 +329,15 @@ public class DownOperation extends AbstractTransferOperation {
 	 * This methods takes a Map containing DatabaseVersions (headers only) and loads these headers into {@link DatabaseBranches}.
 	 * In addition, the local branch is added to this. The resulting DatabaseBranches will contain all headers exactly once,
 	 * for the client that created that version.
-	 * 
+	 *
 	 * @param localBranch {@link DatabaseBranch} containing the locally known headers.
 	 * @param remoteDatabaseHeaders Map from {@link DatabaseRemoteFile}s (important for client names) to the {@link DatabaseVersion}s that are
 	 *        contained in these files.
-	 *        
+	 *
 	 * @return DatabaseBranches filled with all the headers that originated from either of the parameters.
 	 */
 	private DatabaseBranches populateDatabaseBranches(DatabaseBranch localBranch,
-			TreeMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
+			SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
 		DatabaseBranches allBranches = new DatabaseBranches();
 
 		allBranches.put(config.getMachineName(), localBranch.clone());
@@ -357,20 +358,20 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * This method uses the {@link DatabaseReconciliator} to compare the local database with the 
+	 * This method uses the {@link DatabaseReconciliator} to compare the local database with the
 	 * downloaded remote databases, in order to determine a winner. The winner's database versions
 	 * will be applied locally.
-	 * 
+	 *
 	 * <p>For the comparison, the {@link DatabaseVersionHeader}s (mainly the {@link VectorClock}) of each
-	 * database version are compared. Using these vector clocks, the underlying algorithms determine  
-	 * potential conflicts (between database versions, = simultaneous vector clocks), and resolve these 
-	 * conflicts by comparing local timestamps. 
-	 * 
+	 * database version are compared. Using these vector clocks, the underlying algorithms determine
+	 * potential conflicts (between database versions, = simultaneous vector clocks), and resolve these
+	 * conflicts by comparing local timestamps.
+	 *
 	 * <p>The detailed algorithm is described in the {@link DatabaseReconciliator}.
-	 * 
+	 *
 	 * @param localBranch Local database branch (extracted from the local database)
 	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
-	 * @return Returns the branch of the winner 
+	 * @return Returns the branch of the winner
 	 * @throws Exception If any kind of error occurs (...)
 	 */
 	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
@@ -390,7 +391,7 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * Marks locally conflicting database versions as <tt>DIRTY</tt> and removes remote databases that
 	 * correspond to those database versions. This method uses the {@link DatabaseReconciliator}
-	 * to determine whether there is a local purge branch. 
+	 * to determine whether there is a local purge branch.
 	 */
 	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch) throws Exception {
 		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch.getValue());
@@ -430,8 +431,8 @@ public class DownOperation extends AbstractTransferOperation {
 	 * Applies the winner's branch locally in the local database as well as on the local file system. To
 	 * do so, it reads the winner's database, downloads newly required multichunks, determines file system actions
 	 * and applies these actions locally.
-	 * @param cleanupOccurred 
-	 * @param preDeleteFileHistoriesWithLastVersion 
+	 * @param cleanupOccurred
+	 * @param preDeleteFileHistoriesWithLastVersion
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch,
 			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred,
@@ -469,41 +470,41 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * Loads the winner's database branch into the memory in a {@link MemoryDatabase} object, by using
 	 * the already downloaded list of remote database files.
-	 * 
+	 *
 	 * <p>Because database files can contain multiple {@link DatabaseVersion}s per client, a range for which
 	 * to load the database versions must be determined.
-	 * 
+	 *
 	 * <p><b>Example 1:</b><br />
 	 * <pre>
-	 *  db-A-0001   (A1)     Already known             Not loaded 
-	 *  db-A-0005   (A2)     Already known             Not loaded 
-	 *              (A3)     Already known             Not loaded 
+	 *  db-A-0001   (A1)     Already known             Not loaded
+	 *  db-A-0005   (A2)     Already known             Not loaded
+	 *              (A3)     Already known             Not loaded
 	 *              (A4)     Part of winner's branch   Loaded
 	 *              (A5)     Purge database version    Ignored (only DEFAULT)
 	 *  db-B-0001   (A5,B1)  Part of winner's branch   Loaded
 	 *  db-A-0006   (A6,B1)  Part of winner's branch   Loaded
 	 * </pre>
-	 * 
+	 *
 	 * <p>In example 1, only (A4)-(A5) must be loaded from db-A-0005, and not all four database versions.
-	 * 
+	 *
 	 * <p><b>Other example:</b><br />
 	 * <pre>
-	 *  db-A-0005   (A1)     Part of winner's branch   Loaded 
-	 *  db-A-0005   (A2)     Part of winner's branch   Loaded 
+	 *  db-A-0005   (A1)     Part of winner's branch   Loaded
+	 *  db-A-0005   (A2)     Part of winner's branch   Loaded
 	 *  db-B-0001   (A2,B1)  Part of winner's branch   Loaded
-	 *  db-A-0005   (A3,B1)  Part of winner's branch   Loaded 
+	 *  db-A-0005   (A3,B1)  Part of winner's branch   Loaded
 	 *  db-A-0005   (A4,B1)  Part of winner's branch   Loaded
 	 *  db-A-0005   (A5,B1)  Purge database version    Ignored (only DEFAULT)
 	 * </pre>
-	 * 
-	 * <p>In example 2, (A1)-(A5,B1) [except (A2,B1)] are contained in db-A-0005 (after merging!), so 
+	 *
+	 * <p>In example 2, (A1)-(A5,B1) [except (A2,B1)] are contained in db-A-0005 (after merging!), so
 	 * db-A-0005 must be processed twice; each time loading separate parts of the file. In this case:
 	 * First load (A1)-(A2) from db-A-0005, then load (A2,B1) from db-B-0001, then load (A3,B1)-(A4,B1)
 	 * from db-A-0005, and ignore (A5,B1).
-	 * @param databaseFileList 
-	 * @param ignoredMostRecentPurgeVersions 
-	 * 
-	 * @return Returns a loaded memory database containing all metadata from the winner's branch 
+	 * @param databaseFileList
+	 * @param ignoredMostRecentPurgeVersions
+	 *
+	 * @return Returns a loaded memory database containing all metadata from the winner's branch
 	 */
 	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersionHeader, File> databaseVersionLocations)
 			throws IOException, StorageException {
@@ -567,16 +568,16 @@ public class DownOperation extends AbstractTransferOperation {
 
 	/**
 	 * Persists the given winners branch to the local database, i.e. for every database version
-	 * in the winners branch, all contained multichunks, chunks, etc. are added to the local SQL 
+	 * in the winners branch, all contained multichunks, chunks, etc. are added to the local SQL
 	 * database.
-	 * 
-	 * <p>This method applies both regular database versions as well as purge database versions. 
+	 *
+	 * <p>This method applies both regular database versions as well as purge database versions.
 	 */
 	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase)
 			throws SQLException {
 
 		// Add winners database to local database
-		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!			
+		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
 		logger.log(Level.INFO, "- Adding database versions to SQL database ...");
 
 		for (DatabaseVersionHeader currentDatabaseVersionHeader : winnersApplyBranch.getAll()) {
@@ -585,7 +586,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Persists a regular database version to the local database by using 
+	 * Persists a regular database version to the local database by using
 	 * {@link SqlDatabase#writeDatabaseVersion(DatabaseVersion)}.
 	 */
 	private void persistDatabaseVersion(MemoryDatabase winnersDatabase, DatabaseVersionHeader currentDatabaseVersionHeader) {
@@ -599,7 +600,7 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * Identifies and persists 'muddy' multichunks to the local database. Muddy multichunks are multichunks
 	 * that have been referenced by DIRTY database versions and might be reused in future database versions when
-	 * the other client cleans up its mess (performs another 'up'). 
+	 * the other client cleans up its mess (performs another 'up').
 	 */
 	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
 			Map<DatabaseVersionHeader, File> databaseVersionLocations) throws StorageException, IOException, SQLException {
@@ -643,7 +644,7 @@ public class DownOperation extends AbstractTransferOperation {
 			}
 		}
 
-		// Add muddy multichunks to 'multichunks_muddy' database table 
+		// Add muddy multichunks to 'multichunks_muddy' database table
 		boolean hasMuddyMultiChunks = muddyMultiChunksPerDatabaseVersion.size() > 0;
 
 		if (hasMuddyMultiChunks) {
@@ -652,7 +653,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Removes multichunks from the 'muddy' table as soon as they because present in the 
+	 * Removes multichunks from the 'muddy' table as soon as they because present in the
 	 * actual multichunk database table.
 	 */
 	private void removeNonMuddyMultiChunks() throws SQLException {
@@ -663,10 +664,10 @@ public class DownOperation extends AbstractTransferOperation {
 	/**
 	 * This methods takes a Map from {@link DatabaseRemoteFile}s to Lists of {@link DatabaseVersion}s and produces more or less
 	 * the reverse Map, which can be used to find the cached copy of a remote databasefile, given a {@link DatabaseVersionHeader}.
-	 * 
+	 *
 	 * @param remoteDatabaseHeaders mapping remote database files to the versions they contain.
 	 * @param databaseRemoteFilesInCache mapping files to the database remote file that is cached in it.
-	 * 
+	 *
 	 * @return databaseVersionLocations a Map from {@link DatabaseVersionHeader}s to the local File in which that version can be found.
 	 */
 	private Map<DatabaseVersionHeader, File> findDatabaseVersionLocations(Map<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders,

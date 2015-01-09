@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 
 /**
  * A file utility class
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileUtil {
@@ -45,7 +46,7 @@ public class FileUtil {
 		String relativeFilePath = getRelativePath(base, file);
 		return getDatabasePath(relativeFilePath);
 	}
-	
+
 	public static String getDatabasePath(String filePath) {
 		// Note: This is more important than it seems. Unix paths may contain backslashes
 		// so that 'black\white.jpg' is a perfectly valid file path. Windows file names
@@ -57,7 +58,7 @@ public class FileUtil {
 		}
 		else {
 			return filePath;
-		}	
+		}
 	}
 
 	public static String removeTrailingSlash(String filename) {
@@ -78,7 +79,7 @@ public class FileUtil {
 		}
 	}
 
-	public static byte[] createChecksum(File filename, String digestAlgorithm) throws Exception {
+	public static byte[] createChecksum(File filename, String digestAlgorithm) throws NoSuchAlgorithmException, IOException {
 		FileInputStream fis = new FileInputStream(filename);
 
 		byte[] buffer = new byte[1024];
@@ -185,13 +186,13 @@ public class FileUtil {
 	}
 
 	/**
-	 * Replaces the <tt>exists()</tt> method in the <tt>File</tt> class by taking symlinks into account. 
+	 * Replaces the <tt>exists()</tt> method in the <tt>File</tt> class by taking symlinks into account.
 	 * The method returns <tt>true</tt> if the file exists, <tt>false</tt> otherwise.
-	 * 
-	 * <p>Note: The method returns <tt>true</tt>, if a symlink exists, but points to a 
-	 * non-existing target. This behavior is different from the classic 
+	 *
+	 * <p>Note: The method returns <tt>true</tt>, if a symlink exists, but points to a
+	 * non-existing target. This behavior is different from the classic
 	 * {@link #exists(File) exists()}-method in the <tt>File</tt> class.
-	 * 
+	 *
 	 * @param file A file
 	 * @return Returns <tt>true</tt> if a file exists (even if its symlink target does not), <tt>false</tt> otherwise
 	 */
@@ -212,7 +213,7 @@ public class FileUtil {
 			return false;
 		}
 	}
-	
+
 	public static String formatFileSize(long size) {
 		if (size <= 0) {
 			return "0";
@@ -221,6 +222,6 @@ public class FileUtil {
 		final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
 		int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
 
-	    return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+		return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
 	}
 }

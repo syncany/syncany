@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
 package org.syncany.operations.ls;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,55 +36,69 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
 public class LsOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());	
+	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());
 	private LsOperationOptions options;
 	private SqlDatabase localDatabase;
-		
+
 	public LsOperation(Config config, LsOperationOptions options) {
-		super(config);		
-		
+		super(config);
+
 		this.options = options;
 		this.localDatabase = new SqlDatabase(config);
-	}	
-		
+	}
+
 	@Override
 	public LsOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Ls' at client "+config.getMachineName()+" ...");
-		logger.log(Level.INFO, "--------------------------------------------");		
+		logger.log(Level.INFO, "Running 'Ls' at client " + config.getMachineName() + " ...");
+		logger.log(Level.INFO, "--------------------------------------------");
 
-		String pathExpression = parsePathExpression(options.getPathExpression());
-		HashSet<FileType> fileTypes = options.getFileTypes();
+		String pathExpression = parsePathExpression(options.getPathExpression(), options.isFileHistoryId());
+		Set<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes);
+		List<FileVersion> fileList = localDatabase.getFileList(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), options.isDeleted(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
-		
+
 		if (options.isFetchHistories()) {
-			fileHistories = fetchFileHistories(fileTree);
+			fileHistories = fetchFileHistories(fileList);
 		}
-		
-		return new LsOperationResult(fileTree, fileHistories);
+
+		return new LsOperationResult(fileList, fileHistories);
 	}
 
-	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(Map<String, FileVersion> fileTree) {
+	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(List<FileVersion> fileTree) {
 		// Get file history IDs
-		List<FileHistoryId> fileHistoryIds = new ArrayList<>(Collections2.transform(fileTree.values(), new Function<FileVersion, FileHistoryId>() {
+		List<FileHistoryId> fileHistoryIds = new ArrayList<>(Collections2.transform(fileTree, new Function<FileVersion, FileHistoryId>() {
+			@Override
 			public FileHistoryId apply(FileVersion fileVersion) {
 				return fileVersion.getFileHistoryId();
-			}			
+			}
 		}));
 
 		return localDatabase.getFileHistories(fileHistoryIds);
 	}
 
-	private String parsePathExpression(String filter) {
-		if (filter != null) {
-			 if (filter.contains("^") || filter.contains("*")) {
-				 return filter.replace('^', '%').replace('*', '%');
-			 }
-			 else {
-				 return filter + "%";
-			 }
+	private String parsePathExpression(String pathExpression, boolean isFileHistoryId) {
+		if (pathExpression != null) {
+			if (isFileHistoryId) {
+				String randomFileHistoryId = FileHistoryId.secureRandomFileId().toString();
+				boolean isFullLength = pathExpression.length() == randomFileHistoryId.length();
+				
+				if (isFullLength) {
+					return pathExpression;
+				}
+				else {
+					return pathExpression + "%";
+				}
+			}
+			else {
+				if (pathExpression.contains("^") || pathExpression.contains("*")) {
+					return pathExpression.replace('^', '%').replace('*', '%');
+				}
+				else {
+					return pathExpression + "%";
+				}
+			}
 		}
 		else {
 			return null;

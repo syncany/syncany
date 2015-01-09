@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,21 @@ public class PluginOperationResult implements OperationResult {
 	}
 	
 	private PluginResultCode resultCode;
+	private PluginOperationAction action;
 	private List<ExtendedPluginInfo> pluginList;
 	private String sourcePluginPath;
 	private String targetPluginPath;
 	private PluginInfo affectedPluginInfo;
 	private List<String> conflictingPluginIds;
 
+	public PluginOperationAction getAction() {
+		return action;
+	}
+	
+	public void setAction(PluginOperationAction action) {
+		this.action = action;
+	}
+	
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
 	}

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com>
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.LocalEventBus;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -57,8 +58,12 @@ public abstract class AbstractTransferOperation extends Operation {
 	protected TransactionAwareTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
+	protected LocalEventBus eventBus;
+
 	public AbstractTransferOperation(Config config, String operationName) {
 		super(config);
+
+		this.eventBus = LocalEventBus.getInstance();
 
 		// Do NOT reuse TransferManager for action file renewal; see #140
 
@@ -154,34 +159,34 @@ public abstract class AbstractTransferOperation extends Operation {
 	 * This method is used to determine how a database file should be named when
 	 * it is about to be uploaded. It returns the number of the newest database file (which is the
 	 * highest number).
-	 * 
+	 *
 	 * @param client name of the client for which we want to upload a database version.
 	 * @param knownDatabases all DatabaseRemoteFiles present in the repository
 	 * @return the largest database fileversion number.
 	 */
 	protected long getNewestDatabaseFileVersion(String client, List<DatabaseRemoteFile> knownDatabases) {
 		// TODO [low] This could be done via the "known_databases" database table
-		
+
 		// Obtain last known database file version number and increment it
 		long clientVersion = 0;
-		
+
 		for (DatabaseRemoteFile databaseRemoteFile : knownDatabases) {
 			if (databaseRemoteFile.getClientName().equals(client)) {
 				clientVersion = Math.max(clientVersion, databaseRemoteFile.getClientVersion());
 			}
 		}
-		
+
 		return clientVersion;
 	}
 
 	protected long getLastRemoteCleanupNumber(Map<String, CleanupRemoteFile> cleanupFiles) {
 		long cleanupNumber = 0;
-		
+
 		// Find the number of the last cleanup
 		for (CleanupRemoteFile cleanupRemoteFile : cleanupFiles.values()) {
 			cleanupNumber = Math.max(cleanupNumber, cleanupRemoteFile.getCleanupNumber());
 		}
-		
+
 		return cleanupNumber;
 	}
 
@@ -195,7 +200,7 @@ public abstract class AbstractTransferOperation extends Operation {
 			transferManager.disconnect();
 		}
 		catch (StorageException e) {
-			// Don't care!
+			logger.log(Level.FINE, "Could not disconnect the transfermanager", e);
 		}
 	}
 

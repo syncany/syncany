@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -37,6 +36,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory;
@@ -91,6 +91,8 @@ public class LsCommand extends Command {
 		OptionSpec<Void> optionLongChecksums = parser.acceptsAll(asList("f", "full-checksums"));
 		OptionSpec<Void> optionWithVersions = parser.acceptsAll(asList("V", "versions"));
 		OptionSpec<Void> optionGroupedVersions = parser.acceptsAll(asList("g", "group"));
+		OptionSpec<Void> optionFileHistoryId = parser.acceptsAll(asList("H", "file-history"));
+		OptionSpec<Void> optionDeleted = parser.acceptsAll(asList("q", "deleted"));
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -124,14 +126,20 @@ public class LsCommand extends Command {
 		}
 				
 		// --versions
-		fetchHistories = options.has(optionWithVersions);
+		fetchHistories = options.has(optionWithVersions) || options.has(optionFileHistoryId);
 		operationOptions.setFetchHistories(fetchHistories);
+
+		// --file-history
+		operationOptions.setFileHistoryId(options.has(optionFileHistoryId));
 		
 		// --long-checksums (display option)
 		checksumLength = (options.has(optionLongChecksums)) ? CHECKSUM_LENGTH_LONG : CHECKSUM_LENGTH_SHORT;
 
 		// --group (display option)
 		groupedVersions = options.has(optionGroupedVersions);
+		
+		// --deleted
+		operationOptions.setDeleted(options.has(optionDeleted));
 		
 		// <path-expr>
 		List<?> nonOptionArgs = options.nonOptionArguments();
@@ -147,8 +155,8 @@ public class LsCommand extends Command {
 	public void printResults(OperationResult operationResult) {
 		LsOperationResult concreteOperationResult = (LsOperationResult) operationResult;
 		
-		int longestSize = calculateLongestSize(concreteOperationResult.getFileTree());
-		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileTree());
+		int longestSize = calculateLongestSize(concreteOperationResult.getFileList());
+		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileList());
 
 		if (fetchHistories) {
 			printHistories(concreteOperationResult, longestSize, longestVersion);				
@@ -159,7 +167,7 @@ public class LsCommand extends Command {
 	}
 	
 	private void printTree(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		for (FileVersion fileVersion : operationResult.getFileTree().values()) {			
+		for (FileVersion fileVersion : operationResult.getFileList()) {			
 			printOneVersion(fileVersion, longestVersion, longestSize);				
 		}
 	}
@@ -174,7 +182,7 @@ public class LsCommand extends Command {
 	}
 
 	private void printNonGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		for (FileVersion fileVersion : operationResult.getFileTree().values()) {
+		for (FileVersion fileVersion : operationResult.getFileList()) {
 			PartialFileHistory fileHistory = operationResult.getFileVersions().get(fileVersion.getFileHistoryId());
 			
 			for (FileVersion fileVersionInHistory : fileHistory.getFileVersions().values()) {
@@ -184,7 +192,7 @@ public class LsCommand extends Command {
 	}
 
 	private void printGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		Iterator<FileVersion> fileVersionIterator = operationResult.getFileTree().values().iterator();
+		Iterator<FileVersion> fileVersionIterator = operationResult.getFileList().iterator();
 		
 		while (fileVersionIterator.hasNext()) {
 			FileVersion fileVersion = fileVersionIterator.next();
@@ -210,17 +218,52 @@ public class LsCommand extends Command {
 	}
 
 	private void printOneVersion(FileVersion fileVersion, int longestVersion, int longestSize) {
+		String fileStatus = formatFileStatusShortStr(fileVersion.getStatus());
+		String fileType = formatFileTypeShortStr(fileVersion.getType());
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
 		String fileChecksum = formatObjectId(fileVersion.getChecksum());
 		String fileHistoryId = formatObjectId(fileVersion.getFileHistoryId());
 		String path = (fileVersion.getType() == FileType.SYMLINK) ? fileVersion.getPath() + " -> " + fileVersion.getLinkTarget() : fileVersion.getPath();
 
-		out.printf("%-20s %9s %4s %" + longestSize + "d %8s %" + checksumLength + "s %" + checksumLength + "s %"+longestVersion+"d %s\n", 
-				DATE_FORMAT.format(fileVersion.getUpdated()), posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), 
+		out.printf("%s %s %s %9s %4s %" + longestSize + "d %" + checksumLength + "s %" + checksumLength + "s %"+longestVersion+"d %s\n", 
+				DATE_FORMAT.format(fileVersion.getUpdated()), fileStatus, fileType, posixPermissions, dosAttributes, fileVersion.getSize(), 
 				fileChecksum, fileHistoryId, fileVersion.getVersion(), path);
 	}
 	
+	private String formatFileStatusShortStr(FileStatus status) {
+		switch (status) {
+		case NEW:
+			return "A";
+			
+		case CHANGED:
+		case RENAMED:
+			return "M";
+			
+		case DELETED:
+			return "D";
+			
+		default:
+			return "?";
+		}
+	}
+
+	private String formatFileTypeShortStr(FileType type) {
+		switch (type) {
+		case FILE:
+			return "-";
+			
+		case FOLDER: 
+			return "d";
+			
+		case SYMLINK:
+			return "s";
+			
+		default:
+			return "?";				
+		}
+	}
+
 	private String formatObjectId(ObjectId checksum) {
 		if (checksum == null || "".equals(checksum)) {
 			return "";
@@ -230,7 +273,7 @@ public class LsCommand extends Command {
 		}
 	}
 
-	private int calculateLongestVersion(Map<String, FileVersion> fileVersions) {
+	private int calculateLongestVersion(List<FileVersion> fileVersions) {
 		return calculateLongestValue(fileVersions, new Function<FileVersion, Integer>() {
 			public Integer apply(FileVersion fileVersion) {
 				return (""+fileVersion.getVersion()).length();
@@ -238,7 +281,7 @@ public class LsCommand extends Command {
 		});	
 	}
 	
-	private int calculateLongestSize(Map<String, FileVersion> fileVersions) {
+	private int calculateLongestSize(List<FileVersion> fileVersions) {
 		return calculateLongestValue(fileVersions, new Function<FileVersion, Integer>() {
 			public Integer apply(FileVersion fileVersion) {
 				return (""+fileVersion.getSize()).length();
@@ -246,10 +289,10 @@ public class LsCommand extends Command {
 		});	
 	}
 	
-	private int calculateLongestValue(Map<String, FileVersion> fileVersions, Function<FileVersion, Integer> callbackFunction) {
+	private int calculateLongestValue(List<FileVersion> fileVersions, Function<FileVersion, Integer> callbackFunction) {
 		int result = 0;
 		
-		for (FileVersion fileVersion : fileVersions.values()) {
+		for (FileVersion fileVersion : fileVersions) {
 			result = Math.max(result, callbackFunction.apply(fileVersion));
 		}
 		

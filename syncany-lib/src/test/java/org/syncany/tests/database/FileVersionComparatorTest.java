@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,7 +204,7 @@ public class FileVersionComparatorTest {
 		FileVersionComparison fileComparison = versionComparator.compare(fileVersion, somefile, null, true); 
 		
 		// Test
-		assertFalse(fileComparison.equals());
+		assertFalse(fileComparison.areEqual());
 		assertTrue(CollectionUtil.containsExactly(fileComparison.getFileChanges(), FileChange.CHANGED_CHECKSUM));
 		
 		// Tear down

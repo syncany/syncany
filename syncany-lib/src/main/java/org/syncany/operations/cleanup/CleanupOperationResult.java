@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,7 @@
  */
 package org.syncany.operations.cleanup;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.syncany.database.MultiChunkEntry;
-import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.simpleframework.xml.Element;
 import org.syncany.operations.OperationResult;
 
 public class CleanupOperationResult implements OperationResult {
@@ -29,17 +25,31 @@ public class CleanupOperationResult implements OperationResult {
 		OK, OK_NOTHING_DONE, NOK_REMOTE_CHANGES, NOK_RECENTLY_CLEANED, NOK_LOCAL_CHANGES, NOK_DIRTY_LOCAL, NOK_ERROR, NOK_OTHER_OPERATIONS_RUNNING, NOK_REPO_BLOCKED
 	}
 
-	private CleanupResultCode resultCode = CleanupResultCode.OK_NOTHING_DONE;
-	private int mergedDatabaseFilesCount = 0;
-	private int removedOldVersionsCount = 0;
-	private Map<MultiChunkId, MultiChunkEntry> removedMultiChunks = new HashMap<MultiChunkId, MultiChunkEntry>();
+	@Element(name = "resultCode", required = true)
+	private CleanupResultCode resultCode;
+	
+	@Element(name = "mergedDatabaseFilesCount", required = false)
+	private int mergedDatabaseFilesCount;
+	
+	@Element(name = "removedOldVersionsCount", required = false)
+	private int removedOldVersionsCount;
+	
+	@Element(name = "removedMultiChunksCount", required = false)
+	private int removedMultiChunksCount;
+
+	@Element(name = "removedMultiChunksSize", required = false)
+	private long removedMultiChunksSize;
 
 	public CleanupOperationResult() {
-		// Nothing.
+		this(CleanupResultCode.OK_NOTHING_DONE);
 	}
 
 	public CleanupOperationResult(CleanupResultCode resultCode) {
 		this.resultCode = resultCode;
+		this.mergedDatabaseFilesCount = 0;
+		this.removedOldVersionsCount = 0;
+		this.removedMultiChunksCount = 0;
+		this.removedMultiChunksSize = 0L;
 	}
 
 	public void setResultCode(CleanupResultCode resultCode) {
@@ -66,11 +76,19 @@ public class CleanupOperationResult implements OperationResult {
 		this.removedOldVersionsCount = removedOldVersionsCount;
 	}
 
-	public Map<MultiChunkId, MultiChunkEntry> getRemovedMultiChunks() {
-		return removedMultiChunks;
+	public int getRemovedMultiChunksCount() {
+		return removedMultiChunksCount;
 	}
 
-	public void setRemovedMultiChunks(Map<MultiChunkId, MultiChunkEntry> removedMultiChunks) {
-		this.removedMultiChunks = removedMultiChunks;
+	public void setRemovedMultiChunksCount(int removedMultiChunksCount) {
+		this.removedMultiChunksCount = removedMultiChunksCount;
+	}
+
+	public long getRemovedMultiChunksSize() {
+		return removedMultiChunksSize;
+	}
+
+	public void setRemovedMultiChunksSize(long removedMultiChunksSize) {
+		this.removedMultiChunksSize = removedMultiChunksSize;
 	}
 }

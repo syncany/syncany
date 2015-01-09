@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,24 +78,24 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 /**
- * The cipher utility provides functions to create a master key using PBKDF2, 
+ * The cipher utility provides functions to create a master key using PBKDF2,
  * a derived key using SHA256, and to create a {@link Cipher} from a derived key.
  * It furthermore offers a method to programmatically enable the unlimited strength
- * crypto policies. 
- * 
+ * crypto policies.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CipherUtil {
-	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());	
-	
+	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
+
 	/**
-	 * Chars from A-Z / a-z to be used in randomly generated passwords. 
-	 * 
+	 * Chars from A-Z / a-z to be used in randomly generated passwords.
+	 *
 	 * <p><b>Note:</b> This string cannot contain numbers, to prevent breaking
 	 * of the vector clock format.
 	 */
 	private static final String ALPHABETIC_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	
+
 	private static AtomicBoolean initialized = new AtomicBoolean(false);
 	private static AtomicBoolean unlimitedStrengthEnabled = new AtomicBoolean(false);
 	private static SecureRandom secureRandom = new SecureRandom();
@@ -108,11 +108,11 @@ public class CipherUtil {
 	 * Initializes the crypto provider ("Bouncy Castle") and tests whether the unlimited
 	 * strength policy has been enabled. Unlimited crypto allows for stronger crypto algorithms
 	 * such as AES-256 or Twofish-256.
-	 * 
+	 *
 	 * <p>The method is called in the <tt>static</tt> block of this class and hence initialized
 	 * whenever then class is used.
-	 * 
-	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 *
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a>
 	 */
 	public static synchronized void init() {
 		if (!initialized.get()) {
@@ -125,7 +125,8 @@ public class CipherUtil {
 			try {
 				unlimitedStrengthEnabled.set(Cipher.getMaxAllowedKeyLength("AES") > 128);
 			}
-			catch (Exception e) {
+			catch (NoSuchAlgorithmException e) {
+				logger.log(Level.FINE, "No such transformation found", e);
 				unlimitedStrengthEnabled.set(false);
 			}
 
@@ -136,7 +137,7 @@ public class CipherUtil {
 	/**
 	 * Returns whether the unlimited strength policy is enabled in the current JVM.
 	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography
-	 *      Extension (JCE) Unlimited Strength</a> 
+	 *      Extension (JCE) Unlimited Strength</a>
 	 */
 	public static boolean unlimitedStrengthEnabled() {
 		return unlimitedStrengthEnabled.get();
@@ -144,17 +145,17 @@ public class CipherUtil {
 
 	/**
 	 * Attempts to programmatically enable the unlimited strength Java crypto extension
-	 * using the reflection API. 
-	 * 
+	 * using the reflection API.
+	 *
 	 * <p>This class tries to set the property <tt>isRestricted</tt> of the class
-	 * <tt>javax.crypto.JceSecurity</tt> to <tt>false</tt> -- effectively disabling 
+	 * <tt>javax.crypto.JceSecurity</tt> to <tt>false</tt> -- effectively disabling
 	 * the artificial limitations (and the disallowed algorithms).
-	 * 
-	 * <p><b>Note</b>: Be aware that enabling the unlimited strength extension needs to 
-	 * be acknowledged by the end-user to avoid legal issues!  
-	 * 
+	 *
+	 * <p><b>Note</b>: Be aware that enabling the unlimited strength extension needs to
+	 * be acknowledged by the end-user to avoid legal issues!
+	 *
 	 * @throws CipherException If the unlimited strength policy cannot be enabled.
-	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a> 
+	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a>
 	 */
 	public static void enableUnlimitedStrength() throws CipherException {
 		if (!unlimitedStrengthEnabled.get()) {
@@ -175,10 +176,10 @@ public class CipherUtil {
 	/**
 	 * Creates a random array of bytes using the default {@link SecureRandom} implementation
 	 * of the currently active JVM. The returned array can be used as a basis for secret keys,
-	 * IVs or salts. 
-	 * 
+	 * IVs or salts.
+	 *
 	 * @param size Size of the returned array (in bytes)
-	 * @return Returns a random byte array (using a secure pseudo random generator) 
+	 * @return Returns a random byte array (using a secure pseudo random generator)
 	 */
 	public static byte[] createRandomArray(int size) {
 		byte[] randomByteArray = new byte[size];
@@ -186,28 +187,28 @@ public class CipherUtil {
 
 		return randomByteArray;
 	}
-	
-    /**
-     * Generates a random string the given length. Only uses characters 
-     * A-Z/a-z (in order to always create valid serialized vector clock representations).
-     */
+
+	/**
+	 * Generates a random string the given length. Only uses characters
+	 * A-Z/a-z (in order to always create valid serialized vector clock representations).
+	 */
 	public static String createRandomAlphabeticString(int size) {
 		StringBuilder sb = new StringBuilder(size);
-		
+
 		for (int i = 0; i < size; i++) {
 			sb.append(ALPHABETIC_CHARS.charAt(secureRandom.nextInt(ALPHABETIC_CHARS.length())));
 		}
-		
+
 		return sb.toString();
 	}
 
 	/**
-	 * Creates a derived key from the given {@link SecretKey} an input salt and wraps the key in 
-	 * a {@link SecretKeySpec} using the given {@link CipherSpec}. 
-	 * 
+	 * Creates a derived key from the given {@link SecretKey} an input salt and wraps the key in
+	 * a {@link SecretKeySpec} using the given {@link CipherSpec}.
+	 *
 	 * <p>This method simply uses the {@link #createDerivedKey(byte[], byte[], String, int) createDerivedKey()}
 	 * method using the encoded input key and the algorithm and key size given by the cipher spec.
-	 * 
+	 *
 	 * @param inputKey The source key to derive the new key from
 	 * @param inputSalt Input salt used to generate the new key (a non-secret random value!)
 	 * @param outputCipherSpec Defines the algorithm and key size of the new output key
@@ -215,7 +216,7 @@ public class CipherUtil {
 	 */
 	public static SaltedSecretKey createDerivedKey(SecretKey inputKey, byte[] inputSalt, CipherSpec outputCipherSpec)
 			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		
+
 		return createDerivedKey(inputKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
 	}
 
@@ -223,21 +224,21 @@ public class CipherUtil {
 	 * Creates a derived key from the given input key material (raw byte array) and an input salt
 	 * and wraps the key in  a {@link SecretKeySpec} using the given output key algorithm and output
 	 * key size.
-	 * 
-	 * <p>The algorithm used to derive the new key from the input key material (IKM) is the 
-	 * <b>HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</b> (see 
+	 *
+	 * <p>The algorithm used to derive the new key from the input key material (IKM) is the
+	 * <b>HMAC-based Extract-and-Expand Key Derivation Function (HKDF)</b> (see
 	 * <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>)
-	 * 
+	 *
 	 * @param inputKeyMaterial The input key material as raw data bytes, e.g. determined from {@link SecretKey#getEncoded()}
 	 * @param inputSalt Input salt used to generate the new key (a non-secret random value!)
 	 * @param outputKeyAlgorithm Defines the algorithm of the new output key (for {@link SecretKeySpec#getAlgorithm()})
-	 * @param outputKeySize Defines the key size of the new output key 
+	 * @param outputKeySize Defines the key size of the new output key
 	 * @return Returns a new pseudorandom key derived from the input key material using HKDF
 	 * @see <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>
 	 */
 	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
 			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-		
+
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
 		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
 
@@ -265,13 +266,14 @@ public class CipherUtil {
 
 	public static SaltedSecretKey createMasterKey(String password, byte[] salt) throws CipherException {
 		try {
-			logger.log(Level.FINE, "- Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] { MASTER_KEY_DERIVATION_FUNCTION,
+			logger.log(Level.FINE, "- Creating secret key using {0} with {1} rounds, key size {2} bit ...", new Object[] {
+					MASTER_KEY_DERIVATION_FUNCTION,
 					MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE });
-	
+
 			SecretKeyFactory factory = SecretKeyFactory.getInstance(MASTER_KEY_DERIVATION_FUNCTION);
 			KeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray(), salt, MASTER_KEY_DERIVATION_ROUNDS, MASTER_KEY_SIZE);
 			SecretKey masterKey = factory.generateSecret(pbeKeySpec);
-	
+
 			return new SaltedSecretKey(masterKey, salt);
 		}
 		catch (Exception e) {
@@ -295,14 +297,14 @@ public class CipherUtil {
 		try {
 			CipherSession cipherSession = new CipherSession(masterKey);
 			OutputStream multiCipherOutputStream = new MultiCipherOutputStream(ciphertextOutputStream, cipherSpecs, cipherSession);
-	
+
 			int read = -1;
 			byte[] buffer = new byte[4096];
-	
+
 			while (-1 != (read = plaintextInputStream.read(buffer))) {
 				multiCipherOutputStream.write(buffer, 0, read);
 			}
-			
+
 			plaintextInputStream.close();
 			multiCipherOutputStream.close();
 		}
@@ -323,75 +325,76 @@ public class CipherUtil {
 			CipherSession cipherSession = new CipherSession(masterKey);
 			MultiCipherInputStream multiCipherInputStream = new MultiCipherInputStream(fromInputStream, cipherSession);
 			ByteArrayOutputStream plaintextOutputStream = new ByteArrayOutputStream();
-	
+
 			int read = -1;
 			byte[] buffer = new byte[4096];
-	
+
 			while (-1 != (read = multiCipherInputStream.read(buffer))) {
 				plaintextOutputStream.write(buffer, 0, read);
 			}
-			
+
 			multiCipherInputStream.close();
 			plaintextOutputStream.close();
-	
+
 			return plaintextOutputStream.toByteArray();
 		}
 		catch (IOException e) {
 			throw new CipherException(e);
 		}
-	}		
-	
+	}
+
 	/**
 	 * Generates a 2048-bit RSA key pair.
 	 */
 	public static KeyPair generateRsaKeyPair() throws NoSuchAlgorithmException, CipherException, NoSuchProviderException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance(CipherParams.CERTIFICATE_KEYPAIR_ALGORITHM, CipherParams.CRYPTO_PROVIDER_ID);
 		keyGen.initialize(CipherParams.CERTIFICATE_KEYPAIR_SIZE, secureRandom);
-		
-		return keyGen.generateKeyPair();		
+
+		return keyGen.generateKeyPair();
 	}
-	
+
 	/**
 	 * Generates a self-signed certificate, given a public/private key pair.
-	 * 
+	 *
 	 * @see https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138
 	 */
-	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException, CertificateException,
+	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException,
+	CertificateException,
 			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
-		
+
 		// Certificate CN, O and OU
 		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
-		
+
 		builder.addRDN(BCStyle.CN, commonName);
 		builder.addRDN(BCStyle.O, CipherParams.CERTIFICATE_ORGANIZATION);
 		builder.addRDN(BCStyle.OU, CipherParams.CERTIFICATE_ORGUNIT);
 
 		// Dates and serial
-		Date notBefore = new Date(System.currentTimeMillis() - 1*24*60*60*1000L);
-		Date notAfter = new Date(System.currentTimeMillis() + 5*365*24*60*60*1000L);
+		Date notBefore = new Date(System.currentTimeMillis() - 1 * 24 * 60 * 60 * 1000L);
+		Date notAfter = new Date(System.currentTimeMillis() + 5 * 365 * 24 * 60 * 60 * 1000L);
 		BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 
 		// Issuer and subject (identical, because self-signed)
 		X500Name issuer = builder.build();
 		X500Name subject = issuer;
-		
-		X509v3CertificateBuilder certificateGenerator = 
-			new JcaX509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, keyPair.getPublic());
-		
+
+		X509v3CertificateBuilder certificateGenerator =
+				new JcaX509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, keyPair.getPublic());
+
 		ContentSigner signatureGenerator = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-			.setProvider(CipherParams.CRYPTO_PROVIDER)
-			.build(keyPair.getPrivate());
-		
+		.setProvider(CipherParams.CRYPTO_PROVIDER)
+		.build(keyPair.getPrivate());
+
 		X509Certificate certificate = new JcaX509CertificateConverter()
-			.setProvider(CipherParams.CRYPTO_PROVIDER)
-			.getCertificate(certificateGenerator.build(signatureGenerator));
-		
+		.setProvider(CipherParams.CRYPTO_PROVIDER)
+		.getCertificate(certificateGenerator.build(signatureGenerator));
+
 		certificate.checkValidity(new Date());
 		certificate.verify(certificate.getPublicKey());
 
-		return certificate;			
+		return certificate;
 	}
-	
+
 	/**
 	 * Creates an SSL context, given a key store and a trust store.
 	 */
@@ -406,7 +409,7 @@ public class CipherUtil {
 			// Trusted certificates
 			TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			trustManagerFactory.init(trustStore);
-			
+
 			TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
 
 			// Create SSL context

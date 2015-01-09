@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,20 +42,20 @@ import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 
 /**
- * The file version comparator is a helper class to compare {@link FileVersion}s with each 
- * other, or compare {@link FileVersion}s to local {@link File}s. 
- * 
+ * The file version comparator is a helper class to compare {@link FileVersion}s with each
+ * other, or compare {@link FileVersion}s to local {@link File}s.
+ *
  * <p>It captures the {@link FileProperties} of two files or file versions and compares them
  * using the various <tt>compare*</tt>-methods. A comparison returns a set of {@link FileChange}s,
  * each of which identifies a certain attribute change (e.g. checksum changed, name changed).
  * A file can be considered equal if the returned set of {@link FileChange}s is empty.
- * 
+ *
  * <p>The file version comparator distinguishes between <i>cancelling</i> tests and regular tests.
  * Cancelling tests are implemented in {@link #performCancellingTests(FileVersionComparison) performCancellingTests()}.
  * They represent significant changes in a file, for which further comparison would not make
  * sense (e.g. new vs. deleted files or files vs. folders). If a cancelling test is not successful,
  * other tests are not performed.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersionComparator {
@@ -63,13 +64,13 @@ public class FileVersionComparator {
 	private String checksumAlgorithm;
 
 	/**
-	 * Creates a new file version comparator helper class. 
-	 * 
+	 * Creates a new file version comparator helper class.
+	 *
 	 * <p>The <tt>rootFolder</tt> is needed to allow a comparison of the relative file path.
 	 * The <tt>checksumAlgorithm</tt> is used for calculate and compare file checksums. Both
 	 * are used if a local {@link File} is compared to a {@link FileVersion}.
-	 * 
-	 * @param rootFolder Base folder to determine a relative path to 
+	 *
+	 * @param rootFolder Base folder to determine a relative path to
 	 * @param checksumAlgorithm Digest algorithm for checksum calculation, e.g. "SHA1" or "MD5"
 	 */
 	public FileVersionComparator(File rootFolder, String checksumAlgorithm) {
@@ -79,7 +80,7 @@ public class FileVersionComparator {
 
 	/**
 	 * Compares two {@link FileVersion}s to each other and returns a {@link FileVersionComparison} object.
-	 * 
+	 *
 	 * @param expectedFileVersion The expected file version (that is compared to the actual file version)
 	 * @param actualFileVersion The actual file version (that is compared to the expected file version)
 	 * @return Returns a file version comparison object, indicating if there are differences between the file versions
@@ -93,11 +94,11 @@ public class FileVersionComparator {
 
 	/**
 	 * Compares a {@link FileVersion} with a local {@link File} and returns a {@link FileVersionComparison} object.
-	 * 
+	 *
 	 * <p>If the actual file does not differ in size, it is necessary to calculate and compare the checksum of the
-	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last 
-	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.  
-	 * 
+	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last
+	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.
+	 *
 	 * @param expectedFileVersion The expected file version (that is compared to the actual file)
 	 * @param actualFile The actual file (that is compared to the expected file version)
 	 * @param actualFileForceChecksum Force a checksum comparison if necessary (if size does not differ)
@@ -109,18 +110,18 @@ public class FileVersionComparator {
 
 	/**
 	 * Compares a {@link FileVersion} with a local {@link File} and returns a {@link FileVersionComparison} object.
-	 * 
+	 *
 	 * <p>If the actual file does not differ in size, it is necessary to calculate and compare the checksum of the
-	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last 
-	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.  
-	 * 
+	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last
+	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.
+	 *
 	 * <p>If the <tt>actualFileKnownChecksum</tt> parameter is set and a checksum comparison is necessary, this
-	 * parameter is used to compare checksums. If not and force checksum is enabled, the checksum is calculated 
+	 * parameter is used to compare checksums. If not and force checksum is enabled, the checksum is calculated
 	 * and compared.
-	 * 
+	 *
 	 * @param expectedFileVersion The expected file version (that is compared to the actual file)
 	 * @param actualFile The actual file (that is compared to the expected file version)
-	 * @param actualFileKnownChecksum If the checksum of the local file is known, it can be set 
+	 * @param actualFileKnownChecksum If the checksum of the local file is known, it can be set
 	 * @param actualFileForceChecksum Force a checksum comparison if necessary (if size does not differ)
 	 * @return Returns a file version comparison object, indicating if there are differences between the file versions
 	 */
@@ -233,7 +234,7 @@ public class FileVersionComparator {
 
 		boolean actualIsNull = fileComparison.actualFileProperties == null || fileComparison.actualFileProperties.getPosixPermissions() == null;
 		boolean expectedIsNull = fileComparison.expectedFileProperties == null || fileComparison.expectedFileProperties.getPosixPermissions() == null;
-				
+
 		if (!actualIsNull && !expectedIsNull) {
 			if (!fileComparison.actualFileProperties.getPosixPermissions().equals(fileComparison.expectedFileProperties.getPosixPermissions())) {
 				posixPermsDiffer = true;
@@ -242,7 +243,7 @@ public class FileVersionComparator {
 		else if ((actualIsNull && !expectedIsNull) || (!actualIsNull && expectedIsNull)) {
 			posixPermsDiffer = true;
 		}
-		
+
 		if (posixPermsDiffer) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_ATTRIBUTES);
 
@@ -258,7 +259,7 @@ public class FileVersionComparator {
 
 		boolean actualIsNull = fileComparison.actualFileProperties == null || fileComparison.actualFileProperties.getDosAttributes() == null;
 		boolean expectedIsNull = fileComparison.expectedFileProperties == null || fileComparison.expectedFileProperties.getDosAttributes() == null;
-			
+
 		if (!actualIsNull && !expectedIsNull) {
 			if (!fileComparison.actualFileProperties.getDosAttributes().equals(fileComparison.expectedFileProperties.getDosAttributes())) {
 				dosAttrsDiffer = true;
@@ -267,7 +268,7 @@ public class FileVersionComparator {
 		else if ((actualIsNull && !expectedIsNull) || (!actualIsNull && expectedIsNull)) {
 			dosAttrsDiffer = true;
 		}
-		
+
 		if (dosAttrsDiffer) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_ATTRIBUTES);
 
@@ -290,18 +291,24 @@ public class FileVersionComparator {
 	}
 
 	private void compareModifiedDate(FileVersionComparison fileComparison) {
-		long timeDifferenceMillis = Math.abs(fileComparison.expectedFileProperties.getLastModified() - fileComparison.actualFileProperties.getLastModified());
-		
+		long timeDifferenceMillis = Math.abs(fileComparison.expectedFileProperties.getLastModified()
+				- fileComparison.actualFileProperties.getLastModified());
+
 		// Fuzziness on last modified dates is necessary, see issue #166
-		
+
 		if (timeDifferenceMillis > 1000) {
 			fileComparison.fileChanges.add(FileChange.CHANGED_LAST_MOD_DATE);
 
-			logger.log(Level.INFO, "     - " + fileComparison.fileChanges
-					+ ": Local file DIFFERS from file version, expected MOD. DATE = {0} ({1}), but actual MOD. DATE = {2} ({3}), for file {4}", new Object[] {
-					new Date(fileComparison.expectedFileProperties.getLastModified()), fileComparison.expectedFileProperties.getLastModified(),
-					new Date(fileComparison.actualFileProperties.getLastModified()), fileComparison.actualFileProperties.getLastModified(),
-					fileComparison.actualFileProperties.getRelativePath() });
+			logger.log(
+					Level.INFO,
+					"     - "
+							+ fileComparison.fileChanges
+							+ ": Local file DIFFERS from file version, expected MOD. DATE = {0} ({1}), but actual MOD. DATE = {2} ({3}), for file {4}",
+							new Object[] {
+							new Date(fileComparison.expectedFileProperties.getLastModified()),
+							fileComparison.expectedFileProperties.getLastModified(),
+							new Date(fileComparison.actualFileProperties.getLastModified()), fileComparison.actualFileProperties.getLastModified(),
+							fileComparison.actualFileProperties.getRelativePath() });
 		}
 	}
 
@@ -322,7 +329,7 @@ public class FileVersionComparator {
 			throw new RuntimeException("actualFileProperties and expectedFileProperties cannot be null.");
 		}
 		else if (fileComparison.actualFileProperties != null && fileComparison.expectedFileProperties == null) {
-			throw new RuntimeException("expectedFileProperties cannot be null.");			
+			throw new RuntimeException("expectedFileProperties cannot be null.");
 		}
 		else if (fileComparison.actualFileProperties == null && fileComparison.expectedFileProperties != null) {
 			if (!fileComparison.expectedFileProperties.exists()) {
@@ -390,7 +397,7 @@ public class FileVersionComparator {
 		fileProperties.relativePath = FileUtil.getRelativeDatabasePath(rootFolder, file);
 
 		Path filePath = null;
-		
+
 		try {
 			filePath = Paths.get(file.getAbsolutePath());
 			fileProperties.exists = Files.exists(filePath, LinkOption.NOFOLLOW_LINKS);
@@ -398,9 +405,10 @@ public class FileVersionComparator {
 		catch (InvalidPathException e) {
 			// This throws an exception if the filename is invalid,
 			// e.g. colon in filename on windows "file:name"
-			
+
+			logger.log(Level.FINE, "InvalidPath", e);
 			logger.log(Level.WARNING, "- Path '{0}' is invalid on this file system. It cannot exist. ", file.getAbsolutePath());
-			
+
 			fileProperties.exists = false;
 			return fileProperties;
 		}
@@ -460,7 +468,8 @@ public class FileVersionComparator {
 							fileProperties.checksum = null;
 						}
 					}
-					catch (Exception e) {
+					catch (NoSuchAlgorithmException | IOException e) {
+						logger.log(Level.FINE, "Failed create checksum", e);
 						logger.log(Level.SEVERE, "SEVERE: Unable to create checksum for file {0}", file);
 						fileProperties.checksum = null;
 					}
@@ -477,6 +486,7 @@ public class FileVersionComparator {
 			return fileProperties;
 		}
 		catch (IOException e) {
+			logger.log(Level.FINE, "Failed to read file", e);
 			logger.log(Level.SEVERE, "SEVERE: Cannot read file {0}. Assuming file is locked.", file);
 
 			fileProperties.exists = true;
@@ -512,7 +522,7 @@ public class FileVersionComparator {
 		private FileProperties actualFileProperties;
 		private FileProperties expectedFileProperties;
 
-		public boolean equals() {
+		public boolean areEqual() {
 			return fileChanges.size() == 0;
 		}
 

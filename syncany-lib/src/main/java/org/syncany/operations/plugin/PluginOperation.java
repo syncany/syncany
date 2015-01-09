@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
-import org.syncany.operations.plugin.PluginOperationOptions.PluginAction;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
@@ -65,7 +64,7 @@ import com.github.zafarkhaja.semver.Version;
  * The plugin operation installs, removes and lists storage {@link Plugin}s.
  * 
  * <p>The plugin implements these three functionalities as different 
- * {@link PluginAction}:
+ * {@link PluginOperationAction}:
  * 
  * <ul>
  *   <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
@@ -107,6 +106,8 @@ public class PluginOperation extends Operation {
 
 	@Override
 	public PluginOperationResult execute() throws Exception {
+		result.setAction(options.getAction());
+		
 		switch (options.getAction()) {
 		case LIST:
 			return executeList();
