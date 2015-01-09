@@ -161,20 +161,15 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 */
 	public Map<String, FileVersion> getCurrentFileTree() {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTree.sql")) {
-			return getFileTree(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public Map<String, FileVersion> getCurrentFileTree(String prefix) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
-			preparedStatement.setString(1, prefix);
-			preparedStatement.setString(2, prefix);
-			preparedStatement.setString(3, prefix);
-
-			return getFileTree(preparedStatement);
+			Map<String, FileVersion> fileTree = new TreeMap<>();
+			List<FileVersion> fileList = getFileTree(preparedStatement);
+			
+			for (FileVersion fileVersion : fileList) {
+				fileTree.put(fileVersion.getPath(), fileVersion);
+			}
+			
+			return fileTree;
+			
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -204,7 +199,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
+	public List<FileVersion> getFileList(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
 			Set<FileType> fileTypes) {
 		
 		// Determine sensible query parameters
@@ -319,13 +314,13 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	private Map<String, FileVersion> getFileTree(PreparedStatement preparedStatement) {
-		Map<String, FileVersion> fileTree = new TreeMap<String, FileVersion>();
+	private List<FileVersion> getFileTree(PreparedStatement preparedStatement) {
+		List<FileVersion> fileTree = new ArrayList<>();
 
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {
 				FileVersion fileVersion = createFileVersionFromRow(resultSet);
-				fileTree.put(fileVersion.getPath(), fileVersion);
+				fileTree.add(fileVersion);
 			}
 
 			return fileTree;

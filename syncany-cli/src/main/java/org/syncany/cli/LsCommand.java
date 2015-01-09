@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -156,8 +155,8 @@ public class LsCommand extends Command {
 	public void printResults(OperationResult operationResult) {
 		LsOperationResult concreteOperationResult = (LsOperationResult) operationResult;
 		
-		int longestSize = calculateLongestSize(concreteOperationResult.getFileTree());
-		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileTree());
+		int longestSize = calculateLongestSize(concreteOperationResult.getFileList());
+		int longestVersion = calculateLongestVersion(concreteOperationResult.getFileList());
 
 		if (fetchHistories) {
 			printHistories(concreteOperationResult, longestSize, longestVersion);				
@@ -168,7 +167,7 @@ public class LsCommand extends Command {
 	}
 	
 	private void printTree(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		for (FileVersion fileVersion : operationResult.getFileTree().values()) {			
+		for (FileVersion fileVersion : operationResult.getFileList()) {			
 			printOneVersion(fileVersion, longestVersion, longestSize);				
 		}
 	}
@@ -183,7 +182,7 @@ public class LsCommand extends Command {
 	}
 
 	private void printNonGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		for (FileVersion fileVersion : operationResult.getFileTree().values()) {
+		for (FileVersion fileVersion : operationResult.getFileList()) {
 			PartialFileHistory fileHistory = operationResult.getFileVersions().get(fileVersion.getFileHistoryId());
 			
 			for (FileVersion fileVersionInHistory : fileHistory.getFileVersions().values()) {
@@ -193,7 +192,7 @@ public class LsCommand extends Command {
 	}
 
 	private void printGroupedHistories(LsOperationResult operationResult, int longestSize, int longestVersion) {
-		Iterator<FileVersion> fileVersionIterator = operationResult.getFileTree().values().iterator();
+		Iterator<FileVersion> fileVersionIterator = operationResult.getFileList().iterator();
 		
 		while (fileVersionIterator.hasNext()) {
 			FileVersion fileVersion = fileVersionIterator.next();
@@ -274,7 +273,7 @@ public class LsCommand extends Command {
 		}
 	}
 
-	private int calculateLongestVersion(Map<String, FileVersion> fileVersions) {
+	private int calculateLongestVersion(List<FileVersion> fileVersions) {
 		return calculateLongestValue(fileVersions, new Function<FileVersion, Integer>() {
 			public Integer apply(FileVersion fileVersion) {
 				return (""+fileVersion.getVersion()).length();
@@ -282,7 +281,7 @@ public class LsCommand extends Command {
 		});	
 	}
 	
-	private int calculateLongestSize(Map<String, FileVersion> fileVersions) {
+	private int calculateLongestSize(List<FileVersion> fileVersions) {
 		return calculateLongestValue(fileVersions, new Function<FileVersion, Integer>() {
 			public Integer apply(FileVersion fileVersion) {
 				return (""+fileVersion.getSize()).length();
@@ -290,10 +289,10 @@ public class LsCommand extends Command {
 		});	
 	}
 	
-	private int calculateLongestValue(Map<String, FileVersion> fileVersions, Function<FileVersion, Integer> callbackFunction) {
+	private int calculateLongestValue(List<FileVersion> fileVersions, Function<FileVersion, Integer> callbackFunction) {
 		int result = 0;
 		
-		for (FileVersion fileVersion : fileVersions.values()) {
+		for (FileVersion fileVersion : fileVersions) {
 			result = Math.max(result, callbackFunction.apply(fileVersion));
 		}
 		

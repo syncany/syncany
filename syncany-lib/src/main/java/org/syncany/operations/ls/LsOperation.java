@@ -56,19 +56,19 @@ public class LsOperation extends Operation {
 		String pathExpression = parsePathExpression(options.getPathExpression(), options.isFileHistoryId());
 		Set<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), options.isDeleted(), fileTypes);
+		List<FileVersion> fileList = localDatabase.getFileList(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), options.isDeleted(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 
 		if (options.isFetchHistories()) {
-			fileHistories = fetchFileHistories(fileTree);
+			fileHistories = fetchFileHistories(fileList);
 		}
 
-		return new LsOperationResult(fileTree, fileHistories);
+		return new LsOperationResult(fileList, fileHistories);
 	}
 
-	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(Map<String, FileVersion> fileTree) {
+	private Map<FileHistoryId, PartialFileHistory> fetchFileHistories(List<FileVersion> fileTree) {
 		// Get file history IDs
-		List<FileHistoryId> fileHistoryIds = new ArrayList<>(Collections2.transform(fileTree.values(), new Function<FileVersion, FileHistoryId>() {
+		List<FileHistoryId> fileHistoryIds = new ArrayList<>(Collections2.transform(fileTree, new Function<FileVersion, FileHistoryId>() {
 			@Override
 			public FileHistoryId apply(FileVersion fileVersion) {
 				return fileVersion.getFileHistoryId();
