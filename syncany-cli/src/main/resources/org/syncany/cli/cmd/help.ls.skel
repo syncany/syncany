@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
   sy ls [-V | --versions] [-t | --types=<types>] [-D | --date=<date>]
         [-r | --recursive] [-f | --full-checksums] [-g | --group]
-        [-H | --file-history] [<path-expression>]
+        [-H | --file-history] [-q | --deleted] [<path-expression>]
   
 DESCRIPTION 
   This command lists and filters the file tree based on the local database. 
@@ -21,7 +21,8 @@ DESCRIPTION
   select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
   ago or `sy ls -D2014-05-02` to select the file tree at May 2. (5) The -H
   option can be used to select a specific file only. If the option is given,
-  the <path-expression> is interpreted as a file history identifier.
+  the <path-expression> is interpreted as a file history identifier. (6) The
+  -q flag will display files that have been deleted from the file system.
   
   Using the --versions flag, the command also displays the entire version 
   history for the selected files. Using --group, the result can be grouped by
@@ -57,6 +58,11 @@ OPTIONS
   -r, --recursive
     Not only selects the folder relative to the <path-expression>, but to all
     sub trees of it.
+    
+  -q, --deleted
+    Also selects files that have been deleted from the file system, but are
+    still kept in the database. These files can be restored using the
+    `sy restore` command. By default, deleted files are not displayed.
     
   -g, --group
     Only works with --versions. Displays the file versions grouped by file

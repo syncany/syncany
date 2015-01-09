@@ -47,6 +47,9 @@ public class LsOperationOptions implements OperationOptions {
 	@Element(required = false)
 	private boolean fetchHistories;
 
+	@Element(required = false)
+	private boolean deleted;
+	
 	public LsOperationOptions() {
 		this.date = null;
 		this.pathExpression = null;
@@ -54,6 +57,7 @@ public class LsOperationOptions implements OperationOptions {
 		this.recursive = false;
 		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
 		this.fetchHistories = false;
+		this.deleted = false;
 	}
 
 	public Date getDate() {
@@ -103,4 +107,12 @@ public class LsOperationOptions implements OperationOptions {
 	public void setFetchHistories(boolean fetchHistories) {
 		this.fetchHistories = fetchHistories;
 	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}		
 }

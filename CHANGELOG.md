@@ -17,6 +17,7 @@ Change Log
   + Fix confusing error message when plugin not installed #328
   + Fix sync-forever issue with Windows watcher #338
   + Removed `<hooks>` and `<runAfterDown>` because largly unused #311
+  + Fix `sy ls` doesn't display deleted file versions; add `--deleted` #282
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

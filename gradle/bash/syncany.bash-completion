@@ -139,6 +139,7 @@ _sy() {
 		-t --types\
 		-D --date\
 		-r --recursive\
+		-q --deleted\
 		-f --full-checksums\
 		-g --group\
 		-H --file-history"
