@@ -3,7 +3,7 @@ NAME
    
 SYNOPSIS
   sy log [-x | --exclude-empty] [-n | --database-count=<count>]
-         [-f | --file-count=<count>] 
+         [-s | --database-start=<index>] [-f | --file-count=<count>] 
   
 DESCRIPTION 
   This command displays the recent changes to the repository, grouped
@@ -21,6 +21,11 @@ OPTIONS
     displayed by this command. If this option is not set, max. 10 
     database versions are displayed. To return all database versions,
     set this option to -1. 
+    
+  -s, --database-start=<index>
+    Adjusts the start index of the databases to return. In combination
+    with -n, this option can be used for pagination. If -s is not given,
+    the first -n databases will be returned. The default for -s is 0.
     
   -f, --file-count=<count>
     Adjusts the max. number of changed files per database version to be

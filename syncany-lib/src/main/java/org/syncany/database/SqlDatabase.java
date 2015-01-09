@@ -161,8 +161,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getDatabaseVersionsTo(machineName, maxLocalClientVersion);
 	}
 
-	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int maxFileHistoryCount) {
-		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, maxFileHistoryCount);
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
+		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, startDatabaseVersionIndex, maxFileHistoryCount);
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {

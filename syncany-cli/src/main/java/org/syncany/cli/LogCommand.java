@@ -70,6 +70,7 @@ public class LogCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 		
 		OptionSpec<Integer> optionMaxDatabaseVersionCountStr = parser.acceptsAll(asList("n", "database-count")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<Integer> optionStartDatabaseVersionIndexStr = parser.acceptsAll(asList("s", "database-start")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<Integer> optionMaxFileHistoryCountStr = parser.acceptsAll(asList("f", "file-count")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<Void> optionExcludeEmpty = parser.acceptsAll(asList("x", "exclude-empty"));
 
@@ -83,7 +84,12 @@ public class LogCommand extends Command {
 			operationOptions.setMaxDatabaseVersionCount(options.valueOf(optionMaxDatabaseVersionCountStr));
 		}
 		
-		// -n, --database-count=..
+		// -s, --database-start=..
+		if (options.has(optionStartDatabaseVersionIndexStr)) {			
+			operationOptions.setStartDatabaseVersionIndex(options.valueOf(optionStartDatabaseVersionIndexStr));
+		}
+		
+		// -f, --file-count=..
 		if (options.has(optionMaxFileHistoryCountStr)) {			
 			operationOptions.setMaxFileHistoryCount(options.valueOf(optionMaxFileHistoryCountStr));
 		}

@@ -130,6 +130,7 @@ _sy() {
 
 	LOG_OPTIONS="\
 		-n --database-count\
+		-s --database-start\		
 		-f --file-count\
 		-x --exclude-empty"
 		

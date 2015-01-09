@@ -50,7 +50,7 @@ public class LogOperation extends Operation {
 
 		ArrayList<LightweightDatabaseVersion> databaseVersions = new ArrayList<>();
 		Iterator<DatabaseVersion> databaseVersionsIterator = localDatabase.getLastDatabaseVersions(options.getMaxDatabaseVersionCount(),
-				options.getMaxFileHistoryCount());
+				options.getStartDatabaseVersionIndex(), options.getMaxFileHistoryCount());
 				
 		while (databaseVersionsIterator.hasNext()) {
 			DatabaseVersion databaseVersion = databaseVersionsIterator.next();
