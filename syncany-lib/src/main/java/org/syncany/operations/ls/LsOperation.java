@@ -56,7 +56,7 @@ public class LsOperation extends Operation {
 		String pathExpression = parsePathExpression(options.getPathExpression(), options.isFileHistoryId());
 		Set<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), fileTypes);
+		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), options.isDeleted(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 
 		if (options.isFetchHistories()) {

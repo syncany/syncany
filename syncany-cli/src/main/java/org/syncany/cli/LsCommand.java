@@ -37,6 +37,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory;
@@ -92,6 +93,7 @@ public class LsCommand extends Command {
 		OptionSpec<Void> optionWithVersions = parser.acceptsAll(asList("V", "versions"));
 		OptionSpec<Void> optionGroupedVersions = parser.acceptsAll(asList("g", "group"));
 		OptionSpec<Void> optionFileHistoryId = parser.acceptsAll(asList("H", "file-history"));
+		OptionSpec<Void> optionDeleted = parser.acceptsAll(asList("q", "deleted"));
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -136,6 +138,9 @@ public class LsCommand extends Command {
 
 		// --group (display option)
 		groupedVersions = options.has(optionGroupedVersions);
+		
+		// --deleted
+		operationOptions.setDeleted(options.has(optionDeleted));
 		
 		// <path-expr>
 		List<?> nonOptionArgs = options.nonOptionArguments();
@@ -214,17 +219,52 @@ public class LsCommand extends Command {
 	}
 
 	private void printOneVersion(FileVersion fileVersion, int longestVersion, int longestSize) {
+		String fileStatus = formatFileStatusShortStr(fileVersion.getStatus());
+		String fileType = formatFileTypeShortStr(fileVersion.getType());
 		String posixPermissions = (fileVersion.getPosixPermissions() != null) ? fileVersion.getPosixPermissions() : "";
 		String dosAttributes = (fileVersion.getDosAttributes() != null) ? fileVersion.getDosAttributes() : "";
 		String fileChecksum = formatObjectId(fileVersion.getChecksum());
 		String fileHistoryId = formatObjectId(fileVersion.getFileHistoryId());
 		String path = (fileVersion.getType() == FileType.SYMLINK) ? fileVersion.getPath() + " -> " + fileVersion.getLinkTarget() : fileVersion.getPath();
 
-		out.printf("%-20s %9s %4s %" + longestSize + "d %8s %" + checksumLength + "s %" + checksumLength + "s %"+longestVersion+"d %s\n", 
-				DATE_FORMAT.format(fileVersion.getUpdated()), posixPermissions, dosAttributes, fileVersion.getSize(), fileVersion.getType(), 
+		out.printf("%s %s %s %9s %4s %" + longestSize + "d %" + checksumLength + "s %" + checksumLength + "s %"+longestVersion+"d %s\n", 
+				DATE_FORMAT.format(fileVersion.getUpdated()), fileStatus, fileType, posixPermissions, dosAttributes, fileVersion.getSize(), 
 				fileChecksum, fileHistoryId, fileVersion.getVersion(), path);
 	}
 	
+	private String formatFileStatusShortStr(FileStatus status) {
+		switch (status) {
+		case NEW:
+			return "A";
+			
+		case CHANGED:
+		case RENAMED:
+			return "M";
+			
+		case DELETED:
+			return "D";
+			
+		default:
+			return "?";
+		}
+	}
+
+	private String formatFileTypeShortStr(FileType type) {
+		switch (type) {
+		case FILE:
+			return "-";
+			
+		case FOLDER: 
+			return "d";
+			
+		case SYMLINK:
+			return "s";
+			
+		default:
+			return "?";				
+		}
+	}
+
 	private String formatObjectId(ObjectId checksum) {
 		if (checksum == null || "".equals(checksum)) {
 			return "";
