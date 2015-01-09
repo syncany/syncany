@@ -120,8 +120,19 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
 	 */
 	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
+		return getFileHistoriesWithFileVersions(databaseVersionVectorClock, -1);
+	}
+	
+	/**
+	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
+	 */
+	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock, int maxCount) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.all.getFileHistoriesWithFileVersionsByVectorClock.sql")) {
 			preparedStatement.setString(1, databaseVersionVectorClock.toString());
+			
+			if (maxCount > 0) {
+				preparedStatement.setMaxRows(maxCount);
+			}
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet);
@@ -195,7 +206,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	protected Map<FileHistoryId, PartialFileHistory> createFileHistoriesFromResult(ResultSet resultSet) throws SQLException {
 		Map<FileHistoryId, PartialFileHistory> fileHistories = new HashMap<FileHistoryId, PartialFileHistory>();
 		PartialFileHistory fileHistory = null;

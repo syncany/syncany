@@ -38,7 +38,7 @@ public class LogFolderRequestHandler extends FolderRequestHandler {
 		try {
 			LogOperation operation = new LogOperation(config, concreteRequest.getOptions());
 			LogOperationResult operationResult = operation.execute();
-			LogFolderResponse response = new LogFolderResponse(operationResult, request.getId());
+			LogFolderResponse response = new LogFolderResponse(operationResult, request.getId(), request.getRoot());
 		
 			return response;
 		}

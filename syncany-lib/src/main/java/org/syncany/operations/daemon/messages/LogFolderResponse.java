@@ -24,14 +24,19 @@ import org.syncany.operations.log.LogOperationResult;
 public class LogFolderResponse extends FolderResponse {
 	@Element(required = true)
 	private LogOperationResult result;
+	
+	@Element(required = true)
+	private String root;
 
 	public LogFolderResponse() {
 		// Nothing
 	}
 	
-	public LogFolderResponse(LogOperationResult result, int requestId) {
+	public LogFolderResponse(LogOperationResult result, int requestId, String root) {
 		super(200, requestId, null);
+
 		this.result = result;
+		this.root = root;
 	}
 
 	@Override
@@ -41,5 +46,9 @@ public class LogFolderResponse extends FolderResponse {
 
 	public void setResult(LogOperationResult result) {
 		this.result = result;
+	}
+	
+	public String getRoot() {
+		return root;
 	}
 }

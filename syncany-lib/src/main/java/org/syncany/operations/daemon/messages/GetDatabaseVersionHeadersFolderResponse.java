@@ -32,10 +32,18 @@ public class GetDatabaseVersionHeadersFolderResponse extends FolderResponse {
 	@ElementList(required = true, entry="databaseVersionHeader")
 	private ArrayList<DatabaseVersionHeader> databaseVersionHeaders;	
 	
+	public GetDatabaseVersionHeadersFolderResponse() {
+		// Nothing
+	}
+	
 	public GetDatabaseVersionHeadersFolderResponse(int requestId, String root, List<DatabaseVersionHeader> databaseVersionHeaders) {
 		super(200, requestId, null);
 		
 		this.root = root;
 		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
+	}
+	
+	public ArrayList<DatabaseVersionHeader> getDatabaseVersionHeaders() {
+		return databaseVersionHeaders;
 	}
 }

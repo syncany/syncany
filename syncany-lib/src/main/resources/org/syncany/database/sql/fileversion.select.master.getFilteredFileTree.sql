@@ -3,6 +3,7 @@ from fileversion
 where 
 	status<>'DELETED'
 	and path like ?
+	and filehistory_id like ?	
 	and substr_count(path, '/')>=?
 	and substr_count(path, '/')<=?		
 	and type in (unnest(?))			

@@ -19,13 +19,15 @@ package org.syncany.operations.log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
+import org.syncany.database.FileVersion;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.ChangeSet;
 import org.syncany.operations.Operation;
 
 public class LogOperation extends Operation {
@@ -46,21 +48,50 @@ public class LogOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Log' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		Iterator<DatabaseVersion> databaseVersionsIterator = localDatabase.getLastDatabaseVersions(options.getMaxCount());
-		List<DatabaseVersion> databaseVersions = new ArrayList<>();
+		ArrayList<LightweightDatabaseVersion> databaseVersions = new ArrayList<>();
+		Iterator<DatabaseVersion> databaseVersionsIterator = localDatabase.getLastDatabaseVersions(options.getMaxDatabaseVersionCount(),
+				options.getMaxFileHistoryCount());
 				
 		while (databaseVersionsIterator.hasNext()) {
 			DatabaseVersion databaseVersion = databaseVersionsIterator.next();
+			LightweightDatabaseVersion lightweightDatabaseVersion = createLightweightDatabaseVersion(databaseVersion);			
 			
-			if (options.isExcludeChunkData()) {
-				databaseVersion.getChunks().clear();
-				databaseVersion.getMultiChunks().clear();
-				databaseVersion.getFileContents().clear();
-			}
-			
-			databaseVersions.add(databaseVersion);
+			databaseVersions.add(lightweightDatabaseVersion);
 		}
 		
 		return new LogOperationResult(databaseVersions);
+	}
+
+	private LightweightDatabaseVersion createLightweightDatabaseVersion(DatabaseVersion databaseVersion) {
+		// Create changeset
+		ChangeSet changedFiles = new ChangeSet();
+
+		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
+			FileVersion fileVersion = fileHistory.getLastVersion();
+			
+			switch (fileVersion.getStatus()) {
+			case NEW:
+				changedFiles.getNewFiles().add(fileVersion.getPath());
+				break;
+				
+			case CHANGED:
+			case RENAMED:
+				changedFiles.getChangedFiles().add(fileVersion.getPath());
+				break;
+
+			case DELETED:
+				changedFiles.getDeletedFiles().add(fileVersion.getPath());
+				break;
+			}
+		}
+		
+		// Create lightweight database version
+		LightweightDatabaseVersion lightweightDatabaseVersion = new LightweightDatabaseVersion();
+
+		lightweightDatabaseVersion.setClient(databaseVersion.getHeader().getClient());
+		lightweightDatabaseVersion.setDate(databaseVersion.getHeader().getDate());
+		lightweightDatabaseVersion.setChangeSet(changedFiles);
+		
+		return lightweightDatabaseVersion;
 	}
 }

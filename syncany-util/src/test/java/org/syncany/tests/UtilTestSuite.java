@@ -24,6 +24,7 @@ import org.syncany.tests.util.Base58Test;
 import org.syncany.tests.util.CollectionUtilTest;
 import org.syncany.tests.util.FileUtilTest;
 import org.syncany.tests.util.LimitedDosFileAttributesTest;
+import org.syncany.tests.util.LimitedSortedSetTest;
 import org.syncany.tests.util.NormalizedPathTest;
 import org.syncany.tests.util.PidFileUtilTest;
 import org.syncany.tests.util.ReflectionUtilTest;
@@ -34,6 +35,7 @@ import org.syncany.tests.util.StringUtilTest;
 	Base58Test.class,
 	CollectionUtilTest.class,
 	FileUtilTest.class,
+	LimitedSortedSetTest.class,
 	LimitedDosFileAttributesTest.class,
 	NormalizedPathTest.class,
 	PidFileUtilTest.class,

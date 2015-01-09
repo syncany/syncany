@@ -204,30 +204,42 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean recursive, Set<FileType> fileTypes) {
+	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, Set<FileType> fileTypes) {
 		// Determine sensible query parameters
 		// Basic idea: If null/empty given, match them all!
 
-		pathExpression = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+		String fileHistoryPrefix = null;
+		
+		if (fileHistoryId) {
+			fileHistoryPrefix = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+			pathExpression = "%";
+		}
+		else {
+			fileHistoryPrefix = "%";
+			pathExpression = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+		}
+		
 		date = (date == null) ? new Date(4133984461000L) : date;
 
 		int slashCount = StringUtil.substrCount(pathExpression, "/");
-		int filterMinSlashCount = (recursive) ? 0 : slashCount;
-		int filterMaxSlashCount = (recursive) ? Integer.MAX_VALUE : slashCount;
+		int filterMinSlashCount = (recursive || fileHistoryId) ? 0 : slashCount;
+		int filterMaxSlashCount = (recursive || fileHistoryId) ? Integer.MAX_VALUE : slashCount;
 
 		String[] fileTypesStr = createFileTypesArray(fileTypes);
-
+		
 		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, " getFileTree(path = " + pathExpression + ", minSlash = " + filterMinSlashCount + ", maxSlash = "
-					+ filterMaxSlashCount + ", date <= " + date + ", types = " + StringUtil.join(fileTypesStr, ", "));
+			logger.log(Level.INFO, " getFileTree(path = " + pathExpression + ", history = " + fileHistoryPrefix + ", minSlash = "
+					+ filterMinSlashCount + ", maxSlash = " + filterMaxSlashCount + ", date <= " + date + ", types = " 
+					+ StringUtil.join(fileTypesStr, ", "));
 		}
 
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFilteredFileTree.sql")) {
 			preparedStatement.setString(1, pathExpression);
-			preparedStatement.setInt(2, filterMinSlashCount);
-			preparedStatement.setInt(3, filterMaxSlashCount);
-			preparedStatement.setArray(4, connection.createArrayOf("varchar", fileTypesStr));
-			preparedStatement.setTimestamp(5, new Timestamp(date.getTime()));
+			preparedStatement.setString(2, fileHistoryPrefix);
+			preparedStatement.setInt(3, filterMinSlashCount);
+			preparedStatement.setInt(4, filterMaxSlashCount);
+			preparedStatement.setArray(5, connection.createArrayOf("varchar", fileTypesStr));
+			preparedStatement.setTimestamp(6, new Timestamp(date.getTime()));
 
 			return getFileTree(preparedStatement);
 		}

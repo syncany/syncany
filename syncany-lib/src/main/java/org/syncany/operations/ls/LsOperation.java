@@ -53,10 +53,10 @@ public class LsOperation extends Operation {
 		logger.log(Level.INFO, "Running 'Ls' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		String pathExpression = parsePathExpression(options.getPathExpression());
+		String pathExpression = parsePathExpression(options.getPathExpression(), options.isFileHistoryId());
 		Set<FileType> fileTypes = options.getFileTypes();
 
-		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isRecursive(), fileTypes);
+		Map<String, FileVersion> fileTree = localDatabase.getFileTree(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 
 		if (options.isFetchHistories()) {
@@ -78,13 +78,26 @@ public class LsOperation extends Operation {
 		return localDatabase.getFileHistories(fileHistoryIds);
 	}
 
-	private String parsePathExpression(String filter) {
-		if (filter != null) {
-			if (filter.contains("^") || filter.contains("*")) {
-				return filter.replace('^', '%').replace('*', '%');
+	private String parsePathExpression(String pathExpression, boolean isFileHistoryId) {
+		if (pathExpression != null) {
+			if (isFileHistoryId) {
+				String randomFileHistoryId = FileHistoryId.secureRandomFileId().toString();
+				boolean isFullLength = pathExpression.length() == randomFileHistoryId.length();
+				
+				if (isFullLength) {
+					return pathExpression;
+				}
+				else {
+					return pathExpression + "%";
+				}
 			}
 			else {
-				return filter + "%";
+				if (pathExpression.contains("^") || pathExpression.contains("*")) {
+					return pathExpression.replace('^', '%').replace('*', '%');
+				}
+				else {
+					return pathExpression + "%";
+				}
 			}
 		}
 		else {

@@ -129,7 +129,8 @@ _sy() {
 		   --password"
 
 	LOG_OPTIONS="\
-		-n --max-count\
+		-n --database-count\
+		-f --file-count\
 		-x --exclude-empty"
 		
 	LS_OPTIONS="\
@@ -138,7 +139,8 @@ _sy() {
 		-D --date\
 		-r --recursive\
 		-f --full-checksums\
-		-g --group"
+		-g --group\
+		-H --file-history"
 
 	LS_TYPES="\
 		t\

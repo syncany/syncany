@@ -161,8 +161,8 @@ public class SqlDatabase {
 		return databaseVersionDao.getDatabaseVersionsTo(machineName, maxLocalClientVersion);
 	}
 
-	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxCount) {
-		return databaseVersionDao.getLastDatabaseVersions(maxCount);
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int maxFileHistoryCount) {
+		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, maxFileHistoryCount);
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
@@ -248,8 +248,8 @@ public class SqlDatabase {
 		return fileVersionDao.getFileVersionByPath(path);
 	}
 
-	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, Set<FileType> fileTypes) {
-		return fileVersionDao.getFileTree(filter, date, recursive, fileTypes);
+	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, Set<FileType> fileTypes) {
+		return fileVersionDao.getFileTree(pathExpression, date, fileHistoryId, recursive, fileTypes);
 	}
 
 	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {

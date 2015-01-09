@@ -34,6 +34,9 @@ public class LsOperationOptions implements OperationOptions {
 
 	@Element(required = false)
 	private String pathExpression;
+	
+	@Element(required = false)
+	private boolean fileHistoryId;
 
 	@Element(required = false)
 	private boolean recursive;
@@ -47,6 +50,7 @@ public class LsOperationOptions implements OperationOptions {
 	public LsOperationOptions() {
 		this.date = null;
 		this.pathExpression = null;
+		this.fileHistoryId = false;
 		this.recursive = false;
 		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
 		this.fetchHistories = false;
@@ -66,6 +70,14 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setPathExpression(String pathExpression) {
 		this.pathExpression = pathExpression;
+	}		
+
+	public boolean isFileHistoryId() {
+		return fileHistoryId;
+	}
+
+	public void setFileHistoryId(boolean fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
 	}
 
 	public boolean isRecursive() {
