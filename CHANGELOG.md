@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.1-alpha (Date: Tbd.)
+### Syncany 0.4.1-alpha (Date: 10 Jan 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + New 'Preferences' dialog with ability to remove/add plugins, 
