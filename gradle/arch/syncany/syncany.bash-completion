@@ -60,6 +60,7 @@ _sy() {
 		down\
 		genlink\
 		init\
+		log\
 		ls\
 		ls-remote\
 		plugin\
@@ -127,13 +128,21 @@ _sy() {
 		-s --short\
 		   --password"
 
+	LOG_OPTIONS="\
+		-n --database-count\
+		-s --database-start\		
+		-f --file-count\
+		-x --exclude-empty"
+		
 	LS_OPTIONS="\
 		-V --versions\
 		-t --types\
 		-D --date\
 		-r --recursive\
+		-q --deleted\
 		-f --full-checksums\
-		-g --group"
+		-g --group\
+		-H --file-history"
 
 	LS_TYPES="\
 		t\
@@ -320,6 +329,10 @@ _sy() {
 				complete_options="$INIT_OPTIONS"
 				;;
 		esac
+		;;
+		
+	log)
+		complete_options="$LOG_OPTIONS"
 		;;
 
 	ls)
