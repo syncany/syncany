@@ -162,12 +162,13 @@ _sy() {
 		s3\
 		samba\
 		sftp\
+		swift\
 		webdav"
 		
 	PLUGIN_IDS_ALL="\
 		$PLUGIN_IDS_TRANSFER\
-		gui\
-		simpleweb"		
+		flickr\
+		gui"		
 		
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
@@ -211,6 +212,11 @@ _sy() {
 		password=\
 		path=\
 		port="
+
+	PLUGIN_SWIFT_OPTIONS="\
+		authUrl=\
+		username=\
+		password="
 
 	PLUGIN_WEBDAV_OPTIONS="\
 		url=\
@@ -342,7 +348,20 @@ _sy() {
 				;;
 
 			*)
-				complete_options="$LS_OPTIONS"
+				case "${cur}" in
+					-*)
+						complete_options="$LS_OPTIONS"
+						;;
+
+					*)
+						# Special handling: return directories, no space at the end
+
+						compopt -o nospace
+						COMPREPLY=( $( compgen -d -S "/" -- $cur ) )
+
+						return 0
+						;;
+				esac
 				;;
 		esac
 		;;
@@ -493,6 +512,10 @@ _sy_plugin_option_words_for_plugin() {
 
 		sftp)
 			plugin_completions="$PLUGIN_SFTP_OPTIONS"
+			;;
+
+		swift)
+			plugin_completions="$PLUGIN_SWIFT_OPTIONS"
 			;;
 
 		webdav)
