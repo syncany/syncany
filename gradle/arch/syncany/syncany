@@ -1,7 +1,11 @@
 #!/bin/sh
 
 for name in /usr/share/java/syncany/*.jar ; do
-  CLASSPATH=$CLASSPATH:$name
+  if [ -n "$CLASSPATH" ]; then
+    CLASSPATH=$CLASSPATH:$name
+  else
+    CLASSPATH=$name
+  fi
 done
 
 for name in $HOME/.config/syncany/plugins/lib/*.jar ; do
