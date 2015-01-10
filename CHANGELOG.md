@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-### Syncany 0.4.1-alpha (Date: Tbd.)
+### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
+- Patch release to fix serialization issue in 'sy ls'
+  when daemon/GUI is running.
+
+### Syncany 0.4.1-alpha (Date: 10 Jan 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + New 'Preferences' dialog with ability to remove/add plugins, 
@@ -17,6 +21,7 @@ Change Log
   + Fix confusing error message when plugin not installed #328
   + Fix sync-forever issue with Windows watcher #338
   + Removed `<hooks>` and `<runAfterDown>` because largly unused #311
+  + Fix `sy ls` doesn't display deleted file versions; add `--deleted` #282
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

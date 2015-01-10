@@ -328,12 +328,14 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 	
-	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int maxFileHistoryCount) {
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersions.sql")) {
-			if (maxDatabaseVersionCount > 0) {
-				preparedStatement.setMaxRows(maxDatabaseVersionCount);
-			}
-
+			maxDatabaseVersionCount = (maxDatabaseVersionCount > 0) ? maxDatabaseVersionCount : Integer.MAX_VALUE;
+			startDatabaseVersionIndex = (startDatabaseVersionIndex > 0) ? startDatabaseVersionIndex : 0;
+			
+			preparedStatement.setInt(1, maxDatabaseVersionCount);
+			preparedStatement.setInt(2, startDatabaseVersionIndex);
+			
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return new DatabaseVersionIterator(preparedStatement.executeQuery(), true, maxFileHistoryCount);
 			}

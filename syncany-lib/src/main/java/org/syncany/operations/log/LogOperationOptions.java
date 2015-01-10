@@ -25,10 +25,14 @@ public class LogOperationOptions implements OperationOptions {
 	private int maxDatabaseVersionCount;
 	
 	@Element(required = false)
+	private int startDatabaseVersionIndex;
+	
+	@Element(required = false)
 	private int maxFileHistoryCount;
 
 	public LogOperationOptions() {
 		this.maxDatabaseVersionCount = 10;
+		this.startDatabaseVersionIndex = 0;
 		this.maxFileHistoryCount = 100;
 	}
 
@@ -38,6 +42,14 @@ public class LogOperationOptions implements OperationOptions {
 
 	public void setMaxDatabaseVersionCount(int maxDatabaseVersionCount) {
 		this.maxDatabaseVersionCount = maxDatabaseVersionCount;
+	}
+
+	public int getStartDatabaseVersionIndex() {
+		return startDatabaseVersionIndex;
+	}
+
+	public void setStartDatabaseVersionIndex(int startDatabaseVersionIndex) {
+		this.startDatabaseVersionIndex = startDatabaseVersionIndex;
 	}
 
 	public int getMaxFileHistoryCount() {
