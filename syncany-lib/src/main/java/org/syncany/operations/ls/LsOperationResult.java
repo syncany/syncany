@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
@@ -29,7 +30,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationResult;
 
 public class LsOperationResult implements OperationResult {
-	@ElementMap(name = "fileList", required = false, key = "filePath", value = "fileVersion")
+	@ElementList(name = "fileList", required = false, entry = "fileVersion")
 	private ArrayList<FileVersion> fileList;
 	
 	@ElementMap(name = "fileVersions", required = false, key = "fileHistoryId", value = "partialFileHistory")
