@@ -7,6 +7,7 @@ Change Log
   + Fix black notification bubble on Linux #339
   + Fix file version table in browse history detail view has too
     much left cell spacing #346
+  + Fix flickering and newline-problem on Windows tray icon #337
 
 ### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
 - Patch release to fix serialization issue in 'sy ls'
