@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### Syncany 0.4.3-alpha (Date: Tbd.)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Bugfixes and other things:
+  + Fix black notification bubble on Linux #339
+  + Fix file version table in browse history detail view has too
+    much left cell spacing #346
+  + Fix flickering and newline-problem on Windows tray icon #337
+
 ### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
 - Patch release to fix serialization issue in 'sy ls'
   when daemon/GUI is running.
@@ -22,6 +30,7 @@ Change Log
   + Fix sync-forever issue with Windows watcher #338
   + Removed `<hooks>` and `<runAfterDown>` because largly unused #311
   + Fix `sy ls` doesn't display deleted file versions; add `--deleted` #282
+  + Fix Syncany trying to read all files in home dir on Arch Linux #342
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
