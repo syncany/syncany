@@ -92,6 +92,7 @@ public class PluginOperation extends Operation {
 
 	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
 	private static final String PURGEFILE_FILENAME = "purgefile";
+	private static final String UPDATE_FILENAME = "purgefile";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
@@ -156,11 +157,26 @@ public class PluginOperation extends Operation {
 			}
 
 			// ... and install again
-			PluginOperationResult installResult = executeInstallFromApiHost(pluginId);
+			PluginOperationResult installResult;
+			if (EnvironmentUtil.isWindows()) {
+				logger.log(Level.FINE, "Appending jar to updatefile");
+				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
 
-			if (installResult.getResultCode() == PluginResultCode.NOK) {
-				logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
-				erroneousPlugins.add(pluginId);
+				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(updatefilePath, true)))) {
+					out.println(pluginId);
+				}
+				catch (IOException e) {
+					logger.log(Level.SEVERE, "Unable to append to updatefile " + updatefilePath, e);
+					installResult = PluginOperationResult;
+				}
+			}
+			else {
+				installResult = executeInstallFromApiHost(pluginId);
+
+				if (installResult.getResultCode() == PluginResultCode.NOK) {
+					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
+					erroneousPlugins.add(pluginId);
+				}
 			}
 		}
 
