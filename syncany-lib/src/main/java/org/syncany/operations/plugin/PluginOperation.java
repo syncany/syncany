@@ -92,7 +92,7 @@ public class PluginOperation extends Operation {
 
 	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
 	private static final String PURGEFILE_FILENAME = "purgefile";
-	private static final String UPDATE_FILENAME = "purgefile";
+	private static final String UPDATE_FILENAME = "updatefile";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
