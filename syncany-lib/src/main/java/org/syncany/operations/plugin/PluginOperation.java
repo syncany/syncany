@@ -57,7 +57,7 @@ import org.syncany.plugins.Plugins;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-import org.syncany.util.Version;
+import com.github.zafarkhaja.semver.Version;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -157,7 +157,7 @@ public class PluginOperation extends Operation {
 			}
 
 			// ... and install again
-			PluginOperationResult installResult;
+			PluginResultCode installResultCode;
 			if (EnvironmentUtil.isWindows()) {
 				logger.log(Level.FINE, "Appending jar to updatefile");
 				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
@@ -167,13 +167,13 @@ public class PluginOperation extends Operation {
 				}
 				catch (IOException e) {
 					logger.log(Level.SEVERE, "Unable to append to updatefile " + updatefilePath, e);
-					installResult = PluginOperationResult;
+					installResultCode = PluginResultCode.NOK;
 				}
 			}
 			else {
-				installResult = executeInstallFromApiHost(pluginId);
+				installResultCode = executeInstallFromApiHost(pluginId).getResultCode();
 
-				if (installResult.getResultCode() == PluginResultCode.NOK) {
+				if (installResultCode == PluginResultCode.NOK) {
 					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
 					erroneousPlugins.add(pluginId);
 				}
@@ -335,14 +335,14 @@ public class PluginOperation extends Operation {
 	}
 
 	private void checkPluginCompatibility(PluginInfo pluginInfo) throws Exception {
-		Version applicationVersion = Version.parse(Client.getApplicationVersion());
-		Version pluginAppMinVersion = Version.parse(pluginInfo.getPluginAppMinVersion());
+		Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
+		Version pluginAppMinVersion = Version.valueOf(pluginInfo.getPluginAppMinVersion());
 
 		logger.log(Level.INFO, "Checking plugin compatibility:");
 		logger.log(Level.INFO, "- Application version:             " + Client.getApplicationVersion() + "(" + applicationVersion + ")");
 		logger.log(Level.INFO, "- Plugin min. application version: " + pluginInfo.getPluginAppMinVersion() + "(" + pluginAppMinVersion + ")");
 
-		if (applicationVersion.isOlderThan(pluginAppMinVersion)) {
+		if (applicationVersion.lessThan(pluginAppMinVersion)) {
 			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
 							+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
 		}
@@ -499,7 +499,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeList() throws Exception {
-		final Version applicationVersion = Version.parse(Client.getApplicationVersion());
+		final Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Map<String, ExtendedPluginInfo> pluginInfos = new TreeMap<String, ExtendedPluginInfo>();
 
 		// First, list local plugins
@@ -546,11 +546,11 @@ public class PluginOperation extends Operation {
 				else { // Locally also installed
 					extendedPluginInfo.setRemoteAvailable(true);
 
-					Version localVersion = Version.parse(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
-					Version remoteVersion = Version.parse(remotePluginInfo.getPluginVersion());
-					Version remoteMinAppVersion = Version.parse(remotePluginInfo.getPluginAppMinVersion());
+					Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
+					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
+					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
 
-					extendedPluginInfo.setOutdated(localVersion.isOlderThan(remoteVersion) && applicationVersion.isNewerOrEqualThan(remoteMinAppVersion));
+					extendedPluginInfo.setOutdated(localVersion.lessThan(remoteVersion) && applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion));
 				}
 
 				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
