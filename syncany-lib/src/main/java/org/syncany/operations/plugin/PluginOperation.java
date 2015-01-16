@@ -157,7 +157,6 @@ public class PluginOperation extends Operation {
 			}
 
 			// ... and install again
-			PluginResultCode installResultCode;
 			if (EnvironmentUtil.isWindows()) {
 				logger.log(Level.FINE, "Appending jar to updatefile");
 				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
@@ -167,13 +166,13 @@ public class PluginOperation extends Operation {
 				}
 				catch (IOException e) {
 					logger.log(Level.SEVERE, "Unable to append to updatefile " + updatefilePath, e);
-					installResultCode = PluginResultCode.NOK;
+					erroneousPlugins.add(pluginId);
 				}
 			}
 			else {
-				installResultCode = executeInstallFromApiHost(pluginId).getResultCode();
+				PluginOperationResult installResult = executeInstallFromApiHost(pluginId);
 
-				if (installResultCode == PluginResultCode.NOK) {
+				if (installResult.getResultCode() == PluginResultCode.NOK) {
 					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
 					erroneousPlugins.add(pluginId);
 				}
