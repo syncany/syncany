@@ -30,8 +30,7 @@ import com.google.gson.JsonParser;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class JsonMessageFactory extends MessageFactory {
-
+public abstract class JsonMessageFactory extends MessageFactory {
 	private static final Gson SERIALIZER = new Gson();
 	private static final JsonParser PARSER = new JsonParser();
 

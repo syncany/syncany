@@ -37,8 +37,7 @@ import org.syncany.database.VectorClock;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class XmlMessageFactory extends MessageFactory {
-
+public abstract class XmlMessageFactory extends MessageFactory {
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
 

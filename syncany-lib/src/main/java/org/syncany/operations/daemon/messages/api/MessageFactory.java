@@ -28,7 +28,7 @@ import org.syncany.util.StringUtil;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class MessageFactory {
+public abstract class MessageFactory {
 	protected static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 
 	protected static Class<? extends Message> getMessageClass(String requestType) throws Exception {
