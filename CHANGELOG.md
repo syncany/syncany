@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Added support for WS/REST in JSON format #285
+  + Make plugins updatable via `sy plugin update` command #300
 - Bugfixes and other things:
   + Fix black notification bubble on Linux #339
   + Fix file version table in browse history detail view has too

@@ -152,6 +152,7 @@ _sy() {
 	PLUGIN_COMMANDS="\
 		list\
 		install\
+		update\
 		remove"
 
 	PLUGIN_IDS_TRANSFER="\
@@ -373,14 +374,17 @@ _sy() {
 		case "${lastword}" in
 		list)
 			complete_options="$PLUGIN_LIST_OPTIONS"
-
 			;;
+			
 		install)
 			complete_words="$PLUGIN_IDS_ALL"
 			complete_options="$PLUGIN_INSTALL_OPTIONS"
-
 			;;
-
+			
+		update)
+			complete_words="$PLUGIN_IDS_ALL"
+			;;
+			
 		remove)
 			complete_words="$PLUGIN_IDS_ALL"
 			;;
