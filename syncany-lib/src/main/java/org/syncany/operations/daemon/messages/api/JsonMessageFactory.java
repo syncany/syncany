@@ -29,7 +29,6 @@ import com.google.gson.JsonParser;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public abstract class JsonMessageFactory extends MessageFactory {
 	private static final Gson SERIALIZER = new Gson();
 	private static final JsonParser PARSER = new JsonParser();
@@ -38,7 +37,7 @@ public abstract class JsonMessageFactory extends MessageFactory {
 		Message responseMessage = toMessage(responseMessageString);
 
 		if (!(responseMessage instanceof Response)) {
-			throw new Exception("Invalid class: Message is not a response type.");
+			throw new Exception("Invalid class: Message is not a response type: " + responseMessage.getClass());
 		}
 
 		return (Response) responseMessage;
@@ -48,7 +47,7 @@ public abstract class JsonMessageFactory extends MessageFactory {
 		Message requestMessage = toMessage(responseMessageString);
 
 		if (!(requestMessage instanceof Request)) {
-			throw new Exception("Invalid class: Message is not a request type.");
+			throw new Exception("Invalid class: Message is not a request type:" + requestMessage.getClass());
 		}
 
 		return (Request) requestMessage;
@@ -74,13 +73,18 @@ public abstract class JsonMessageFactory extends MessageFactory {
 		return jo.toString();
 	}
 
-	/* first key contains message name:
-	* { <messageType>:
-	*   {
-	*     <payload>
-	*   }
-	* }
-	*/
+	/** 
+	 * Parses JSON message for message type. 
+	 * First key contains message name:
+	 * 
+	 * <pre>
+	 * { "messageType":
+	 *   {
+	 *     // payload
+	 *   }
+	 * }
+	 * </pre>
+	 */
 	private static String getMessageType(String message) throws Exception {
 		try {
 			JsonObject result = PARSER.parse(message).getAsJsonObject();
@@ -90,5 +94,4 @@ public abstract class JsonMessageFactory extends MessageFactory {
 			throw new Exception("Cannot find type of message. Invalid JSON: " + message);
 		}
 	}
-
 }

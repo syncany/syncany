@@ -20,6 +20,7 @@ package org.syncany.cli;
 import static java.util.Arrays.asList;
 
 import javax.net.ssl.SSLContext;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.DaemonOperation;
+import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
@@ -70,6 +72,7 @@ import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
 import org.syncany.util.StringUtil;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -91,7 +94,7 @@ public class CommandLineClient extends Client {
 
 	private static final String SERVER_SCHEMA = "https://";
 	private static final String SERVER_HOSTNAME = "127.0.0.1";
-	private static final String SERVER_REST_API = "/api/rs";
+	private static final String SERVER_REST_API = WebServer.API_ENDPOINT_REST_XML;
 
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;

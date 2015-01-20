@@ -26,13 +26,16 @@ import java.util.regex.Pattern;
 
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
+import org.syncany.operations.daemon.WebServer.RequestFormatType;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.EventResponse;
 import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+
 import com.google.common.base.Joiner;
+
 import io.undertow.websockets.WebSocketConnectionCallback;
 import io.undertow.websockets.core.AbstractReceiveListener;
 import io.undertow.websockets.core.BufferedTextMessage;
@@ -53,9 +56,9 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private final WebServer daemonWebServer;
 	private final LocalEventBus eventBus;
 	private final String certificateCommonName;
-	private final WebServer.RequestFormatType requestFormatType;
+	private final RequestFormatType requestFormatType;
 
-	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName, WebServer.RequestFormatType requestFormatType) {
+	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName, RequestFormatType requestFormatType) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
 		this.certificateCommonName = certificateCommonName;
@@ -138,6 +141,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 
 		try {
 			Message message;
+			
 			switch (requestFormatType) {
 				case JSON:
 					message = JsonMessageFactory.toRequest(messageStr);
@@ -148,7 +152,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 					break;
 
 				default:
-					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
+					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(RequestFormatType.values()));
 			}
 
 			if (message instanceof Request) {
@@ -171,6 +175,7 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private void handleRequest(WebSocketChannel clientSocket, Request request) {
 		daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
 		daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
+		
 		eventBus.post(request);
 	}
 

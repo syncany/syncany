@@ -27,11 +27,14 @@ import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
+import org.syncany.operations.daemon.WebServer.RequestFormatType;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+
 import com.google.common.base.Joiner;
+
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 
@@ -45,9 +48,9 @@ public class InternalRestHandler implements HttpHandler {
 
 	private final WebServer daemonWebServer;
 	private final LocalEventBus eventBus;
-	private final WebServer.RequestFormatType requestFormatType;
+	private final RequestFormatType requestFormatType;
 
-	public InternalRestHandler(WebServer daemonWebServer, WebServer.RequestFormatType requestFormatType) {
+	public InternalRestHandler(WebServer daemonWebServer, RequestFormatType requestFormatType) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
 		this.requestFormatType = requestFormatType;
@@ -77,6 +80,7 @@ public class InternalRestHandler implements HttpHandler {
 
 		try {
 			Request request;
+			
 			switch (requestFormatType) {
 				case JSON:
 					request = JsonMessageFactory.toRequest(message);
@@ -87,11 +91,12 @@ public class InternalRestHandler implements HttpHandler {
 					break;
 
 				default:
-					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(WebServer.RequestFormatType.values()));
+					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(RequestFormatType.values()));
 			}
 
 			daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
 			daemonWebServer.putCacheRestRequest(request.getId(), exchange);
+			
 			eventBus.post(request);
 		}
 		catch (Exception e) {

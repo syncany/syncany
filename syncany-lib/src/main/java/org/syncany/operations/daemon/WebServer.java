@@ -21,6 +21,7 @@ import static io.undertow.Handlers.path;
 import static io.undertow.Handlers.websocket;
 
 import javax.net.ssl.SSLContext;
+
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -58,10 +59,12 @@ import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
 import org.syncany.plugins.web.WebInterfacePlugin;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+
 import io.undertow.Undertow;
 import io.undertow.security.api.AuthenticationMechanism;
 import io.undertow.security.api.AuthenticationMode;
@@ -84,6 +87,11 @@ import io.undertow.websockets.core.WebSockets;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class WebServer {
+	public static final String API_ENDPOINT_WS_XML = "/api/ws/xml";
+	public static final String API_ENDPOINT_WS_JSON = "/api/ws/json";
+	public static final String API_ENDPOINT_REST_XML = "/api/rs/xml";
+	public static final String API_ENDPOINT_REST_JSON = "/api/rs/json";
+	
 	public enum RequestFormatType {
 		XML, JSON
 	}
@@ -99,9 +107,11 @@ public class WebServer {
 	private Cache<Integer, RequestFormatType> requestIdRestFormatCache;
 	private Cache<String, File> fileTokenTempFileCache;
 
-	private Map<WebSocketChannel, RequestFormatType> clientChannels = Maps.newHashMap();
+	private Map<WebSocketChannel, RequestFormatType> webSocketChannelRequestFormatMap;
 
 	public WebServer(DaemonConfigTO daemonConfig) throws Exception {
+		this.webSocketChannelRequestFormatMap = Maps.newConcurrentMap();
+		
 		initCaches();
 		initEventBus();
 		initServer(daemonConfig);
@@ -161,10 +171,10 @@ public class WebServer {
 
 		// Set up the handlers for WebSocket, REST and the web interface
 		HttpHandler pathHttpHandler = path()
-						.addPrefixPath("/api/ws", websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.XML)))
-						.addPrefixPath("/api/ws/json", websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.JSON)))
-						.addPrefixPath("/api/rs", new InternalRestHandler(this, RequestFormatType.XML))
-						.addPrefixPath("/api/rs/json", new InternalRestHandler(this, RequestFormatType.JSON))
+						.addPrefixPath(API_ENDPOINT_WS_XML, websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.XML)))
+						.addPrefixPath(API_ENDPOINT_WS_JSON, websocket(new InternalWebSocketHandler(this, certificateCommonName, RequestFormatType.JSON)))
+						.addPrefixPath(API_ENDPOINT_REST_XML, new InternalRestHandler(this, RequestFormatType.XML))
+						.addPrefixPath(API_ENDPOINT_REST_JSON, new InternalRestHandler(this, RequestFormatType.JSON))
 						.addPrefixPath("/", new InternalWebInterfaceHandler());
 
 		// Add some security spices
@@ -308,56 +318,51 @@ public class WebServer {
 	}
 
 	private void sendBroadcast(Message message) throws Exception {
-		logger.log(Level.INFO, "Sending broadcast message to " + clientChannels.size() + " websocket client(s)");
+		logger.log(Level.INFO, "Sending broadcast message to " + webSocketChannelRequestFormatMap.size() + " websocket client(s)");
 
-		synchronized (clientChannels) {
-			for (WebSocketChannel clientChannel : clientChannels.keySet()) {
+		synchronized (webSocketChannelRequestFormatMap) {
+			for (WebSocketChannel clientChannel : webSocketChannelRequestFormatMap.keySet()) {
 				sendTo(clientChannel, message);
 			}
 		}
 	}
 
 	private void sendTo(WebSocketChannel clientChannel, Message message) throws Exception {
-		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + message);
-		WebSockets.sendText(makeMessage(clientChannel, message), clientChannel, null);
+		String messageStr = createMessageStr(clientChannel, message);
+		
+		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + messageStr);
+		WebSockets.sendText(messageStr, clientChannel, null);
 	}
 
-	private String makeMessage(WebSocketChannel channel, Message message) throws Exception {
-		// it's always there, be cool
-		RequestFormatType requestFormatType = clientChannels.get(channel);
+	private void sendTo(HttpServerExchange serverExchange, Response response) throws Exception {
+		String responseStr = createMessageStr(response);
 
-		if (requestFormatType == null) {
-			requestFormatType = DEFAULT_RESPONSE_FORMAT;
-		}
+		logger.log(Level.INFO, "Sending message to " + serverExchange.getHostAndPort() + ": " + responseStr);
 
-		switch (requestFormatType) {
-			case JSON:
-				return JsonMessageFactory.toJson(message);
-
-			default:
-				return XmlMessageFactory.toXml(message);
-		}
-	}
-
-	private void sendTo(HttpServerExchange serverExchange, Response message) throws Exception {
-		logger.log(Level.INFO, "Sending message to " + serverExchange.getHostAndPort() + ": " + message);
-
-		serverExchange.getResponseSender().send(makeMessage(message));
+		serverExchange.getResponseSender().send(responseStr);
 		serverExchange.endExchange();
 	}
+	
+	private String createMessageStr(WebSocketChannel channel, Message message) throws Exception {
+		RequestFormatType requestFormatType = webSocketChannelRequestFormatMap.get(channel);
+		return createMessageStr(message, requestFormatType);
+	}
 
-	private String makeMessage(Response message) throws Exception {
-		// it's always there, be cool
-		RequestFormatType requestFormatType = requestIdRestFormatCache.getIfPresent(message.getRequestId());
+	private String createMessageStr(Response response) throws Exception {
+		RequestFormatType requestFormatType = requestIdRestFormatCache.getIfPresent(response.getRequestId());
+		return createMessageStr(response, requestFormatType);		
+	}
 
-		if (requestFormatType == null) {
-			requestFormatType = DEFAULT_RESPONSE_FORMAT;
+	private String createMessageStr(Message message, RequestFormatType outputFormat) throws Exception {
+		if (outputFormat == null) {
+			outputFormat = DEFAULT_RESPONSE_FORMAT;
 		}
 
-		switch (requestFormatType) {
+		switch (outputFormat) {
 			case JSON:
 				return JsonMessageFactory.toJson(message);
 
+			case XML:
 			default:
 				return XmlMessageFactory.toXml(message);
 		}
@@ -366,24 +371,11 @@ public class WebServer {
 	// Client channel access methods
 
 	public void addClientChannel(WebSocketChannel clientChannel, RequestFormatType format) {
-		synchronized (clientChannels) {
-			clientChannels.put(clientChannel, format);
-		}
+		webSocketChannelRequestFormatMap.put(clientChannel, format);
 	}
 
 	public void removeClientChannel(WebSocketChannel clientChannel) {
-		synchronized (clientChannels) {
-			clientChannels.remove(clientChannel);
-		}
-	}
-
-	public RequestFormatType getRequestFormatTypeFromWebSocketChannel(WebSocketChannel channel) {
-		if (channel.getUrl().toLowerCase().contains("json")) {
-			return RequestFormatType.JSON;
-		}
-		else {
-			return RequestFormatType.XML;
-		}
+		webSocketChannelRequestFormatMap.remove(clientChannel);
 	}
 
 	// Cache access methods
