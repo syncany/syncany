@@ -27,12 +27,21 @@ public class PluginOperationResult implements OperationResult {
 	}
 	
 	private PluginResultCode resultCode;
+	private PluginOperationAction action;
 	private List<ExtendedPluginInfo> pluginList;
 	private String sourcePluginPath;
 	private String targetPluginPath;
 	private PluginInfo affectedPluginInfo;
 	private List<String> conflictingPluginIds;
 
+	public PluginOperationAction getAction() {
+		return action;
+	}
+	
+	public void setAction(PluginOperationAction action) {
+		this.action = action;
+	}
+	
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
 	}

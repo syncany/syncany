@@ -31,6 +31,7 @@ import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.database.FileContent;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.VectorClock;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -49,6 +50,7 @@ public class XmlMessageFactory extends MessageFactory {
 
 			registry.bind(PartialFileHistory.FileHistoryId.class, new FileHistoryIdConverter());
 			registry.bind(FileContent.FileChecksum.class, new FileChecksumConverter());
+			registry.bind(VectorClock.class, new VectorClockConverter());
 
 			serializer = new Persister(new RegistryStrategy(registry));
 		}
@@ -125,6 +127,18 @@ public class XmlMessageFactory extends MessageFactory {
 
 		@Override
 		public void write(OutputNode node, FileContent.FileChecksum value) throws Exception {
+			node.setValue(value.toString());
+		}
+	}
+
+	private static class VectorClockConverter implements Converter<VectorClock> {
+		@Override
+		public VectorClock read(InputNode node) throws Exception {
+			return VectorClock.parseVectorClock(node.getValue());
+		}
+
+		@Override
+		public void write(OutputNode node, VectorClock value) throws Exception {
 			node.setValue(value.toString());
 		}
 	}

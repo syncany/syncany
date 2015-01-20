@@ -37,9 +37,6 @@ public class DaemonConfigTO {
 	@ElementList(name = "users", entry = "user", required = false)
 	private ArrayList<UserTO> users = new ArrayList<UserTO>();
 
-	@Element(name = "hooks", required = false)
-	private HooksTO hooks;
-
 	private PortTO portTO; // This is generated dynamically by the daemon. It should't be in the XML.
 
 	public static DaemonConfigTO load(File file) throws ConfigException {
@@ -90,13 +87,5 @@ public class DaemonConfigTO {
 
 	public void setPortTO(PortTO portTO) {
 		this.portTO = portTO;
-	}
-
-	public HooksTO getHooks() {
-		return hooks;
-	}
-
-	public void setHooks(HooksTO hooks) {
-		this.hooks = hooks;
 	}
 }

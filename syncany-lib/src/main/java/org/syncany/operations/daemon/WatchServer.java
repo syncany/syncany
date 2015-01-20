@@ -32,13 +32,11 @@ import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.FolderTO;
-import org.syncany.operations.ChangeSet;
 import org.syncany.operations.daemon.Watch.SyncStatus;
 import org.syncany.operations.daemon.messages.AddWatchManagementRequest;
 import org.syncany.operations.daemon.messages.AddWatchManagementResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.DaemonReloadedExternalEvent;
-import org.syncany.operations.daemon.messages.DownEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.ListWatchesManagementRequest;
 import org.syncany.operations.daemon.messages.ListWatchesManagementResponse;
 import org.syncany.operations.daemon.messages.RemoveWatchManagementRequest;
@@ -49,7 +47,6 @@ import org.syncany.operations.daemon.messages.api.ManagementRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
-import org.syncany.util.StringUtil;
 
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -285,48 +282,6 @@ public class WatchServer {
 				logger.log(Level.WARNING, "Error removing watch from daemon config.", e);
 				eventBus.post(new RemoveWatchManagementResponse(RemoveWatchManagementResponse.ERR_OTHER, request.getId(), "Error removing to config: "
 						+ e.getMessage()));
-			}
-		}
-	}
-
-	@Subscribe
-	public void onPostDownOperation(DownEndSyncExternalEvent downEndSyncEvent) {
-		if (daemonConfig.getHooks() != null) {
-			String runAfterSyncCommand = daemonConfig.getHooks().getRunAfterDownCommand();
-
-			if (runAfterSyncCommand != null) {
-				ChangeSet changeSet = downEndSyncEvent.getChanges();
-
-				List<String> changeMessageParts = new ArrayList<>();
-
-				if (changeSet.getNewFiles().size() > 0) {
-					changeMessageParts.add(changeSet.getNewFiles().size() + " file(s) added");
-				}
-
-				if (changeSet.getChangedFiles().size() > 0) {
-					changeMessageParts.add(changeSet.getChangedFiles().size() + " file(s) changed");
-				}
-
-				if (changeSet.getDeletedFiles().size() > 0) {
-					changeMessageParts.add(changeSet.getDeletedFiles().size() + " file(s) deleted");
-				}
-
-				String changedMessage = StringUtil.join(changeMessageParts, ", ");
-
-				String escapedSubject = changedMessage.replace("\"", "\\\"");
-				runAfterSyncCommand = runAfterSyncCommand.replace("%subject", escapedSubject);
-
-				try {
-					logger.log(Level.INFO, "Running command: " + runAfterSyncCommand);
-
-					List<String> commandArgsList = StringUtil.splitCommandLineArgs(runAfterSyncCommand);
-					String[] commandArgs = commandArgsList.toArray(new String[0]);
-
-					Runtime.getRuntime().exec(commandArgs);
-				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Cannot run sync after command: " + runAfterSyncCommand, e);
-				}
 			}
 		}
 	}

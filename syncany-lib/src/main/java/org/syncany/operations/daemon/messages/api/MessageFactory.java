@@ -39,8 +39,7 @@ public class MessageFactory {
 
 		// Try to load!
 		try {
-			Class<? extends Message> MessageClass = Class.forName(fqMessageClassName).asSubclass(Message.class);
-			return MessageClass;
+			return Class.forName(fqMessageClassName).asSubclass(Message.class);
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);

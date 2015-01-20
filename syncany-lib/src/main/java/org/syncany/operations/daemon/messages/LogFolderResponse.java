@@ -17,33 +17,38 @@
  */
 package org.syncany.operations.daemon.messages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.operations.daemon.messages.api.FolderResponse;
+import org.syncany.operations.log.LogOperationResult;
 
-public class GetDatabaseVersionHeadersFolderResponse extends FolderResponse {
+public class LogFolderResponse extends FolderResponse {
+	@Element(required = true)
+	private LogOperationResult result;
+	
 	@Element(required = true)
 	private String root;
-	
-	@ElementList(required = true, entry="databaseVersionHeader")
-	private ArrayList<DatabaseVersionHeader> databaseVersionHeaders;	
-	
-	public GetDatabaseVersionHeadersFolderResponse() {
+
+	public LogFolderResponse() {
 		// Nothing
 	}
 	
-	public GetDatabaseVersionHeadersFolderResponse(int requestId, String root, List<DatabaseVersionHeader> databaseVersionHeaders) {
+	public LogFolderResponse(LogOperationResult result, int requestId, String root) {
 		super(200, requestId, null);
-		
+
+		this.result = result;
 		this.root = root;
-		this.databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>(databaseVersionHeaders);
+	}
+
+	@Override
+	public LogOperationResult getResult() {
+		return result;
+	}
+
+	public void setResult(LogOperationResult result) {
+		this.result = result;
 	}
 	
-	public ArrayList<DatabaseVersionHeader> getDatabaseVersionHeaders() {
-		return databaseVersionHeaders;
+	public String getRoot() {
+		return root;
 	}
 }

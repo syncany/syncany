@@ -161,42 +161,15 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	 */
 	public Map<String, FileVersion> getCurrentFileTree() {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTree.sql")) {
-			return getFileTree(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public Map<String, FileVersion> getCurrentFileTree(String prefix) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getCurrentFileTreeWithPrefix.sql")) {
-			preparedStatement.setString(1, prefix);
-			preparedStatement.setString(2, prefix);
-			preparedStatement.setString(3, prefix);
-
-			return getFileTree(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Queries the database for the {@link FileVersion}s active at the given date and
-	 * returns it as a map.
-	 *
-	 * <p>Keys in the returned map correspond to the file version's relative file path,
-	 * and values to the actual {@link FileVersion} object.
-	 *
-	 * @param date Date for which the file tree should be queried
-	 * @return Returns the file tree at the given date as a map of relative paths to {@link FileVersion} objects
-	 */
-	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileTreeAtDate.sql")) {
-			preparedStatement.setTimestamp(1, new Timestamp(date.getTime()));
-			preparedStatement.setTimestamp(2, new Timestamp(date.getTime()));
-
-			return getFileTree(preparedStatement);
+			Map<String, FileVersion> fileTree = new TreeMap<>();
+			List<FileVersion> fileList = getFileTree(preparedStatement);
+			
+			for (FileVersion fileVersion : fileList) {
+				fileTree.put(fileVersion.getPath(), fileVersion);
+			}
+			
+			return fileTree;
+			
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -226,30 +199,46 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<String, FileVersion> getFileTree(String pathExpression, Date date, boolean recursive, Set<FileType> fileTypes) {
+	public List<FileVersion> getFileList(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
+			Set<FileType> fileTypes) {
+		
 		// Determine sensible query parameters
 		// Basic idea: If null/empty given, match them all!
 
-		pathExpression = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+		String fileHistoryPrefix = null;
+		
+		if (fileHistoryId) {
+			fileHistoryPrefix = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+			pathExpression = "%";
+		}
+		else {
+			fileHistoryPrefix = "%";
+			pathExpression = (pathExpression == null || "".equals(pathExpression)) ? "%" : pathExpression;
+		}
+		
 		date = (date == null) ? new Date(4133984461000L) : date;
 
 		int slashCount = StringUtil.substrCount(pathExpression, "/");
-		int filterMinSlashCount = (recursive) ? 0 : slashCount;
-		int filterMaxSlashCount = (recursive) ? Integer.MAX_VALUE : slashCount;
+		int filterMinSlashCount = (recursive || fileHistoryId) ? 0 : slashCount;
+		int filterMaxSlashCount = (recursive || fileHistoryId) ? Integer.MAX_VALUE : slashCount;
 
-		String[] fileTypesStr = createFileTypesArray(fileTypes);
-
+		String[] fileTypesStr = createFileTypesArray(fileTypes);		
+		String fileStatusNotEqualTo = (deleted) ? "INVALID" : FileStatus.DELETED.toString(); 
+		
 		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, " getFileTree(path = " + pathExpression + ", minSlash = " + filterMinSlashCount + ", maxSlash = "
-					+ filterMaxSlashCount + ", date <= " + date + ", types = " + StringUtil.join(fileTypesStr, ", "));
+			logger.log(Level.INFO, " getFileTree(path = " + pathExpression + ", history = " + fileHistoryPrefix + ", minSlash = "
+					+ filterMinSlashCount + ", maxSlash = " + filterMaxSlashCount + ", date <= " + date + ", types = " 
+					+ StringUtil.join(fileTypesStr, ", "));
 		}
 
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFilteredFileTree.sql")) {
-			preparedStatement.setString(1, pathExpression);
-			preparedStatement.setInt(2, filterMinSlashCount);
-			preparedStatement.setInt(3, filterMaxSlashCount);
-			preparedStatement.setArray(4, connection.createArrayOf("varchar", fileTypesStr));
-			preparedStatement.setTimestamp(5, new Timestamp(date.getTime()));
+			preparedStatement.setString(1, fileStatusNotEqualTo);
+			preparedStatement.setString(2, pathExpression);
+			preparedStatement.setString(3, fileHistoryPrefix);
+			preparedStatement.setInt(4, filterMinSlashCount);
+			preparedStatement.setInt(5, filterMaxSlashCount);
+			preparedStatement.setArray(6, connection.createArrayOf("varchar", fileTypesStr));
+			preparedStatement.setTimestamp(7, new Timestamp(date.getTime()));
 
 			return getFileTree(preparedStatement);
 		}
@@ -325,13 +314,13 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	private Map<String, FileVersion> getFileTree(PreparedStatement preparedStatement) {
-		Map<String, FileVersion> fileTree = new TreeMap<String, FileVersion>();
+	private List<FileVersion> getFileTree(PreparedStatement preparedStatement) {
+		List<FileVersion> fileTree = new ArrayList<>();
 
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {
 				FileVersion fileVersion = createFileVersionFromRow(resultSet);
-				fileTree.put(fileVersion.getPath(), fileVersion);
+				fileTree.add(fileVersion);
 			}
 
 			return fileTree;

@@ -132,7 +132,7 @@ public class BasicWatchServerTest {
 			assertTrue(response instanceof LsFolderResponse);
 			LsFolderResponse treeResponse = (LsFolderResponse) response;
 
-			files = treeResponse.getResult().getFileTree().values().toArray(new FileVersion[] {});
+			files = treeResponse.getResult().getFileList().toArray(new FileVersion[] {});
 
 			if (files.length == 2) {
 				break;
