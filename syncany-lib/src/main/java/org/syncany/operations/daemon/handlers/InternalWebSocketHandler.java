@@ -144,11 +144,11 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 			
 			switch (requestFormatType) {
 				case JSON:
-					message = JsonMessageFactory.toRequest(messageStr);
+					message = JsonMessageFactory.toMessage(messageStr);
 					break;
 
 				case XML:
-					message = XmlMessageFactory.toRequest(messageStr);
+					message = XmlMessageFactory.toMessage(messageStr);
 					break;
 
 				default:

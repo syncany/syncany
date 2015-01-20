@@ -62,7 +62,7 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		Message responseMessage = toMessage(responseMessageXml);
 
 		if (!(responseMessage instanceof Response)) {
-			throw new Exception("Invalid class: Message is not a response type.");
+			throw new Exception("Invalid class: Message is not a response type: " + responseMessage.getClass());
 		}
 
 		return (Response) responseMessage;
@@ -72,7 +72,7 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		Message requestMessage = toMessage(requestMessageXml);
 
 		if (!(requestMessage instanceof Request)) {
-			throw new Exception("Invalid class: Message is not a request type.");
+			throw new Exception("Invalid class: Message is not a request type: " + requestMessage.getClass());
 		}
 
 		return (Request) requestMessage;
