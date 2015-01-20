@@ -17,13 +17,6 @@
  */
 package org.syncany.operations.daemon.handlers;
 
-import io.undertow.websockets.WebSocketConnectionCallback;
-import io.undertow.websockets.core.AbstractReceiveListener;
-import io.undertow.websockets.core.BufferedTextMessage;
-import io.undertow.websockets.core.StreamSourceFrameChannel;
-import io.undertow.websockets.core.WebSocketChannel;
-import io.undertow.websockets.spi.WebSocketHttpExchange;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -33,11 +26,22 @@ import java.util.regex.Pattern;
 
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.daemon.WebServer;
+import org.syncany.operations.daemon.WebServer.RequestFormatType;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
+import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.EventResponse;
 import org.syncany.operations.daemon.messages.api.Message;
-import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
+import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+
+import com.google.common.base.Joiner;
+
+import io.undertow.websockets.WebSocketConnectionCallback;
+import io.undertow.websockets.core.AbstractReceiveListener;
+import io.undertow.websockets.core.BufferedTextMessage;
+import io.undertow.websockets.core.StreamSourceFrameChannel;
+import io.undertow.websockets.core.WebSocketChannel;
+import io.undertow.websockets.spi.WebSocketHttpExchange;
 
 /**
  * InternalWebSocketHandler handles the web socket requests
@@ -49,14 +53,16 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());
 	private static final Pattern WEBSOCKET_ALLOWED_ORIGIN_HEADER = Pattern.compile("^(https?|wss?)://(localhost|127\\.\\d+\\.\\d+\\.\\d+):\\d+$");
 
-	private WebServer daemonWebServer;
-	private LocalEventBus eventBus;
-	private String certificateCommonName;
+	private final WebServer daemonWebServer;
+	private final LocalEventBus eventBus;
+	private final String certificateCommonName;
+	private final RequestFormatType requestFormatType;
 
-	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName) {
+	public InternalWebSocketHandler(WebServer daemonWebServer, String certificateCommonName, RequestFormatType requestFormatType) {
 		this.daemonWebServer = daemonWebServer;
 		this.eventBus = LocalEventBus.getInstance();
 		this.certificateCommonName = certificateCommonName;
+		this.requestFormatType = requestFormatType;
 
 		this.eventBus.register(this);
 	}
@@ -93,7 +99,8 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 				}
 			});
 
-			daemonWebServer.addClientChannel(channel);
+			logger.log(Level.INFO, "A new client (" + channel.hashCode() + ") connected using format " + requestFormatType);
+			daemonWebServer.addClientChannel(channel, requestFormatType);
 
 			channel.resumeReceives();
 		}
@@ -133,10 +140,23 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 		logger.log(Level.INFO, "Web socket message received: " + messageStr);
 
 		try {
-			Message message = MessageFactory.toMessage(messageStr);
+			Message message;
 			
+			switch (requestFormatType) {
+				case JSON:
+					message = JsonMessageFactory.toMessage(messageStr);
+					break;
+
+				case XML:
+					message = XmlMessageFactory.toMessage(messageStr);
+					break;
+
+				default:
+					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(RequestFormatType.values()));
+			}
+
 			if (message instanceof Request) {
-				handleRequest(clientSocket, (Request) message);				
+				handleRequest(clientSocket, (Request) message);
 			}
 			else if (message instanceof EventResponse) {
 				handleEventResponse(clientSocket, (EventResponse) message);
@@ -150,13 +170,15 @@ public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 			eventBus.post(new BadRequestResponse(-1, "Invalid message."));
 		}
 	}
-	
+
 
 	private void handleRequest(WebSocketChannel clientSocket, Request request) {
-		daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);			
+		daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
+		daemonWebServer.putCacheWebSocketRequest(request.getId(), clientSocket);
+		
 		eventBus.post(request);
 	}
-	
+
 	private void handleEventResponse(WebSocketChannel clientSocket, EventResponse eventResponse) {
 		eventBus.post(eventResponse);
 	}

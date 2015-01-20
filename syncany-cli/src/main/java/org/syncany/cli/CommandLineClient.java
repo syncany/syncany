@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
+import javax.net.ssl.SSLContext;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,12 +38,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.net.ssl.SSLContext;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -65,27 +61,32 @@ import org.syncany.config.UserConfig;
 import org.syncany.config.to.PortTO;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.daemon.DaemonOperation;
+import org.syncany.operations.daemon.WebServer;
 import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.BadRequestResponse;
 import org.syncany.operations.daemon.messages.api.FolderRequest;
 import org.syncany.operations.daemon.messages.api.FolderResponse;
-import org.syncany.operations.daemon.messages.api.MessageFactory;
 import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.Response;
+import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
 import org.syncany.util.StringUtil;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 /**
  * The command line client implements a typical CLI. It represents the first entry
  * point for the Syncany command line application and can be used to run all of the
- * supported commands. 
- * 
+ * supported commands.
+ *
  * <p>The responsibilities of the command line client include the parsing and interpretation
- * of global options (like log file, debugging), displaying of help pages, and executing 
+ * of global options (like log file, debugging), displaying of help pages, and executing
  * commands. It furthermore detects if a local folder is handled by the daemon and, if so,
  * passes the command to the daemon via REST.
- *   
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class CommandLineClient extends Client {
@@ -93,7 +94,7 @@ public class CommandLineClient extends Client {
 
 	private static final String SERVER_SCHEMA = "https://";
 	private static final String SERVER_HOSTNAME = "127.0.0.1";
-	private static final String SERVER_REST_API = "/api/rs";
+	private static final String SERVER_REST_API = WebServer.API_ENDPOINT_REST_XML;
 
 	private static final String LOG_FILE_PATTERN = "syncany.log";
 	private static final int LOG_FILE_COUNT = 4;
@@ -243,7 +244,7 @@ public class CommandLineClient extends Client {
 	}
 
 	/**
-	 * Initializes configuration if required. 
+	 * Initializes configuration if required.
 	 * Returns non-zero if something goes wrong.
 	 */
 	private int initConfigIfRequired(CommandScope requiredCommandScope, File localDir) throws ConfigException {
@@ -278,7 +279,7 @@ public class CommandLineClient extends Client {
 
 	private void initLogOption(OptionSet options, OptionSpec<String> optionLog, OptionSpec<String> optionLogLevel, OptionSpec<Void> optionLogPrint,
 			OptionSpec<Void> optionDebug) throws SecurityException, IOException {
-		
+
 		initLogHandlers(options, optionLog, optionLogPrint, optionDebug);
 		initLogLevel(options, optionDebug, optionLogLevel);
 	}
@@ -320,7 +321,7 @@ public class CommandLineClient extends Client {
 
 	private void initLogHandlers(OptionSet options, OptionSpec<String> optionLog, OptionSpec<Void> optionLogPrint, OptionSpec<Void> optionDebug)
 			throws SecurityException, IOException {
-		
+
 		// --log=<file>
 		String logFilePattern = null;
 
@@ -426,7 +427,7 @@ public class CommandLineClient extends Client {
 			Request request = buildFolderRequestFromCommand(command, commandName, commandArgs, config.getLocalDir().getAbsolutePath());
 			String serverUri = SERVER_SCHEMA + SERVER_HOSTNAME + ":" + portConfig.getPort() + SERVER_REST_API;
 
-			String xmlMessageString = MessageFactory.toXml(request);
+			String xmlMessageString = XmlMessageFactory.toXml(request);
 			StringEntity xmlMessageEntity = new StringEntity(xmlMessageString);
 
 			HttpPost httpPost = new HttpPost(serverUri);
@@ -453,7 +454,7 @@ public class CommandLineClient extends Client {
 		String responseStr = IOUtils.toString(httpResponse.getEntity().getContent());
 		logger.log(Level.FINE, "Responding to message with responseString: " + responseStr);
 
-		Response response = MessageFactory.toResponse(responseStr);
+		Response response = XmlMessageFactory.toResponse(responseStr);
 
 		if (response instanceof FolderResponse) {
 			FolderResponse folderResponse = (FolderResponse) response;
@@ -527,7 +528,7 @@ public class CommandLineClient extends Client {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			int manPageReturnCode = execManPageAndExit(MAN_PAGE_MAIN);
-			
+
 			if (manPageReturnCode == 0) { // Success
 				return manPageReturnCode;
 			}
@@ -540,9 +541,9 @@ public class CommandLineClient extends Client {
 	private int showCommandHelpAndExit(String commandName) throws IOException {
 		// Try opening man page (if on Linux)
 		if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);			
+			String commandManPage = String.format(MAN_PAGE_COMMAND_FORMAT, commandName);
 			int manPageReturnCode = execManPageAndExit(commandManPage);
-			
+
 			if (manPageReturnCode == 0) { // Success
 				return manPageReturnCode;
 			}
