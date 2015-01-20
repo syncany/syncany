@@ -210,7 +210,7 @@ public class WatchServer {
 			}
 		}
 		catch (ClassNotFoundException e) {
-			logger.log(Level.FINE, "No handler found for management request class " + managementRequest.getClass() + ". Ignoring.", e);
+			logger.log(Level.FINE, "No handler found for management request class " + managementRequest.getClass() + ". Ignoring."); // Not logging 'e'!
 		}
 		catch (Exception e) {
 			logger.log(Level.FINE, "Failed to process request", e);
