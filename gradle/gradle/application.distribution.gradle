@@ -53,7 +53,7 @@ startScripts {
 		String winUpdateFileCommands = "@rem Reinstall plugins after update removal #SYNCANY_INCL_4#\r\n"
 		winUpdateFileCommands += "SET UPDATEFILE=%AppData%\\\\Syncany\\\\updatefile\r\n";
 		winUpdateFileCommands += "if exist %UPDATEFILE% (\r\n";
-		winUpdateFileCommands += "  @for /f %%b in (%UPDATEFILE%) do \"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %SYNCANY_OPTS%  -classpath \"%CLASSPATH%\" org.syncany.Syncany plugin install %%b 2>NUL\r\n";
+		winUpdateFileCommands += "  @for /f %%b in (%UPDATEFILE%) do \"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %SYNCANY_OPTS%  -classpath \"%CLASSPATH%\" org.syncany.Syncany plugin install %%b -m 2>NUL\r\n";
 		winUpdateFileCommands += "  del /q %UPDATEFILE% 2>NUL\r\n";
 		winUpdateFileCommands += ")\r\n\r\n";
 

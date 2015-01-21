@@ -50,6 +50,8 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
+import org.syncany.operations.daemon.messages.PluginRemoveExternalEvent;
+import org.syncany.operations.daemon.messages.PluginUpdateExternalEvent;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
@@ -131,15 +133,20 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeUpdate() throws Exception {
-		List<String> updateablePlugins = Lists.newArrayList();
+		List<String> updateablePlugins = findUpdateCandidates();
 		List<String> erroneousPlugins = Lists.newArrayList();
+		List<String> delayedPlugins = Lists.newArrayList();
 
+		// update only a specific plugin if it is updatable and provided
 		String forcePluginId = options.getPluginId();
-		updateablePlugins.add(forcePluginId);
-
-		// update all plugins which are out of date
-		if (forcePluginId == null) {
-			updateablePlugins = findUpdateCandidates();
+		if (forcePluginId != null) {
+			if (updateablePlugins.contains(forcePluginId)) {
+				updateablePlugins = Lists.newArrayList(forcePluginId);
+			}
+			else {
+				logger.log(Level.WARNING, "User requested to update a non-updatable plugin: " + forcePluginId);
+				erroneousPlugins.add(forcePluginId);
+			}
 		}
 
 		logger.log(Level.INFO, "The following plugins can be automatically updated: " + StringUtil.join(updateablePlugins, ", "));
@@ -163,6 +170,7 @@ public class PluginOperation extends Operation {
 
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(updatefilePath, true)))) {
 					out.println(pluginId);
+					delayedPlugins.add(pluginId);
 				}
 				catch (IOException e) {
 					logger.log(Level.SEVERE, "Unable to append to updatefile " + updatefilePath, e);
@@ -187,6 +195,7 @@ public class PluginOperation extends Operation {
 		}
 
 		result.setErroneousPluginIds(erroneousPlugins);
+		result.setDelayedPluginIds(delayedPlugins);
 
 		return result;
 	}
@@ -259,9 +268,7 @@ public class PluginOperation extends Operation {
 
 	private boolean canUninstall(File pluginJarFile) {
 		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
-		boolean canUninstall = pluginJarFile != null && pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
-
-		return canUninstall;
+		return pluginJarFile != null && pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
 	}
 
 	private File getJarFile(Plugin plugin) {
@@ -311,7 +318,7 @@ public class PluginOperation extends Operation {
 
 		checkPluginCompatibility(pluginInfo);
 
-		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl()));
+		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl(), pluginId));
 
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();

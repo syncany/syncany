@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,26 @@ import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public class PluginInstallExternalEvent extends ExternalEvent {
 	private String source;
+	private String pluginId = "unknown plugin";
 
 	public PluginInstallExternalEvent() {
 		// Nothing
 	}
-	
+
 	public PluginInstallExternalEvent(String source) {
 		this.source = source;
 	}
 
+	public PluginInstallExternalEvent(String source, String pluginId) {
+		this.source = source;
+		this.pluginId = pluginId;
+	}
+
 	public String getSource() {
 		return source;
+	}
+
+	public String getPluginId() {
+		return pluginId;
 	}
 }

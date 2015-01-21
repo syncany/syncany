@@ -27,14 +27,13 @@ import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
-import org.syncany.operations.plugin.PluginOperationAction;
 import org.syncany.operations.plugin.PluginInfo;
+import org.syncany.operations.plugin.PluginOperationAction;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import joptsimple.OptionParser;
@@ -42,6 +41,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 public class PluginCommand extends Command {
+
+	private boolean minimalOutput = false;
 
 	@Override
 	public CommandScope getRequiredCommandScope() {
@@ -71,6 +72,7 @@ public class PluginCommand extends Command {
 		OptionSpec<Void> optionLocal = parser.acceptsAll(asList("L", "local-only"));
 		OptionSpec<Void> optionRemote = parser.acceptsAll(asList("R", "remote-only"));
 		OptionSpec<Void> optionSnapshots = parser.acceptsAll(asList("s", "snapshot", "snapshots"));
+		OptionSpec<Void> optionMinimalOutput = parser.acceptsAll(asList("m", "minimal-output"));
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -78,14 +80,17 @@ public class PluginCommand extends Command {
 		List<?> nonOptionArgs = options.nonOptionArguments();
 
 		if (nonOptionArgs.size() == 0) {
-			throw new Exception("Invalid syntax, please specify an action (list, install, remove).");
+			throw new Exception("Invalid syntax, please specify an action (list, install, remove, update).");
 		}
 
 		// <action>
 		String actionStr = nonOptionArgs.get(0).toString();
 		PluginOperationAction action = parsePluginAction(actionStr);
-		
+
 		operationOptions.setAction(action);
+
+		// --minimal-output
+		minimalOutput = options.has(optionMinimalOutput);
 
 		// --snapshots
 		operationOptions.setSnapshots(options.has(optionSnapshots));
@@ -201,18 +206,29 @@ public class PluginCommand extends Command {
 	}
 
 	private void printResultInstall(PluginOperationResult operationResult) {
-		// Print regular result
-		if (operationResult.getResultCode() == PluginResultCode.OK) {
-			out.printf("Plugin successfully installed from %s\n", operationResult.getSourcePluginPath());
-			out.printf("Install location: %s\n", operationResult.getTargetPluginPath());
-			out.println();
-
-			printPluginDetails(operationResult.getAffectedPluginInfo());
-			printPluginConflictWarning(operationResult);
+		// Print minimal result
+		if (minimalOutput) {
+			if (operationResult.getResultCode() == PluginResultCode.OK) {
+				out.println("OK");
+			}
+			else {
+				out.println("NOK");
+			}
 		}
+		// Print regular result
 		else {
-			out.println("Plugin installation failed. Try -d to get more details.");
-			out.println();
+			if (operationResult.getResultCode() == PluginResultCode.OK) {
+				out.printf("Plugin successfully installed from %s\n", operationResult.getSourcePluginPath());
+				out.printf("Install location: %s\n", operationResult.getTargetPluginPath());
+				out.println();
+
+				printPluginDetails(operationResult.getAffectedPluginInfo());
+				printPluginConflictWarning(operationResult);
+			}
+			else {
+				out.println("Plugin installation failed. Try -d to get more details.");
+				out.println();
+			}
 		}
 	}
 
@@ -223,18 +239,22 @@ public class PluginCommand extends Command {
 				out.println("All plugins are up to date.");
 			}
 			else {
-				Iterables.removeIf(operationResult.getUpdatedPluginIds(), new Predicate<String>() {
-					@Override
-					public boolean apply(String pluginId) {
-						return operationResult.getErroneousPluginIds().contains(pluginId);
-					}
-				});
+				Iterables.removeAll(operationResult.getUpdatedPluginIds(), operationResult.getErroneousPluginIds());
+				Iterables.removeAll(operationResult.getUpdatedPluginIds(), operationResult.getDelayedPluginIds());
 
-				out.printf("Plugins successfully updated: %s\n", StringUtil.join(operationResult.getUpdatedPluginIds(), ", "));
+				if (operationResult.getDelayedPluginIds().size() > 0) {
+					out.printf("Plugins to be updated: %s\n", StringUtil.join(operationResult.getDelayedPluginIds(), ", "));
+				}
+
+				if (operationResult.getUpdatedPluginIds().size() > 0) {
+					out.printf("Plugins successfully updated: %s\n", StringUtil.join(operationResult.getUpdatedPluginIds(), ", "));
+				}
 
 				if (operationResult.getErroneousPluginIds().size() > 0) {
 					out.printf("Failed to update %s. Try -d to get more details\n", StringUtil.join(operationResult.getErroneousPluginIds(), ", "));
 				}
+
+				out.println();
 			}
 		}
 		else {
@@ -262,18 +282,30 @@ public class PluginCommand extends Command {
 	}
 
 	private void printResultRemove(PluginOperationResult operationResult) {
-		if (operationResult.getResultCode() == PluginResultCode.OK) {
-			out.printf("Plugin successfully removed.\n");
-			out.printf("Original local was %s\n", operationResult.getSourcePluginPath());
-			out.println();
+		// Print minimal result
+		if (minimalOutput) {
+			if (operationResult.getResultCode() == PluginResultCode.OK) {
+				out.println("Removing " + operationResult.getAffectedPluginInfo().getPluginId() + "... OK");
+			}
+			else {
+				out.println("Removing " + operationResult.getAffectedPluginInfo().getPluginId() + "... NOK");
+			}
 		}
+		// Print regular result
 		else {
-			out.println("Plugin removal failed.");
-			out.println();
+			if (operationResult.getResultCode() == PluginResultCode.OK) {
+				out.printf("Plugin successfully removed.\n");
+				out.printf("Original local was %s\n", operationResult.getSourcePluginPath());
+				out.println();
+			}
+			else {
+				out.println("Plugin removal failed.");
+				out.println();
 
-			out.println("Note: Plugins shipped with the application or additional packages");
-			out.println("      cannot be removed. These plugin are marked 'Global' in the list.");
-			out.println();
+				out.println("Note: Plugins shipped with the application or additional packages");
+				out.println("      cannot be removed. These plugin are marked 'Global' in the list.");
+				out.println();
+			}
 		}
 	}
 
@@ -287,11 +319,18 @@ public class PluginCommand extends Command {
 
 	@Subscribe
 	public void onPluginConnectToHostEventReceived(PluginConnectToHostExternalEvent event) {
-		out.printr("Connecting to " + event.getHost() + " ...");
+		if (!minimalOutput) {
+			out.printr("Connecting to " + event.getHost() + " ...");
+		}
 	}
 
 	@Subscribe
 	public void onPluginInstallEventReceived(PluginInstallExternalEvent event) {
-		out.printr("Installing plugin from " + event.getSource() + " ...");
+		if (minimalOutput) {
+			out.print("Installing " + event.getPluginId() + "... ");
+		}
+		else {
+			out.printr("Installing plugin from " + event.getSource() + " ...");
+		}
 	}
 }

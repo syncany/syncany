@@ -22,7 +22,7 @@ import java.util.List;
 import org.syncany.operations.OperationResult;
 
 public class PluginOperationResult implements OperationResult {
-
+	
 	public enum PluginResultCode {
 		OK, NOK
 	}
@@ -36,15 +36,16 @@ public class PluginOperationResult implements OperationResult {
 	private List<String> conflictingPluginIds;
 	private List<String> updatedPluginIds;
 	private List<String> erroneousPluginIds;
+	private List<String> delayedPluginIds;
 
 	public PluginOperationAction getAction() {
 		return action;
 	}
-	
+
 	public void setAction(PluginOperationAction action) {
 		this.action = action;
 	}
-	
+
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
 	}
@@ -106,5 +107,13 @@ public class PluginOperationResult implements OperationResult {
 
 	public void setErroneousPluginIds(List<String> erroneousPluginIds) {
 		this.erroneousPluginIds = erroneousPluginIds;
+	}
+
+	public void setDelayedPluginIds(List<String> delayedPluginIds) {
+		this.delayedPluginIds = delayedPluginIds;
+	}
+
+	public List<String> getDelayedPluginIds() {
+		return delayedPluginIds;
 	}
 }
