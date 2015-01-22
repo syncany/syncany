@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,31 +23,32 @@ public class ExtendedPluginInfo {
 	private boolean installed;
 	private boolean canUninstall;
 	private boolean remoteAvailable;
-	
+	private boolean outdated;
+
 	public PluginInfo getLocalPluginInfo() {
 		return localPluginInfo;
 	}
-	
+
 	public void setLocalPluginInfo(PluginInfo localPluginInfo) {
 		this.localPluginInfo = localPluginInfo;
 	}
-	
+
 	public PluginInfo getRemotePluginInfo() {
 		return remotePluginInfo;
 	}
-	
+
 	public void setRemotePluginInfo(PluginInfo remotePluginInfo) {
 		this.remotePluginInfo = remotePluginInfo;
 	}
-	
+
 	public boolean isInstalled() {
 		return installed;
 	}
-	
+
 	public void setInstalled(boolean installed) {
 		this.installed = installed;
 	}
-	
+
 	public boolean isRemoteAvailable() {
 		return remoteAvailable;
 	}
@@ -62,5 +63,13 @@ public class ExtendedPluginInfo {
 
 	public void setCanUninstall(boolean canUninstall) {
 		this.canUninstall = canUninstall;
+	}
+
+	public boolean isOutdated() {
+		return outdated;
+	}
+
+	public void setOutdated(boolean outdated) {
+		this.outdated = outdated;
 	}
 }
