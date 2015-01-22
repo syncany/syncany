@@ -5,7 +5,8 @@ SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]
                  [<plugin-id>]
                  
-  sy plugin install [-s | --snapshot] (<URL> | <file> | <plugin-id>)
+  sy plugin install [-s | --snapshot] [-m | --minimal-output] 
+                    (<URL> | <file> | <plugin-id>)
 
   sy plugin update [<plugin-id>]
   
@@ -70,6 +71,10 @@ ACIONS
     -s, --snapshot
       Installs the daily snapshot instead of the release version. Only if
       <plugin-id> is given. Not for <URL> or <file>.
+            
+    -m, --minimal-output
+      Reduces the output of the command to "OK" or "NOK" instead of reporting
+      detailed progress and download URLs.   
 
   update [<plugin-id>]
     Updates the plugin with the plugin identifier <plugin-id> or updates all

@@ -177,7 +177,8 @@ _sy() {
 		-s --snapshots"
 
 	PLUGIN_INSTALL_OPTIONS="\
-		-s --snapshot"
+		-s --snapshot\
+		-m --minimal-output"
 
 	PLUGIN_DROPBOX_OPTIONS="\
 		authToken=\
