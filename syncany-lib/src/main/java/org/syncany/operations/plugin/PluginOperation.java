@@ -50,8 +50,6 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
-import org.syncany.operations.daemon.messages.PluginRemoveExternalEvent;
-import org.syncany.operations.daemon.messages.PluginUpdateExternalEvent;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
@@ -139,6 +137,7 @@ public class PluginOperation extends Operation {
 
 		// update only a specific plugin if it is updatable and provided
 		String forcePluginId = options.getPluginId();
+		logger.log(Level.FINE, "Force plugin is " + forcePluginId);
 		if (forcePluginId != null) {
 			if (updateablePlugins.contains(forcePluginId)) {
 				updateablePlugins = Lists.newArrayList(forcePluginId);
@@ -151,7 +150,6 @@ public class PluginOperation extends Operation {
 
 		logger.log(Level.INFO, "The following plugins can be automatically updated: " + StringUtil.join(updateablePlugins, ", "));
 
-		result.setUpdatedPluginIds(updateablePlugins);
 
 		for (String pluginId : updateablePlugins) {
 			// first remove
@@ -194,6 +192,7 @@ public class PluginOperation extends Operation {
 			result.setResultCode(PluginResultCode.OK);
 		}
 
+		result.setUpdatedPluginIds(updateablePlugins);
 		result.setErroneousPluginIds(erroneousPlugins);
 		result.setDelayedPluginIds(delayedPlugins);
 
@@ -318,7 +317,7 @@ public class PluginOperation extends Operation {
 
 		checkPluginCompatibility(pluginInfo);
 
-		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl(), pluginId));
+		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl()));
 
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();

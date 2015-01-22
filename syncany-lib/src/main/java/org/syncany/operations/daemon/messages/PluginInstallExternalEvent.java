@@ -21,7 +21,6 @@ import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
 public class PluginInstallExternalEvent extends ExternalEvent {
 	private String source;
-	private String pluginId = "unknown plugin";
 
 	public PluginInstallExternalEvent() {
 		// Nothing
@@ -31,16 +30,7 @@ public class PluginInstallExternalEvent extends ExternalEvent {
 		this.source = source;
 	}
 
-	public PluginInstallExternalEvent(String source, String pluginId) {
-		this.source = source;
-		this.pluginId = pluginId;
-	}
-
 	public String getSource() {
 		return source;
-	}
-
-	public String getPluginId() {
-		return pluginId;
 	}
 }

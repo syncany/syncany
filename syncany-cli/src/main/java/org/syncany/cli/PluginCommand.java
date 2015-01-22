@@ -118,11 +118,16 @@ public class PluginCommand extends Command {
 				operationOptions.setListMode(PluginListMode.ALL);
 			}
 
-			// <plugin-id> (optional in 'list')
+			// <plugin-id> (optional in 'list' or 'update')
 			if (nonOptionArgs.size() == 2) {
 				String pluginId = nonOptionArgs.get(1).toString();
 				operationOptions.setPluginId(pluginId);
 			}
+		}
+
+		else if (action == PluginOperationAction.UPDATE && nonOptionArgs.size() == 2) {
+			String pluginId = nonOptionArgs.get(1).toString();
+			operationOptions.setPluginId(pluginId);
 		}
 
 		return operationOptions;
@@ -148,6 +153,7 @@ public class PluginCommand extends Command {
 
 			case INSTALL:
 				printResultInstall(concreteOperationResult);
+				return;
 
 			case REMOVE:
 				printResultRemove(concreteOperationResult);
@@ -285,10 +291,10 @@ public class PluginCommand extends Command {
 		// Print minimal result
 		if (minimalOutput) {
 			if (operationResult.getResultCode() == PluginResultCode.OK) {
-				out.println("Removing " + operationResult.getAffectedPluginInfo().getPluginId() + "... OK");
+				out.println("OK");
 			}
 			else {
-				out.println("Removing " + operationResult.getAffectedPluginInfo().getPluginId() + "... NOK");
+				out.println("NOK");
 			}
 		}
 		// Print regular result
@@ -326,10 +332,7 @@ public class PluginCommand extends Command {
 
 	@Subscribe
 	public void onPluginInstallEventReceived(PluginInstallExternalEvent event) {
-		if (minimalOutput) {
-			out.print("Installing " + event.getPluginId() + "... ");
-		}
-		else {
+		if (!minimalOutput) {
 			out.printr("Installing plugin from " + event.getSource() + " ...");
 		}
 	}
