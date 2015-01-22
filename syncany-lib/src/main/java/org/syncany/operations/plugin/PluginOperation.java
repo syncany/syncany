@@ -145,11 +145,11 @@ public class PluginOperation extends Operation {
 			else {
 				logger.log(Level.WARNING, "User requested to update a non-updatable plugin: " + forcePluginId);
 				erroneousPlugins.add(forcePluginId);
+				updateablePlugins = Lists.newArrayList(); // empty list
 			}
 		}
 
 		logger.log(Level.INFO, "The following plugins can be automatically updated: " + StringUtil.join(updateablePlugins, ", "));
-
 
 		for (String pluginId : updateablePlugins) {
 			// first remove
