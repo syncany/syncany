@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.syncany.Client;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
@@ -35,12 +36,13 @@ import org.syncany.config.to.RepoTO.TransformerTO;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+import com.github.zafarkhaja.semver.Version;
 
 /**
  * This class produces {@link RepoTO}s with some sensible defaults for the Chunkers and
  * MultiChunkers. The transformers are configurable, namely whether or not compression is used
  * and how it is encrypted.
- * 
+ *
  * @author Pim Otte <otte.pim@gmail.com>
  */
 public class DefaultRepoTOFactory implements RepoTOFactory {
@@ -74,6 +76,8 @@ public class DefaultRepoTOFactory implements RepoTOFactory {
 	}
 
 	public RepoTO createRepoTO(ChunkerTO chunkerTO, MultiChunkerTO multiChunkerTO, List<TransformerTO> transformersTO) {
+		Version appVersion = Version.valueOf(Client.getApplicationVersion());
+
 		// Make transfer object
 		RepoTO repoTO = new RepoTO();
 
@@ -87,6 +91,7 @@ public class DefaultRepoTOFactory implements RepoTOFactory {
 		repoTO.setChunkerTO(chunkerTO);
 		repoTO.setMultiChunker(multiChunkerTO);
 		repoTO.setTransformers(transformersTO);
+		repoTO.setMinAppVersion(Version.forIntegers(appVersion.getMajorVersion(), appVersion.getMinorVersion()));
 
 		return repoTO;
 	}

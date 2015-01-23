@@ -27,16 +27,20 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.Registry;
+import org.simpleframework.xml.convert.RegistryStrategy;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.strategy.Strategy;
 import org.syncany.config.ConfigException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.util.SemVerConverter;
 import org.syncany.util.StringUtil;
+import com.github.zafarkhaja.semver.Version;
 
 /**
  * The repo transfer object is used to create and load the repo file
@@ -62,6 +66,9 @@ public class RepoTO {
 	@Element(name = "multichunker", required = false)
 	private MultiChunkerTO multiChunker;
 
+	@Element(name = "minAppVersion", required = true)
+	private Version minAppVersion;
+
 	@ElementList(name = "transformers", required = false, entry = "transformer")
 	private ArrayList<TransformerTO> transformers;
 
@@ -73,9 +80,27 @@ public class RepoTO {
 		this.repoId = repoId;
 	}
 
+	public static RepoTO load(File repoFile) throws ConfigException  {
+		try {
+			return createPersister().read(RepoTO.class, repoFile);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot load repoTO from file " + repoFile, e);
+		}
+	}
+
+	public static RepoTO loadFromString(String repoFileStr) throws ConfigException  {
+		try {
+			return createPersister().read(RepoTO.class, repoFileStr);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot load repoTO from string:\n" + repoFileStr, e);
+		}
+	}
+
 	public void save(File file) throws ConfigException {
 		try {
-			new Persister().write(this, file);
+			createPersister().write(this, file);
 		}
 		catch (Exception e) {
 			throw new ConfigException("Cannot write repoTO to file " + file, e);
@@ -84,11 +109,8 @@ public class RepoTO {
 
 	public void save(File file, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws ConfigException {
 		try {
-
 			ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
-
-			Serializer serializer = new Persister();
-			serializer.write(this, plaintextRepoOutputStream);
+			createPersister().write(this, plaintextRepoOutputStream);
 
 			CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSpecs, masterKey);
 		}
@@ -136,6 +158,14 @@ public class RepoTO {
 		this.transformers = (transformers != null) ? new ArrayList<TransformerTO>(transformers) : null;
 	}
 
+	public Version getMinAppVersion() {
+		return minAppVersion;
+	}
+
+	public void setMinAppVersion(Version minAppVersion) {
+		this.minAppVersion = minAppVersion;
+	}
+
 	public static class ChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
@@ -147,4 +177,12 @@ public class RepoTO {
 	public static class TransformerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
+
+	private static Persister createPersister() throws Exception {
+		Registry registry = new Registry();
+		Strategy strategy = new RegistryStrategy(registry);
+		registry.bind(Version.class, new SemVerConverter());
+		return new Persister(strategy);
+	}
+
 }

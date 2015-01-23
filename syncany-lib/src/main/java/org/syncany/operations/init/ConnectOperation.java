@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
@@ -46,6 +47,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
+import com.github.zafarkhaja.semver.Version;
 
 /**
  * The connect operation connects to an existing repository at a given remote storage
@@ -349,7 +351,6 @@ public class ConnectOperation extends AbstractInitOperation {
 	protected File downloadFile(TransferManager transferManager, RemoteFile remoteFile) throws StorageException {
 		try {
 			File tmpRepoFile = File.createTempFile("syncanyfile", "tmp");
-
 			transferManager.download(remoteFile, tmpRepoFile);
 			return tmpRepoFile;
 		}
@@ -384,12 +385,22 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	private void verifyRepoFile(String repoFileStr) throws StorageException {
+		RepoTO repoTO;
 		try {
-			Serializer serializer = new Persister();
-			serializer.read(RepoTO.class, repoFileStr);
+			repoTO = RepoTO.loadFromString(repoFileStr);
 		}
 		catch (Exception e) {
 			throw new StorageException("Repo file corrupt.", e);
+		}
+
+		// validate that repo version is supported
+		Version minAppVersion = repoTO.getMinAppVersion();
+		Version appVersion = Version.valueOf(Client.getApplicationVersion());
+
+		logger.log(Level.INFO, "Is the repo (min {0}) supported by us ({1})? {2}", new Object[]{minAppVersion, appVersion, !appVersion.lessThan(minAppVersion)});
+
+		if (appVersion.lessThan(minAppVersion)) {
+			throw new StorageException("Repository requires a higher app version (" + minAppVersion  + ")");
 		}
 	}
 
