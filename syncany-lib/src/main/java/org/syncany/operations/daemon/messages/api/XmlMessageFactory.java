@@ -23,15 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.Converter;
-import org.simpleframework.xml.convert.Registry;
-import org.simpleframework.xml.convert.RegistryStrategy;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.InputNode;
-import org.simpleframework.xml.stream.OutputNode;
-import org.syncany.database.FileContent;
-import org.syncany.database.PartialFileHistory;
-import org.syncany.database.VectorClock;
+import org.syncany.config.to.XmlSerializer;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -41,22 +33,7 @@ public abstract class XmlMessageFactory extends MessageFactory {
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
 
-	private static final Serializer serializer;
-
-	static {
-		try {
-			Registry registry = new Registry();
-
-			registry.bind(PartialFileHistory.FileHistoryId.class, new FileHistoryIdConverter());
-			registry.bind(FileContent.FileChecksum.class, new FileChecksumConverter());
-			registry.bind(VectorClock.class, new VectorClockConverter());
-
-			serializer = new Persister(new RegistryStrategy(registry));
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+	private static final Serializer serializer = XmlSerializer.getInstance();
 
 	public static Response toResponse(String responseMessageXml) throws Exception {
 		Message responseMessage = toMessage(responseMessageXml);
@@ -103,42 +80,6 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		}
 		else {
 			throw new Exception("Cannot find type of message. Invalid XML: " + message);
-		}
-	}
-
-	private static class FileHistoryIdConverter implements Converter<PartialFileHistory.FileHistoryId> {
-		@Override
-		public PartialFileHistory.FileHistoryId read(InputNode node) throws Exception {
-			return PartialFileHistory.FileHistoryId.parseFileId(node.getValue());
-		}
-
-		@Override
-		public void write(OutputNode node, PartialFileHistory.FileHistoryId value) throws Exception {
-			node.setValue(value.toString());
-		}
-	}
-
-	private static class FileChecksumConverter implements Converter<FileContent.FileChecksum> {
-		@Override
-		public FileContent.FileChecksum read(InputNode node) throws Exception {
-			return FileContent.FileChecksum.parseFileChecksum(node.getValue());
-		}
-
-		@Override
-		public void write(OutputNode node, FileContent.FileChecksum value) throws Exception {
-			node.setValue(value.toString());
-		}
-	}
-
-	private static class VectorClockConverter implements Converter<VectorClock> {
-		@Override
-		public VectorClock read(InputNode node) throws Exception {
-			return VectorClock.parseVectorClock(node.getValue());
-		}
-
-		@Override
-		public void write(OutputNode node, VectorClock value) throws Exception {
-			node.setValue(value.toString());
 		}
 	}
 

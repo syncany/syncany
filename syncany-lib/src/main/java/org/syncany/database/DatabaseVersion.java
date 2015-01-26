@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.Transient;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
@@ -54,9 +56,12 @@ public class DatabaseVersion {
 	private Map<ChunkChecksum, ChunkEntry> chunks;
 	private Map<MultiChunkId, MultiChunkEntry> multiChunks;
 	private Map<FileChecksum, FileContent> fileContents;
+	
+	@ElementMap(name = "fileHistories", key = "id", attribute = true)
 	private Map<FileHistoryId, PartialFileHistory> fileHistories;
 
 	// Quick access cache
+	@Transient
 	private Map<ChunkChecksum, MultiChunkId> chunkMultiChunkCache;
 
 	public DatabaseVersion() {

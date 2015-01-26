@@ -20,6 +20,8 @@ package org.syncany.database;
 import java.io.File;
 import java.util.Date;
 
+import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Text;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 
@@ -39,23 +41,43 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  */
 public class FileVersion implements Cloneable {
 	// Optional
+	@Attribute(name = "fileHistoryId", required = false)
 	private FileHistoryId fileHistoryId;
 
 	// Mandatory
+	@Attribute(name = "version", required = true)
 	private Long version; // TODO [low] This can be an Integer. No need for a long!
+
+	@Attribute(name = "path", required = true)
 	private String path;
+	
+	@Attribute(name = "type", required = true)
 	private FileType type;
+	
+	@Attribute(name = "status", required = true)
 	private FileStatus status;
+	
+	@Attribute(name = "size", required = true)
 	private Long size;
+	
+	@Attribute(name = "lastModified", required = true)
 	private Date lastModified;
 
 	// Mandatory (if type is symlink)
+	@Attribute(name = "linkTarget", required = false)
 	private String linkTarget;
-
+	
 	// Optional
+	@Attribute(name = "checksum", required = false)
 	private FileChecksum checksum;
+	
+	@Attribute(name = "updated", required = false)
 	private Date updated;
+	
+	@Attribute(name = "posixPermissions", required = false)
 	private String posixPermissions;
+	
+	@Attribute(name = "dosAttributes", required = false)
 	private String dosAttributes;
 
 	public FileVersion() {

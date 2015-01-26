@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.config.to.XmlSerializer;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
@@ -461,4 +462,53 @@ public class DatabaseVersionDaoTest {
 		databaseConnection.close();
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
 	}	
+	
+	
+	@Test
+	public void testDatabaseVersionSerialization() throws Exception {
+		
+		// b. Add new database header (with one file history)
+		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		DatabaseVersionHeader newDatabaseVersionHeader = new DatabaseVersionHeader();
+		
+		newDatabaseVersionHeader.setClient("C");
+		newDatabaseVersionHeader.setDate(new Date(1489977288000L));
+		newDatabaseVersionHeader.setVectorClock(TestDatabaseUtil.createVectorClock("A5,C1"));
+		
+		newDatabaseVersion.setHeader(newDatabaseVersionHeader);
+		
+		PartialFileHistory newFileHistory = new PartialFileHistory(FileHistoryId.secureRandomFileId());
+		FileVersion newFileVersion = new FileVersion();
+		
+		newFileVersion.setVersion(1L);
+		newFileVersion.setPath("newfile");
+		newFileVersion.setChecksum(FileChecksum.parseFileChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"));
+		newFileVersion.setLinkTarget(null);
+		newFileVersion.setPosixPermissions("rwxrwxrwx");
+		newFileVersion.setDosAttributes(null);
+		newFileVersion.setStatus(FileStatus.NEW);
+		newFileVersion.setLastModified(new Date());
+		newFileVersion.setUpdated(new Date());
+		newFileVersion.setSize(1L);
+		newFileVersion.setType(FileType.FILE);
+
+		newFileHistory.addFileVersion(newFileVersion);
+		newDatabaseVersion.addFileHistory(newFileHistory);
+
+		ChunkEntry newChunkEntry = new ChunkEntry(ChunkChecksum.parseChunkChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"), 1);
+		newDatabaseVersion.addChunk(newChunkEntry);
+		
+		MultiChunkEntry newMultiChunkEntry = new MultiChunkEntry(MultiChunkId.parseMultiChunkId("1234567890987654321234567876543456555555"), 10);
+		newMultiChunkEntry.addChunk(newChunkEntry.getChecksum());
+		newDatabaseVersion.addMultiChunk(newMultiChunkEntry);
+		/*
+		FileContent newFileContent = new FileContent();
+		newFileContent.setChecksum(FileChecksum.parseFileChecksum("aaaaaaaaaaaaaaaaaaaaab2b263ffa4cc48e282f"));
+		newFileContent.setSize(1L);		
+		newFileContent.addChunk(newChunkEntry.getChecksum());
+		newDatabaseVersion.addFileContent(newFileContent);		*/
+		
+		
+		XmlSerializer.getInstance().write(newDatabaseVersion, System.out);
+	}
 }
