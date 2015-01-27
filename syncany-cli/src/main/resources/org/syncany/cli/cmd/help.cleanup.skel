@@ -57,6 +57,11 @@ OPTIONS
     Sets the number of database files per client. If the total number of 
     databases exceeds <count> times the number of clients, all database
     files will be merged to one per client.
+    
+  -e, --keep-deleted-files-for-seconds=<seconds>
+    Sets the minimal amount of time that cleanup allows to keep deleted files. (Such that
+    they can be restored at some point). Cleanup will fully delete files that
+    were deleted more than this number of seconds ago and they will be gone permanently. 
   
   -f, --force
     Forces a the cleanup, even if the time between cleanups (-t) has not been 
