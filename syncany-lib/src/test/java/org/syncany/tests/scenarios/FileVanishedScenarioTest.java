@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.database.SqlDatabase;
+import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -48,6 +49,8 @@ public class FileVanishedScenarioTest {
 		final int numFilesVanished = 50;
 		final int numFilesRemaining = numFiles - numFilesVanished;
 		final int sizeFiles = 500 * 1024;
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setMinSecondsBeforeFullyDeletingFiles(0);
 
 		// Prepare by creating test files
 		logger.log(Level.INFO, "Creating test files ...");
@@ -119,7 +122,7 @@ public class FileVanishedScenarioTest {
 
 		// Test 2: Now up the rest, there should be exactly 50 files in the database
 		clientA.up();
-		clientA.cleanup();
+		clientA.cleanup(options);
 
 		databaseClientA = clientA.loadLocalDatabase();
 		assertEquals("There should be EXACTLY " + numFilesRemaining + " file histories in the database.", numFilesRemaining, databaseClientA
