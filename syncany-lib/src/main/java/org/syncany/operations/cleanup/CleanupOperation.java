@@ -258,7 +258,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
-		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
+
+		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
+		purgeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
 
 		boolean needToRemoveFileVersions = purgeFileVersions.size() > 0;
 

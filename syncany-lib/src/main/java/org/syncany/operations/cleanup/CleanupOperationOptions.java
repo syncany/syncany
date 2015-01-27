@@ -38,6 +38,9 @@ public class CleanupOperationOptions implements OperationOptions {
 	private int keepVersionsCount = 5;
 
 	@Element(required = false)
+	private long minSecondsBeforeFullyDeletingFiles = 3600L * 24L * 30L;
+
+	@Element(required = false)
 	private int maxDatabaseFiles = 15;
 
 	@Element(required = false)
@@ -94,6 +97,14 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public long getMinSecondsBetweenCleanups() {
 		return minSecondsBetweenCleanups;
+	}
+
+	public void setMinSecondsBeforeFullyDeletingFiles(long minSecondsBeforeFullyDeletingFiles) {
+		this.minSecondsBeforeFullyDeletingFiles = minSecondsBeforeFullyDeletingFiles;
+	}
+
+	public long getMinSecondsBeforeFullyDeletingFiles() {
+		return minSecondsBeforeFullyDeletingFiles;
 	}
 
 	public boolean isForce() {
