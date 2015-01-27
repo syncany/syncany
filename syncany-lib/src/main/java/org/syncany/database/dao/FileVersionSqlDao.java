@@ -286,6 +286,17 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersionsBefore.sql")) {
+			preparedStatement.setTimestamp(0, new Timestamp(timestamp));
+			return getSingleVersionInHistory(preparedStatement);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
 
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByHistoryAndVersion.sql")) {

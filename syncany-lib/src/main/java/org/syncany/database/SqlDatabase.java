@@ -262,6 +262,10 @@ public class SqlDatabase {
 		return fileVersionDao.getDeletedFileVersions();
 	}
 
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
+		return fileVersionDao.getDeletedFileVersionsBefore(timestamp);
+	}
+
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
 		return fileVersionDao.getFileVersion(fileHistoryId, version);
 	}
