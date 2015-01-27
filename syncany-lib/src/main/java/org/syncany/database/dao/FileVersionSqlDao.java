@@ -289,7 +289,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersionsBefore.sql")) {
-			preparedStatement.setTimestamp(0, new Timestamp(timestamp));
+			preparedStatement.setTimestamp(1, new Timestamp(timestamp));
 			return getSingleVersionInHistory(preparedStatement);
 		}
 		catch (SQLException e) {

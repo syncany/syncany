@@ -58,6 +58,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(2);
+		options.setMinSecondsBeforeFullyDeletingFiles(0);
 
 		// Run
 
@@ -613,5 +614,31 @@ public class CleanupOperationTest {
 
 		// Tear down
 		clientA.deleteTestData();
+	}
+	
+	@Test
+	public void fullyDeletingDeletedFilesTest() throws Exception {
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
+
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setRemoveOldVersions(true);
+		options.setMinSecondsBetweenCleanups(0);
+		options.setMinSecondsBeforeFullyDeletingFiles(2);
+		
+		clientA.createNewFile("file.jpg");
+		clientA.up();
+		clientA.deleteFile("file.jpg");
+		clientA.up();
+		clientA.cleanup(options);
+		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+
+		Thread.sleep(3000);
+
+		clientA.cleanup(options);
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+
 	}
 }
