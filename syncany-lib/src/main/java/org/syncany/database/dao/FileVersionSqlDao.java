@@ -149,6 +149,23 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
+	public void removeSpecificFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
+		if (purgeFileVersions.size() > 0) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "fileversion.delete.all.removeFileVersionsByIds.sql")) {
+				for (FileHistoryId purgeFileHistoryId : purgeFileVersions.keySet()) {
+					for (FileVersion purgeFileVersion : purgeFileVersions.get(purgeFileHistoryId)) {
+						preparedStatement.setString(1, purgeFileHistoryId.toString());
+						preparedStatement.setLong(2, purgeFileVersion.getVersion());
+
+						preparedStatement.addBatch();
+					}
+				}
+
+				preparedStatement.executeBatch();
+			}
+		}
+	}
+
 	/**
 	 * Queries the database for the currently active {@link FileVersion}s and returns it
 	 * as a map. If the current file tree (on the disk) has not changed, the result will
@@ -279,11 +296,15 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, String dateFilter) {
+		System.out.println(dateFilter);
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
-			preparedStatement.setString(1, dateFilter);
-			preparedStatement.setTimestamp(2, new Timestamp(beginTimestamp));
-			preparedStatement.setTimestamp(3, new Timestamp(endTimestamp));
 
+			System.out.println("blah");
+			preparedStatement.setString(1, dateFilter);
+			System.out.println("blah");
+			preparedStatement.setTimestamp(1, new Timestamp(beginTimestamp));
+			preparedStatement.setTimestamp(2, new Timestamp(endTimestamp));
+			System.out.println("blah");
 			return getAllVersionsInQuery(preparedStatement);
 		}
 		catch (SQLException e) {

@@ -255,26 +255,33 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
 
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
+		long currentTime = System.currentTimeMillis()/1000L;
+		long previousTime = 0;
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+		for (long time : options.getPurgeFileVersionSettings().keySet()) {
+			if (previousTime != 0) {
+				purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - previousTime, currentTime - time, options
+						.getPurgeFileVersionSettings().get(time)));
+			}
+			previousTime = time;
+		}
 
 		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
-		purgeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
+		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
 
-		boolean needToRemoveFileVersions = purgeFileVersions.size() > 0;
-
-		if (!needToRemoveFileVersions) {
-			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).",
-					options.getKeepVersionsCount());
+		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
+			logger.log(Level.INFO, "- Old version removal: Not necessary.");
 			return;
 		}
 
-		logger.log(Level.INFO, "- Old version removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
-				purgeFileVersions.size(), options.getKeepVersionsCount() });
+		logger.log(Level.INFO, "- Old version removal: Found {0} file histories and {1} file versions that need cleaning.", new Object[] {
+				purgeFileVersions.size(),
+				purgeBeforeFileVersions.size() });
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeSmallerOrEqualFileVersions(purgeBeforeFileVersions);
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
@@ -289,7 +296,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			unusedMultiChunkSize += removedMultiChunk.getSize();
 		}
 
-		result.setRemovedOldVersionsCount(purgeFileVersions.size());
+		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size());
 		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
 	}

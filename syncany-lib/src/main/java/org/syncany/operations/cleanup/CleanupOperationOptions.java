@@ -118,9 +118,9 @@ public class CleanupOperationOptions implements OperationOptions {
 		if (purgeFileVersionSettings == null) {
 			purgeFileVersionSettings = new TreeMap<Long, String>();
 			purgeFileVersionSettings.put(30L * 24L * 3600L, "BC");
-			purgeFileVersionSettings.put(3L * 24L * 3600L, "YYYYMMDD");
-			purgeFileVersionSettings.put(3600L, "YYYYMMDDHH");
-			purgeFileVersionSettings.put(600L, "YYYYMMDDHHMI");
+			purgeFileVersionSettings.put(3L * 24L * 3600L, "YYYY-MM-DD");
+			purgeFileVersionSettings.put(3600L, "YYYY-MM-DD-HH");
+			purgeFileVersionSettings.put(600L, "YYYY-MM-DD-HH-MI");
 		}
 		return purgeFileVersionSettings;
 	}

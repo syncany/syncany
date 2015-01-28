@@ -239,6 +239,10 @@ public class SqlDatabase {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
 
+	public void removeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
+		fileVersionDao.removeSpecificFileVersions(purgeFileVersions);
+	}
+
 	@Deprecated
 	public FileVersion getFileVersionByPath(String path) {
 		return fileVersionDao.getFileVersionByPath(path);
