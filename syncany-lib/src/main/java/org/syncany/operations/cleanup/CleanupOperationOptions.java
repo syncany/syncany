@@ -17,7 +17,11 @@
  */
 package org.syncany.operations.cleanup;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 
@@ -45,6 +49,9 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	@Element(required = false)
 	private long minSecondsBetweenCleanups = 10800;
+
+	@ElementMap(entry = "fromTime", key = "truncateDateFormat", required = false, attribute = true, inline = true)
+	private SortedMap<Long, String> purgeFileVersionSettings;
 
 	// TODO [medium] Implement multichunk repackaging
 
@@ -105,6 +112,21 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public long getMinSecondsBeforeFullyDeletingFiles() {
 		return minSecondsBeforeFullyDeletingFiles;
+	}
+	
+	public SortedMap<Long, String> getPurgeFileVersionSettings() {
+		if (purgeFileVersionSettings == null) {
+			purgeFileVersionSettings = new TreeMap<Long, String>();
+			purgeFileVersionSettings.put(30L * 24L * 3600L, "BC");
+			purgeFileVersionSettings.put(3L * 24L * 3600L, "YYYYMMDD");
+			purgeFileVersionSettings.put(3600L, "YYYYMMDDHH");
+			purgeFileVersionSettings.put(600L, "YYYYMMDDHHMI");
+		}
+		return purgeFileVersionSettings;
+	}
+
+	public void setPurgeFileVersionSettings(SortedMap<Long, String> newSettings) {
+		purgeFileVersionSettings = newSettings;
 	}
 
 	public boolean isForce() {

@@ -258,6 +258,10 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
 	}
 
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, String dateFilter) {
+		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, dateFilter);
+	}
+
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
 	}
