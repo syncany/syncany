@@ -296,15 +296,20 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, String dateFilter) {
-		System.out.println(dateFilter);
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
-
-			System.out.println("blah");
 			preparedStatement.setString(1, dateFilter);
-			System.out.println("blah");
-			preparedStatement.setTimestamp(1, new Timestamp(beginTimestamp));
-			preparedStatement.setTimestamp(2, new Timestamp(endTimestamp));
-			System.out.println("blah");
+			preparedStatement.setTimestamp(2, new Timestamp(beginTimestamp));
+			preparedStatement.setTimestamp(3, new Timestamp(endTimestamp));
+			return getAllVersionsInQuery(preparedStatement);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsBeforeTime.sql")) {
+			preparedStatement.setTimestamp(1, new Timestamp(timestamp));
 			return getAllVersionsInQuery(preparedStatement);
 		}
 		catch (SQLException e) {
@@ -459,5 +464,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 		return fileVersion;
 	}
+
 
 }

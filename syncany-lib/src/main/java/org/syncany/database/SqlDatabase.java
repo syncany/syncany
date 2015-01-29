@@ -266,6 +266,10 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, dateFilter);
 	}
 
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
+		return fileVersionDao.getFileHistoriesToPurgeBefore(timestamp);
+	}
+
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
 	}
@@ -343,4 +347,5 @@ public class SqlDatabase {
 	private void removeUnreferencedFileContents() throws SQLException {
 		fileContentDao.removeUnreferencedFileContents();
 	}
+
 }

@@ -6,7 +6,7 @@ from fileversion
 where (filehistory_id, version) not in (
 	select filehistory_id, max(version)
 	from fileversion
-	group by filehistory_id, trunc(updated, ?)
+	group by filehistory_id, trunc(updated, CAST(? AS VARCHAR(20)))
 )
 and updated > ?
 and updated < ?

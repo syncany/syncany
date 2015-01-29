@@ -262,11 +262,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 		for (long time : options.getPurgeFileVersionSettings().keySet()) {
 			if (previousTime != 0) {
 				purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - previousTime, currentTime - time, options
-						.getPurgeFileVersionSettings().get(time)));
+						.getPurgeFileVersionSettings().get(previousTime)));
 			}
 			previousTime = time;
 		}
-
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeBefore(currentTime - previousTime));
 		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
