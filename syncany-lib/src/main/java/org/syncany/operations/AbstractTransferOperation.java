@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
+import org.syncany.plugins.transfer.FolderizableTransferManager;
+import org.syncany.plugins.transfer.FolderAwareTransferManager;
 import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
@@ -82,7 +84,17 @@ public abstract class AbstractTransferOperation extends Operation {
 	}
 
 	private TransferManager createRetriableTransferManager(Config config) throws StorageException {
-		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection(), config));
+		return new RetriableTransferManager(createTransferManager(config));
+	}
+
+	private TransferManager createTransferManager(Config config) throws StorageException {
+		TransferManager pluginTransferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
+
+		if (pluginTransferManager instanceof FolderizableTransferManager) {
+			return new FolderAwareTransferManager((FolderizableTransferManager) pluginTransferManager);
+		}
+
+		return pluginTransferManager;
 	}
 
 	protected void startOperation() throws Exception {
