@@ -41,4 +41,5 @@ public interface FolderizableTransferManager extends TransferManager {
 	public List<Class<? extends RemoteFile>> getFolderizableFiles();
 
 	public boolean createPathIfRequired(RemoteFile remoteFile);
+
 }
