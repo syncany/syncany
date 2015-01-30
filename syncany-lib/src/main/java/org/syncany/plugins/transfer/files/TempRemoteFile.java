@@ -57,11 +57,11 @@ public class TempRemoteFile extends RemoteFile {
 	 * @throws StorageException
 	 */
 	public TempRemoteFile(RemoteFile targetRemoteFile) throws StorageException {
-		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getName()));
+		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getSimpleName()));
 	}
 
 	public TempRemoteFile(RemoteFile targetRemoteFile, String path) throws StorageException {
-		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getName()), path);
+		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getSimpleName()), path);
 	}
 
 	/**

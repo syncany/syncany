@@ -91,6 +91,7 @@ public abstract class AbstractTransferOperation extends Operation {
 		TransferManager pluginTransferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
 
 		if (pluginTransferManager instanceof FolderizableTransferManager) {
+			logger.log(Level.INFO, "Creating FolderAwareTransferManager");
 			return new FolderAwareTransferManager((FolderizableTransferManager) pluginTransferManager);
 		}
 

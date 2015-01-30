@@ -125,7 +125,7 @@ public class FolderAwareTransferManager implements TransferManager {
 		}
 
 		// we need to use the hash value of a file's name because some files aren't folderizable by default
-		String fileId = StringUtil.toHex(DigestUtils.sha256(remoteFile.getName()));
+		String fileId = StringUtil.toHex(DigestUtils.sha256(remoteFile.getSimpleName()));
 		StringBuilder path = new StringBuilder();
 
 		for (int i = 0; i < underlyingTransferManager.getSubfolderDepth(); i++) {
@@ -133,7 +133,7 @@ public class FolderAwareTransferManager implements TransferManager {
 			path.append(FOLDER_SEPERATOR);
 		}
 
-		return RemoteFile.createRemoteFileWithPath(path.toString(), remoteFile.getName(), remoteFile.getClass());
+		return RemoteFile.createRemoteFileWithPath(remoteFile.getSimpleName(), path.toString(), remoteFile.getClass());
 	}
 
 }

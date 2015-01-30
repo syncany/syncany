@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
+import com.google.common.base.Objects;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -132,12 +133,12 @@ public abstract class RemoteFile {
 	 * <p>The name must match the corresponding name pattern, and the class name
 	 * can either be <tt>RemoteFile</tt>, or a sub-class thereof.
 	 *
-	 * @param path The path of the remote file
 	 * @param name The name of the remote file
+	 * @param path The path of the remote file
 	 * @param remoteFileClass Class name of the object to instantiate, <tt>RemoteFile</tt> or a sub-class thereof
 	 * @return Returns a new object of the given class
 	 */
-	public static <T extends RemoteFile> T createRemoteFileWithPath(String path, String name, Class<T> remoteFileClass) throws StorageException {
+	public static <T extends RemoteFile> T createRemoteFileWithPath(String name, String path, Class<T> remoteFileClass) throws StorageException {
 		try {
 			return remoteFileClass.getConstructor(String.class, String.class).newInstance(name, path);
 		}
@@ -205,6 +206,6 @@ public abstract class RemoteFile {
 
 	@Override
 	public String toString() {
-		return RemoteFile.class.getSimpleName() + "[name=" + name + "]";
+		return Objects.toStringHelper(this).add("name", name).add("path", path).toString();
 	}
 }
