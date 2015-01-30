@@ -138,6 +138,7 @@ public class DirtyDatabaseScenarioTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		cleanupOptions.setForce(true);
 
 		// Run
 

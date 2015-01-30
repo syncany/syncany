@@ -266,6 +266,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			}
 			previousTime = time;
 		}
+
 		purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeBefore(currentTime - previousTime));
 		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
@@ -282,6 +283,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// Local: First, remove file versions that are not longer needed
 		localDatabase.removeSmallerOrEqualFileVersions(purgeBeforeFileVersions);
+		localDatabase.removeFileVersions(purgeFileVersions);
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
@@ -296,7 +298,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			unusedMultiChunkSize += removedMultiChunk.getSize();
 		}
 
-		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size());
+		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size() + purgeFileVersions.size());
 		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
 	}
@@ -423,7 +425,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		boolean tooManyDatabaseFiles = numberOfDatabaseFiles > maxDatabaseFiles;
 		boolean removedOldVersions = result.getRemovedOldVersionsCount() > 0;
 
-		return removedOldVersions || tooManyDatabaseFiles;
+		return removedOldVersions || tooManyDatabaseFiles || options.isForce();
 	}
 
 	/**

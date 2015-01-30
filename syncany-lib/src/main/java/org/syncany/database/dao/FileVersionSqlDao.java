@@ -151,7 +151,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 	public void removeSpecificFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
 		if (purgeFileVersions.size() > 0) {
-			try (PreparedStatement preparedStatement = getStatement(connection, "fileversion.delete.all.removeFileVersionsByIds.sql")) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "fileversion.delete.all.removeSpecificFileVersionsByIds.sql")) {
 				for (FileHistoryId purgeFileHistoryId : purgeFileVersions.keySet()) {
 					for (FileVersion purgeFileVersion : purgeFileVersions.get(purgeFileHistoryId)) {
 						preparedStatement.setString(1, purgeFileHistoryId.toString());
