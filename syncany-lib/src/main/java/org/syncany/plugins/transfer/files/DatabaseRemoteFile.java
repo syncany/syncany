@@ -56,6 +56,10 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 		super(name);
 	}
 
+	public DatabaseRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
+	}
+
 	/**
 	 * Initializes a new database file, given a client name and version
 	 *
@@ -65,6 +69,10 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 	 */
 	public DatabaseRemoteFile(String clientName, long version) throws StorageException {
 		super(String.format(NAME_FORMAT, clientName, version));
+	}
+
+	public DatabaseRemoteFile(String clientName, long version, String path) throws StorageException {
+		super(String.format(NAME_FORMAT, clientName, version), path);
 	}
 
 	/**

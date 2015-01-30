@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,11 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.plugins.transfer.StorageException;
 
 /**
- * The temp file represents a temporary file on the remote storage. 
- * 
+ * The temp file represents a temporary file on the remote storage.
+ *
  * <p><b>Name pattern:</b> The name pattern of a temp file is
  * <b>temp-&lt;randomidentifier&gt;</b>.
- * 
+ *
  * @author Pim Otte
  */
 public class TempRemoteFile extends RemoteFile {
@@ -36,26 +36,34 @@ public class TempRemoteFile extends RemoteFile {
 	private static final String NAME_FORMAT = "temp-%s-%s";
 
 	private RemoteFile targetRemoteFile;
-	
+
 	/**
-	 * Initializes a new temp file, given a name. 
-	 * 
-	 * @param name temp file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * Initializes a new temp file, given a name.
+	 *
+	 * @param name temp file name; <b>must</b> always match the {@link #NAME_PATTERN}
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public TempRemoteFile(String name) throws StorageException {
 		super(name);
 	}
-	
+
+	public TempRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
+	}
+
 	/**
 	 * Initializes a new randomly named temp file.
-	 * 
+	 *
 	 * @throws StorageException
 	 */
 	public TempRemoteFile(RemoteFile targetRemoteFile) throws StorageException {
 		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getName()));
 	}
-	
+
+	public TempRemoteFile(RemoteFile targetRemoteFile, String path) throws StorageException {
+		super(String.format(NAME_FORMAT, CipherUtil.createRandomAlphabeticString(5), targetRemoteFile.getName()), path);
+	}
+
 	/**
 	 * Returns the target remote file, i.e. the {@link RemoteFile} this
 	 * temporary file will be renamed into, or was renamed from.
@@ -71,7 +79,7 @@ public class TempRemoteFile extends RemoteFile {
 		if (!matcher.matches()) {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_PATTERN.pattern() + " expected.");
 		}
-		
+
 		try {
 			targetRemoteFile = RemoteFile.createRemoteFile(matcher.group(2));
 		}

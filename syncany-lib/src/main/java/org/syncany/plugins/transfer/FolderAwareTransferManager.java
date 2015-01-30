@@ -31,6 +31,7 @@ import org.syncany.util.StringUtil;
 
 public class FolderAwareTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(FolderAwareTransferManager.class.getSimpleName());
+	private static final char FOLDER_SEPERATOR = '/';
 
 	private final FolderizableTransferManager underlyingTransferManager;
 
@@ -129,10 +130,10 @@ public class FolderAwareTransferManager implements TransferManager {
 
 		for (int i = 0; i < underlyingTransferManager.getSubfolderDepth(); i++) {
 			sb.append(fileId.substring(i * underlyingTransferManager.getBytesPerFolder(), (i + 1) * underlyingTransferManager.getBytesPerFolder()));
-			sb.append("/");
+			sb.append(FOLDER_SEPERATOR);
 		}
 
-		return RemoteFile.createRemoteFile(sb.toString(), remoteFile.getClass());
+		return RemoteFile.createRemoteFileWithPath(sb.toString(), remoteFile.getName(), remoteFile.getClass());
 	}
 
 }
