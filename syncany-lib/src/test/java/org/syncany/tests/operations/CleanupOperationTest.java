@@ -281,7 +281,7 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(4, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(2, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(3, cleanupOperationResult.getRemovedMultiChunksCount());
 		assertEquals(1, cleanupOperationResult.getRemovedOldVersionsCount());
 
 		// A: Continue to upload stuff ! <<<<<<<<<<<<<<<<<<<<<
@@ -547,6 +547,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setStatusOptions(forceChecksumStatusOperationOptions);
 		options.setRemoveOldVersions(true);
+		options.setMinSecondsBeforeFullyDeletingFiles(0);
 		options.setMinSecondsBetweenCleanups(40000000);
 		options.setForce(true);
 
@@ -598,7 +599,7 @@ public class CleanupOperationTest {
 				return name.startsWith("database-");
 			}
 		}).length);
-		assertEquals(5, repoMultiChunkDir.listFiles().length);
+		assertEquals(1, repoMultiChunkDir.listFiles().length);
 		assertEquals(0, repoActionsDir.listFiles().length);
 		assertEquals(0, repoDir.list(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
@@ -610,7 +611,7 @@ public class CleanupOperationTest {
 				return name.startsWith("temp-");
 			}
 		}).length);
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
 
 		// Tear down
 		clientA.deleteTestData();
