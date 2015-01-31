@@ -255,22 +255,20 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-
 		long currentTime = System.currentTimeMillis()/1000L;
 		long previousTime = 0;
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+
 		for (long time : options.getPurgeFileVersionSettings().keySet()) {
-			if (previousTime != 0) {
-				purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - previousTime, currentTime - time, options
-						.getPurgeFileVersionSettings().get(previousTime)));
-			}
+			purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time, currentTime - previousTime, options
+					.getPurgeFileVersionSettings().get(time)));
 			previousTime = time;
 		}
 
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeBefore(currentTime - previousTime));
 		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
+		purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete));
 
 		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary.");
