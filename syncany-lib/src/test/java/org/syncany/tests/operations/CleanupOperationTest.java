@@ -264,6 +264,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
 		options.setKeepVersionsCount(2);
+		options.setMinSecondsBeforeFullyDeletingFiles(0);
 
 		// Run
 

@@ -75,6 +75,7 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setKeepVersionsCount(1);
+		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -210,7 +211,6 @@ public class CleanupInterruptedTest {
 		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setMaxDatabaseFiles(1);
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
 		clientA.cleanup(cleanupOptions);
 
@@ -274,7 +274,7 @@ public class CleanupInterruptedTest {
 		clientB.down();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setKeepVersionsCount(1);
+		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
