@@ -255,12 +255,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-		long currentTime = System.currentTimeMillis()/1000L;
+		long currentTime = System.currentTimeMillis();
 		long previousTime = 0;
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
 		for (long time : options.getPurgeFileVersionSettings().keySet()) {
-			purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time, currentTime - previousTime, options
+			purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time * 1000, currentTime - previousTime * 1000,
+					options
 					.getPurgeFileVersionSettings().get(time)));
 			previousTime = time;
 		}
