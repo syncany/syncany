@@ -57,7 +57,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(2);
 		options.setMinSecondsBeforeFullyDeletingFiles(0);
 
 		// Run
@@ -106,25 +105,25 @@ public class CleanupOperationTest {
 		CleanupOperationResult cleanupOperationResult = clientA.cleanup(options);
 		assertEquals(CleanupResultCode.OK, cleanupOperationResult.getResultCode());
 		assertEquals(11, cleanupOperationResult.getMergedDatabaseFilesCount());
-		assertEquals(5, cleanupOperationResult.getRemovedMultiChunksCount());
-		assertEquals(3, cleanupOperationResult.getRemovedOldVersionsCount());
+		assertEquals(7, cleanupOperationResult.getRemovedMultiChunksCount());
+		assertEquals(4, cleanupOperationResult.getRemovedOldVersionsCount());
 
-		// 2 versions for "file.jpg", 2 versions for "otherfile.txt" and one version for "someotherfile.jpg"
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
-		assertEquals("7", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='file.jpg'", databaseConnectionA)); // 3+4
-		assertEquals("5", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 2+3
+		// 1 version for "file.jpg", 1 versions for "otherfile.txt" and 1 version for "someotherfile.jpg"
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("4", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='file.jpg'", databaseConnectionA)); // 4
+		assertEquals("3", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='otherfile.txt'", databaseConnectionA)); // 3
 		assertEquals("1", TestSqlUtil.runSqlSelect("select sum(version) from fileversion where path='someotherfile.jpg'", databaseConnectionA));
 
-		// 5 chunks remain; one was obsolete so we removed it!
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));
+		// 3 chunks remain; one was obsolete so we removed it!
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));
 
-		// 6 chunks in 5 multichunks
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
-		assertEquals("5", TestSqlUtil.runSqlSelect("select count(*) from filecontent", databaseConnectionA));
+		// 3 chunks in 3 multichunks
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from filecontent", databaseConnectionA));
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(distinct id) from filehistory", databaseConnectionA));
 
 		// Test the repo
-		assertEquals(5, new File(testConnection.getPath() + "/multichunks/").list().length);
+		assertEquals(3, new File(testConnection.getPath() + "/multichunks/").list().length);
 		assertEquals(1, new File(testConnection.getPath() + "/databases/").list(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
 				return name.startsWith("database-");

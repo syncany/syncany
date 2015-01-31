@@ -212,13 +212,14 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
 		clientA.cleanup(cleanupOptions);
 
 		TransferManager transferManager = new TransactionAwareTransferManager(
 				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
 
-		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
+		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
