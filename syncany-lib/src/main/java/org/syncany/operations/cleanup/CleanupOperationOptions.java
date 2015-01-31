@@ -39,9 +39,6 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean removeUnreferencedTemporaryFiles = true;
 
 	@Element(required = false)
-	private int keepVersionsCount = 5;
-
-	@Element(required = false)
 	private long minSecondsBeforeFullyDeletingFiles = 3600L * 24L * 30L;
 
 	@Element(required = false)
@@ -74,20 +71,12 @@ public class CleanupOperationOptions implements OperationOptions {
 		return removeUnreferencedTemporaryFiles;
 	}
 
-	public int getKeepVersionsCount() {
-		return keepVersionsCount;
-	}
-
 	public void setRemoveOldVersions(boolean removeOldVersions) {
 		this.removeOldVersions = removeOldVersions;
 	}
 
 	public void setRemoveUnreferencedTemporaryFiles(boolean removeUnreferencedTemporaryFiles) {
 		this.removeUnreferencedTemporaryFiles = removeUnreferencedTemporaryFiles;
-	}
-
-	public void setKeepVersionsCount(int keepVersionsCount) {
-		this.keepVersionsCount = keepVersionsCount;
 	}
 
 	public void setMaxDatabaseFiles(int maxDatabaseFiles) {

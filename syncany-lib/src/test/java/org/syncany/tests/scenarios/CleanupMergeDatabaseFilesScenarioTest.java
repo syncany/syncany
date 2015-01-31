@@ -131,7 +131,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(5);
 		options.setMinSecondsBetweenCleanups(0);
 		options.setMaxDatabaseFiles(7);
 
@@ -279,7 +278,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -340,7 +338,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -397,7 +394,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -503,7 +499,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
-		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
 		cleanupOptionsKeepOneForce.setMinSecondsBeforeFullyDeletingFiles(0);
 
@@ -630,7 +625,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
-		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
 
 		// Create a couple of files, then delete them and do a cleanup

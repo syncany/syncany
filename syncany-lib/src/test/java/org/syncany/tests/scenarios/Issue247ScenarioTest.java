@@ -83,7 +83,6 @@ public class Issue247ScenarioTest {
 		clientUxWork.down();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setKeepVersionsCount(2);
 		
 		clientUxWork.cleanup(cleanupOptions);
 				

@@ -152,7 +152,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setStatusOptions(statusOptions);
 		cleanupOptions.setRemoveOldVersions(true);
-		cleanupOptions.setKeepVersionsCount(2);
 
 		// Run
 
@@ -188,7 +187,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(2);
 
 		// Run
 
@@ -227,7 +225,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(10); // <<<<<< Different!
 
 		// Run
 
@@ -262,7 +259,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(2);
 		options.setMinSecondsBeforeFullyDeletingFiles(0);
 
 		// Run
@@ -314,7 +310,6 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions removeOldCleanupOperationOptions = new CleanupOperationOptions();
 		removeOldCleanupOperationOptions.setRemoveOldVersions(true);
-		removeOldCleanupOperationOptions.setKeepVersionsCount(2);
 
 		StatusOperationOptions forceChecksumStatusOperationOptions = new StatusOperationOptions();
 		forceChecksumStatusOperationOptions.setForceChecksum(true);
@@ -439,7 +434,6 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMinSecondsBetweenCleanups(0);
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(10);
 		options.setMaxDatabaseFiles(3);
 
 		// Run

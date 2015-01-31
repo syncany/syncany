@@ -63,7 +63,6 @@ public class CleanupCommand extends Command {
 		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
-		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg()
 				.ofType(String.class);
 		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files")).withRequiredArg().ofType(Integer.class);
@@ -80,17 +79,6 @@ public class CleanupCommand extends Command {
 
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
-
-		// -k=<count>, --keep-versions=<count>
-		if (options.has(optionKeepVersions)) {
-			int keepVersionCount = options.valueOf(optionKeepVersions);
-
-			if (keepVersionCount < 1) {
-				throw new Exception("Invalid value for --keep-versions=" + keepVersionCount + "; must be >= 1");
-			}
-
-			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));
-		}
 
 		// -t=<count>, --time-between-cleanups=<count>
 		if (options.has(optionSecondsBetweenCleanups)) {

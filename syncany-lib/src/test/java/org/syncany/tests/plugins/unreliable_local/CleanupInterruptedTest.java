@@ -74,7 +74,6 @@ public class CleanupInterruptedTest {
 		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setKeepVersionsCount(1);
 		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
 		boolean cleanupFailed = false;
 		try {
