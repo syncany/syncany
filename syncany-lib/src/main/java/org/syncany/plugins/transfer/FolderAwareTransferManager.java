@@ -62,14 +62,22 @@ public class FolderAwareTransferManager implements TransferManager {
 	@Override
 	public void move(final RemoteFile sourceFile, final RemoteFile targetFile) throws StorageException {
 		final RemoteFile pathAwareTargetFile = createPathAwareRemoteFile(targetFile);
-		underlyingTransferManager.createPathIfRequired(pathAwareTargetFile);
+
+		if (!underlyingTransferManager.createPathIfRequired(pathAwareTargetFile)) {
+			throw new StorageException("Unable to create path for " + pathAwareTargetFile);
+		}
+
 		underlyingTransferManager.move(createPathAwareRemoteFile(sourceFile), pathAwareTargetFile);
 	}
 
 	@Override
 	public void upload(final File localFile, final RemoteFile remoteFile) throws StorageException {
 		final RemoteFile pathAwareRemoteFile = createPathAwareRemoteFile(remoteFile);
-		underlyingTransferManager.createPathIfRequired(pathAwareRemoteFile);
+
+		if (!underlyingTransferManager.createPathIfRequired(pathAwareRemoteFile)) {
+			throw new StorageException("Unable to create path for " + pathAwareRemoteFile);
+		}
+
 		underlyingTransferManager.upload(localFile, pathAwareRemoteFile);
 	}
 
@@ -110,13 +118,7 @@ public class FolderAwareTransferManager implements TransferManager {
 	}
 
 	private boolean isFolderizable(Class<? extends RemoteFile> remoteFileClass) {
-		for (Class<? extends RemoteFile> remoteFileClassEl : underlyingTransferManager.getFolderizableFiles()) {
-			if (remoteFileClass.equals(remoteFileClassEl)) {
-				return true;
-			}
-		}
-
-		return false;
+		return underlyingTransferManager.getFolderizableFiles().contains(remoteFileClass);
 	}
 
 	private RemoteFile createPathAwareRemoteFile(RemoteFile remoteFile) throws StorageException {
