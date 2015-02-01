@@ -33,9 +33,9 @@ public class FolderAwareTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(FolderAwareTransferManager.class.getSimpleName());
 	private static final char FOLDER_SEPERATOR = '/';
 
-	private final FolderizableTransferManager underlyingTransferManager;
+	private final Folderable underlyingTransferManager;
 
-	public FolderAwareTransferManager(FolderizableTransferManager underlyingTransferManager) {
+	public FolderAwareTransferManager(Folderable underlyingTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
 	}
 

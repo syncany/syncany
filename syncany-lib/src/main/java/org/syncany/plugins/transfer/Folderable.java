@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableList;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public interface FolderizableTransferManager extends TransferManager {
+public interface Folderable extends TransferManager {
 
 	public static final int BYTES_PER_FOLDER = 2;
 	public static final int SUBFOLDER_DEPTH = 2;
