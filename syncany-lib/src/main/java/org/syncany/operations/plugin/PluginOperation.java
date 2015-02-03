@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,42 +57,46 @@ import org.syncany.plugins.Plugins;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
-
 import com.github.zafarkhaja.semver.Version;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * The plugin operation installs, removes and lists storage {@link Plugin}s.
- * 
- * <p>The plugin implements these three functionalities as different 
+ *
+ * <p>The plugin implements these three functionalities as different
  * {@link PluginOperationAction}:
- * 
+ *
  * <ul>
- *   <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
- *       as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed 
- *       from a local JAR file, a URL (the operation downloads a JAR file), or the 
- *       API host (the operation find the plugin using the 'list' action and downloads
- *       the JAR file).</li>
- *   <li><tt>REMOVE</tt>: Removal means deleting a JAR file from the user plugin
- *       directoryThis action. This action simply finds the responsible plugin JAR
- *       file and deletes it. Only JAR files inside the user plugin direcory can be
- *       deleted.</li>
- *   <li><tt>LIST</tt>: Listing refers to a local and a remote list. The locally installed
- *       plugins can be queried by {@link Plugins#list()}. These plugins' JAR files must be
- *       in the application's class path. Remotely available plugins are queried through the
- *       API.</li>
- * </ul> 
- *   
+ * <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
+ * as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed
+ * from a local JAR file, a URL (the operation downloads a JAR file), or the
+ * API host (the operation find the plugin using the 'list' action and downloads
+ * the JAR file).</li>
+ * <li><tt>REMOVE</tt>: Removal means deleting a JAR file from the user plugin
+ * directoryThis action. This action simply finds the responsible plugin JAR
+ * file and deletes it. Only JAR files inside the user plugin direcory can be
+ * deleted.</li>
+ * <li><tt>LIST</tt>: Listing refers to a local and a remote list. The locally installed
+ * plugins can be queried by {@link Plugins#list()}. These plugins' JAR files must be
+ * in the application's class path. Remotely available plugins are queried through the
+ * API.</li>
+ * </ul>
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";	
+	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
 	private static final String PURGEFILE_FILENAME = "purgefile";
+	private static final String UPDATE_FILENAME = "updatefile";
 
 	private PluginOperationOptions options;
 	private PluginOperationResult result;
-	
+
 	private LocalEventBus eventBus;
 
 	public PluginOperation(Config config, PluginOperationOptions options) {
@@ -100,31 +104,124 @@ public class PluginOperation extends Operation {
 
 		this.options = options;
 		this.result = new PluginOperationResult();
-		
+
 		this.eventBus = LocalEventBus.getInstance();
 	}
 
 	@Override
 	public PluginOperationResult execute() throws Exception {
 		result.setAction(options.getAction());
-		
+
 		switch (options.getAction()) {
-		case LIST:
-			return executeList();
+			case LIST:
+				return executeList();
 
-		case INSTALL:
-			return executeInstall();
+			case INSTALL:
+				return executeInstall();
 
-		case REMOVE:
-			return executeRemove();
+			case REMOVE:
+				return executeRemove();
 
-		default:
-			throw new Exception("Unknown action: " + options.getAction());
+			case UPDATE:
+				return executeUpdate();
+
+			default:
+				throw new Exception("Unknown action: " + options.getAction());
 		}
 	}
 
+	private PluginOperationResult executeUpdate() throws Exception {
+		List<String> updateablePlugins = findUpdateCandidates();
+		List<String> erroneousPlugins = Lists.newArrayList();
+		List<String> delayedPlugins = Lists.newArrayList();
+
+		// update only a specific plugin if it is updatable and provided
+		String forcePluginId = options.getPluginId();
+		logger.log(Level.FINE, "Force plugin is " + forcePluginId);
+		if (forcePluginId != null) {
+			if (updateablePlugins.contains(forcePluginId)) {
+				updateablePlugins = Lists.newArrayList(forcePluginId);
+			}
+			else {
+				logger.log(Level.WARNING, "User requested to update a non-updatable plugin: " + forcePluginId);
+				erroneousPlugins.add(forcePluginId);
+				updateablePlugins = Lists.newArrayList(); // empty list
+			}
+		}
+
+		logger.log(Level.INFO, "The following plugins can be automatically updated: " + StringUtil.join(updateablePlugins, ", "));
+
+		for (String pluginId : updateablePlugins) {
+			// first remove
+			PluginOperationResult removeResult = executeRemove(pluginId);
+
+			if (removeResult.getResultCode() == PluginResultCode.NOK) {
+				logger.log(Level.SEVERE, "Unable to remove " + pluginId + " during the update process");
+				erroneousPlugins.add(pluginId);
+				continue;
+			}
+
+			// ... and install again
+			if (EnvironmentUtil.isWindows()) {
+				logger.log(Level.FINE, "Appending jar to updatefile");
+				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
+
+				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(updatefilePath, true)))) {
+					out.println(pluginId);
+					delayedPlugins.add(pluginId);
+				}
+				catch (IOException e) {
+					logger.log(Level.SEVERE, "Unable to append to updatefile " + updatefilePath, e);
+					erroneousPlugins.add(pluginId);
+				}
+			}
+			else {
+				PluginOperationResult installResult = executeInstallFromApiHost(pluginId);
+
+				if (installResult.getResultCode() == PluginResultCode.NOK) {
+					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
+					erroneousPlugins.add(pluginId);
+				}
+			}
+		}
+
+		if (erroneousPlugins.size() > 0 && erroneousPlugins.size() == updateablePlugins.size()) {
+			result.setResultCode(PluginResultCode.NOK);
+		}
+		else {
+			result.setResultCode(PluginResultCode.OK);
+		}
+
+		result.setUpdatedPluginIds(updateablePlugins);
+		result.setErroneousPluginIds(erroneousPlugins);
+		result.setDelayedPluginIds(delayedPlugins);
+
+		return result;
+	}
+
+	private List<String> findUpdateCandidates() throws Exception {
+		List<ExtendedPluginInfo> updateCandidates = executeList().getPluginList();
+
+		Iterables.removeIf(updateCandidates, new Predicate<ExtendedPluginInfo>() {
+			@Override
+			public boolean apply(ExtendedPluginInfo pluginInfo) {
+				return !pluginInfo.isInstalled() || !pluginInfo.canUninstall() || !pluginInfo.isOutdated();
+			}
+		});
+
+		return Lists.transform(updateCandidates, new Function<ExtendedPluginInfo, String>() {
+			@Override
+			public String apply(ExtendedPluginInfo pluginInfo) {
+				return pluginInfo.getLocalPluginInfo().getPluginId();
+			}
+		});
+	}
+
 	private PluginOperationResult executeRemove() throws Exception {
-		String pluginId = options.getPluginId();
+		return executeRemove(options.getPluginId());
+	}
+
+	private PluginOperationResult executeRemove(String pluginId) throws Exception {
 		Plugin plugin = Plugins.get(pluginId);
 
 		if (plugin == null) {
@@ -133,17 +230,18 @@ public class PluginOperation extends Operation {
 
 		File pluginJarFile = getJarFile(plugin);
 		boolean canUninstall = canUninstall(pluginJarFile);
-		
+
 		if (canUninstall) {
 			PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
 
 			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);
-			pluginJarFile.delete();
+			boolean deleted = pluginJarFile.delete();
 
 			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
-			if (EnvironmentUtil.isWindows()) {
+			if (EnvironmentUtil.isWindows() || !deleted) {
+				logger.log(Level.FINE, "Appending jar to purgefile (" + EnvironmentUtil.isWindows() + ", "+ deleted +")");
 				File purgefilePath = new File(UserConfig.getUserConfigDir(), PURGEFILE_FILENAME);
-				
+
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
 					out.println(pluginJarFile.getAbsolutePath());
 				}
@@ -151,6 +249,9 @@ public class PluginOperation extends Operation {
 					logger.log(Level.SEVERE, "Unable to append to purgefile " + purgefilePath, e);
 				}
 			}
+
+			// refresh plugin list
+			Plugins.refresh();
 
 			result.setSourcePluginPath(pluginJarFile.getAbsolutePath());
 			result.setAffectedPluginInfo(pluginInfo);
@@ -163,31 +264,29 @@ public class PluginOperation extends Operation {
 
 		return result;
 	}
-	
+
 	private boolean canUninstall(File pluginJarFile) {
 		File globalUserPluginDir = UserConfig.getUserPluginLibDir();
-		boolean canUninstall = pluginJarFile != null && pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
-		
-		return canUninstall;
+		return pluginJarFile != null && pluginJarFile.getAbsolutePath().startsWith(globalUserPluginDir.getAbsolutePath());
 	}
-	
+
 	private File getJarFile(Plugin plugin) {
 		Class<? extends Plugin> pluginClass = plugin.getClass();
 		URL pluginClassLocation = pluginClass.getResource('/' + pluginClass.getName().replace('.', '/') + ".class");
 		String pluginClassLocationStr = pluginClassLocation.toString();
-		
+
 		logger.log(Level.INFO, "Plugin class is at " + pluginClassLocationStr);
 
 		if (pluginClassLocationStr.startsWith("jar:file:")) {
 			int indexStartAfterSchema = "jar:file:".length();
 			int indexEndAtExclamationPoint = pluginClassLocationStr.indexOf("!");
 			File pluginJarFile = new File(pluginClassLocationStr.substring(indexStartAfterSchema, indexEndAtExclamationPoint));
-			
-			logger.log(Level.INFO, "Plugin is in JAR at " + pluginJarFile);	
+
+			logger.log(Level.INFO, "Plugin is in JAR at " + pluginJarFile);
 			return pluginJarFile;
 		}
 		else {
-			logger.log(Level.INFO, "Plugin is not in a JAR file. Probably in test environment.");	
+			logger.log(Level.INFO, "Plugin is not in a JAR file. Probably in test environment.");
 			return null;
 		}
 	}
@@ -217,9 +316,9 @@ public class PluginOperation extends Operation {
 		}
 
 		checkPluginCompatibility(pluginInfo);
-		
+
 		eventBus.post(new PluginInstallExternalEvent(pluginInfo.getDownloadUrl()));
-		
+
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();
 		String actualChecksum = calculateChecksum(tempPluginJarFile);
@@ -227,7 +326,7 @@ public class PluginOperation extends Operation {
 		if (expectedChecksum == null || !expectedChecksum.equals(actualChecksum)) {
 			throw new Exception("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
 		}
-		
+
 		logger.log(Level.INFO, "Plugin JAR checksum verified: " + actualChecksum);
 
 		File targetPluginJarFile = installPlugin(tempPluginJarFile, pluginInfo);
@@ -243,35 +342,35 @@ public class PluginOperation extends Operation {
 	private void checkPluginCompatibility(PluginInfo pluginInfo) throws Exception {
 		Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Version pluginAppMinVersion = Version.valueOf(pluginInfo.getPluginAppMinVersion());
-		
+
 		logger.log(Level.INFO, "Checking plugin compatibility:");
 		logger.log(Level.INFO, "- Application version:             " + Client.getApplicationVersion() + "(" + applicationVersion + ")");
 		logger.log(Level.INFO, "- Plugin min. application version: " + pluginInfo.getPluginAppMinVersion() + "(" + pluginAppMinVersion + ")");
-		
-		if (!applicationVersion.greaterThanOrEqualTo(pluginAppMinVersion)) {
+
+		if (applicationVersion.lessThan(pluginAppMinVersion)) {
 			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
-					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
+							+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
 		}
-		
+
 		// Verify if any conflicting plugins are installed
 		logger.log(Level.INFO, "Checking for conflicting plugins.");
-		
+
 		List<String> conflictingIds = pluginInfo.getConflictingPluginIds();
 		List<String> conflictingInstalledIds = new ArrayList<String>();
-		
+
 		if (conflictingIds != null) {
 			for (String pluginId : conflictingIds) {
 				Plugin plugin = Plugins.get(pluginId);
-				
+
 				if (plugin != null) {
 					logger.log(Level.INFO, "- Conflicting plugin " + pluginId + " found.");
 					conflictingInstalledIds.add(pluginId);
 				}
-				
+
 				logger.log(Level.FINE, "- Conflicting plugin " + pluginId + " not installed");
 			}
 		}
-		
+
 		result.setConflictingPlugins(conflictingInstalledIds);
 	}
 
@@ -284,7 +383,7 @@ public class PluginOperation extends Operation {
 
 	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws Exception {
 		eventBus.post(new PluginInstallExternalEvent(pluginJarFile.getAbsolutePath()));
-		
+
 		PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
 
 		checkPluginNotInstalled(pluginInfo.getPluginId());
@@ -302,7 +401,7 @@ public class PluginOperation extends Operation {
 
 	private PluginOperationResult executeInstallFromUrl(String downloadJarUrl) throws Exception {
 		eventBus.post(new PluginInstallExternalEvent(downloadJarUrl));
-		
+
 		File tempPluginJarFile = downloadPluginJar(downloadJarUrl);
 		PluginInfo pluginInfo = readPluginInfoFromJar(tempPluginJarFile);
 
@@ -336,28 +435,28 @@ public class PluginOperation extends Operation {
 			if (jarManifest == null) {
 				throw new Exception("Given file is not a valid Syncany plugin file (not a JAR file, or no manifest).");
 			}
-			
+
 			String pluginId = jarManifest.getMainAttributes().getValue("Plugin-Id");
-			
+
 			if (pluginId == null) {
 				throw new Exception("Given file is not a valid Syncany plugin file (no plugin ID in manifest).");
 			}
-			
+
 			PluginInfo pluginInfo = new PluginInfo();
-			
+
 			pluginInfo.setPluginId(pluginId);
 			pluginInfo.setPluginName(jarManifest.getMainAttributes().getValue("Plugin-Name"));
 			pluginInfo.setPluginVersion(jarManifest.getMainAttributes().getValue("Plugin-Version"));
 			pluginInfo.setPluginDate(jarManifest.getMainAttributes().getValue("Plugin-Date"));
 			pluginInfo.setPluginAppMinVersion(jarManifest.getMainAttributes().getValue("Plugin-App-Min-Version"));
 			pluginInfo.setPluginRelease(Boolean.parseBoolean(jarManifest.getMainAttributes().getValue("Plugin-Release")));
-			
+
 			if (jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With") != null) {
 				pluginInfo.setConflictingPluginIds(Arrays.asList(jarManifest.getMainAttributes().getValue("Plugin-Conflicts-With")));
 			}
-			
+
 			return pluginInfo;
-		}		
+		}
 	}
 
 	private File installPlugin(File pluginJarFile, PluginInfo pluginInfo) throws IOException {
@@ -365,7 +464,7 @@ public class PluginOperation extends Operation {
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
-				pluginInfo.getPluginVersion()));
+						pluginInfo.getPluginVersion()));
 
 		logger.log(Level.INFO, "Installing plugin from " + pluginJarFile + " to " + targetPluginJarFile + " ...");
 		FileUtils.copyFile(pluginJarFile, targetPluginJarFile);
@@ -375,7 +474,7 @@ public class PluginOperation extends Operation {
 
 	/**
 	 * Downloads the plugin JAR from the given URL to a temporary
-	 * local location.  
+	 * local location.
 	 */
 	private File downloadPluginJar(String pluginJarUrl) throws Exception {
 		URL pluginJarFile = new URL(pluginJarUrl);
@@ -405,6 +504,7 @@ public class PluginOperation extends Operation {
 	}
 
 	private PluginOperationResult executeList() throws Exception {
+		final Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Map<String, ExtendedPluginInfo> pluginInfos = new TreeMap<String, ExtendedPluginInfo>();
 
 		// First, list local plugins
@@ -419,20 +519,20 @@ public class PluginOperation extends Operation {
 
 				extendedPluginInfo.setLocalPluginInfo(localPluginInfo);
 				extendedPluginInfo.setInstalled(true);
-				
+
 				// Test if plugin can be uninstalled
 				Plugin plugin = Plugins.get(localPluginInfo.getPluginId());
 				File pluginJarFile = getJarFile(plugin);
 				boolean canUninstall = canUninstall(pluginJarFile);
-				
-				extendedPluginInfo.setCanUninstall(canUninstall);				
+
+				extendedPluginInfo.setCanUninstall(canUninstall);
 
 				// Add to list
 				pluginInfos.put(localPluginInfo.getPluginId(), extendedPluginInfo);
 			}
 		}
 
-		// Then, list remove plugins
+		// Then, list remote plugins
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.REMOTE) {
 			for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
 				if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
@@ -441,7 +541,7 @@ public class PluginOperation extends Operation {
 
 				ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
 				boolean localPluginInstalled = extendedPluginInfo != null;
-				
+
 				if (!localPluginInstalled) { // Locally not installed
 					extendedPluginInfo = new ExtendedPluginInfo();
 
@@ -450,6 +550,12 @@ public class PluginOperation extends Operation {
 				}
 				else { // Locally also installed
 					extendedPluginInfo.setRemoteAvailable(true);
+
+					Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
+					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
+					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
+
+					extendedPluginInfo.setOutdated(localVersion.lessThan(remoteVersion) && applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion));
 				}
 
 				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
@@ -498,13 +604,13 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private String getRemoteListStr(String pluginId) throws Exception {		
+	private String getRemoteListStr(String pluginId) throws Exception {
 		String appVersion = Client.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
 		String osStr = EnvironmentUtil.getOperatingSystemDescription();
 		String archStr = EnvironmentUtil.getArchDescription();
-		
+
 		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
 
@@ -513,7 +619,7 @@ public class PluginOperation extends Operation {
 		URLConnection urlConnection = pluginListUrl.openConnection();
 		urlConnection.setConnectTimeout(2000);
 		urlConnection.setReadTimeout(2000);
-		
+
 		BufferedReader urlStreamReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 		StringBuilder responseStringBuilder = new StringBuilder();
 
