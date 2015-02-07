@@ -22,6 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -634,6 +637,75 @@ public class CleanupOperationTest {
 
 		clientA.cleanup(options);
 		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+
+	}
+
+	@Test
+	public void defaultFileVersionDeletionTest() throws Exception {
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
+
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setRemoveOldVersions(true);
+		options.setMinSecondsBetweenCleanups(0);
+
+
+		// More than a month back
+		clientA.createNewFile("file.jpg", 1024);
+		clientA.upWithForceChecksum();
+		// Less than a month back
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		// Less than a month back, same day as above
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		// Less than 3 days back
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		// Less than 3 days back, same hour as above
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		// Less than 1 hour back
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+		// Less than 1 hour back, same minute
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+
+		long curTime = System.currentTimeMillis() / 1000L;
+		
+		long[] times = new long[]{curTime - 31L*24L*3600L, 
+				curTime - 20L * 24L * 3600L - 1L, curTime - 20L * 24L * 3600L,
+				curTime - 24 * 3600L - 1L, curTime - 24L * 3600L,
+				curTime - 500L, curTime - 499L
+		};
+		System.out.println(TestSqlUtil.runSqlSelect("select filehistory_id, version, updated from fileversion", databaseConnectionA));
+
+		int i = 0;
+		try (PreparedStatement preparedStatement = databaseConnectionA.prepareStatement("select * from fileversion")) {
+			ResultSet res = preparedStatement.executeQuery();
+			while (res.next()) {
+				int version = res.getInt("version");
+				try (PreparedStatement preparedUpdate = databaseConnectionA.prepareStatement("update fileversion set updated = ? where version = ?")) {
+					System.out.println(new Timestamp(times[i] * 1000L));
+					preparedUpdate.setTimestamp(1, new Timestamp(times[i] * 1000L));
+					preparedUpdate.setInt(2, version);
+					assertEquals(1, preparedUpdate.executeUpdate());
+				}
+				i++;
+			}
+		}
+		databaseConnectionA.commit();
+		System.out.println(TestSqlUtil.runSqlSelect("select version, updated from fileversion", databaseConnectionA));
+		assertEquals("7", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+
+
+
+		clientA.cleanup(options);
+		System.out.println(TestSqlUtil.runSqlSelect("select version, updated from fileversion", databaseConnectionA));
+		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 
 	}
 }

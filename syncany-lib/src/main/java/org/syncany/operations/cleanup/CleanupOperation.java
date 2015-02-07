@@ -20,6 +20,7 @@ package org.syncany.operations.cleanup;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -260,17 +261,20 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
 		for (long time : options.getPurgeFileVersionSettings().keySet()) {
-			purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time * 1000, currentTime - previousTime * 1000,
-					options
-					.getPurgeFileVersionSettings().get(time)));
+			logger.log(Level.INFO, new Timestamp(currentTime - time * 1000) + " " + new Timestamp(currentTime - previousTime * 1000) + " "
+					+ options.getPurgeFileVersionSettings().get(time));
+			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time * 1000,
+					currentTime - previousTime * 1000,
+					options.getPurgeFileVersionSettings().get(time));
+			putAllFileversionsInMap(newPurgeFileVersions, purgeFileVersions);
+			logger.log(Level.INFO, "Number of versions: " + purgeFileVersions.size());
 			previousTime = time;
 		}
 
 		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete));
-
+		putAllFileversionsInMap(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete), purgeFileVersions);
 		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary.");
 			return;
@@ -300,6 +304,18 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size() + purgeFileVersions.size());
 		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
+	}
+
+	private void putAllFileversionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
+			Map<FileHistoryId, List<FileVersion>> purgeFileVersions) {
+		for (FileHistoryId fileHistoryId : newFileVersions.keySet()) {
+			if (purgeFileVersions.containsKey(fileHistoryId)) {
+				purgeFileVersions.get(fileHistoryId).addAll(newFileVersions.get(fileHistoryId));
+			}
+			else {
+				purgeFileVersions.put(fileHistoryId, newFileVersions.get(fileHistoryId));
+			}
+		}
 	}
 
 	/**
