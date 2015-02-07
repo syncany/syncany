@@ -20,7 +20,6 @@ package org.syncany.operations.cleanup;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -261,13 +260,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
 		for (long time : options.getPurgeFileVersionSettings().keySet()) {
-			logger.log(Level.INFO, new Timestamp(currentTime - time * 1000) + " " + new Timestamp(currentTime - previousTime * 1000) + " "
-					+ options.getPurgeFileVersionSettings().get(time));
-			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(currentTime - time * 1000,
+			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
+					currentTime - time * 1000,
 					currentTime - previousTime * 1000,
 					options.getPurgeFileVersionSettings().get(time));
+
 			putAllFileversionsInMap(newPurgeFileVersions, purgeFileVersions);
-			logger.log(Level.INFO, "Number of versions: " + purgeFileVersions.size());
 			previousTime = time;
 		}
 

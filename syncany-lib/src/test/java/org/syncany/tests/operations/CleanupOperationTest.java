@@ -685,7 +685,6 @@ public class CleanupOperationTest {
 				curTime - 24 * 3600L - 1L, curTime - 24L * 3600L,
 				curTime - 500L, curTime - 499L
 		};
-		System.out.println(TestSqlUtil.runSqlSelect("select filehistory_id, version, updated from fileversion", databaseConnectionA));
 
 		int i = 0;
 		try (PreparedStatement preparedStatement = databaseConnectionA.prepareStatement("select * from fileversion")) {
@@ -701,14 +700,11 @@ public class CleanupOperationTest {
 				i++;
 			}
 		}
+
 		databaseConnectionA.commit();
-		System.out.println(TestSqlUtil.runSqlSelect("select version, updated from fileversion", databaseConnectionA));
 		assertEquals("7", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 
-
-
 		clientA.cleanup(options);
-		System.out.println(TestSqlUtil.runSqlSelect("select version, updated from fileversion", databaseConnectionA));
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 
 	}
