@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.TreeMap;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
@@ -228,6 +229,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
+		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
 
 		// Run
 
@@ -436,6 +438,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMinSecondsBetweenCleanups(0);
+		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
 		options.setRemoveOldVersions(true);
 		options.setMaxDatabaseFiles(3);
 
@@ -624,6 +627,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(0);
+		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
 		options.setMinSecondsBeforeFullyDeletingFiles(2);
 		
 		clientA.createNewFile("file.jpg");
