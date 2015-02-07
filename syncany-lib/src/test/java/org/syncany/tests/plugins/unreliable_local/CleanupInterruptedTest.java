@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
+import java.util.TreeMap;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -134,6 +135,7 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMaxDatabaseFiles(1);
+		cleanupOptions.setPurgeFileVersionSettings(new TreeMap<Long, String>());
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);

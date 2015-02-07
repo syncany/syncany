@@ -201,28 +201,28 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A8,B6) + (A8,B7) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A9,B7) + (A10,B7) [PURGE]
 		clientA.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionA));
 
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B8) + (A10,B9) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B10) + (A10,B11) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientA.down();
