@@ -618,7 +618,7 @@ public class CleanupOperationTest {
 	}
 	
 	@Test
-	public void fullyDeletingDeletedFilesTest() throws Exception {
+	public void testFullyDeletingDeletedFiles() throws Exception {
 		// Setup
 		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);
@@ -645,7 +645,7 @@ public class CleanupOperationTest {
 	}
 
 	@Test
-	public void defaultFileVersionDeletionTest() throws Exception {
+	public void testDefaultFileVersionDeletion() throws Exception {
 		// Setup
 		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 		TestClient clientA = new TestClient("A", testConnection);

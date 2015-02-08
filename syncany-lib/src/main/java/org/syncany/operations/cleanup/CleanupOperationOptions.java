@@ -102,8 +102,18 @@ public class CleanupOperationOptions implements OperationOptions {
 	public long getMinSecondsBeforeFullyDeletingFiles() {
 		return minSecondsBeforeFullyDeletingFiles;
 	}
-	
+
+	/** 
+	 * This function returns a Map which describes how to purge fileversions.
+	 * 
+	 * Each key-value pair has a long and a string, representing the following:
+	 * The string determines the behavior we use up to long seconds in the past.
+	 * ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
+	 * If the second pair is (3600*24, "HH"), we keep 1 version every hour for the last day, 
+	 * except the last hour, for which the above policy holds.
+	 */
 	public SortedMap<Long, String> getPurgeFileVersionSettings() {
+
 		if (purgeFileVersionSettings == null) {
 			purgeFileVersionSettings = new TreeMap<Long, String>();
 			purgeFileVersionSettings.put(30L * 24L * 3600L, "DD");

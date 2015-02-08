@@ -255,24 +255,16 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-		long currentTime = System.currentTimeMillis();
-		long previousTime = 0;
-		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
-		for (long time : options.getPurgeFileVersionSettings().keySet()) {
-			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
-					currentTime - time * 1000,
-					currentTime - previousTime * 1000,
-					options.getPurgeFileVersionSettings().get(time));
+		// Get file versions that should be purged according to the settings that are given. Time-based.
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = collectPurgableFileVersions();
 
-			putAllFileversionsInMap(newPurgeFileVersions, purgeFileVersions);
-			previousTime = time;
-		}
-
-		long soLongAgoWeFullyDelete = System.currentTimeMillis()-options.getMinSecondsBeforeFullyDeletingFiles()*1000;
+		// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
+		long soLongAgoWeFullyDelete = System.currentTimeMillis() - options.getMinSecondsBeforeFullyDeletingFiles() * 1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
 		putAllFileversionsInMap(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete), purgeFileVersions);
+
 		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary.");
 			return;
@@ -302,6 +294,29 @@ public class CleanupOperation extends AbstractTransferOperation {
 		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size() + purgeFileVersions.size());
 		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
+	}
+
+	private Map<FileHistoryId, List<FileVersion>> collectPurgableFileVersions() {
+		long currentTime = System.currentTimeMillis();
+		long previousTime = 0;
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+
+		for (long time : options.getPurgeFileVersionSettings().keySet()) {
+			// Each key-value pair has a long and a string, representing the following:
+			// The string determines the behavior we use up to long seconds in the past.
+			// ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
+			// If the second pair is (3600*24, "HH"), we keep 1 version every hour for the last day, 
+			// except the last hour, for which the above policy holds.
+			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
+					currentTime - time * 1000,
+					currentTime - previousTime * 1000,
+					options.getPurgeFileVersionSettings().get(time));
+
+			putAllFileversionsInMap(newPurgeFileVersions, purgeFileVersions);
+			previousTime = time;
+		}
+
+		return purgeFileVersions;
 	}
 
 	private void putAllFileversionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
