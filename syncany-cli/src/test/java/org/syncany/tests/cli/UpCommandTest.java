@@ -103,9 +103,10 @@ public class UpCommandTest {
 				"cleanup"
 		}));
 
-		assertEquals(10, cliOut.length);
+		assertEquals(11, cliOut.length);
 		assertTrue(cliOut[8].contains("21 database files merged"));
-		assertTrue(cliOut[9].contains("Cleanup successful"));
+		assertTrue(cliOut[9].contains("1 file histories shortened"));
+		assertTrue(cliOut[10].contains("Cleanup successful"));
 
 		for (int i = 1; i <= 21; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
