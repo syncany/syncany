@@ -98,7 +98,7 @@ startScripts {
 
 		// - Read max memory (-Xmx) from userconfig.xml
 		String forceSwtGtk2Commands = "# Force SWT/GTK2 (workaround until SWT/GTK3 tables work right) #SYNCANY_INCL_1#\n"
-		forceSwtGtk2Commands += "SWT_GTK3=0\n";
+		forceSwtGtk2Commands += "export SWT_GTK3=0\n";
 
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${forceSwtGtk2Commands}"))
 
