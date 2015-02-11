@@ -21,21 +21,21 @@ import java.io.File;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.util.StringUtil;
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class FolderAwareTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(FolderAwareTransferManager.class.getSimpleName());
-	private static final char FOLDER_SEPERATOR = '/';
+public class PathAwareTransferManager implements TransferManager {
+	private static final Logger logger = Logger.getLogger(PathAwareTransferManager.class.getSimpleName());
 
-	private final Folderable underlyingTransferManager;
+	private final PathAware underlyingTransferManager;
 
-	public FolderAwareTransferManager(Folderable underlyingTransferManager) {
+	public PathAwareTransferManager(PathAware underlyingTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
 	}
 
@@ -127,12 +127,12 @@ public class FolderAwareTransferManager implements TransferManager {
 		}
 
 		// we need to use the hash value of a file's name because some files aren't folderizable by default
-		String fileId = StringUtil.toHex(DigestUtils.sha256(remoteFile.getSimpleName()));
+		String fileId = StringUtil.toHex(Hashing.murmur3_128().hashString(remoteFile.getSimpleName(), Charsets.UTF_8).asBytes());
 		StringBuilder path = new StringBuilder();
 
 		for (int i = 0; i < underlyingTransferManager.getSubfolderDepth(); i++) {
 			path.append(fileId.substring(i * underlyingTransferManager.getBytesPerFolder(), (i + 1) * underlyingTransferManager.getBytesPerFolder()));
-			path.append(FOLDER_SEPERATOR);
+			path.append(underlyingTransferManager.getFolderSeperator());
 		}
 
 		return RemoteFile.createRemoteFileWithPath(remoteFile.getSimpleName(), path.toString(), remoteFile.getClass());
