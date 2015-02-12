@@ -28,15 +28,15 @@ import com.google.common.collect.ImmutableList;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public interface Folderable extends TransferManager {
+public interface PathAware extends TransferManager {
 
-	public static final int BYTES_PER_FOLDER = 2;
-	public static final int SUBFOLDER_DEPTH = 2;
 	public static final List<Class<? extends RemoteFile>> FOLDERIZABLE_FILES = ImmutableList.<Class<? extends RemoteFile>>builder().add(MultichunkRemoteFile.class).add(TempRemoteFile.class).build();
 
 	public int getBytesPerFolder();
 
 	public int getSubfolderDepth();
+
+	public char getFolderSeperator();
 
 	public List<Class<? extends RemoteFile>> getFolderizableFiles();
 
