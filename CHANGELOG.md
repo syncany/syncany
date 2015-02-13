@@ -15,6 +15,7 @@ Change Log
     much left cell spacing #346
   + Fix flickering and newline-problem on Windows tray icon #337
   + Fix ampersands (&) in menus #367
+  + Fix last modified pre-1970 issue #374
 
 ### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
 - Patch release to fix serialization issue in 'sy ls'
