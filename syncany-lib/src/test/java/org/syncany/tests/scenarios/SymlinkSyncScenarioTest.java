@@ -67,7 +67,7 @@ public class SymlinkSyncScenarioTest {
 		// Test 2: Check database for inconsistencies
 		SqlDatabase database = clientA.loadLocalDatabase();
 
-		assertNotNull("File should be uploaded.", database.getFileVersionByPath("symlink-name"));
+		assertEquals("File should be uploaded.", 1, database.getFileList("symlink-name", null, false, false, false, null).size());
 		assertNotNull("There should be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies
