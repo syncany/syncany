@@ -39,7 +39,7 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean removeUnreferencedTemporaryFiles = true;
 
 	@Element(required = false)
-	private long minKeepSeconds = 30 * 24 * 60 * 60; // 30 days
+	private long minKeepDeletedSeconds = 30 * 24 * 60 * 60; // 30 days
 
 	@Element(required = false)
 	private int maxDatabaseFiles = 15;
@@ -94,12 +94,12 @@ public class CleanupOperationOptions implements OperationOptions {
 		return minSecondsBetweenCleanups;
 	}
 
-	public void setMinKeepSeconds(long minKeepSeconds) {
-		this.minKeepSeconds = minKeepSeconds;
+	public void setMinKeepSeconds(long minKeepDeletedSeconds) {
+		this.minKeepDeletedSeconds = minKeepDeletedSeconds;
 	}
 
-	public long getMinKeepSeconds() {
-		return minKeepSeconds;
+	public long getMinKeepDeletedSeconds() {
+		return minKeepDeletedSeconds;
 	}
 	
 	public SortedMap<Long, String> getPurgeFileVersionSettings() {

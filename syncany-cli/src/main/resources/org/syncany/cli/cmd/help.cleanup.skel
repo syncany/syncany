@@ -2,9 +2,10 @@ NAME
   sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
-  sy cleanup [-k | --keep-min] [-f | --force] [-t | --time-between-cleanups ]
-             [-x | --max-database-files] [-V | --no-version-removal] 
-             [-T | --no-temp-removal] [<status-options>]
+  sy cleanup [-k | --keep-deleted=<time>] [-x | --max-database-files] 
+             [-t | --time-between-cleanups=<time>] [-f | --force]
+             [-V | --no-version-removal] [-T | --no-temp-removal]
+             [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
@@ -30,7 +31,7 @@ DESCRIPTION
   This command is used by the 'up' command.
   
 OPTIONS
-  -k, --keep-min=<relative-time>
+  -k, --keep-deleted=<relative-time>
     Sets the minimal amount of time that cleanup allows to keep deleted files;
     Such that they can be restored at some point). Cleanup will fully delete
     files that were deleted more than this number of seconds ago and they will

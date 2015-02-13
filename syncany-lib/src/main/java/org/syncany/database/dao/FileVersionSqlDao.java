@@ -350,19 +350,23 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 	private Map<FileHistoryId, List<FileVersion>> getAllVersionsInQuery(PreparedStatement preparedStatement) throws SQLException {
 		try (ResultSet resultSet = preparedStatement.executeQuery()) {
-			Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+			Map<FileHistoryId, List<FileVersion>> fileHistoryPurgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
 			while (resultSet.next()) {
 				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
 				FileVersion fileVersion = createFileVersionFromRow(resultSet);
 
-				if (purgeFileVersions.get(fileHistoryId) == null) {
-					purgeFileVersions.put(fileHistoryId, new ArrayList<FileVersion>());
+				List<FileVersion> purgeFileVersions = fileHistoryPurgeFileVersions.get(fileHistoryId);
+				
+				if (purgeFileVersions == null) {
+					purgeFileVersions = new ArrayList<FileVersion>();
+					fileHistoryPurgeFileVersions.put(fileHistoryId, purgeFileVersions);
 				}
-				purgeFileVersions.get(fileHistoryId).add(fileVersion);
+				
+				purgeFileVersions.add(fileVersion);
 			}
 
-			return purgeFileVersions;
+			return fileHistoryPurgeFileVersions;
 		}
 	}
 

@@ -259,7 +259,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = collectPurgableFileVersions();
 
 		// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
-		long soLongAgoWeFullyDelete = System.currentTimeMillis() - options.getMinKeepSeconds() * 1000;
+		long soLongAgoWeFullyDelete = System.currentTimeMillis() - options.getMinKeepDeletedSeconds() * 1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
 		putAllFileVersionsInMap(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete), purgeFileVersions);
@@ -319,13 +319,17 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	private void putAllFileVersionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
-			Map<FileHistoryId, List<FileVersion>> purgeFileVersions) {
+			Map<FileHistoryId, List<FileVersion>> fileHistoryPurgeFileVersions) {
+		
 		for (FileHistoryId fileHistoryId : newFileVersions.keySet()) {
-			if (purgeFileVersions.containsKey(fileHistoryId)) {
-				purgeFileVersions.get(fileHistoryId).addAll(newFileVersions.get(fileHistoryId));
+			List<FileVersion> purgeFileVersions = fileHistoryPurgeFileVersions.get(fileHistoryId);
+			List<FileVersion> newPurgeFileVersions = newFileVersions.get(fileHistoryId);
+			
+			if (purgeFileVersions != null) {
+				purgeFileVersions.addAll(newPurgeFileVersions);
 			}
 			else {
-				purgeFileVersions.put(fileHistoryId, newFileVersions.get(fileHistoryId));
+				fileHistoryPurgeFileVersions.put(fileHistoryId, newPurgeFileVersions);
 			}
 		}
 	}
