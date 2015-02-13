@@ -304,7 +304,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 			// Each key-value pair has a long and a string, representing the following:
 			// The string determines the behavior we use up to long seconds in the past.
 			// ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
-			// If the second pair is (3600*24, "HH"), we keep 1 version every hour for the last day, 
+			// If the second pair is (3*24*3600, "HH"), we keep 1 version every hour for the last three days, 
 			// except the last hour, for which the above policy holds.
 			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
 					currentTime - time * 1000,
