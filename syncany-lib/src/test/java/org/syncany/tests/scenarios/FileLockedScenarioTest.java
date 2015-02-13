@@ -144,7 +144,7 @@ public class FileLockedScenarioTest {
 		// Test 2: Check database for inconsistencies
 		SqlDatabase database = client.loadLocalDatabase();
 
-		assertNull("File should NOT be uploaded while it is locked.", database.getFileVersionByPath("large-test-file"));
+		assertEquals("File should NOT be uploaded while it is locked.", 0, database.getFileList("large-test-file", null, false, false, false, null).size());
 		assertNull("There should NOT be a new database version, because file should not have been added.", database.getLastDatabaseVersionHeader());
 
 		// Test 3: Check file system for inconsistencies

@@ -181,10 +181,6 @@ public class SqlDatabase {
 		return databaseVersionDao.writeDatabaseVersion(databaseVersion);
 	}
 
-	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
-		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
-	}
-
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
@@ -242,12 +238,7 @@ public class SqlDatabase {
 	public void removeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
 		fileVersionDao.removeSpecificFileVersions(purgeFileVersions);
 	}
-
-	@Deprecated
-	public FileVersion getFileVersionByPath(String path) {
-		return fileVersionDao.getFileVersionByPath(path);
-	}
-
+	
 	public List<FileVersion> getFileList(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
 			Set<FileType> fileTypes) {
 		

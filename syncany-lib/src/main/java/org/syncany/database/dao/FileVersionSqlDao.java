@@ -95,22 +95,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		preparedStatement.close();
 	}
 
-	public void writePurgeFileVersions(Connection connection, FileHistoryId fileHistoryId, long databaseVersionId,
-			Collection<FileVersion> purgeFileVersions) throws SQLException {
-		PreparedStatement preparedStatement = getStatement(connection, "fileversion.insert.writePurgeFileVersions.sql");
-
-		for (FileVersion purgeFileVersion : purgeFileVersions) {
-			preparedStatement.setString(1, fileHistoryId.toString());
-			preparedStatement.setInt(2, Integer.parseInt("" + purgeFileVersion.getVersion()));
-			preparedStatement.setLong(3, databaseVersionId);
-
-			preparedStatement.addBatch();
-		}
-
-		preparedStatement.executeBatch();
-		preparedStatement.close();
-	}
-
 	/**
 	 * Removes {@link FileVersion}s from the database table <i>fileversion</i> for which the
 	 * the corresponding database is marked <tt>DIRTY</tt>.
@@ -392,23 +376,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			}
 
 			return fileTree;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Deprecated
-	public FileVersion getFileVersionByPath(String path) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.master.getFileVersionByPath.sql")) {
-			preparedStatement.setString(1, path);
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				if (resultSet.next()) {
-					return createFileVersionFromRow(resultSet);
-				}
-			}
-
-			return null;
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
