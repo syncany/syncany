@@ -255,15 +255,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-
 		// Get file versions that should be purged according to the settings that are given. Time-based.
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = collectPurgableFileVersions();
 
 		// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
-		long soLongAgoWeFullyDelete = System.currentTimeMillis() - options.getMinSecondsBeforeFullyDeletingFiles() * 1000;
+		long soLongAgoWeFullyDelete = System.currentTimeMillis() - options.getMinKeepSeconds() * 1000;
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(localDatabase.getDeletedFileVersionsBefore(soLongAgoWeFullyDelete));
-		putAllFileversionsInMap(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete), purgeFileVersions);
+		putAllFileVersionsInMap(localDatabase.getFileHistoriesToPurgeBefore(soLongAgoWeFullyDelete), purgeFileVersions);
 
 		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary.");
@@ -312,14 +311,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 					currentTime - previousTime * 1000,
 					options.getPurgeFileVersionSettings().get(time));
 
-			putAllFileversionsInMap(newPurgeFileVersions, purgeFileVersions);
+			putAllFileVersionsInMap(newPurgeFileVersions, purgeFileVersions);
 			previousTime = time;
 		}
 
 		return purgeFileVersions;
 	}
 
-	private void putAllFileversionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
+	private void putAllFileVersionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
 			Map<FileHistoryId, List<FileVersion>> purgeFileVersions) {
 		for (FileHistoryId fileHistoryId : newFileVersions.keySet()) {
 			if (purgeFileVersions.containsKey(fileHistoryId)) {

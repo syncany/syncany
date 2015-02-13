@@ -75,7 +75,7 @@ public class CleanupInterruptedTest {
 		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
+		cleanupOptions.setMinKeepSeconds(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -213,7 +213,7 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
-		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
+		cleanupOptions.setMinKeepSeconds(0);
 		clientA.cleanup(cleanupOptions);
 
 		TransferManager transferManager = new TransactionAwareTransferManager(
@@ -276,7 +276,7 @@ public class CleanupInterruptedTest {
 		clientB.down();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setMinSecondsBeforeFullyDeletingFiles(0);
+		cleanupOptions.setMinKeepSeconds(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);

@@ -500,7 +500,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
 		cleanupOptionsKeepOneForce.setForce(true);
-		cleanupOptionsKeepOneForce.setMinSecondsBeforeFullyDeletingFiles(0);
+		cleanupOptionsKeepOneForce.setMinKeepSeconds(0);
 
 		// Create a couple of files, then delete them and do a cleanup
 

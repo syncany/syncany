@@ -2,9 +2,9 @@ NAME
   sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
-  sy cleanup [-V | --no-version-removal] [-T | --no-temp-removal] 
-             [-t | --time-between-cleanups ] [-x | --max-database-files]
-             [-e | --keep-deleted-seconds] [-f | --force] [<status-options>]
+  sy cleanup [-k | --keep-min] [-f | --force] [-t | --time-between-cleanups ]
+             [-x | --max-database-files] [-V | --no-version-removal] 
+             [-T | --no-temp-removal] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
@@ -30,9 +30,36 @@ DESCRIPTION
   This command is used by the 'up' command.
   
 OPTIONS
+  -k, --keep-min=<relative-time>
+    Sets the minimal amount of time that cleanup allows to keep deleted files;
+    Such that they can be restored at some point). Cleanup will fully delete
+    files that were deleted more than this number of seconds ago and they will
+    be gone permanently. Default is 30 days (30d).
+    
+    Relative time format: <value><unit>, for which <value> may be any 
+    floating point number and <unit> may be any of the following: s(econds),
+    m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
+    shortened if they are unique. Examples: 5h30m or 1y1mo2d
+
+  -t, --time-between-cleanups=<relative-time>
+    Sets the minimal amount of time between two cleanups. If the last cleanup
+    from this client is less then <relative-time> ago, no database files
+    will be merged. Versions will still be removed.
+    
+    Relative time format: (see -k)
+
+  -x, --max-database-files=<count>
+    Sets the number of database files per client. If the total number of 
+    databases exceeds <count> times the number of clients, all database
+    files will be merged to one per client.
+      
+  -f, --force
+    Forces a the cleanup, even if the time between cleanups (-t) has not been 
+    run out yet. Use this option only if a cleanup is absolutely necessary.
+      
   -V, --no-version-removal 
     Turns off the removal of old versions for the command. If this is set, this
-    command will not shorten file histories to the <count> given by -k, and it
+    command will not shorten file histories to the value given by -k, and it
     will not delete file versions marked as 'deleted' in the database.  
     
   -T, --no-temp-removal   
@@ -40,24 +67,4 @@ OPTIONS
     is set, this command will leave temporary files on the offsite storage
     untouched.   
 
-  -t, --time-between-cleanups=<seconds>
-    Sets the minimal amount of time between two cleanups. If the last cleanup
-    from this client is less then <seconds> seconds ago, no database files
-    will be merged. Versions will still be removed.
-
-  -x, --max-database-files=<count>
-    Sets the number of database files per client. If the total number of 
-    databases exceeds <count> times the number of clients, all database
-    files will be merged to one per client.
-    
-  -e, --keep-deleted-seconds=<seconds>
-    Sets the minimal amount of time that cleanup allows to keep deleted files;
-    Such that they can be restored at some point). Cleanup will fully delete
-    files that were deleted more than this number of seconds ago and they will
-    be gone permanently. 
-  
-  -f, --force
-    Forces a the cleanup, even if the time between cleanups (-t) has not been 
-    run out yet. Use this option only if a cleanup is absolutely necessary.
-      
 %RESOURCE:incl/footer.skel%

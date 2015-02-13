@@ -61,7 +61,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setMinSecondsBeforeFullyDeletingFiles(0);
+		options.setMinKeepSeconds(0);
 
 		// Run
 
@@ -264,7 +264,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setMinSecondsBeforeFullyDeletingFiles(0);
+		options.setMinKeepSeconds(0);
 
 		// Run
 
@@ -547,7 +547,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setStatusOptions(forceChecksumStatusOperationOptions);
 		options.setRemoveOldVersions(true);
-		options.setMinSecondsBeforeFullyDeletingFiles(0);
+		options.setMinKeepSeconds(0);
 		options.setMinSecondsBetweenCleanups(40000000);
 		options.setForce(true);
 
@@ -628,7 +628,7 @@ public class CleanupOperationTest {
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(0);
 		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
-		options.setMinSecondsBeforeFullyDeletingFiles(2);
+		options.setMinKeepSeconds(2);
 		
 		clientA.createNewFile("file.jpg");
 		clientA.up();
@@ -655,22 +655,23 @@ public class CleanupOperationTest {
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(0);
 
-
 		// More than a month back
 		clientA.createNewFile("file.jpg", 1024);
 		clientA.upWithForceChecksum();
 		// Less than a month back
 		clientA.changeFile("file.jpg");
-		clientA.upWithForceChecksum();
+		clientA.upWithForceChecksum();		
 		// Less than a month back, same day as above
 		clientA.changeFile("file.jpg");
 		clientA.upWithForceChecksum();
+		
 		// Less than 3 days back
 		clientA.changeFile("file.jpg");
 		clientA.upWithForceChecksum();
 		// Less than 3 days back, same hour as above
 		clientA.changeFile("file.jpg");
 		clientA.upWithForceChecksum();
+		
 		// Less than 1 hour back
 		clientA.changeFile("file.jpg");
 		clientA.upWithForceChecksum();
@@ -706,6 +707,7 @@ public class CleanupOperationTest {
 
 		clientA.cleanup(options);
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+		assertEquals("3\n5\n7", TestSqlUtil.runSqlSelect("select version from fileversion", databaseConnectionA));
 
 	}
 }

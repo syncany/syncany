@@ -63,11 +63,12 @@ public class CleanupCommand extends Command {
 		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
-		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg()
-				.ofType(String.class);
-		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files")).withRequiredArg().ofType(Integer.class);
-		OptionSpec<Long> optionKeepDeletedFilesForSeconds = parser.acceptsAll(asList("e", "keep-deleted-seconds")).withRequiredArg()
-				.ofType(Long.class);
+		OptionSpec<String> optionTimeBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups"))
+				.withRequiredArg().ofType(String.class);
+		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files"))
+				.withRequiredArg().ofType(Integer.class);
+		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("k", "keep-min"))
+				.withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -81,25 +82,14 @@ public class CleanupCommand extends Command {
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
 		// -t=<count>, --time-between-cleanups=<count>
-		if (options.has(optionSecondsBetweenCleanups)) {
-			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
+		if (options.has(optionTimeBetweenCleanups)) {
+			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionTimeBetweenCleanups));
 
 			if (secondsBetweenCleanups < 0) {
 				throw new Exception("Invalid value for --time-between-cleanups=" + secondsBetweenCleanups + "; must be >= 0");
 			}
 
 			operationOptions.setMinSecondsBetweenCleanups(secondsBetweenCleanups);
-		}
-
-		// -d=<count>, --max-database-files=<count>
-		if (options.has(optionMaxDatabaseFiles)) {
-			int maxDatabaseFiles = options.valueOf(optionMaxDatabaseFiles);
-
-			if (maxDatabaseFiles < 1) {
-				throw new Exception("Invalid value for --max-database-files=" + maxDatabaseFiles + "; must be >= 1");
-			}
-
-			operationOptions.setMaxDatabaseFiles(maxDatabaseFiles);
 		}
 
 		// -x=<count>, --max-database-files=<count>
@@ -113,15 +103,15 @@ public class CleanupCommand extends Command {
 			operationOptions.setMaxDatabaseFiles(maxDatabaseFiles);
 		}
 
-		// -e=<count>, --keep-deleted-files-for-seconds=<count>
-		if (options.has(optionKeepDeletedFilesForSeconds)) {
-			long keepDeletedFilesForSeconds = options.valueOf(optionKeepDeletedFilesForSeconds);
+		// -k=<time>, --keep-min=<time>
+		if (options.has(optionKeepMinTime)) {
+			long keepDeletedFilesForSeconds = CommandLineUtil.parseTimePeriod(options.valueOf(optionKeepMinTime));
 
 			if (keepDeletedFilesForSeconds < 0) {
-				throw new Exception("Invalid value for --keep-deleted-seconds==" + keepDeletedFilesForSeconds + "; must be >= 0");
+				throw new Exception("Invalid value for --keep-min==" + keepDeletedFilesForSeconds + "; must be >= 0");
 			}
 
-			operationOptions.setMinSecondsBeforeFullyDeletingFiles(keepDeletedFilesForSeconds);
+			operationOptions.setMinKeepSeconds(keepDeletedFilesForSeconds);
 		}
 
 		// Parse 'status' options
@@ -147,7 +137,8 @@ public class CleanupCommand extends Command {
 			break;
 
 		case NOK_RECENTLY_CLEANED:
-			out.println("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
+			out.println("Cleanup has been done recently, so it is not necessary.");
+			out.println("If you are sure it is necessary, override with --force.");
 			break;
 
 		case NOK_LOCAL_CHANGES:

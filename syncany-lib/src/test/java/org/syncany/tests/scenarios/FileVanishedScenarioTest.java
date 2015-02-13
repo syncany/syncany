@@ -50,7 +50,7 @@ public class FileVanishedScenarioTest {
 		final int numFilesRemaining = numFiles - numFilesVanished;
 		final int sizeFiles = 500 * 1024;
 		CleanupOperationOptions options = new CleanupOperationOptions();
-		options.setMinSecondsBeforeFullyDeletingFiles(0);
+		options.setMinKeepSeconds(0);
 
 		// Prepare by creating test files
 		logger.log(Level.INFO, "Creating test files ...");

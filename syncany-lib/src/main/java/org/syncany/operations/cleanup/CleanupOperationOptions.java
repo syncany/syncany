@@ -39,21 +39,20 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean removeUnreferencedTemporaryFiles = true;
 
 	@Element(required = false)
-	private long minSecondsBeforeFullyDeletingFiles = 3600L * 24L * 30L;
+	private long minKeepSeconds = 30 * 24 * 60 * 60; // 30 days
 
 	@Element(required = false)
 	private int maxDatabaseFiles = 15;
 
 	@Element(required = false)
-	private long minSecondsBetweenCleanups = 10800;
+	private long minSecondsBetweenCleanups = 3 * 60 * 60; // 3 hours
 
 	@ElementMap(entry = "fromTime", key = "truncateDateFormat", required = false, attribute = true, inline = true)
 	private SortedMap<Long, String> purgeFileVersionSettings;
 
-	// TODO [medium] Implement multichunk repackaging
-
-	// private boolean repackageMultiChunks = true; 
-	// private double repackageUnusedThreshold = 0.7;
+	public CleanupOperationOptions() {
+		purgeFileVersionSettings = createDefaultPurgeFileVersionSettings();	
+	}
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -95,31 +94,15 @@ public class CleanupOperationOptions implements OperationOptions {
 		return minSecondsBetweenCleanups;
 	}
 
-	public void setMinSecondsBeforeFullyDeletingFiles(long minSecondsBeforeFullyDeletingFiles) {
-		this.minSecondsBeforeFullyDeletingFiles = minSecondsBeforeFullyDeletingFiles;
+	public void setMinKeepSeconds(long minKeepSeconds) {
+		this.minKeepSeconds = minKeepSeconds;
 	}
 
-	public long getMinSecondsBeforeFullyDeletingFiles() {
-		return minSecondsBeforeFullyDeletingFiles;
+	public long getMinKeepSeconds() {
+		return minKeepSeconds;
 	}
-
-	/** 
-	 * This function returns a Map which describes how to purge fileversions.
-	 * 
-	 * Each key-value pair has a long and a string, representing the following:
-	 * The string determines the behavior we use up to long seconds in the past.
-	 * ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
-	 * If the second pair is (3600*24, "HH"), we keep 1 version every hour for the last day, 
-	 * except the last hour, for which the above policy holds.
-	 */
+	
 	public SortedMap<Long, String> getPurgeFileVersionSettings() {
-
-		if (purgeFileVersionSettings == null) {
-			purgeFileVersionSettings = new TreeMap<Long, String>();
-			purgeFileVersionSettings.put(30L * 24L * 3600L, "DD");
-			purgeFileVersionSettings.put(3L * 24L * 3600L, "HH");
-			purgeFileVersionSettings.put(3600L, "MI");
-		}
 		return purgeFileVersionSettings;
 	}
 
@@ -133,5 +116,24 @@ public class CleanupOperationOptions implements OperationOptions {
 
 	public void setForce(boolean force) {
 		this.force = force;
+	}
+	
+	/** 
+	 * This function returns a Map which describes how to purge file versions.
+	 * 
+	 * Each key-value pair has a long and a string, representing the following:
+	 * The string determines the behavior we use up to long seconds in the past.
+	 * ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
+	 * If the second pair is (3600*24, "HH"), we keep 1 version every hour for the last day, 
+	 * except the last hour, for which the above policy holds.
+	 */
+	private SortedMap<Long, String> createDefaultPurgeFileVersionSettings() {
+		TreeMap<Long, String> purgeSettings = new TreeMap<Long, String>();
+
+		purgeSettings.put(30L * 24L * 3600L, "DD");
+		purgeSettings.put(3L * 24L * 3600L, "HH");
+		purgeSettings.put(3600L, "MI");	
+		
+		return purgeSettings;
 	}
 }
