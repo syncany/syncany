@@ -249,7 +249,7 @@ _sy() {
 		-F --force\
 		-V --no-version-removal\
 		-T --no-temp-removal\
-		-k --keep-versions\
+		-e --keep-deleted-seconds\
 		-t --time-between-cleanups\
 		-x --max-database-files\
 		$STATUS_OPTIONS"

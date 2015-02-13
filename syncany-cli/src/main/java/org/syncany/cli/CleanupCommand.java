@@ -66,7 +66,7 @@ public class CleanupCommand extends Command {
 		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg()
 				.ofType(String.class);
 		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files")).withRequiredArg().ofType(Integer.class);
-		OptionSpec<Long> optionKeepDeletedFilesForSeconds = parser.acceptsAll(asList("e", "keep-deleted-files-for-seconds")).withRequiredArg()
+		OptionSpec<Long> optionKeepDeletedFilesForSeconds = parser.acceptsAll(asList("e", "keep-deleted-seconds")).withRequiredArg()
 				.ofType(Long.class);
 
 		OptionSet options = parser.parse(operationArgs);
@@ -118,7 +118,7 @@ public class CleanupCommand extends Command {
 			long keepDeletedFilesForSeconds = options.valueOf(optionKeepDeletedFilesForSeconds);
 
 			if (keepDeletedFilesForSeconds < 0) {
-				throw new Exception("Invalid value for --keep-deleted-files-for-seconds==" + keepDeletedFilesForSeconds + "; must be >= 0");
+				throw new Exception("Invalid value for --keep-deleted-seconds==" + keepDeletedFilesForSeconds + "; must be >= 0");
 			}
 
 			operationOptions.setMinSecondsBeforeFullyDeletingFiles(keepDeletedFilesForSeconds);
