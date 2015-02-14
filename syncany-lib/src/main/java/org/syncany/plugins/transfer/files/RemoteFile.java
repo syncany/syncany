@@ -17,12 +17,14 @@
  */
 package org.syncany.plugins.transfer.files;
 
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
+import com.google.common.collect.Sets;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -45,6 +47,7 @@ public abstract class RemoteFile {
 	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
 
 	private String name;
+	private Set<RemoteFileAttributes> remoteFileAttributes = Sets.newHashSet();
 
 	/**
 	 * Creates a new remote file by its name. The name is used by {@link TransferManager}s
@@ -68,8 +71,26 @@ public abstract class RemoteFile {
 	/**
 	 * Returns the name of the file (as it is identified by Syncany)
 	 */
-	public String getName() {
+	public final String getName() {
 		return name;
+	}
+
+	/**
+	 * Returns a list of attributes for a given file
+	 */
+	public final <T extends RemoteFileAttributes> T getAttributes(Class<T> remoteFileAttributesClass) throws NoSuchFieldException {
+
+		for (RemoteFileAttributes remoteFileAttribute : remoteFileAttributes) {
+			if (remoteFileAttribute.getClass().isAssignableFrom(remoteFileAttributesClass)) {
+				return remoteFileAttributesClass.cast(remoteFileAttribute);
+			}
+		}
+
+		throw new NoSuchFieldException("Unable to find attributes for class " + remoteFileAttributesClass);
+	}
+
+	public final void addAttributes(RemoteFileAttributes newRemoteFileAttributes) {
+		remoteFileAttributes.add(newRemoteFileAttributes);
 	}
 
 	/**

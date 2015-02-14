@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,41 +15,51 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer;
+package org.syncany.plugins.transfer.feature;
 
 import java.io.File;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.Config;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageFileNotFoundException;
+import org.syncany.plugins.transfer.StorageMoveException;
+import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * The retriable transfer manager implements a simple try-sleep-retry mechanism
- * for regular {@link TransferManager}s. It encapsules a single transfer manager and
- * proxies all of its methods. If a method fails with a {@link StorageException}, the 
- * method is retried N times before the exception is actually thrown to the caller. 
- * Between retries, the method waits M seconds. 
- * 
+ * for regular {@link org.syncany.plugins.transfer.TransferManager}s. It encapsules a single transfer manager and
+ * proxies all of its methods. If a method fails with a {@link org.syncany.plugins.transfer.StorageException}, the
+ * method is retried N times before the exception is actually thrown to the caller.
+ * Between retries, the method waits M seconds.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class RetriableTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(RetriableTransferManager.class.getSimpleName());
 
-	// Values are public to enable quicker testing
-
-	private static int RETRY_MAX_COUNT = 3;
-	public static int RETRY_SLEEP_MILLIS = 3000;
-
 	private interface RetriableMethod {
 		public Object execute() throws StorageException;
 	}
 
-	private TransferManager underlyingTransferManager;
+	private final TransferManager underlyingTransferManager;
+	private final Config config;
+	private final int retryMaxCount;
+	private final int retrySleepMillis;
+
 	private int tryCount;
 
-	public RetriableTransferManager(TransferManager underlyingTransferManager) {
+	public RetriableTransferManager(TransferManager underlyingTransferManager, Config config, Retriable retriableAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
+		this.config = config;
+
+		retryMaxCount = retriableAnnotation.numberRetries();
+		retrySleepMillis = retriableAnnotation.sleepInterval();
+
 		this.tryCount = 0;
 	}
 
@@ -141,6 +151,11 @@ public class RetriableTransferManager implements TransferManager {
 	}
 
 	@Override
+	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFileClass) {
+		return underlyingTransferManager.getRemoteFilePath(remoteFileClass);
+	}
+
+	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
 		return underlyingTransferManager.test(testCreateTarget);
 	}
@@ -191,7 +206,7 @@ public class RetriableTransferManager implements TransferManager {
 		while (true) {
 			try {
 				if (tryCount > 0) {
-					logger.log(Level.WARNING, "Retrying method: " + tryCount + "/" + RETRY_MAX_COUNT + " ...");
+					logger.log(Level.WARNING, "Retrying method: " + tryCount + "/" + retryMaxCount + " ...");
 				}
 
 				Object result = retryableMethod.execute();
@@ -206,17 +221,17 @@ public class RetriableTransferManager implements TransferManager {
 			catch (StorageException e) {
 				tryCount++;
 
-				if (tryCount >= RETRY_MAX_COUNT) {
+				if (tryCount >= retryMaxCount) {
 					logger.log(Level.WARNING, "Transfer method failed. No retries left. Throwing exception.", e);
 					throw e;
 				}
 				else {
-					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + RETRY_MAX_COUNT + " retries. Sleeping "
-							+ RETRY_SLEEP_MILLIS
+					logger.log(Level.WARNING, "Transfer method failed. " + tryCount + "/" + retryMaxCount + " retries. Sleeping "
+							+ retrySleepMillis
 							+ "ms ...", e);
 
 					try {
-						Thread.sleep(RETRY_SLEEP_MILLIS);
+						Thread.sleep(retrySleepMillis);
 					}
 					catch (Exception e1) {
 						throw new StorageException(e1);

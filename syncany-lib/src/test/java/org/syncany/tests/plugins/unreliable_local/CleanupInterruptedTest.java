@@ -31,9 +31,9 @@ import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
-import org.syncany.plugins.transfer.RetriableTransferManager;
+import org.syncany.plugins.transfer.feature.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.TransactionAwareTransferManager;
+import org.syncany.plugins.transfer.feature.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -233,7 +233,7 @@ public class CleanupInterruptedTest {
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
 
-		// One deletion failed 
+		// One deletion failed
 		assertEquals(1, transferManager.list(TempRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "temporary").list().length);
 

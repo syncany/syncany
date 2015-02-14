@@ -23,6 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.plugins.transfer.feature.Retriable;
+import org.syncany.plugins.transfer.feature.TransactionAware;
 import org.syncany.util.StringUtil;
 
 /**
@@ -32,6 +34,8 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
+@Retriable(numberRetries = 3, sleepInterval = 3000)
+@TransactionAware
 public abstract class AbstractTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 
@@ -90,7 +94,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 			result.setTargetCanConnect(true);
 		}
-		catch (StorageException e) {			
+		catch (StorageException e) {
 			result.setTargetCanConnect(false);
 			result.setErrorMessage(StringUtil.getStackTrace(e));
 

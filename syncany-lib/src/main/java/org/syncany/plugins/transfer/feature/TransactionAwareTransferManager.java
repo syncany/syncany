@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer;
+package org.syncany.plugins.transfer.feature;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +32,11 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageFileNotFoundException;
+import org.syncany.plugins.transfer.StorageMoveException;
+import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -48,10 +53,10 @@ import org.syncany.plugins.transfer.to.TransactionTO;
 public class TransactionAwareTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(TransactionAwareTransferManager.class.getSimpleName());
 
-	private TransferManager underlyingTransferManager;
-	private Config config;
+	private final TransferManager underlyingTransferManager;
+	private final Config config;
 
-	public TransactionAwareTransferManager(TransferManager underlyingTransferManager, Config config) {
+	public TransactionAwareTransferManager(TransferManager underlyingTransferManager, Config config, TransactionAware transactionAwareAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 	}
@@ -137,6 +142,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 	@Override
 	public <T extends RemoteFile> Map<String, T> list(final Class<T> remoteFileClass) throws StorageException {
 		return addAndFilterFilesInTransaction(remoteFileClass, underlyingTransferManager.list(remoteFileClass));
+	}
+
+	@Override
+	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFileClass) {
+		return underlyingTransferManager.getRemoteFilePath(remoteFileClass);
 	}
 
 	/**

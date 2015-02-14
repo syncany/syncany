@@ -27,8 +27,8 @@ import java.util.List;
 
 /**
  * Utility class to find classes, methods and fields with certain properties -
- * typically having an annotation or a certain erasure. 
- * 
+ * typically having an annotation or a certain erasure.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class ReflectionUtil {
@@ -107,4 +107,27 @@ public abstract class ReflectionUtil {
 
 		return null;
 	}
+
+	public static boolean isAnnotationPresentSomewhere(Class<?> clazz, Class<? extends Annotation> annotation) {
+		while (clazz != null) {
+			if (clazz.isAnnotationPresent(annotation)) {
+				return true;
+			}
+			clazz = clazz.getSuperclass();
+		}
+
+		return false;
+	}
+
+	public static <T extends Annotation> T getAnnotationSomewhere(Class<?> clazz, Class<T> annotation) {
+		while (clazz != null) {
+			if (clazz.isAnnotationPresent(annotation)) {
+				return clazz.getAnnotation(annotation);
+			}
+			clazz = clazz.getSuperclass();
+		}
+
+		return null;
+	}
+
 }
