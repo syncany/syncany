@@ -94,6 +94,7 @@ public class TransferManagerFeatureSupport {
 
 		private <T extends TransferManager> T wrap(Class<T> desiredTransferManagerClass) {
 			checkFeatureSetForDuplicates();
+			checkIfAllFeaturesSupported();
 
 			logger.log(Level.INFO, "Annotating TransferManager: " + features.size() + "/" + FEATURES.size() + " features selected");
 
@@ -131,7 +132,7 @@ public class TransferManagerFeatureSupport {
 				throw new RuntimeException("Unable to wrap TransferManager in " + desiredTransferManagerClass.getSimpleName() + " because the feature does not seem to be supported", e);
 			}
 		}
-		
+
 		private TransferManager apply(TransferManager transferManager, Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass) throws IllegalAccessException, InvocationTargetException, InstantiationException {
 			logger.log(Level.FINE, "Wrapping TransferManager " + transferManager + " in " + featureTransferManagerClass);
 
@@ -172,7 +173,15 @@ public class TransferManagerFeatureSupport {
 			int setSize = Sets.newHashSet(features.values()).size();
 
 			if (listSize != setSize) {
-				throw new IllegalArgumentException("There duplicates in the feature set: " + features);
+				throw new IllegalArgumentException("There are duplicates in the feature set: " + features);
+			}
+		}
+
+		private void checkIfAllFeaturesSupported() {
+			for (Class<? extends Annotation> featureAnnotation : features.values()) {
+				if (!FEATURES.contains(featureAnnotation)) {
+					throw new IllegalArgumentException("Feature " + featureAnnotation + " is unknown");
+				}
 			}
 		}
 
