@@ -48,7 +48,7 @@ public class CleanupOperationOptions implements OperationOptions {
 	private long minSecondsBetweenCleanups = 3 * 60 * 60; // 3 hours
 
 	@ElementMap(entry = "fromTime", key = "truncateDateFormat", required = false, attribute = true, inline = true)
-	private SortedMap<Long, String> purgeFileVersionSettings;
+	private SortedMap<Long, TimeUnit> purgeFileVersionSettings;
 
 	public CleanupOperationOptions() {
 		purgeFileVersionSettings = createDefaultPurgeFileVersionSettings();	
@@ -102,11 +102,11 @@ public class CleanupOperationOptions implements OperationOptions {
 		return minKeepDeletedSeconds;
 	}
 	
-	public SortedMap<Long, String> getPurgeFileVersionSettings() {
+	public SortedMap<Long, TimeUnit> getPurgeFileVersionSettings() {
 		return purgeFileVersionSettings;
 	}
 
-	public void setPurgeFileVersionSettings(SortedMap<Long, String> newSettings) {
+	public void setPurgeFileVersionSettings(SortedMap<Long, TimeUnit> newSettings) {
 		purgeFileVersionSettings = newSettings;
 	}
 
@@ -123,17 +123,21 @@ public class CleanupOperationOptions implements OperationOptions {
 	 * 
 	 * Each key-value pair has a long and a string, representing the following:
 	 * The string determines the behavior we use up to long seconds in the past.
-	 * ie. If the first pair is (3600, "MI"), we keep 1 version every minute for the last hour.
-	 * If the second pair is (3*24*3600, "HH"), we keep 1 version every hour for the last three days,  
+	 * ie. If the first pair is (3600, TimeUnit.MINUTES), we keep 1 version every minute for the last hour.
+	 * If the second pair is (3*24*3600, TimeUnit.HOURS), we keep 1 version every hour for the last three days,  
 	 * except the last hour, for which the above policy holds.
 	 */
-	private SortedMap<Long, String> createDefaultPurgeFileVersionSettings() {
-		TreeMap<Long, String> purgeSettings = new TreeMap<Long, String>();
+	private SortedMap<Long, TimeUnit> createDefaultPurgeFileVersionSettings() {
+		TreeMap<Long, TimeUnit> purgeSettings = new TreeMap<Long, TimeUnit>();
 
-		purgeSettings.put(30L * 24L * 3600L, "DD");
-		purgeSettings.put(3L * 24L * 3600L, "HH");
-		purgeSettings.put(3600L, "MI");	
+		purgeSettings.put(30L * 24L * 3600L, TimeUnit.DAYS);
+		purgeSettings.put(3L * 24L * 3600L, TimeUnit.HOURS);
+		purgeSettings.put(3600L, TimeUnit.MINUTES);
 		
 		return purgeSettings;
+	}
+
+	public enum TimeUnit {
+		YEARS, MONTHS, WEEKS, DAYS, HOURS, MINUTES, SECONDS
 	}
 }

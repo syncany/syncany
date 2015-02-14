@@ -40,6 +40,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.down.DatabaseBranch;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
@@ -253,8 +254,8 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
 	}
 
-	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, String dateFilter) {
-		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, dateFilter);
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
+		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, timeUnit);
 	}
 
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {

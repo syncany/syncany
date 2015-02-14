@@ -28,6 +28,7 @@ import java.util.TreeMap;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.up.UpOperationResult;
@@ -135,7 +136,7 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMaxDatabaseFiles(1);
-		cleanupOptions.setPurgeFileVersionSettings(new TreeMap<Long, String>());
+		cleanupOptions.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);

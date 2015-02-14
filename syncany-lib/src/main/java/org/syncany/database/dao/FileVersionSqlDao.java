@@ -40,6 +40,7 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.util.StringUtil;
 
 /**
@@ -279,9 +280,32 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, String dateFilter) {
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
-			preparedStatement.setString(1, dateFilter);
+			switch (timeUnit) {
+			case SECONDS:
+					preparedStatement.setString(1, "SS");
+					break;
+			case MINUTES:
+					preparedStatement.setString(1, "MI");
+					break;
+			case HOURS:
+					preparedStatement.setString(1, "HH");
+					break;
+			case DAYS:
+					preparedStatement.setString(1, "DD");
+					break;	
+			case WEEKS:
+					preparedStatement.setString(1, "WW");
+					break;
+			case MONTHS:
+					preparedStatement.setString(1, "MM");
+					break;
+			case YEARS:
+					preparedStatement.setString(1, "YYYY");
+					break;	
+			}
+			
 			preparedStatement.setTimestamp(2, new Timestamp(beginTimestamp));
 			preparedStatement.setTimestamp(3, new Timestamp(endTimestamp));
 			return getAllVersionsInQuery(preparedStatement);

@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.down.DownOperationResult;
@@ -229,7 +230,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
+		options.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
 
 		// Run
 
@@ -438,7 +439,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setMinSecondsBetweenCleanups(0);
-		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
+		options.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
 		options.setRemoveOldVersions(true);
 		options.setMaxDatabaseFiles(3);
 
@@ -627,7 +628,7 @@ public class CleanupOperationTest {
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
 		options.setMinSecondsBetweenCleanups(0);
-		options.setPurgeFileVersionSettings(new TreeMap<Long, String>());
+		options.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
 		options.setMinKeepSeconds(2);
 		
 		clientA.createNewFile("file.jpg");
