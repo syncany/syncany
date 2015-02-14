@@ -29,6 +29,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.ReflectionUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
 /**
@@ -92,6 +93,8 @@ public class TransferManagerFeatureSupport {
 		}
 
 		private <T extends TransferManager> T wrap(Class<T> desiredTransferManagerClass) {
+			checkFeatureSetForDuplicates();
+			
 			logger.log(Level.INFO, "Annotating TransferManager: " + features.size() + "/" + FEATURES.size() + " features selected");
 
 			Class<? extends Annotation> applyLast = null;
@@ -156,6 +159,16 @@ public class TransferManagerFeatureSupport {
 			catch (Exception e) {
 				throw new RuntimeException("Unable to find class for feature " + featureAnnotation.getSimpleName() + ". Tried " + FQCN, e);
 			}
+		}
+
+		private void checkFeatureSetForDuplicates() {
+			int listSize = features.values().size();
+			int setSize = Sets.newHashSet(features.values()).size();
+
+			if (listSize != setSize) {
+				throw new IllegalArgumentException("There duplicates in the feature set: " + features);
+			}
+
 		}
 
 	}
