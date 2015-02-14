@@ -711,4 +711,28 @@ public class CleanupOperationTest {
 		assertEquals("3\n5\n7", TestSqlUtil.runSqlSelect("select version from fileversion", databaseConnectionA));
 
 	}
+
+	@Test
+	public void testFullFileVersionDeletion() throws Exception {
+		// Setup
+		LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
+		TestClient clientA = new TestClient("A", testConnection);
+		java.sql.Connection databaseConnectionA = clientA.getConfig().createDatabaseConnection();
+
+		CleanupOperationOptions options = new CleanupOperationOptions();
+		options.setRemoveOldVersions(true);
+		options.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
+		options.setMinKeepSeconds(0);
+		options.setMinSecondsBetweenCleanups(0);
+
+		// More than a month back
+		clientA.createNewFile("file.jpg", 1024);
+		clientA.upWithForceChecksum();
+		// Less than a month back
+		clientA.changeFile("file.jpg");
+		clientA.upWithForceChecksum();
+
+		clientA.cleanup(options);
+		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+	}
 }
