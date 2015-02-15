@@ -32,6 +32,6 @@ public interface PathAwareFeatureExtension extends TransferManagerFeatureExtensi
 
 	public boolean removeFolder(String path) throws StorageException;
 
-	public Map<FileType, String> listFolder(String path) throws StorageException;
+	public Map<String, FileType> listFolder(String path) throws StorageException;
 
 }

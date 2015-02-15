@@ -153,10 +153,10 @@ public class PathAwareTransferManager implements TransferManager {
 	private <T extends RemoteFile> void list(String remoteFilePath, Map<String, T> remoteFiles, Class<T> remoteFileClass) throws StorageException {
 		logger.log(Level.SEVERE, "Listing folder: " + remoteFilePath);
 
-		for (Map.Entry<FileType, String> item : pathAwareFeatureExtension.listFolder(remoteFilePath).entrySet()) {
-			String itemName = item.getValue();
+		for (Map.Entry<String, FileType> item : pathAwareFeatureExtension.listFolder(remoteFilePath).entrySet()) {
+			String itemName = item.getKey();
 
-			switch (item.getKey()) {
+			switch (item.getValue()) {
 				case FILE:
 					remoteFiles.put(itemName, RemoteFile.createRemoteFile(itemName, remoteFileClass));
 					break;
