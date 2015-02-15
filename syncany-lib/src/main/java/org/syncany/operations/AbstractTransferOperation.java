@@ -80,11 +80,11 @@ public abstract class AbstractTransferOperation extends Operation {
 	}
 
 	private TransactionAwareTransferManager createTransactionAwareTransferManager(Config config) throws StorageException {
-		return TransferManagerFeatureSupport.build(config.getTransferPlugin().createTransferManager(config.getConnection(), config), config).withAllFeatures().as(TransactionAware.class);
+		return TransferManagerFeatureSupport.buildFromConfig(config).withAllFeatures().as(TransactionAware.class);
 	}
 
 	private TransferManager createTransferManager(Config config) throws StorageException {
-		return TransferManagerFeatureSupport.build(config.getTransferPlugin().createTransferManager(config.getConnection(), config), config).withFeature(TransactionAware.class).withFeature(Retriable.class).asDefault();
+		return TransferManagerFeatureSupport.buildFromConfig(config).withFeature(TransactionAware.class).withFeature(Retriable.class).asDefault();
 	}
 
 	protected void startOperation() throws Exception {

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,16 +31,17 @@ import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.feature.TransferManagerFeatureSupport;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
- * The list remote operation queries the transfer manager for any unknown 
- * {@link DatabaseRemoteFile}s. 
- * 
+ * The list remote operation queries the transfer manager for any unknown
+ * {@link DatabaseRemoteFile}s.
+ *
  * <p>It first uses a {@link TransferManager} to list all remote databases and then
  * uses the local list of known databases to filter already processed files. The local
  * list of known databases is loaded.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LsRemoteOperation extends Operation {
@@ -72,7 +73,7 @@ public class LsRemoteOperation extends Operation {
 
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
-				: config.getTransferPlugin().createTransferManager(config.getConnection(), config);
+				: TransferManagerFeatureSupport.buildFromConfig(config).withAllFeatures().asDefault();
 
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);

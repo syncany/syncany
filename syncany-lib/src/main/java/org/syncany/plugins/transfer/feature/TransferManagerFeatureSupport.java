@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.ReflectionUtil;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +51,11 @@ public class TransferManagerFeatureSupport {
 					.build();
 
 	public static Builder build(TransferManager transferManager, Config config) {
+		return new Builder(transferManager, config);
+	}
+
+	public static Builder buildFromConfig(Config config) throws StorageException {
+		TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
 		return new Builder(transferManager, config);
 	}
 
