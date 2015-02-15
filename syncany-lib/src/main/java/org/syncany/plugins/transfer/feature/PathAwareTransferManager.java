@@ -287,8 +287,9 @@ public class PathAwareTransferManager implements TransferManager {
 	}
 
 	private boolean removeFolder(String folder) throws StorageException {
-
 		for(int i = 0; i < subfolderDepth; i++) {
+			logger.log(Level.FINE, "Removing folder " + folder);
+			
 			if (pathAwareFeatureExtension.listFolder(folder).size() != 0) {
 				return true;
 			}
@@ -297,7 +298,7 @@ public class PathAwareTransferManager implements TransferManager {
 				return false;
 			}
 
-			folder = folder.substring(0, folder.lastIndexOf(folderSeparator) - 1);
+			folder = folder.substring(0, folder.lastIndexOf(folderSeparator));
 		}
 
 		return true;
