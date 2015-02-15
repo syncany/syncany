@@ -239,10 +239,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 		return files;
 	}
 
-	private File getRemoteFile(RemoteFile remoteFile) {
-		return new File(getRemoteFilePath(remoteFile.getClass()), remoteFile.getName());
-	}
-
+	@Override
 	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
 		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath.toString();
@@ -262,6 +259,10 @@ public class LocalTransferManager extends AbstractTransferManager {
 		else {
 			return repoPath.toString();
 		}
+	}
+
+	private File getRemoteFile(RemoteFile remoteFile) {
+		return new File(getRemoteFilePath(remoteFile.getClass()), remoteFile.getName());
 	}
 
 	public String getAbsoluteParentDirectory(File file) {
