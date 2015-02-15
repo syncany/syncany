@@ -57,12 +57,12 @@ public class TransferManagerFeatureSupport {
 
 		private final TreeMultimap<Integer, Class<? extends Annotation>> features = TreeMultimap.create(Ordering.natural(), Ordering.explicit(FEATURES));
 		private final Config config;
-		private final Class<? extends TransferManager> transferManagerClass;
+		private final TransferManager originTransferManager;
 		private TransferManager transferManager;
 
 		private Builder(TransferManager transferManager, Config config) {
 			this.transferManager = transferManager;
-			transferManagerClass = transferManager.getClass();
+			this.originTransferManager = transferManager;
 			this.config = config;
 		}
 
@@ -102,7 +102,7 @@ public class TransferManagerFeatureSupport {
 
 			try {
 				for (Class<? extends Annotation> featureAnnotation : features.values()) {
-					if (ReflectionUtil.isAnnotationPresentSomewhere(transferManagerClass, featureAnnotation)) {
+					if (ReflectionUtil.isAnnotationPresentSomewhere(originTransferManager.getClass(), featureAnnotation)) {
 						Class<? extends TransferManager> featureTransferManagerClass = getImplementingTransferManager(featureAnnotation);
 
 						if (featureTransferManagerClass.equals(desiredTransferManagerClass)) {
@@ -136,13 +136,22 @@ public class TransferManagerFeatureSupport {
 		private TransferManager apply(TransferManager transferManager, Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass) throws IllegalAccessException, InvocationTargetException, InstantiationException {
 			logger.log(Level.FINE, "Wrapping TransferManager " + transferManager + " in " + featureTransferManagerClass);
 
-			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationSomewhere(transferManagerClass, featureAnnotationClass);
+			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationSomewhere(originTransferManager.getClass(), featureAnnotationClass);
 			Constructor<?> constructor;
 
+			// try the most common constructor
 			constructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass);
 
 			if (constructor != null) {
 				return (TransferManager) constructor.newInstance(transferManager, config, featureAnnotationClass.cast(concreteFeatureAnnotation));
+			}
+
+			// some features require the original TM instance because they use a feature extension
+			constructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass, TransferManager.class);
+
+			if (constructor != null) {
+				logger.log(Level.INFO, "Feature uses an extension");
+				return (TransferManager) constructor.newInstance(transferManager, config, featureAnnotationClass.cast(concreteFeatureAnnotation), originTransferManager);
 			}
 
 			// legacy support for old TransferManagers

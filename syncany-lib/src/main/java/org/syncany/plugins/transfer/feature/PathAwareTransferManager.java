@@ -18,6 +18,8 @@
 package org.syncany.plugins.transfer.feature;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -31,6 +33,7 @@ import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFileAttributes;
+import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +55,7 @@ public class PathAwareTransferManager implements TransferManager {
 	private final List<Class<? extends RemoteFile>> affectedFiles;
 	private final PathAwareFeatureExtension pathAwareFeatureExtension;
 
-	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation) {
+	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation, TransferManager originTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 
@@ -60,17 +63,25 @@ public class PathAwareTransferManager implements TransferManager {
 		bytesPerFolder = pathAwareAnnotation.bytesPerFolder();
 		folderSeparator = pathAwareAnnotation.folderSeparator();
 		affectedFiles = ImmutableList.copyOf(pathAwareAnnotation.affected());
-		pathAwareFeatureExtension = getPathAwareFeatureExtension(pathAwareAnnotation);
+
+		pathAwareFeatureExtension = getPathAwareFeatureExtension(originTransferManager, pathAwareAnnotation);
 	}
 
 	@SuppressWarnings("unchecked")
-	private PathAwareFeatureExtension getPathAwareFeatureExtension(PathAware pathAwareAnnotation) {
+	private PathAwareFeatureExtension getPathAwareFeatureExtension(TransferManager originTransferManager, PathAware pathAwareAnnotation) {
+		Class<? extends TransferManager> originTransferManagerClass = originTransferManager.getClass();
 		Class<PathAwareFeatureExtension> pathAwareFeatureExtensionClass = (Class<PathAwareFeatureExtension>) pathAwareAnnotation.extension();
 
 		try {
+			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(pathAwareFeatureExtensionClass, originTransferManagerClass);
+
+			if (constructor != null) {
+				return (PathAwareFeatureExtension) constructor.newInstance(originTransferManagerClass.cast(originTransferManager));
+			}
+
 			return pathAwareFeatureExtensionClass.newInstance();
 		}
-		catch (InstantiationException | IllegalAccessException | NullPointerException e) {
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException | NullPointerException e) {
 			throw new RuntimeException("Cannot instantiate PathAwareFeatureExtension (perhaps " + pathAwareFeatureExtensionClass + " does not exist?)", e);
 		}
 	}
@@ -223,7 +234,7 @@ public class PathAwareTransferManager implements TransferManager {
 		return path.toString().replaceAll(File.pathSeparator, String.valueOf(folderSeparator));
 	}
 
-	private boolean removeEmptyFolder(RemoteFile remoteFile) {
+	private boolean removeEmptyFolder(RemoteFile remoteFile) throws StorageException {
 		boolean success = true;
 		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes;
 

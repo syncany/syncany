@@ -20,6 +20,7 @@ package org.syncany.plugins.transfer.feature;
 import java.util.Map;
 
 import org.syncany.plugins.transfer.FileType;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -27,10 +28,10 @@ import org.syncany.plugins.transfer.FileType;
 
 public interface PathAwareFeatureExtension extends TransferManagerFeatureExtension {
 
-	public boolean createPath(String path);
+	public boolean createPath(String path) throws StorageException;
 
-	public boolean removeEmptyFolder(String path);
+	public boolean removeEmptyFolder(String path) throws StorageException;
 
-	public Map<FileType, String> listFolder(String path);
+	public Map<FileType, String> listFolder(String path) throws StorageException;
 
 }
