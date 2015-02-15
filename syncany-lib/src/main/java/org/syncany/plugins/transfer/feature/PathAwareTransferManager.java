@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
@@ -111,19 +112,19 @@ public class PathAwareTransferManager implements TransferManager {
 		final RemoteFile pathAwareSourceFile = createPathAwareRemoteFile(sourceFile);
 		final RemoteFile pathAwareTargetFile = createPathAwareRemoteFile(targetFile);
 
-		if (pathAwareFeatureExtension.createPath(pathToString(Paths.get(pathAwareTargetFile.getName()).getParent()))) {
+		if (!createFolder(pathAwareTargetFile)) {
 			throw new StorageException("Unable to create path for " + pathAwareTargetFile);
 		}
 
 		underlyingTransferManager.move(createPathAwareRemoteFile(sourceFile), pathAwareTargetFile);
-		removeEmptyFolder(pathAwareSourceFile);
+		removeFolder(pathAwareSourceFile);
 	}
 
 	@Override
 	public void upload(final File localFile, final RemoteFile remoteFile) throws StorageException {
 		final RemoteFile pathAwareRemoteFile = createPathAwareRemoteFile(remoteFile);
 
-		if (pathAwareFeatureExtension.createPath(pathToString(Paths.get(pathAwareRemoteFile.getName()).getParent()))) {
+		if (!createFolder(pathAwareRemoteFile)) {
 			throw new StorageException("Unable to create path for " + pathAwareRemoteFile);
 		}
 
@@ -134,7 +135,7 @@ public class PathAwareTransferManager implements TransferManager {
 	public boolean delete(final RemoteFile remoteFile) throws StorageException {
 		final RemoteFile pathAwareRemoteFile = createPathAwareRemoteFile(remoteFile);
 		boolean delete = underlyingTransferManager.delete(pathAwareRemoteFile);
-		boolean folder = removeEmptyFolder(pathAwareRemoteFile);
+		boolean folder = removeFolder(pathAwareRemoteFile);
 
 		return delete && folder;
 	}
@@ -150,6 +151,7 @@ public class PathAwareTransferManager implements TransferManager {
 	}
 
 	private <T extends RemoteFile> void list(String remoteFilePath, Map<String, T> remoteFiles, Class<T> remoteFileClass) throws StorageException {
+		logger.log(Level.SEVERE, "Listing folder: " + remoteFilePath);
 
 		for (Map.Entry<FileType, String> item : pathAwareFeatureExtension.listFolder(remoteFilePath).entrySet()) {
 			String itemName = item.getValue();
@@ -234,7 +236,7 @@ public class PathAwareTransferManager implements TransferManager {
 		return path.toString().replaceAll(File.pathSeparator, String.valueOf(folderSeparator));
 	}
 
-	private boolean removeEmptyFolder(RemoteFile remoteFile) throws StorageException {
+	private boolean createFolder(RemoteFile remoteFile) throws StorageException {
 		boolean success = true;
 		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes;
 
@@ -249,12 +251,56 @@ public class PathAwareTransferManager implements TransferManager {
 			return true;
 		}
 
-		String remoteFilePath = pathToString(Paths.get(pathAwareRemoteFileAttributes.getPath()));
+		String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
+
 		if (remoteFilePath != null) {
-			success = pathAwareFeatureExtension.removeEmptyFolder(remoteFilePath);
+			logger.log(Level.INFO, "Remote file is path aware, creating folder " + remoteFilePath);
+			success = pathAwareFeatureExtension.createPath(remoteFilePath);
 		}
 
 		return success;
+	}
+
+	private boolean removeFolder(RemoteFile remoteFile) throws StorageException {
+		boolean success = true;
+		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes;
+
+		try {
+			pathAwareRemoteFileAttributes = remoteFile.getAttributes(PathAwareRemoteFileAttributes.class);
+		}
+		catch (NoSuchFieldException e) {
+			return true;
+		}
+
+		if (!pathAwareRemoteFileAttributes.hasPath()) {
+			return true;
+		}
+
+		String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
+
+		if (remoteFilePath != null) {
+			logger.log(Level.INFO, "Remote file is path aware, cleaning empty folders at " + remoteFilePath);
+			success = removeFolder(remoteFilePath);
+		}
+
+		return success;
+	}
+
+	private boolean removeFolder(String folder) throws StorageException {
+
+		for(int i = 0; i < subfolderDepth; i++) {
+			if (pathAwareFeatureExtension.listFolder(folder).size() != 0) {
+				return true;
+			}
+
+			if (!pathAwareFeatureExtension.removeFolder(folder)) {
+				return false;
+			}
+
+			folder = folder.substring(0, folder.lastIndexOf(folderSeparator) - 1);
+		}
+
+		return true;
 	}
 
 	public static class PathAwareRemoteFileAttributes extends RemoteFileAttributes {
