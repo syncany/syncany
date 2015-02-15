@@ -37,11 +37,11 @@ import com.google.common.collect.TreeMultimap;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class TransferManagerFeatureSupport {
+public class TransferManagerFactory {
 
-	private static final Logger logger = Logger.getLogger(TransferManagerFeatureSupport.class.getName());
+	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getName());
 
-	private static final String FQCN_SKELETON = TransferManagerFeatureSupport.class.getPackage().getName() + ".%sTransferManager";
+	private static final String FQCN_SKELETON = TransferManagerFactory.class.getPackage().getName() + ".%sTransferManager";
 	private static final int DEFAULT_PRIORITY = 0;
 
 	public static final List<Class<? extends Annotation>> FEATURES = ImmutableList.<Class<? extends Annotation>>builder()

@@ -35,7 +35,7 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.feature.TransactionAware;
-import org.syncany.plugins.transfer.feature.TransferManagerFeatureSupport;
+import org.syncany.plugins.transfer.feature.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
@@ -345,7 +345,7 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = TransferManagerFeatureSupport.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 
@@ -454,7 +454,7 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = TransferManagerFeatureSupport.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 

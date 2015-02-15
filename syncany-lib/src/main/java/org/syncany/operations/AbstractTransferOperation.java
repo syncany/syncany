@@ -30,7 +30,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.feature.Retriable;
 import org.syncany.plugins.transfer.feature.TransactionAware;
 import org.syncany.plugins.transfer.feature.TransactionAwareTransferManager;
-import org.syncany.plugins.transfer.feature.TransferManagerFeatureSupport;
+import org.syncany.plugins.transfer.feature.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -80,11 +80,11 @@ public abstract class AbstractTransferOperation extends Operation {
 	}
 
 	private TransactionAwareTransferManager createTransactionAwareTransferManager(Config config) throws StorageException {
-		return TransferManagerFeatureSupport.buildFromConfig(config).withAllFeatures().as(TransactionAware.class);
+		return TransferManagerFactory.buildFromConfig(config).withAllFeatures().as(TransactionAware.class);
 	}
 
 	private TransferManager createTransferManager(Config config) throws StorageException {
-		return TransferManagerFeatureSupport.buildFromConfig(config).withFeature(TransactionAware.class).withFeature(Retriable.class).asDefault();
+		return TransferManagerFactory.buildFromConfig(config).withFeature(TransactionAware.class).withFeature(Retriable.class).asDefault();
 	}
 
 	protected void startOperation() throws Exception {

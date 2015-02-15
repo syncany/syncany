@@ -31,7 +31,7 @@ import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.feature.TransferManagerFeatureSupport;
+import org.syncany.plugins.transfer.feature.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
@@ -73,7 +73,7 @@ public class LsRemoteOperation extends Operation {
 
 		TransferManager transferManager = (loadedTransferManager != null)
 				? loadedTransferManager
-				: TransferManagerFeatureSupport.buildFromConfig(config).withAllFeatures().asDefault();
+				: TransferManagerFactory.buildFromConfig(config).withAllFeatures().asDefault();
 
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);

@@ -34,7 +34,7 @@ import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.feature.TransactionAware;
-import org.syncany.plugins.transfer.feature.TransferManagerFeatureSupport;
+import org.syncany.plugins.transfer.feature.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
@@ -84,7 +84,7 @@ public class CleanupInterruptedTest {
 		}
 
 		assertTrue(cleanupFailed);
-		TransferManager transferManager = TransferManagerFeatureSupport.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());
@@ -142,7 +142,7 @@ public class CleanupInterruptedTest {
 		}
 
 		assertTrue(cleanupFailed);
-		TransferManager transferManager = TransferManagerFeatureSupport.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
 
@@ -212,7 +212,7 @@ public class CleanupInterruptedTest {
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
 		clientA.cleanup(cleanupOptions);
 
-		TransferManager transferManager = TransferManagerFeatureSupport.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
