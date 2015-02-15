@@ -15,19 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer.feature;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.syncany.plugins.transfer.features;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface TransactionAware {
+public interface TransferManagerFeatureExtension {
 	// nothing
 }

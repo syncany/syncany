@@ -31,7 +31,7 @@ import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.feature.TransferManagerFactory;
+import org.syncany.plugins.transfer.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**

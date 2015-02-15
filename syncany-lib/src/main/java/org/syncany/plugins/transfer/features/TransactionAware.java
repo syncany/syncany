@@ -15,23 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer.feature;
+package org.syncany.plugins.transfer.features;
 
-import java.util.Map;
-
-import org.syncany.plugins.transfer.FileType;
-import org.syncany.plugins.transfer.StorageException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public interface PathAwareFeatureExtension extends TransferManagerFeatureExtension {
-
-	public boolean createPath(String path) throws StorageException;
-
-	public boolean removeFolder(String path) throws StorageException;
-
-	public Map<String, FileType> listFolder(String path) throws StorageException;
-
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface TransactionAware {
+	// nothing
 }

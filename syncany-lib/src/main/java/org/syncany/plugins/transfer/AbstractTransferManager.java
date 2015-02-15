@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.transfer.feature.Retriable;
-import org.syncany.plugins.transfer.feature.TransactionAware;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.StringUtil;
 
 /**

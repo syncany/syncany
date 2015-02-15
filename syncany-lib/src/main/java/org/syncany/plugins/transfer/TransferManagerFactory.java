@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer.feature;
+package org.syncany.plugins.transfer;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -25,8 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.features.PathAware;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.ReflectionUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -112,7 +113,7 @@ public class TransferManagerFactory {
 						Class<? extends TransferManager> featureTransferManagerClass = getImplementingTransferManager(featureAnnotation);
 
 						if (featureTransferManagerClass.equals(desiredTransferManagerClass)) {
-							logger.log(Level.INFO, "Holding back current feature, request to wrap last");
+							logger.log(Level.INFO, "Holding back currefeaturesure, request to wrap last");
 							applyLast = featureAnnotation;
 							continue;
 						}
@@ -126,16 +127,16 @@ public class TransferManagerFactory {
 				}
 			}
 			catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-				logger.log(Level.SEVERE, "Unable to annotate TransferManager with feature", e);
-				throw new RuntimeException("Unable to annotate TransferManager with feature", e);
+				logger.log(Level.SEVERE, "Unable to annotate TransferManager wifeaturesure", e);
+				throw new RuntimeException("Unable to annotate TransferManager wifeaturesure", e);
 			}
 
 			try {
 				return desiredTransferManagerClass.cast(transferManager);
 			}
 			catch(ClassCastException e) {
-				logger.log(Level.SEVERE, "Unable to wrap TransferManager in " + desiredTransferManagerClass.getSimpleName() + " because the feature does not seem to be supported", e);
-				throw new RuntimeException("Unable to wrap TransferManager in " + desiredTransferManagerClass.getSimpleName() + " because the feature does not seem to be supported", e);
+				logger.log(Level.SEVERE, "Unable to wrap TransferManager in " + desiredTransferManagerClass.getSimpleName() + " because tfeaturesure does not seem to be supported", e);
+				throw new RuntimeException("Unable to wrap TransferManager in " + desiredTransferManagerClass.getSimpleName() + " because tfeaturesure does not seem to be supported", e);
 			}
 		}
 
@@ -152,7 +153,7 @@ public class TransferManagerFactory {
 				return (TransferManager) constructor.newInstance(transferManager, config, featureAnnotationClass.cast(concreteFeatureAnnotation));
 			}
 
-			// some features require the original TM instance because they use a feature extension
+			// some features require the original TM instance because they usefeaturesure extension
 			constructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass, TransferManager.class);
 
 			if (constructor != null) {
@@ -168,7 +169,7 @@ public class TransferManagerFactory {
 				return (TransferManager) constructor.newInstance(transferManager);
 			}
 
-			throw new RuntimeException("Invalid TransferManager feature class detected: Unable to find constructor");
+			throw new RuntimeException("Invalid TransferManagfeaturesure class detected: Unable to find constructor");
 		}
 
 		@SuppressWarnings("unchecked")
@@ -179,7 +180,7 @@ public class TransferManagerFactory {
 				return (Class<? extends TransferManager>) Class.forName(FQCN);
 			}
 			catch (Exception e) {
-				throw new RuntimeException("Unable to find class for feature " + featureAnnotation.getSimpleName() + ". Tried " + FQCN, e);
+				throw new RuntimeException("Unable to find class ffeaturesure " + featureAnnotation.getSimpleName() + ". Tried " + FQCN, e);
 			}
 		}
 
@@ -188,7 +189,7 @@ public class TransferManagerFactory {
 			int setSize = Sets.newHashSet(features.values()).size();
 
 			if (listSize != setSize) {
-				throw new IllegalArgumentException("There are duplicates in the feature set: " + features);
+				throw new IllegalArgumentException("There are duplicates in tfeaturesure set: " + features);
 			}
 		}
 
