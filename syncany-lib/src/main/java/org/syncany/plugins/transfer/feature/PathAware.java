@@ -37,5 +37,5 @@ public @interface PathAware {
 	int subfolderDepth() default 2;
 	char folderSeparator() default '/';
 	Class<? extends RemoteFile>[] affected() default {MultichunkRemoteFile.class, TempRemoteFile.class};
-	Class<? extends TransferManagerFeatureExtension> extension();
+	Class<? extends PathAwareFeatureExtension> extension();
 }
