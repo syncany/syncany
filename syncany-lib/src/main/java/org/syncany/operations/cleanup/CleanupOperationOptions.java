@@ -36,6 +36,9 @@ public class CleanupOperationOptions implements OperationOptions {
 	private boolean removeOldVersions = true;
 
 	@Element(required = false)
+	private boolean removeVersionsByInterval = true;
+
+	@Element(required = false)
 	private boolean removeUnreferencedTemporaryFiles = true;
 
 	@Element(required = false)
@@ -66,12 +69,20 @@ public class CleanupOperationOptions implements OperationOptions {
 		return removeOldVersions;
 	}
 
-	public boolean isRemoveUnreferencedTemporaryFiles() {
-		return removeUnreferencedTemporaryFiles;
-	}
-
 	public void setRemoveOldVersions(boolean removeOldVersions) {
 		this.removeOldVersions = removeOldVersions;
+	}
+
+	public boolean isRemoveVersionsByInterval() {
+		return removeVersionsByInterval;
+	}
+
+	public void setRemoveVersionsByInterval(boolean removeVersionsByInterval) {
+		this.removeVersionsByInterval = removeVersionsByInterval;
+	}
+
+	public boolean isRemoveUnreferencedTemporaryFiles() {
+		return removeUnreferencedTemporaryFiles;
 	}
 
 	public void setRemoveUnreferencedTemporaryFiles(boolean removeUnreferencedTemporaryFiles) {

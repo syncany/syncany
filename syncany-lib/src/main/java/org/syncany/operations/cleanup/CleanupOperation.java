@@ -168,9 +168,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
 
-		if (options.isRemoveOldVersions()) {
-			removeOldVersions();
-		}
+		removeOldVersions();
 
 		if (options.isRemoveUnreferencedTemporaryFiles()) {
 			transferManager.removeUnreferencedTemporaryFiles();
@@ -257,12 +255,19 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-		// Get file versions that should be purged according to the settings that are given. Time-based.
-		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = collectPurgableFileVersions();
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new TreeMap<FileHistoryId, List<FileVersion>>();
+		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new TreeMap<FileHistoryId, FileVersion>();
 
-		// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
-		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = collectPurgeBeforeFileVersions(purgeFileVersions);		
-				
+		if (options.isRemoveVersionsByInterval()) {
+			// Get file versions that should be purged according to the settings that are given. Time-based.
+			purgeFileVersions = collectPurgableFileVersions();
+		}
+
+		if (options.isRemoveOldVersions()) {
+			// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
+			// purgeFileVersions is modified here!
+			purgeBeforeFileVersions = collectPurgeBeforeFileVersions(purgeFileVersions);
+		}
 		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
 			logger.log(Level.INFO, "- Old version removal: Not necessary.");
 			return;

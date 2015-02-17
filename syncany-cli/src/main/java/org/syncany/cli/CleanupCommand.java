@@ -62,6 +62,7 @@ public class CleanupCommand extends Command {
 
 		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
 		OptionSpec<Void> optionNoOlderVersionRemoval = parser.acceptsAll(asList("O", "no-delete-older-than"));
+		OptionSpec<Void> optionNoVersionRemovalByInterval = parser.acceptsAll(asList("I", "no-delete-interval"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
 		OptionSpec<String> optionTimeBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups"))
 				.withRequiredArg().ofType(String.class);
@@ -80,6 +81,9 @@ public class CleanupCommand extends Command {
 
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
+		
+		// -I, --no-delete-interval
+		operationOptions.setRemoveVersionsByInterval(!options.has(optionNoVersionRemovalByInterval));
 
 		// -o=<time>, --delete-older-than=<time>
 		if (options.has(optionKeepMinTime)) {
