@@ -11,21 +11,22 @@ DESCRIPTION
   well as the remote store. It removes old versions from the local database,
   deletes unused multichunks (if possible) and merges remote database files, 
   if necessary.
-    
-  Merge remote databases: The remote databases of the local client are merged 
-  together if there are more than 15 remote databases per client. The purpose 
-  of this is to avoid endless amounts of small database files on the remote 
-  storage and a quicker download process for new clients.
   
   Remove old file versions: File versions are deleted by two criteria. The
   first is if it is older than 30 days (configurable with -o, disable with -O). 
   The second is an interval based strategy, to keep the version history 
-  readable. This strategy can be disabled with -I.
+  readable. By default, one version is kept per minute in the last hour,
+  one verison is kept per hour in the last three days and one version
+  per day is kept in the last month. This strategy can be disabled with -I. 
+  
+  Merge remote databases: The remote databases of the local client are merged 
+  together if there are more than 15 remote databases per client. The purpose 
+  of this is to avoid endless amounts of small database files on the remote 
+  storage and a quicker download process for new clients. In addition, 
+  databases are merged whenever versions are removed.
   
   This command uses the 'status' and 'ls-remote' commands and is only executed
   if there are neither local nor remote changes.
-  
-  This command is used by the 'up' command.
   
 OPTIONS
   -o, --delete-older-than=<relative-time>
@@ -41,10 +42,6 @@ OPTIONS
     floating point number and <unit> may be any of the following: s(econds),
     m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
     shortened if they are unique. Examples: 5h30m or 1y1mo2d
-      
-  -f, --force
-    Forces a the cleanup, even if the time between cleanups (-t) has not been 
-    run out yet. Use this option only if a cleanup is absolutely necessary.
   
   -I, --no-delete-interval
     Turns off the version removal strategy based on intervals. 
@@ -63,5 +60,10 @@ OPTIONS
     Turns off the removal of leftover temporary files for the command. If this
     is set, this command will leave temporary files on the offsite storage
     untouched.   
+    
+  -f, --force
+    Forces a the cleanup, even if the time between cleanups (3 hours) has not 
+    passed. Use this option only if a cleanup is absolutely necessary and you
+    know what you are doing.
 
 %RESOURCE:incl/footer.skel%
