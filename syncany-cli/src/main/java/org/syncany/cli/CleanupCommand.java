@@ -61,13 +61,13 @@ public class CleanupCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
-		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
+		OptionSpec<Void> optionNoOlderVersionRemoval = parser.acceptsAll(asList("O", "no-delete-older-than"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
 		OptionSpec<String> optionTimeBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups"))
 				.withRequiredArg().ofType(String.class);
 		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files"))
 				.withRequiredArg().ofType(Integer.class);
-		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("k", "keep-min"))
+		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("o", "delete-older-than"))
 				.withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
@@ -76,39 +76,17 @@ public class CleanupCommand extends Command {
 		operationOptions.setForce(options.has(optionForce));
 
 		// -V, --no-version-removal
-		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
+		operationOptions.setRemoveOldVersions(!options.has(optionNoOlderVersionRemoval));
 
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
 
-		// -t=<count>, --time-between-cleanups=<count>
-		if (options.has(optionTimeBetweenCleanups)) {
-			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionTimeBetweenCleanups));
-
-			if (secondsBetweenCleanups < 0) {
-				throw new Exception("Invalid value for --time-between-cleanups=" + secondsBetweenCleanups + "; must be >= 0");
-			}
-
-			operationOptions.setMinSecondsBetweenCleanups(secondsBetweenCleanups);
-		}
-
-		// -x=<count>, --max-database-files=<count>
-		if (options.has(optionMaxDatabaseFiles)) {
-			int maxDatabaseFiles = options.valueOf(optionMaxDatabaseFiles);
-
-			if (maxDatabaseFiles < 1) {
-				throw new Exception("Invalid value for --max-database-files=" + maxDatabaseFiles + "; must be >= 1");
-			}
-
-			operationOptions.setMaxDatabaseFiles(maxDatabaseFiles);
-		}
-
-		// -k=<time>, --keep-min=<time>
+		// -o=<time>, --delete-older-than=<time>
 		if (options.has(optionKeepMinTime)) {
 			long keepDeletedFilesForSeconds = CommandLineUtil.parseTimePeriod(options.valueOf(optionKeepMinTime));
 
 			if (keepDeletedFilesForSeconds < 0) {
-				throw new Exception("Invalid value for --keep-min==" + keepDeletedFilesForSeconds + "; must be >= 0");
+				throw new Exception("Invalid value for --delete-older-than==" + keepDeletedFilesForSeconds + "; must be >= 0");
 			}
 
 			operationOptions.setMinKeepSeconds(keepDeletedFilesForSeconds);
