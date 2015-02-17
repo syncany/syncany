@@ -43,6 +43,8 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.util.StringUtil;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * The file version DAO queries and modifies the <i>fileversion</i> in
  * the SQL database. This table corresponds to the Java object {@link FileVersion}.
@@ -50,8 +52,17 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersionSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());
-
+	private static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());	
+	private static final Map<TimeUnit, String> timeUnitSqlTimeUnitMap = new ImmutableMap.Builder<TimeUnit, String>()
+           .put(TimeUnit.SECONDS, "SS")
+           .put(TimeUnit.MINUTES, "MI")
+           .put(TimeUnit.HOURS, "HH")
+           .put(TimeUnit.DAYS, "DD")
+           .put(TimeUnit.WEEKS, "WW")
+           .put(TimeUnit.MONTHS, "MM")
+           .put(TimeUnit.YEARS, "YYY")
+           .build();	
+	
 	public FileVersionSqlDao(Connection connection) {
 		super(connection);
 	}
@@ -282,32 +293,12 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
-			switch (timeUnit) {
-			case SECONDS:
-					preparedStatement.setString(1, "SS");
-					break;
-			case MINUTES:
-					preparedStatement.setString(1, "MI");
-					break;
-			case HOURS:
-					preparedStatement.setString(1, "HH");
-					break;
-			case DAYS:
-					preparedStatement.setString(1, "DD");
-					break;	
-			case WEEKS:
-					preparedStatement.setString(1, "WW");
-					break;
-			case MONTHS:
-					preparedStatement.setString(1, "MM");
-					break;
-			case YEARS:
-					preparedStatement.setString(1, "YYYY");
-					break;	
-			}
+			String timeUnitIdentifier = timeUnitSqlTimeUnitMap.get(timeUnit);
 			
+			preparedStatement.setString(1, timeUnitIdentifier);
 			preparedStatement.setTimestamp(2, new Timestamp(beginTimestamp));
 			preparedStatement.setTimestamp(3, new Timestamp(endTimestamp));
+			
 			return getAllVersionsInQuery(preparedStatement);
 		}
 		catch (SQLException e) {
