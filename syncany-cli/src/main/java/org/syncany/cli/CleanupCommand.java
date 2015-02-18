@@ -61,12 +61,15 @@ public class CleanupCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 
 		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
-		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-removal"));
+		OptionSpec<Void> optionNoOlderVersionRemoval = parser.acceptsAll(asList("O", "no-delete-older-than"));
+		OptionSpec<Void> optionNoVersionRemovalByInterval = parser.acceptsAll(asList("I", "no-delete-interval"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
-		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
-		OptionSpec<String> optionSecondsBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups")).withRequiredArg()
-				.ofType(String.class);
-		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files")).withRequiredArg().ofType(Integer.class);
+		OptionSpec<String> optionTimeBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups"))
+				.withRequiredArg().ofType(String.class);
+		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files"))
+				.withRequiredArg().ofType(Integer.class);
+		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("o", "delete-older-than"))
+				.withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -74,42 +77,23 @@ public class CleanupCommand extends Command {
 		operationOptions.setForce(options.has(optionForce));
 
 		// -V, --no-version-removal
-		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
+		operationOptions.setRemoveOldVersions(!options.has(optionNoOlderVersionRemoval));
 
 		// -T, --no-temp-removal
 		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
+		
+		// -I, --no-delete-interval
+		operationOptions.setRemoveVersionsByInterval(!options.has(optionNoVersionRemovalByInterval));
 
-		// -k=<count>, --keep-versions=<count>
-		if (options.has(optionKeepVersions)) {
-			int keepVersionCount = options.valueOf(optionKeepVersions);
+		// -o=<time>, --delete-older-than=<time>
+		if (options.has(optionKeepMinTime)) {
+			long keepDeletedFilesForSeconds = CommandLineUtil.parseTimePeriod(options.valueOf(optionKeepMinTime));
 
-			if (keepVersionCount < 1) {
-				throw new Exception("Invalid value for --keep-versions=" + keepVersionCount + "; must be >= 1");
+			if (keepDeletedFilesForSeconds < 0) {
+				throw new Exception("Invalid value for --delete-older-than==" + keepDeletedFilesForSeconds + "; must be >= 0");
 			}
 
-			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));
-		}
-
-		// -t=<count>, --time-between-cleanups=<count>
-		if (options.has(optionSecondsBetweenCleanups)) {
-			long secondsBetweenCleanups = CommandLineUtil.parseTimePeriod(options.valueOf(optionSecondsBetweenCleanups));
-
-			if (secondsBetweenCleanups < 0) {
-				throw new Exception("Invalid value for --time-between-cleanups=" + secondsBetweenCleanups + "; must be >= 0");
-			}
-
-			operationOptions.setMinSecondsBetweenCleanups(secondsBetweenCleanups);
-		}
-
-		// -d=<count>, --max-database-files=<count>
-		if (options.has(optionMaxDatabaseFiles)) {
-			int maxDatabaseFiles = options.valueOf(optionMaxDatabaseFiles);
-
-			if (maxDatabaseFiles < 1) {
-				throw new Exception("Invalid value for --max-database-files=" + maxDatabaseFiles + "; must be >= 1");
-			}
-
-			operationOptions.setMaxDatabaseFiles(maxDatabaseFiles);
+			operationOptions.setMinKeepSeconds(keepDeletedFilesForSeconds);
 		}
 
 		// Parse 'status' options
@@ -135,7 +119,8 @@ public class CleanupCommand extends Command {
 			break;
 
 		case NOK_RECENTLY_CLEANED:
-			out.println("Cleanup has been done recently, so it is not necessary. If you are sure it is necessary, override with --force.");
+			out.println("Cleanup has been done recently, so it is not necessary.");
+			out.println("If you are sure it is necessary, override with --force.");
 			break;
 
 		case NOK_LOCAL_CHANGES:

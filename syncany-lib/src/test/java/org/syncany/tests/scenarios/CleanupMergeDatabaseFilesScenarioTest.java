@@ -131,7 +131,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
-		options.setKeepVersionsCount(5);
 		options.setMinSecondsBetweenCleanups(0);
 		options.setMaxDatabaseFiles(7);
 
@@ -202,28 +201,28 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A8,B6) + (A8,B7) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientA.down();
 		clientA.changeFile("A-file.jpg");
 		clientA.up(upOperationOptionsWithCleanupForce); // (A9,B7) + (A10,B7) [PURGE]
 		clientA.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionA));
 
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B8) + (A10,B9) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientB.down();
 		clientB.changeFile("A-file.jpg");
 		clientB.up(upOperationOptionsWithCleanupForce); // (A10,B10) + (A10,B11) [PURGE]
 		clientB.cleanup(options);
-		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
+		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from chunk where checksum='" + fileAndChunkChecksumThatRaisesException + "'",
 				databaseConnectionB));
 
 		clientA.down();
@@ -279,7 +278,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -340,7 +338,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -397,7 +394,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeep1 = new CleanupOperationOptions();
 		cleanupOptionsKeep1.setRemoveOldVersions(true);
-		cleanupOptionsKeep1.setKeepVersionsCount(1);
 
 		StatusOperationOptions statusOptionsForceChecksum = new StatusOperationOptions();
 		statusOptionsForceChecksum.setForceChecksum(true);
@@ -503,8 +499,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
-		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
+		cleanupOptionsKeepOneForce.setMinKeepSeconds(0);
 
 		// Create a couple of files, then delete them and do a cleanup
 
@@ -629,7 +625,6 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 
 		CleanupOperationOptions cleanupOptionsKeepOneForce = new CleanupOperationOptions();
 		cleanupOptionsKeepOneForce.setRemoveOldVersions(true);
-		cleanupOptionsKeepOneForce.setKeepVersionsCount(1);
 		cleanupOptionsKeepOneForce.setForce(true);
 
 		// Create a couple of files, then delete them and do a cleanup

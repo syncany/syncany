@@ -43,7 +43,9 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
+import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.daemon.messages.CleanupEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
@@ -166,9 +168,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
 		remoteTransaction = new RemoteTransaction(config, transferManager);
 
-		if (options.isRemoveOldVersions()) {
-			removeOldVersions();
-		}
+		removeOldVersions();
 
 		if (options.isRemoveUnreferencedTemporaryFiles()) {
 			transferManager.removeUnreferencedTemporaryFiles();
@@ -255,24 +255,31 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
 	 */
 	private void removeOldVersions() throws Exception {
-		Map<FileHistoryId, FileVersion> purgeFileVersions = new HashMap<>();
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new TreeMap<FileHistoryId, List<FileVersion>>();
+		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new TreeMap<FileHistoryId, FileVersion>();
 
-		purgeFileVersions.putAll(localDatabase.getFileHistoriesWithMaxPurgeVersion(options.getKeepVersionsCount()));
-		purgeFileVersions.putAll(localDatabase.getDeletedFileVersions());
+		if (options.isRemoveVersionsByInterval()) {
+			// Get file versions that should be purged according to the settings that are given. Time-based.
+			purgeFileVersions = collectPurgableFileVersions();
+		}
 
-		boolean needToRemoveFileVersions = purgeFileVersions.size() > 0;
-
-		if (!needToRemoveFileVersions) {
-			logger.log(Level.INFO, "- Old version removal: Not necessary (no file histories longer than {0} versions found).",
-					options.getKeepVersionsCount());
+		if (options.isRemoveOldVersions()) {
+			// Get all non-final fileversions and deleted (final) fileversions that we want to fully delete.
+			// purgeFileVersions is modified here!
+			purgeBeforeFileVersions = collectPurgeBeforeFileVersions(purgeFileVersions);
+		}
+		if (purgeFileVersions.isEmpty() && purgeBeforeFileVersions.isEmpty()) {
+			logger.log(Level.INFO, "- Old version removal: Not necessary.");
 			return;
 		}
 
-		logger.log(Level.INFO, "- Old version removal: Found {0} file histories that need cleaning (longer than {1} versions).", new Object[] {
-				purgeFileVersions.size(), options.getKeepVersionsCount() });
+		logger.log(Level.INFO, "- Old version removal: Found {0} file histories and {1} file versions that need cleaning.", new Object[] {
+				purgeFileVersions.size(),
+				purgeBeforeFileVersions.size() });
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeSmallerOrEqualFileVersions(purgeFileVersions);
+		localDatabase.removeSmallerOrEqualFileVersions(purgeBeforeFileVersions);
+		localDatabase.removeFileVersions(purgeFileVersions);
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
@@ -287,9 +294,69 @@ public class CleanupOperation extends AbstractTransferOperation {
 			unusedMultiChunkSize += removedMultiChunk.getSize();
 		}
 
-		result.setRemovedOldVersionsCount(purgeFileVersions.size());
+		result.setRemovedOldVersionsCount(purgeBeforeFileVersions.size() + purgeFileVersions.size());
 		result.setRemovedMultiChunksCount(unusedMultiChunks.size());
 		result.setRemovedMultiChunksSize(unusedMultiChunkSize);
+	}
+
+	private Map<FileHistoryId, FileVersion> collectPurgeBeforeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) {
+		long deleteBeforeTimestamp = System.currentTimeMillis() - options.getMinKeepDeletedSeconds() * 1000;
+		
+		Map<FileHistoryId, FileVersion> deletedFileVersionsBeforeTimestamp = localDatabase.getDeletedFileVersionsBefore(deleteBeforeTimestamp);
+		Map<FileHistoryId, List<FileVersion>> selectedPurgeFileVersions = localDatabase.getFileHistoriesToPurgeBefore(deleteBeforeTimestamp);
+		
+		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
+		purgeBeforeFileVersions.putAll(deletedFileVersionsBeforeTimestamp);
+		putAllFileVersionsInMap(selectedPurgeFileVersions, purgeFileVersions);
+		
+		return purgeBeforeFileVersions;
+	}
+
+	/**
+	 * For all time intervals defined in the purge file settings, determine the eligible file
+	 * versions to be purged -- namely all but the newest one.
+	 * 
+	 * @see CleanupOperation 
+	 * @see CleanupOperationOptions#getPurgeFileVersionSettings()
+	 * @see FileVersionSqlDao#getFileHistoriesToPurgeInInterval(long, long, TimeUnit)
+	 */
+	private Map<FileHistoryId, List<FileVersion>> collectPurgableFileVersions() {
+		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+
+		long currentTime = System.currentTimeMillis();
+		long previousTruncateIntervalTimeMultiplier = 0;		
+		
+		for (Map.Entry<Long, TimeUnit> purgeFileVersionSetting : options.getPurgeFileVersionSettings().entrySet()) {
+			Long truncateIntervalMultiplier = purgeFileVersionSetting.getKey();
+			TimeUnit truncateIntervalTimeUnit = purgeFileVersionSetting.getValue();			
+			
+			long beginIntervalTimestamp = currentTime - truncateIntervalMultiplier * 1000;
+			long endIntervalTimestamp = currentTime - previousTruncateIntervalTimeMultiplier * 1000;
+			
+			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
+					beginIntervalTimestamp, endIntervalTimestamp, truncateIntervalTimeUnit);
+
+			putAllFileVersionsInMap(newPurgeFileVersions, purgeFileVersions);
+			previousTruncateIntervalTimeMultiplier = truncateIntervalMultiplier;
+		}
+
+		return purgeFileVersions;
+	}
+
+	private void putAllFileVersionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
+			Map<FileHistoryId, List<FileVersion>> fileHistoryPurgeFileVersions) {
+		
+		for (FileHistoryId fileHistoryId : newFileVersions.keySet()) {
+			List<FileVersion> purgeFileVersions = fileHistoryPurgeFileVersions.get(fileHistoryId);
+			List<FileVersion> newPurgeFileVersions = newFileVersions.get(fileHistoryId);
+			
+			if (purgeFileVersions != null) {
+				purgeFileVersions.addAll(newPurgeFileVersions);
+			}
+			else {
+				fileHistoryPurgeFileVersions.put(fileHistoryId, newPurgeFileVersions);
+			}
+		}
 	}
 
 	/**
@@ -414,7 +481,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		boolean tooManyDatabaseFiles = numberOfDatabaseFiles > maxDatabaseFiles;
 		boolean removedOldVersions = result.getRemovedOldVersionsCount() > 0;
 
-		return removedOldVersions || tooManyDatabaseFiles;
+		return removedOldVersions || tooManyDatabaseFiles || options.isForce();
 	}
 
 	/**
