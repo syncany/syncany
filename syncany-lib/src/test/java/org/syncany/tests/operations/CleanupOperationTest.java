@@ -489,6 +489,7 @@ public class CleanupOperationTest {
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(false);
+		options.setRemoveVersionsByInterval(false);
 		options.setMinSecondsBetweenCleanups(40000000);
 
 		// Run
