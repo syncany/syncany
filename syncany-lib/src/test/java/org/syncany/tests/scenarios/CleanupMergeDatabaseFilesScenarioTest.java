@@ -377,6 +377,10 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		clientC.deleteTestData();
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_1_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "1_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_2_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "2_after_cleanup"));
 	}
 
 	@Test
@@ -482,6 +486,18 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		clientC.deleteTestData();
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_1_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientA.getConfig().getAppDir(), "1_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_2_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientA.getConfig().getAppDir(), "2_after_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_3_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "3_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_4_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "4_after_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_5_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "5_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_6_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "6_after_cleanup"));
 	}
 
 	@Test

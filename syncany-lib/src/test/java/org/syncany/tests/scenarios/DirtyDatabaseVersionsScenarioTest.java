@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlResultEquals;
 
@@ -151,6 +153,12 @@ public class DirtyDatabaseVersionsScenarioTest {
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_1_before_down"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "1_before_down"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_2_after_down_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "2_after_down_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_3_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getAppDir(), "3_after_cleanup"));
 	}	
 	
 	@Test
