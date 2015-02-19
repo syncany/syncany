@@ -247,11 +247,10 @@ _sy() {
 
 	CLEANUP_OPTIONS="\
 		-F --force\
-		-V --no-version-removal\
+		-o --delete-older-than\
+		-I --no-delete-interval\
+		-O --no-delete-older-than\
 		-T --no-temp-removal\
-		-k --keep-deleted\
-		-t --time-between-cleanups\
-		-x --max-database-files\
 		$STATUS_OPTIONS"
 
 	# Un-comment this for debug purposes:

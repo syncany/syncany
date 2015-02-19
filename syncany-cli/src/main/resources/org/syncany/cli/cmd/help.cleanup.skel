@@ -2,9 +2,9 @@ NAME
   sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
-  sy cleanup [-k | --keep-deleted=<time>]  [-f | --force]
-             [-V | --no-version-removal] [-T | --no-temp-removal]
-             [<status-options>]
+  sy cleanup [-o | --delete-older-than=<relative-time>] [-f | --force]
+             [-I | --no-delete-interval] [-O | --no-delete-older-than]
+             [-T | --no-temp-removal] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
