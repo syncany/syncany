@@ -486,6 +486,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientA.deleteTestData();
 		clientB.deleteTestData();
 		clientC.deleteTestData();
+		clientD.deleteTestData();
+		clientE.deleteTestData();
 		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_1_before_cleanup"));
 		FileUtils.deleteDirectory(new File(clientA.getConfig().getAppDir(), "1_before_cleanup"));
 		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_2_after_cleanup"));

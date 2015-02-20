@@ -118,5 +118,6 @@ public class ManySyncUpsAndDatabaseFileCleanupScenarioTest {
 		clientB.down();
 		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
 		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }
