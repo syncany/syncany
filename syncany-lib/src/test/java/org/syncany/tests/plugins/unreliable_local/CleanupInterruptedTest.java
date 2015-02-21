@@ -190,6 +190,8 @@ public class CleanupInterruptedTest {
 
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
+
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -252,6 +254,8 @@ public class CleanupInterruptedTest {
 
 		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
+
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -298,5 +302,7 @@ public class CleanupInterruptedTest {
 		UpOperationResult upResult = clientB.up();
 		assertEquals(UpResultCode.NOK_REPO_BLOCKED, upResult.getResultCode());
 
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

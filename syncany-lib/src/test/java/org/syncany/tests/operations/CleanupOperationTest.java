@@ -644,6 +644,8 @@ public class CleanupOperationTest {
 		clientA.cleanup(options);
 		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 
+		// Tear down
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -711,6 +713,8 @@ public class CleanupOperationTest {
 		assertEquals("3", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 		assertEquals("3\n5\n7", TestSqlUtil.runSqlSelect("select version from fileversion", databaseConnectionA));
 
+		// Tear down
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -735,5 +739,8 @@ public class CleanupOperationTest {
 
 		clientA.cleanup(options);
 		assertEquals("1", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
+
+		// Tear down
+		clientA.deleteTestData();
 	}
 }
