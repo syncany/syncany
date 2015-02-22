@@ -17,10 +17,12 @@ Contributors / Former Team Members:
 - Florian Spiegel
 - Gaétan Collaud
 - Gregor Trefs (gtrefs)
+- Joel Pettersson (joelpet)
 - Julien Nicoulaud
 - kt3k
 - Marius Voilă
 - MatMaul
+- Neal Gompa (Conan-Kudo)
 - Nikolai Hellwig
 - Stefan Mai (iamnafets)
 - Stefan Hugtenburg (MrHug)
