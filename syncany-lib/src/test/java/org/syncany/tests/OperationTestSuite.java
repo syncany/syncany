@@ -48,7 +48,7 @@ import org.syncany.tests.operations.SyncUpOperationTest;
 	PluginOperationTest.class,
 	RecursiveWatcherTest.class,
 	StatusOperationTest.class,
-	SyncUpOperationTest.class,
+	SyncUpOperationTest.class	
 })
 public class OperationTestSuite {
 	// This class executes all tests
