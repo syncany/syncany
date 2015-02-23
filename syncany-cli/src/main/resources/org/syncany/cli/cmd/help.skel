@@ -63,4 +63,6 @@ REPORTING BUGS
   Please report bugs to the GitHub issues page at
      https://www.github.com/syncany/syncany/issues
 
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

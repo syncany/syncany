@@ -24,4 +24,6 @@ OPTIONS
     Only prints the link and leaves out any explanatory text. Useful if the
     link is used in a script.
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

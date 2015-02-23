@@ -88,4 +88,6 @@ ACIONS
     only be used for plugins that were installed by the user, and not for
     system-wide plugins.    
 
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

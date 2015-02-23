@@ -64,10 +64,6 @@ public class CleanupCommand extends Command {
 		OptionSpec<Void> optionNoOlderVersionRemoval = parser.acceptsAll(asList("O", "no-delete-older-than"));
 		OptionSpec<Void> optionNoVersionRemovalByInterval = parser.acceptsAll(asList("I", "no-delete-interval"));
 		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
-		OptionSpec<String> optionTimeBetweenCleanups = parser.acceptsAll(asList("t", "time-between-cleanups"))
-				.withRequiredArg().ofType(String.class);
-		OptionSpec<Integer> optionMaxDatabaseFiles = parser.acceptsAll(asList("x", "max-database-files"))
-				.withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("o", "delete-older-than"))
 				.withRequiredArg().ofType(String.class);
 

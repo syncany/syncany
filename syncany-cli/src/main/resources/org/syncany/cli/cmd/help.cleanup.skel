@@ -66,4 +66,6 @@ OPTIONS
     passed. Use this option only if a cleanup is absolutely necessary and you
     know what you are doing.
 
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

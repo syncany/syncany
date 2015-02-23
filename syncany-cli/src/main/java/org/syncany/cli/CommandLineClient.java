@@ -19,8 +19,6 @@ package org.syncany.cli;
 
 import static java.util.Arrays.asList;
 
-import javax.net.ssl.SSLContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,8 +34,12 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.net.ssl.SSLContext;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -73,10 +75,6 @@ import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.PidFileUtil;
 import org.syncany.util.StringUtil;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
 /**
  * The command line client implements a typical CLI. It represents the first entry
  * point for the Syncany command line application and can be used to run all of the
@@ -100,7 +98,6 @@ public class CommandLineClient extends Client {
 	private static final int LOG_FILE_COUNT = 4;
 	private static final int LOG_FILE_LIMIT = 25000000; // 25 MB
 
-	private static final Pattern HELP_TEXT_RESOURCE_PATTERN = Pattern.compile("\\%RESOURCE:([^%]+)\\%");
 	private static final String HELP_TEXT_RESOURCE_ROOT = "/" + CommandLineClient.class.getPackage().getName().replace(".", "/") + "/";
 	private static final String HELP_TEXT_HELP_SKEL_RESOURCE = "cmd/help.skel";
 	private static final String HELP_TEXT_VERSION_SHORT_SKEL_RESOURCE = "incl/version_short.skel";
@@ -598,17 +595,6 @@ public class CommandLineClient extends Client {
 			if (line.contains(variableName)) {
 				line = line.replace(variableName, (String) applicationProperty.getValue());
 			}
-		}
-
-		Matcher includeResourceMatcher = HELP_TEXT_RESOURCE_PATTERN.matcher(line);
-
-		if (includeResourceMatcher.find()) {
-			String includeResource = HELP_TEXT_RESOURCE_ROOT + includeResourceMatcher.group(1);
-			InputStream includeResourceInputStream = CommandLineClient.class.getResourceAsStream(includeResource);
-			String includeResourceStr = IOUtils.toString(includeResourceInputStream);
-
-			line = includeResourceMatcher.replaceAll(includeResourceStr);
-			line = replaceVariables(line);
 		}
 
 		return line;
