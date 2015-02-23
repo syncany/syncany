@@ -18,7 +18,7 @@
 #
 
 #
-# This script creates transforms any input plain text file into a 
+# This script transforms any input plain text file into a 
 # man page compatible file. 
 #
 
@@ -40,7 +40,7 @@ sub main {
 }
 
 sub print_usage_and_exit() {
-	print STDERR "Usage: makeman [INFILE] [OUTFILE]\n";
+	print STDERR "Usage: makeman.pl [INFILE] [OUTFILE]\n";
 	print STDERR "\n";
 	print STDERR "Parameters:\n";
 	print STDERR "  INFILE   Text file with structure of a man page (optional).\n";
@@ -49,9 +49,9 @@ sub print_usage_and_exit() {
 	print STDERR "  Both parameters are optional. If - is given, STDIN/STDOUT is used.\n";	
 	print STDERR "\n";
 	print STDERR "Examples:\n";
-	print STDERR "  makeman sy.skel sy.1             # Creates man page at sy.1\n";
-	print STDERR "  cat sy.skel | makeman - > sy.1   # Same result\n";
-	print STDERR "  cat sy.skel | makeman - sy.1     # Same result\n";
+	print STDERR "  makeman.pl sy.skel sy.1             # Creates man page at sy.1\n";
+	print STDERR "  cat sy.skel | makeman.pl - > sy.1   # Same result\n";
+	print STDERR "  cat sy.skel | makeman.pl - sy.1     # Same result\n";
 	print STDERR "\n";
 	
 	exit 1;
