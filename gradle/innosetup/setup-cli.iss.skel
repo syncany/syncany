@@ -21,7 +21,7 @@ AppVersion=${applicationVersionFull}
 AppVerName=Syncany ${applicationVersion}
 AppPublisher=Philipp Heckel
 AppPublisherURL=https://www.syncany.org/
-AppCopyright=Copyright (C) 2011-2014 Philipp Heckel
+AppCopyright=Copyright (C) 2011-2015 Philipp Heckel
 
 DefaultDirName={pf}\\Syncany
 DefaultGroupName=Syncany

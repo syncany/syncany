@@ -17,6 +17,8 @@
  */
 package org.syncany.tests.scenarios;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FilenameFilter;
 
@@ -26,8 +28,6 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-
-import static org.junit.Assert.assertEquals;
 
 public class Issue227_2_ScenarioTest {
 	@Test
@@ -353,5 +353,6 @@ public class Issue227_2_ScenarioTest {
 		clientMOM.deleteTestData();
 		clientHSE.deleteTestData();
 		clientMee.deleteTestData();
+		clientIHtwo.deleteTestData();
 	}
 }

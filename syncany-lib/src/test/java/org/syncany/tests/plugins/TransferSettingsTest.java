@@ -26,6 +26,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import org.simpleframework.xml.core.ElementException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferPlugin;
@@ -51,7 +53,7 @@ public class TransferSettingsTest {
 	@Before
 	public void before() throws Exception {
 		tmpFile = File.createTempFile("syncany-transfer-settings-test", "tmp");
-		Config config = TestConfigUtil.createTestLocalConfig();
+		config = TestConfigUtil.createTestLocalConfig();
 		assertNotNull(Plugins.get("dummy"));
 		assertNotNull(config);
 	}
@@ -59,6 +61,8 @@ public class TransferSettingsTest {
 	@After
 	public void after() throws Exception {
 		tmpFile.delete();
+		FileUtils.deleteDirectory(((LocalTransferSettings) config.getConnection()).getPath());
+		FileUtils.deleteDirectory(config.getLocalDir());
 		config = null;
 	}
 
@@ -71,7 +75,11 @@ public class TransferSettingsTest {
 
 		final DummyTransferSettings ts = new DummyTransferSettings();
 		final LocalTransferSettings lts = new LocalTransferSettings();
-		final ConfigTO conf = TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO();
+		final InitOperationOptions initOperationOptions = TestConfigUtil.createTestInitOperationOptions("syncanytest");
+		final ConfigTO conf = initOperationOptions.getConfigTO();
+
+		File repoDir = ((LocalTransferSettings) initOperationOptions.getConfigTO().getTransferSettings()).getPath();
+		File localDir = initOperationOptions.getLocalDir();
 
 		conf.setTransferSettings(ts);
 
@@ -82,7 +90,6 @@ public class TransferSettingsTest {
 		ts.subsettings = lts;
 
 		assertTrue(ts.isValid());
-
 		Serializer serializer = new Persister();
 		serializer.write(conf, tmpFile);
 
@@ -97,6 +104,10 @@ public class TransferSettingsTest {
 
 		DummyTransferManager transferManager = plugin.createTransferManager(tsRestored, config);
 		assertNotNull(transferManager);
+
+		// Tear down
+		FileUtils.deleteDirectory(localDir);
+		FileUtils.deleteDirectory(repoDir);
 	}
 
 	@Test
@@ -120,13 +131,17 @@ public class TransferSettingsTest {
 	@Test
 	public void testDeserializeCorrectClass() throws Exception {
 		Serializer serializer = new Persister();
-
+		InitOperationOptions initOperationOptions = TestConfigUtil.createTestInitOperationOptions("syncanytest");
 		// Always LocalTransferSettings
-		serializer.write(TestConfigUtil.createTestInitOperationOptions("syncanytest").getConfigTO(), tmpFile);
+		serializer.write(initOperationOptions.getConfigTO(), tmpFile);
 
 		ConfigTO confRestored = ConfigTO.load(tmpFile);
 
 		assertEquals(LocalTransferSettings.class, confRestored.getTransferSettings().getClass());
+
+		// Tear down
+		FileUtils.deleteDirectory(initOperationOptions.getLocalDir());
+		FileUtils.deleteDirectory(((LocalTransferSettings) initOperationOptions.getConfigTO().getTransferSettings()).getPath());
 	}
 
 	@Test(expected = ElementException.class)

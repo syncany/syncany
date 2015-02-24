@@ -60,4 +60,6 @@ OPTIONS
     printed by the `list` action). Changes will be applied after a restart
     of the daemon.
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

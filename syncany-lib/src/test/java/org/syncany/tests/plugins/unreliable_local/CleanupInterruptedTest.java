@@ -23,10 +23,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
+import java.util.TreeMap;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.up.UpOperationResult;
@@ -74,7 +76,7 @@ public class CleanupInterruptedTest {
 		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setKeepVersionsCount(1);
+		cleanupOptions.setMinKeepSeconds(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -133,6 +135,7 @@ public class CleanupInterruptedTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMaxDatabaseFiles(1);
+		cleanupOptions.setPurgeFileVersionSettings(new TreeMap<Long, TimeUnit>());
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -185,6 +188,8 @@ public class CleanupInterruptedTest {
 
 		assertEquals(0, transferManager.list(ActionRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "actions").list().length);
+
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -208,14 +213,14 @@ public class CleanupInterruptedTest {
 		clientA.upWithForceChecksum();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setMaxDatabaseFiles(1);
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		cleanupOptions.setMinKeepSeconds(0);
 		clientA.cleanup(cleanupOptions);
 
 		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
 
-		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
-		assertEquals(2, new File(testConnection.getPath(), "multichunks").list().length);
+		assertEquals(1, transferManager.list(MultichunkRemoteFile.class).size());
+		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 
 		assertEquals(1, transferManager.list(DatabaseRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "databases").list(new FilenameFilter() {
@@ -246,6 +251,8 @@ public class CleanupInterruptedTest {
 
 		assertEquals(0, transferManager.list(TempRemoteFile.class).size());
 		assertEquals(0, new File(testConnection.getPath(), "temporary").list().length);
+
+		clientA.deleteTestData();
 	}
 
 	@Test
@@ -271,7 +278,7 @@ public class CleanupInterruptedTest {
 		clientB.down();
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		cleanupOptions.setKeepVersionsCount(1);
+		cleanupOptions.setMinKeepSeconds(0);
 		boolean cleanupFailed = false;
 		try {
 			clientA.cleanup(cleanupOptions);
@@ -292,5 +299,7 @@ public class CleanupInterruptedTest {
 		UpOperationResult upResult = clientB.up();
 		assertEquals(UpResultCode.NOK_REPO_BLOCKED, upResult.getResultCode());
 
+		clientA.deleteTestData();
+		clientB.deleteTestData();
 	}
 }

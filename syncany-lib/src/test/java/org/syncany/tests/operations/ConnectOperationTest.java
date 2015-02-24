@@ -90,6 +90,7 @@ public class ConnectOperationTest {
 		TestFileUtil.deleteDirectory(repoDir);
 		TestFileUtil.deleteDirectory(localConnectDirB);
 		TestFileUtil.deleteDirectory(initOperationOptionsA.getLocalDir());
+		TestFileUtil.deleteDirectory(connectOperationOptionsB.getLocalDir());
 	}
 
 	@Test
@@ -106,6 +107,8 @@ public class ConnectOperationTest {
 		// B.connect()
 		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp(TestConfigUtil.createUniqueName("client-B", initOperationOptionsA));
 		File localConnectDirB = new File(localDirB, Config.DIR_APPLICATION);
+		File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getTransferSettings()).getPath();
+
 
 		ConfigTO connectionConfigToB = initOperationOptionsA.getConfigTO();
 		((LocalTransferSettings) connectionConfigToB.getTransferSettings()).setPath(new File("/does/not/exist")); // <<< Point to non-existing repo
@@ -128,12 +131,12 @@ public class ConnectOperationTest {
 		assertFalse(new File(localConnectDirB, Config.DIR_LOG).exists());
 		assertFalse(new File(localConnectDirB, Config.FILE_REPO).exists());
 
-		File repoDir = ((LocalTransferSettings) initOperationOptionsA.getConfigTO().getTransferSettings()).getPath();
 
 		// Tear down
 		TestFileUtil.deleteDirectory(repoDir);
 		TestFileUtil.deleteDirectory(localConnectDirB);
 		TestFileUtil.deleteDirectory(initOperationOptionsA.getLocalDir());
+		TestFileUtil.deleteDirectory(connectOperationOptionsB.getLocalDir());
 	}
 
 	@Test
@@ -179,6 +182,7 @@ public class ConnectOperationTest {
 		TestFileUtil.deleteDirectory(repoDir);
 		TestFileUtil.deleteDirectory(localConnectDirB);
 		TestFileUtil.deleteDirectory(initOperationOptionsA.getLocalDir());
+		TestFileUtil.deleteDirectory(connectOperationOptionsB.getLocalDir());
 	}
 
 	@Test

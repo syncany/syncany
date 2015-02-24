@@ -9,6 +9,7 @@ Change Log
   + Added support for WS/REST in JSON format #285
   + Make plugins updatable via `sy plugin update` command #300
   + History browser in the GUI #333
+  + Better defaults for Cleanup. #345
 - Bugfixes and other things:
   + Fix black notification bubble on Linux #339
   + Fix file version table in browse history detail view has too
@@ -17,6 +18,7 @@ Change Log
   + Fix ampersands (&) in menus #367
   + Fix last modified pre-1970 issue #374
   + Fix autostart not working on OSX #371
+  + Fix tests to make them clean up after themselves #377/#386
 
 ### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
 - Patch release to fix serialization issue in 'sy ls'

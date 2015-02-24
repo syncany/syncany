@@ -40,7 +40,10 @@ import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.util.StringUtil;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * The file version DAO queries and modifies the <i>fileversion</i> in
@@ -49,8 +52,17 @@ import org.syncany.util.StringUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileVersionSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());
-
+	private static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());	
+	private static final Map<TimeUnit, String> timeUnitSqlTimeUnitMap = new ImmutableMap.Builder<TimeUnit, String>()
+           .put(TimeUnit.SECONDS, "SS")
+           .put(TimeUnit.MINUTES, "MI")
+           .put(TimeUnit.HOURS, "HH")
+           .put(TimeUnit.DAYS, "DD")
+           .put(TimeUnit.WEEKS, "WW")
+           .put(TimeUnit.MONTHS, "MM")
+           .put(TimeUnit.YEARS, "YYY")
+           .build();	
+	
 	public FileVersionSqlDao(Connection connection) {
 		super(connection);
 	}
@@ -126,6 +138,23 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 					preparedStatement.setLong(2, purgeFileVersion.getVersion());
 
 					preparedStatement.addBatch();
+				}
+
+				preparedStatement.executeBatch();
+			}
+		}
+	}
+
+	public void removeSpecificFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
+		if (purgeFileVersions.size() > 0) {
+			try (PreparedStatement preparedStatement = getStatement(connection, "fileversion.delete.all.removeSpecificFileVersionsByIds.sql")) {
+				for (FileHistoryId purgeFileHistoryId : purgeFileVersions.keySet()) {
+					for (FileVersion purgeFileVersion : purgeFileVersions.get(purgeFileHistoryId)) {
+						preparedStatement.setString(1, purgeFileHistoryId.toString());
+						preparedStatement.setLong(2, purgeFileVersion.getVersion());
+
+						preparedStatement.addBatch();
+					}
 				}
 
 				preparedStatement.executeBatch();
@@ -262,6 +291,31 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
+			String timeUnitIdentifier = timeUnitSqlTimeUnitMap.get(timeUnit);
+			
+			preparedStatement.setString(1, timeUnitIdentifier);
+			preparedStatement.setTimestamp(2, new Timestamp(beginTimestamp));
+			preparedStatement.setTimestamp(3, new Timestamp(endTimestamp));
+			
+			return getAllVersionsInQuery(preparedStatement);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsBeforeTime.sql")) {
+			preparedStatement.setTimestamp(1, new Timestamp(timestamp));
+			return getAllVersionsInQuery(preparedStatement);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersions.sql")) {
 			return getSingleVersionInHistory(preparedStatement);
@@ -269,6 +323,17 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
+		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersionsBefore.sql")) {
+			preparedStatement.setTimestamp(1, new Timestamp(timestamp));
+			return getSingleVersionInHistory(preparedStatement);
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
@@ -295,6 +360,28 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 			}
 
 			return mostRecentPurgeFileVersions;
+		}
+	}
+
+	private Map<FileHistoryId, List<FileVersion>> getAllVersionsInQuery(PreparedStatement preparedStatement) throws SQLException {
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
+			Map<FileHistoryId, List<FileVersion>> fileHistoryPurgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
+
+			while (resultSet.next()) {
+				FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+				FileVersion fileVersion = createFileVersionFromRow(resultSet);
+
+				List<FileVersion> purgeFileVersions = fileHistoryPurgeFileVersions.get(fileHistoryId);
+				
+				if (purgeFileVersions == null) {
+					purgeFileVersions = new ArrayList<FileVersion>();
+					fileHistoryPurgeFileVersions.put(fileHistoryId, purgeFileVersions);
+				}
+				
+				purgeFileVersions.add(fileVersion);
+			}
+
+			return fileHistoryPurgeFileVersions;
 		}
 	}
 
@@ -363,4 +450,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 		return fileVersion;
 	}
+
+
 }
