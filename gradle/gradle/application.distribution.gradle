@@ -7,6 +7,21 @@ apply plugin: "application"
 applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
+
+task manpages(dependsOn: compileJava) {
+    def man = rootProject.file("build/man")
+	doLast {
+		man.mkdirs()
+	
+		exec {
+			workingDir rootProject.file("gradle/man")
+			commandLine "./makemanpages.sh"
+		}
+	}
+}
+
+startScripts.dependsOn(manpages)
+
 startScripts {
 	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
 
@@ -177,6 +192,9 @@ startScripts {
 	}
 }
 
+
+
+
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
 
@@ -186,7 +204,18 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
+
+    from("build/man") {
+        include "syncany.manpages"
+        into "man"
+    }   
+
+    from("build/man/man") {
+        include "*"
+        into "man/man"
+    }
 }
+
 
 distTar {
 	baseName = "syncany"
