@@ -11,6 +11,8 @@ Change Log
   + History browser in the GUI #333
   + Better defaults for Cleanup. #345
 - Bugfixes and other things:
+  + Add man pages and bash completion to tar.gz/.zip distribution, 
+    to allow using them in Arch and potentially other releases #148/#388
   + Fix black notification bubble on Linux #339
   + Fix file version table in browse history detail view has too
     much left cell spacing #346
