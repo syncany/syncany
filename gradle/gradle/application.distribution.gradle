@@ -7,7 +7,6 @@ apply plugin: "application"
 applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
-
 startScripts {
 	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
 
@@ -178,9 +177,6 @@ startScripts {
 	}
 }
 
-
-
-
 applicationDistribution.from("${rootProject.projectDir}/") {
 	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
 
@@ -191,37 +187,36 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		into "bin"
 	}
 
-    def man = file("${rootProject.projectDir}/build/man")
-        if (man.exists()) {
-        from("build/man") {
-            include "syncany.manpages"
-            into "man"
-        }   
+	// Copy man pages (if they were built via 'manpages' task)
+        if (file("${rootProject.projectDir}/build/man").exists()) {
+		from("build/man") {
+			include "syncany.manpages"
+			into "man"
+		}   
 
-        from("build/man/man") {
-            include "*"
-            into "man/man"
-        }
-    }
+		from("build/man/man") {
+			include "*"
+			into "man/man"
+		}
+	}
 
-    from("${rootProject.projectDir}/gradle/bash") {
-        include "syncany.bash-completion"
-        into "bash"
-    }
+	// Copy bash completion to distribution
+	from("${rootProject.projectDir}/gradle/bash") {
+		include "syncany.bash-completion"
+		into "bash"
+	}
 }
 
 task manpages(dependsOn: compileJava) {
-    def man = rootProject.file("build/man")
 	doLast {
-		man.mkdirs()
-	
+		rootProject.file("build/man").mkdirs()
+
 		exec {
 			workingDir rootProject.file("gradle/man")
 			commandLine "./makemanpages.sh"
 		}
 	}
 }
-
 
 
 distTar {
