@@ -8,20 +8,6 @@ applicationName = "syncany"
 mainClassName = "org.syncany.Syncany"
 
 
-task manpages(dependsOn: compileJava) {
-    def man = rootProject.file("build/man")
-	doLast {
-		man.mkdirs()
-	
-		exec {
-			workingDir rootProject.file("gradle/man")
-			commandLine "./makemanpages.sh"
-		}
-	}
-}
-
-startScripts.dependsOn(manpages)
-
 startScripts {
 	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
 
@@ -205,16 +191,37 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		into "bin"
 	}
 
-    from("build/man") {
-        include "syncany.manpages"
-        into "man"
-    }   
+    def man = file("${rootProject.projectDir}/build/man")
+        if (man.exists()) {
+        from("build/man") {
+            include "syncany.manpages"
+            into "man"
+        }   
 
-    from("build/man/man") {
-        include "*"
-        into "man/man"
+        from("build/man/man") {
+            include "*"
+            into "man/man"
+        }
+    }
+
+    from("${rootProject.projectDir}/gradle/bash") {
+        include "syncany.bash-completion"
+        into "bash"
     }
 }
+
+task manpages(dependsOn: compileJava) {
+    def man = rootProject.file("build/man")
+	doLast {
+		man.mkdirs()
+	
+		exec {
+			workingDir rootProject.file("gradle/man")
+			commandLine "./makemanpages.sh"
+		}
+	}
+}
+
 
 
 distTar {
