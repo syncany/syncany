@@ -25,10 +25,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.plugins.transfer.features.Feature;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.ReflectionUtil;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -42,9 +44,10 @@ public class TransferManagerFactory {
 
 	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getName());
 
-	private static final String FQCN_SKELETON = TransferManagerFactory.class.getPackage().getName() + ".%sTransferManager";
+	private static final String FQCN_SKELETON = TransferManagerFactory.class.getPackage().getName() + ".features.%sTransferManager";
 	private static final int DEFAULT_PRIORITY = 0;
 
+	@Deprecated
 	public static final List<Class<? extends Annotation>> FEATURES = ImmutableList.<Class<? extends Annotation>>builder()
 					.add(TransactionAware.class)
 					.add(Retriable.class)
@@ -83,6 +86,7 @@ public class TransferManagerFactory {
 			return this;
 		}
 
+		@Deprecated
 		public Builder withAllFeatures() {
 			for (Class<? extends Annotation> featureAnnotation : FEATURES) {
 				withFeature(featureAnnotation);
@@ -96,7 +100,8 @@ public class TransferManagerFactory {
 
 		@SuppressWarnings("unchecked")
 		public <T extends TransferManager> T as(Class<? extends Annotation> featureAnnotation) {
-			return wrap((Class<T>) getImplementingTransferManager(featureAnnotation));
+			Class<T> implementingTransferManager = (Class<T>) getImplementingTransferManager(featureAnnotation);
+			return wrap(implementingTransferManager);
 		}
 
 		private <T extends TransferManager> T wrap(Class<T> desiredTransferManagerClass) {
@@ -109,7 +114,7 @@ public class TransferManagerFactory {
 
 			try {
 				for (Class<? extends Annotation> featureAnnotation : features.values()) {
-					if (ReflectionUtil.isAnnotationPresentSomewhere(originTransferManager.getClass(), featureAnnotation)) {
+					if (ReflectionUtil.isAnnotationPresentInHierarchy(originTransferManager.getClass(), featureAnnotation)) {
 						Class<? extends TransferManager> featureTransferManagerClass = getImplementingTransferManager(featureAnnotation);
 
 						if (featureTransferManagerClass.equals(desiredTransferManagerClass)) {
@@ -143,7 +148,7 @@ public class TransferManagerFactory {
 		private TransferManager apply(TransferManager transferManager, Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass) throws IllegalAccessException, InvocationTargetException, InstantiationException {
 			logger.log(Level.FINE, "Wrapping TransferManager " + transferManager + " in " + featureTransferManagerClass);
 
-			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationSomewhere(originTransferManager.getClass(), featureAnnotationClass);
+			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationInHierarchy(originTransferManager.getClass(), featureAnnotationClass);
 			Constructor<?> constructor;
 
 			// try the most common constructor
@@ -174,13 +179,13 @@ public class TransferManagerFactory {
 
 		@SuppressWarnings("unchecked")
 		private static Class<? extends TransferManager> getImplementingTransferManager(Class<? extends Annotation> featureAnnotation) {
-			String FQCN = String.format(FQCN_SKELETON, featureAnnotation.getSimpleName());
+			String transferManagerFQCN = String.format(FQCN_SKELETON, featureAnnotation.getSimpleName());
 
 			try {
-				return (Class<? extends TransferManager>) Class.forName(FQCN);
+				return (Class<? extends TransferManager>) Class.forName(transferManagerFQCN);
 			}
 			catch (Exception e) {
-				throw new RuntimeException("Unable to find class ffeaturesure " + featureAnnotation.getSimpleName() + ". Tried " + FQCN, e);
+				throw new RuntimeException("Unable to find class with feature " + featureAnnotation.getSimpleName() + ". Tried " + transferManagerFQCN, e);
 			}
 		}
 
@@ -195,7 +200,7 @@ public class TransferManagerFactory {
 
 		private void checkIfAllFeaturesSupported() {
 			for (Class<? extends Annotation> featureAnnotation : features.values()) {
-				if (!FEATURES.contains(featureAnnotation)) {
+				if (!featureAnnotation.isAnnotationPresent(Feature.class)) {
 					throw new IllegalArgumentException("Feature " + featureAnnotation + " is unknown");
 				}
 			}

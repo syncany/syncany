@@ -108,22 +108,24 @@ public abstract class ReflectionUtil {
 		return null;
 	}
 
-	public static boolean isAnnotationPresentSomewhere(Class<?> clazz, Class<? extends Annotation> annotation) {
+	public static boolean isAnnotationPresentInHierarchy(Class<?> clazz, Class<? extends Annotation> annotation) {
 		while (clazz != null) {
 			if (clazz.isAnnotationPresent(annotation)) {
 				return true;
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 
 		return false;
 	}
 
-	public static <T extends Annotation> T getAnnotationSomewhere(Class<?> clazz, Class<T> annotation) {
+	public static <T extends Annotation> T getAnnotationInHierarchy(Class<?> clazz, Class<T> annotation) {
 		while (clazz != null) {
 			if (clazz.isAnnotationPresent(annotation)) {
 				return clazz.getAnnotation(annotation);
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 

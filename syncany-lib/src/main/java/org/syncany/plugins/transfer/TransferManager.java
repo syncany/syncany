@@ -18,7 +18,6 @@
 package org.syncany.plugins.transfer;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.Map;
 
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;

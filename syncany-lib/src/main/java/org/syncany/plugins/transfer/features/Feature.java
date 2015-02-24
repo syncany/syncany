@@ -22,14 +22,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * @author Christian Roth <christian.roth@port17.de>
- */
-
-@Feature
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Retriable {
-	int numberRetries() default 3;
-	int sleepInterval() default 3000;
+public @interface Feature {
+	// Marker
 }
