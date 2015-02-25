@@ -96,4 +96,6 @@ EXAMPLES
     Selects and displays all file versions and their file histories. 
     This selects the entire database. Use with caution.
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

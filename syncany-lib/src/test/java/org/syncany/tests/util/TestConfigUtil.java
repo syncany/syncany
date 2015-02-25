@@ -47,6 +47,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
+
 import com.google.common.collect.Lists;
 
 public class TestConfigUtil {

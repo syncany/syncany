@@ -51,7 +51,6 @@ public class Issue288ScenarioTest {
 		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
 		
 		CleanupOperationOptions cleanupOptionsKeepOne = new CleanupOperationOptions();
-		cleanupOptionsKeepOne.setKeepVersionsCount(1);
 		cleanupOptionsKeepOne.setForce(true);
 		
 		// Create file content with two duplicate chunks

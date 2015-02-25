@@ -17,7 +17,9 @@
  */
 package org.syncany.tests.scenarios;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlResultEquals;
 
@@ -128,7 +130,7 @@ public class DirtyDatabaseVersionsScenarioTest {
 		
 		assertSqlResultEquals(clientB.getDatabaseFile(), "select count(*) from multichunk_muddy", "1");
 		
-		FileUtils.copyDirectory(testConnection.getPath(), new File(testConnection.getPath()+"_2_after_down_before_cleanup"));
+		FileUtils.copyDirectory(testConnection.getPath(), new File(testConnection.getPath(), "_2_after_down_before_cleanup"));
 		FileUtils.copyDirectory(clientB.getConfig().getLocalDir(), new File(clientB.getConfig().getLocalDir()+"_2_after_down_before_cleanup"));
 		
 		assertEquals(3, new File(testConnection.getPath(), "multichunks").listFiles().length);
@@ -151,6 +153,14 @@ public class DirtyDatabaseVersionsScenarioTest {
 		// Tear down
 		clientA.deleteTestData();
 		clientB.deleteTestData();
+		System.out.println(new File(testConnection.getPath() + "_1_before_down"));
+		System.out.println(new File(clientB.getConfig().getLocalDir(), "_1_before_down"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_1_before_down"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getLocalDir() + "_1_before_down"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_2_after_down_before_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getLocalDir() + "_2_after_down_before_cleanup"));
+		FileUtils.deleteDirectory(new File(testConnection.getPath() + "_3_after_cleanup"));
+		FileUtils.deleteDirectory(new File(clientB.getConfig().getLocalDir() + "_3_after_cleanup"));
 	}	
 	
 	@Test

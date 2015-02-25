@@ -38,4 +38,6 @@ OPTIONS
     The default strategy is 'rename'.
     The 'ask' strategy is currently NOT implemented!  
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

@@ -60,7 +60,6 @@ public class Issue316ScenarioTest {
 		java.sql.Connection databaseConnectionB = clientB.getConfig().createDatabaseConnection();
 				
 		CleanupOperationOptions cleanupOptionsKeepOne = new CleanupOperationOptions();
-		cleanupOptionsKeepOne.setKeepVersionsCount(1);
 		cleanupOptionsKeepOne.setMaxDatabaseFiles(1);
 		cleanupOptionsKeepOne.setForce(true);	
 				
@@ -126,7 +125,6 @@ public class Issue316ScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 				
 		CleanupOperationOptions cleanupOptionsKeepOne = new CleanupOperationOptions();
-		cleanupOptionsKeepOne.setKeepVersionsCount(1);
 		cleanupOptionsKeepOne.setMaxDatabaseFiles(1);
 		cleanupOptionsKeepOne.setForce(true);	
 				

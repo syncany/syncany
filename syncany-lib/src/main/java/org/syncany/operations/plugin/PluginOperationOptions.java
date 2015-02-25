@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ public class PluginOperationOptions implements OperationOptions {
 	public enum PluginListMode {
 		ALL, LOCAL, REMOTE
 	}
-	
+
 	private PluginOperationAction action = null;
 	private String pluginId = null;
 	private PluginListMode listMode = PluginListMode.ALL;

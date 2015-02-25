@@ -37,4 +37,6 @@ OPTIONS
     Excludes empty database version from the result. If this option is
     not given, empty databases will be listed as '(empty)'.      
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

@@ -28,4 +28,6 @@ OPTIONS
 
   All arguments of the 'status' command can be used.
  
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

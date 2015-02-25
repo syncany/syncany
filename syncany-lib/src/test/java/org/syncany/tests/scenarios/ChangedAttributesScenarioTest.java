@@ -83,7 +83,7 @@ public class ChangedAttributesScenarioTest {
 		// Test 2: Check database for inconsistencies
 		SqlDatabase database = clientB.loadLocalDatabase();
 
-		assertNotNull("File should be uploaded.", database.getFileVersionByPath("file1.jpg"));		
+		assertEquals("File should be uploaded.", 1, database.getFileList("file1.jpg", null, false, false, false, null).size());		
 		assertEquals("There should be a new database version, because file should not have been added.", 2, database.getLocalDatabaseBranch().size());
 		
 		// B down

@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
@@ -120,7 +121,16 @@ public abstract class FileSystemAction {
 	}
 
 	protected void setLastModified(FileVersion reconstructedFileVersion, File reconstructedFilesAtFinalLocation) {
-		reconstructedFilesAtFinalLocation.setLastModified(reconstructedFileVersion.getLastModified().getTime());
+		// Using Files.setLastModifiedTime() instead of File.setLastModified()  
+		// due to pre-1970 issue. See #374 for details.
+		
+		try {
+			FileTime newLastModifiedTime = FileTime.fromMillis(reconstructedFileVersion.getLastModified().getTime());
+			Files.setLastModifiedTime(reconstructedFilesAtFinalLocation.toPath(), newLastModifiedTime);
+		}
+		catch (IOException e) {
+			logger.log(Level.WARNING, "Warning: Could not set last modified date for file " + reconstructedFilesAtFinalLocation + "; Ignoring error.", e);
+		}		
 	}
 
 	protected void moveToConflictFile(FileVersion targetFileVersion) throws IOException {

@@ -40,6 +40,7 @@ public class Issue143ScenarioTest {
 
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		cleanupOptions.setMinSecondsBetweenCleanups(0);
+		cleanupOptions.setMinKeepSeconds(0);
 
 		// Scenario, see
 		// https://github.com/syncany/syncany/issues/143#issuecomment-50964685

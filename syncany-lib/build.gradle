@@ -24,6 +24,7 @@ dependencies {
 	compile			"io.undertow:undertow-servlet:1.1.0.CR3"
 	compile			"io.undertow:undertow-websockets-jsr:1.1.0.CR3"
 	compile			"net.sf.jpathwatch:jpathwatch:0.95"
+	compile			"com.google.code.gson:gson:2.3"
 
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
 	testCompile		"junit:junit:4.9"

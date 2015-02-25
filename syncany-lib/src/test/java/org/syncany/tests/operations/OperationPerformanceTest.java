@@ -69,5 +69,6 @@ public class OperationPerformanceTest {
 		
 		// Cleanup
 		TestConfigUtil.deleteTestLocalConfigAndData(configA);
+		TestConfigUtil.deleteTestLocalConfigAndData(configB);
 	}	
 }
