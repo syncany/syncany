@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.integration.tests.scenarios.AllFilePossibilitiesScenarioTest;
+import org.syncany.tests.integration.scenarios.AllFilePossibilitiesScenarioTest;
 import org.syncany.tests.util.TestClient;
 import org.syncany.util.FileUtil;
 
