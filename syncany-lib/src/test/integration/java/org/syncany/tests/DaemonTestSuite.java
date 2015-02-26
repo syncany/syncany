@@ -20,8 +20,8 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.daemon.BasicWatchServerTest;
-import org.syncany.tests.daemon.NoCliRequestsWhileSyncingTest;
+import org.syncany.tests.integration.daemon.BasicWatchServerTest;
+import org.syncany.tests.integration.daemon.NoCliRequestsWhileSyncingTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

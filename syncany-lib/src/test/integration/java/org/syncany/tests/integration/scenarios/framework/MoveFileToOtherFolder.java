@@ -15,21 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests;
+package org.syncany.tests.integration.scenarios.framework;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLargeFileScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLotsOfSmallFilesScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningNewAndDeleteScenarioTest;
+import java.io.File;
+import java.io.FileFilter;
 
-@RunWith(Suite.class)
-@SuiteClasses({
-	LongRunningLargeFileScenarioTest.class,
-	LongRunningLotsOfSmallFilesScenarioTest.class,
-	LongRunningNewAndDeleteScenarioTest.class
-})
-public class LongRunningTestSuite {
-	// This class executes all tests
+public class MoveFileToOtherFolder extends AbstractClientAction {
+	@Override
+	public void execute() throws Exception {
+		final File fromFile = pickFile(8932);
+		final File toFile = pickFileOrFolder(42342, new FileFilter() {				
+			@Override
+			public boolean accept(File file) {
+				return file.isFile() && !fromFile.getParentFile().getAbsolutePath().equals(file.getParentFile().getAbsolutePath());
+			}
+		});
+		
+		log(this, fromFile+" -> "+toFile);
+		fromFile.renameTo(toFile);
+	}		
 }

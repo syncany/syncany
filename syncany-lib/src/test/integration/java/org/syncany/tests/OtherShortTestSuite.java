@@ -32,12 +32,12 @@ import org.syncany.tests.crypto.CipherSessionTest;
 import org.syncany.tests.crypto.CipherSpecsTest;
 import org.syncany.tests.crypto.CipherUtilTest;
 import org.syncany.tests.crypto.MultiCipherStreamsTest;
-import org.syncany.tests.plugins.PluginOptionsTest;
-import org.syncany.tests.plugins.PluginsTest;
-import org.syncany.tests.plugins.TransferSettingsTest;
-import org.syncany.tests.plugins.local.LocalTransferManagerPluginTest;
-import org.syncany.tests.plugins.unreliable_local.CleanupInterruptedTest;
-import org.syncany.tests.plugins.unreliable_local.UploadInterruptedTest;
+import org.syncany.tests.integration.plugins.PluginOptionsTest;
+import org.syncany.tests.integration.plugins.PluginsTest;
+import org.syncany.tests.integration.plugins.TransferSettingsTest;
+import org.syncany.tests.integration.plugins.local.LocalTransferManagerPluginTest;
+import org.syncany.tests.integration.plugins.unreliable_local.CleanupInterruptedTest;
+import org.syncany.tests.integration.plugins.unreliable_local.UploadInterruptedTest;
 import org.syncany.tests.util.SqlRunnerTest;
 
 @RunWith(Suite.class)

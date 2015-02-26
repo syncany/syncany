@@ -15,21 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests;
+package org.syncany.tests.integration.scenarios.framework;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLargeFileScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLotsOfSmallFilesScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningNewAndDeleteScenarioTest;
+import java.io.File;
+import java.util.Random;
 
-@RunWith(Suite.class)
-@SuiteClasses({
-	LongRunningLargeFileScenarioTest.class,
-	LongRunningLotsOfSmallFilesScenarioTest.class,
-	LongRunningNewAndDeleteScenarioTest.class
-})
-public class LongRunningTestSuite {
-	// This class executes all tests
+public class ChangeLastModifiedDate extends AbstractClientAction {
+	@Override
+	public void execute() throws Exception {
+		File file = pickFile(1221);
+		
+		log(this, file.getAbsolutePath());
+		file.setLastModified(System.currentTimeMillis()+1000*(1+new Random().nextInt(999)));
+	}		
 }

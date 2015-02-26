@@ -15,21 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests;
+package org.syncany.tests.integration.scenarios.framework;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLargeFileScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningLotsOfSmallFilesScenarioTest;
-import org.syncany.tests.integration.scenarios.longrunning.LongRunningNewAndDeleteScenarioTest;
-
-@RunWith(Suite.class)
-@SuiteClasses({
-	LongRunningLargeFileScenarioTest.class,
-	LongRunningLotsOfSmallFilesScenarioTest.class,
-	LongRunningNewAndDeleteScenarioTest.class
-})
-public class LongRunningTestSuite {
-	// This class executes all tests
+public interface Executable {
+	public void execute() throws Exception;
 }

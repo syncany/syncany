@@ -20,19 +20,19 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.operations.AssemblerTest;
-import org.syncany.tests.operations.CleanupOperationTest;
-import org.syncany.tests.operations.ConnectOperationTest;
-import org.syncany.tests.operations.FileSystemActionComparatorTest;
-import org.syncany.tests.operations.FileSystemActionReconciliatorTest;
-import org.syncany.tests.operations.IndexerTest;
-import org.syncany.tests.operations.InitOperationTest;
-import org.syncany.tests.operations.NotificationListenerTest;
-import org.syncany.tests.operations.OperationPerformanceTest;
-import org.syncany.tests.operations.PluginOperationTest;
-import org.syncany.tests.operations.RecursiveWatcherTest;
-import org.syncany.tests.operations.StatusOperationTest;
-import org.syncany.tests.operations.SyncUpOperationTest;
+import org.syncany.tests.integration.operations.AssemblerTest;
+import org.syncany.tests.integration.operations.CleanupOperationTest;
+import org.syncany.tests.integration.operations.ConnectOperationTest;
+import org.syncany.tests.integration.operations.FileSystemActionComparatorTest;
+import org.syncany.tests.integration.operations.FileSystemActionReconciliatorTest;
+import org.syncany.tests.integration.operations.IndexerTest;
+import org.syncany.tests.integration.operations.InitOperationTest;
+import org.syncany.tests.integration.operations.NotificationListenerTest;
+import org.syncany.tests.integration.operations.OperationPerformanceTest;
+import org.syncany.tests.integration.operations.PluginOperationTest;
+import org.syncany.tests.integration.operations.RecursiveWatcherTest;
+import org.syncany.tests.integration.operations.StatusOperationTest;
+import org.syncany.tests.integration.operations.SyncUpOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
