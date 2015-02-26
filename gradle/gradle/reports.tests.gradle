@@ -54,7 +54,7 @@ subprojects {
 		exclude '**/*TestSuite*'
 	}
 
-	task integTest(type: Test, dependsOn: integTestClasses, group: 'Verification') {
+	task integTest(type: Test, dependsOn: [testClasses, integTestClasses], group: 'Verification') {
 		description = "All integration tests"
 		ignoreFailures = true
 		maxParallelForks = 2
