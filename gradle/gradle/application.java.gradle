@@ -19,13 +19,13 @@ subprojects {
 		}
 		
 		test {
-			java      { srcDir 'src/test/java'}
+			java      { srcDir 'src/test/unit/java'}
 			resources { srcDir 'src/test/resources'}
 		}
 
-    integTest {
-			java      { srcDir 'src/integTest/java'}
-			resources { srcDir 'src/integTest/resources'}
+    integration {
+			java      { srcDir 'src/test/integration/java' }
+			resources { srcDir 'src/test/resources'}
 			compileClasspath += sourceSets.test.compileClasspath
 			runtimeClasspath += sourceSets.test.runtimeClasspath
     }
@@ -33,7 +33,7 @@ subprojects {
 	}
 
 	dependencies {
-		integTestCompile sourceSets.test.output
+		integrationCompile sourceSets.test.output
 	}
 	
 	processResources {	

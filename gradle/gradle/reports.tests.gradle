@@ -54,13 +54,13 @@ subprojects {
 		exclude '**/*TestSuite*'
 	}
 
-	task integTest(type: Test, dependsOn: [testClasses, integTestClasses], group: 'Verification') {
+	task intTest(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "All integration tests"
 		ignoreFailures = true
 		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
-		testClassesDir = sourceSets.integTest.output.classesDir
-    classpath += sourceSets.integTest.runtimeClasspath
+		testClassesDir = sourceSets.integration.output.classesDir
+    classpath += sourceSets.integration.runtimeClasspath
 
 		exclude '**/*TestSuite*'
 	}
