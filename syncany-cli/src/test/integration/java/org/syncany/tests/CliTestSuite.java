@@ -20,19 +20,19 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.cli.CliPluginsTest;
-import org.syncany.tests.cli.CommandLineInterfaceTest;
-import org.syncany.tests.cli.ConnectCommandWithEncryptionTest;
-import org.syncany.tests.cli.DownCommandTest;
-import org.syncany.tests.cli.GenlinkCommandTest;
-import org.syncany.tests.cli.InitAndConnectCommandNoEncryptionTest;
-import org.syncany.tests.cli.LsCommandTest;
-import org.syncany.tests.cli.LsRemoteCommandTest;
-import org.syncany.tests.cli.PluginCommandTest;
-import org.syncany.tests.cli.RestoreCommandTest;
-import org.syncany.tests.cli.StatusCommandTest;
-import org.syncany.tests.cli.UpCommandTest;
-import org.syncany.tests.cli.WatchCommandTest;
+import org.syncany.tests.integration.cli.CliPluginsTest;
+import org.syncany.tests.integration.cli.CommandLineInterfaceTest;
+import org.syncany.tests.integration.cli.ConnectCommandWithEncryptionTest;
+import org.syncany.tests.integration.cli.DownCommandTest;
+import org.syncany.tests.integration.cli.GenlinkCommandTest;
+import org.syncany.tests.integration.cli.InitAndConnectCommandNoEncryptionTest;
+import org.syncany.tests.integration.cli.LsCommandTest;
+import org.syncany.tests.integration.cli.LsRemoteCommandTest;
+import org.syncany.tests.integration.cli.PluginCommandTest;
+import org.syncany.tests.integration.cli.RestoreCommandTest;
+import org.syncany.tests.integration.cli.StatusCommandTest;
+import org.syncany.tests.integration.cli.UpCommandTest;
+import org.syncany.tests.integration.cli.WatchCommandTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

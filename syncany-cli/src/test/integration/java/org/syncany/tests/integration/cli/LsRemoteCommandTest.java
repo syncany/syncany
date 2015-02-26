@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.cli;
+package org.syncany.tests.integration.cli;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,63 +28,39 @@ import org.syncany.tests.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.tests.util.TestFileUtil;
 
-public class DownCommandTest {	
+public class LsRemoteCommandTest {
 	@Test
-	public void testDownCommandNoArgs() throws Exception {
-		// Setup
+	public void testLsRemoteCommand() throws Exception {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 		Map<String, String> clientB = TestCliUtil.createLocalTestEnvAndConnect("B", connectionSettings);
-		
-		TestFileUtil.createRandomFile(new File(clientA.get("localdir")+"/file1"), 20*1024);
-		TestFileUtil.createRandomFile(new File(clientA.get("localdir")+"/file2"), 20*1024);
-		TestFileUtil.createRandomFile(new File(clientA.get("localdir")+"/file3"), 20*1024);
-				
-		// Round 1: No changes
+
+		// Round 1: No changes / remote databases expected
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientB.get("localdir"),
-			"down"
+				"--localdir", clientA.get("localdir"),
+				"ls-remote"
 		}));
-		
+
 		assertEquals("Different number of output lines expected.", 3, cliOut.length);
-		
-		// Round 2: Only added files
-		new CommandLineClient(new String[] { 
-			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--force-checksum"
+
+		// Round 2: One new database expected
+		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);
+		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file2"), 20 * 1024);
+
+		new CommandLineClient(new String[] {
+				"--localdir", clientB.get("localdir"),
+				"up",
 		}).start();
-		
+
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientB.get("localdir"),
-			"down"
+				"--localdir", clientA.get("localdir"),
+				"ls-remote"
 		}));
-		
-		assertEquals("Different number of output lines expected.", 10, cliOut.length);
-		assertEquals("A file1", cliOut[6]);
-		assertEquals("A file2", cliOut[7]);
-		assertEquals("A file3", cliOut[8]);		
-		
-		// Round 3: Modified and deleted files
-		TestFileUtil.changeRandomPartOfBinaryFile(new File(clientA.get("localdir")+"/file2"));
-		new File(clientA.get("localdir")+"/file3").delete();
-		
-		new CommandLineClient(new String[] { 
-			 "--localdir", clientA.get("localdir"),
-			 "up",
-			 "--force-checksum"
-		}).start();
-		
-		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
-			"--localdir", clientB.get("localdir"),
-			"down"
-		}));
-		
-		assertEquals("Different number of output lines expected.", 9, cliOut.length);
-		assertEquals("M file2", cliOut[6]);
-		assertEquals("D file3", cliOut[7]);
-		
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
+
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("? database-B-0000000001", cliOut[2]);
+
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestCliUtil.deleteTestLocalConfigAndData(clientB);
-	}			
+	}
 }
