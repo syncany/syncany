@@ -25,9 +25,9 @@ import java.util.Date;
 import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
 public class LongRunningLargeFileScenarioTest {

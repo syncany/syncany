@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.config.Config;
-import org.syncany.tests.util.TestCliUtil;
+import org.syncany.tests.unit.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class StatusCommandTest {		

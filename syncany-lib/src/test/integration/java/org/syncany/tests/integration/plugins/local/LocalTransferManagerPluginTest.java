@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.syncany.tests.integration.plugins.AbstractTransferManagerTest;
-import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.unit.util.TestFileUtil;
 
 /**
  * @author Vincent Wiencek <vwiencek@gmail.com>

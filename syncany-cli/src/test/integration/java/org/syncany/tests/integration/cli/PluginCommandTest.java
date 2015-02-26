@@ -21,8 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
+import org.syncany.tests.unit.util.TestCliUtil;
 import org.syncany.tests.util.TestAssertUtil;
-import org.syncany.tests.util.TestCliUtil;
 
 public class PluginCommandTest {	
 	@Test

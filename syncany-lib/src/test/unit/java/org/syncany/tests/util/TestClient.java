@@ -30,6 +30,7 @@ import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 
 public class TestClient extends Client {
 	public TestClient(String machineName, TransferSettings connection) throws Exception {

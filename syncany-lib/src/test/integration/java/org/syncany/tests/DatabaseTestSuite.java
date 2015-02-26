@@ -20,8 +20,6 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.database.ObjectIdTest;
-import org.syncany.tests.database.VectorClockTest;
 import org.syncany.tests.integration.database.DatabaseReconciliatorTest;
 import org.syncany.tests.integration.database.FileVersionComparatorTest;
 import org.syncany.tests.integration.database.MemoryDatabaseCacheTest;
@@ -34,6 +32,8 @@ import org.syncany.tests.integration.database.dao.FileHistoryDaoTest;
 import org.syncany.tests.integration.database.dao.FileVersionDaoTest;
 import org.syncany.tests.integration.database.dao.MultiChunkDaoTest;
 import org.syncany.tests.integration.database.dao.XmlDatabaseDaoTest;
+import org.syncany.tests.unit.database.ObjectIdTest;
+import org.syncany.tests.unit.database.VectorClockTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

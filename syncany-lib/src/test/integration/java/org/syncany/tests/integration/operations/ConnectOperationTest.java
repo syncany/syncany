@@ -38,8 +38,8 @@ import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.plugins.local.LocalTransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 
 /**
  * This test goes through the creation of a local repo and verifies

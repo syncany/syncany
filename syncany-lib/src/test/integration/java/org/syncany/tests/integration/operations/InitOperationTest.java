@@ -35,8 +35,8 @@ import org.syncany.operations.init.InitOperationResult;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 
 import com.google.common.collect.Lists;
 

@@ -22,7 +22,7 @@ import java.io.FileFilter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.syncany.tests.util.TestFileUtil;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 

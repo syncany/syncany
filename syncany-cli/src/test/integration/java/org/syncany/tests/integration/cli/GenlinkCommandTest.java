@@ -27,9 +27,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.tests.util.TestCliUtil;
+import org.syncany.tests.unit.util.TestCliUtil;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 
 public class GenlinkCommandTest {
 	@Rule

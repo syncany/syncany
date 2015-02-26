@@ -27,8 +27,8 @@ import org.syncany.config.Config;
 import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 
 public class OperationPerformanceTest {
 	private static final Logger logger = Logger.getLogger(OperationPerformanceTest.class.getSimpleName());

@@ -36,9 +36,9 @@ import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.local.LocalTransferSettings;
+import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
-import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.EnvironmentUtil;
 
 public class PluginOperationTest {
