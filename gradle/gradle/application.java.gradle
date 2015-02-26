@@ -28,6 +28,7 @@ subprojects {
 			resources { srcDir 'src/test/resources'}
 			compileClasspath += sourceSets.test.compileClasspath
 			runtimeClasspath += sourceSets.test.runtimeClasspath
+			output.classesDir = sourceSets.test.output.classesDir
     }
 
 	}

@@ -30,7 +30,7 @@ subprojects {
 	
 	// Test Tasks //////////////////////////////////////////////////////////
 
-	task testAllLong(type: Test, dependsOn: testClasses, group: 'Verification') {
+	task testAllLong(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "Test long running scenarios"
 		ignoreFailures = true
 		maxParallelForks = 2
@@ -38,7 +38,7 @@ subprojects {
 		include '**/LongRunning*'
 	}
 	
-	task testScenario(type: Test, dependsOn: testClasses, group: 'Verification') {
+	task testScenario(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "Test all scenarios"
 		ignoreFailures = true
 		maxParallelForks = 2
@@ -46,7 +46,7 @@ subprojects {
 		include '**/*ScenarioTest*'
 	}
 	
-	task testAll(type: Test, dependsOn: testClasses, group: 'Verification') {
+	task testAll(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "All tests"
 		ignoreFailures = true
 		maxParallelForks = 2
@@ -65,7 +65,7 @@ subprojects {
 		exclude '**/*TestSuite*'
 	}
 	
-	task testAllButLongCrypto(type: Test, dependsOn: testClasses, group: 'Verification') {
+	task testAllButLongCrypto(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		jvmArgs '-Dcrypto.enable=true'
 		description = "All tests except long running with crypto"
 		ignoreFailures = true
