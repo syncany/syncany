@@ -170,10 +170,14 @@ public class UpOperation extends AbstractTransferOperation {
 				return result;
 			}
 
+			// [NOTE] Changes are gathered in one go; this could be done in parallel with sending known changes.
 			ChangeSet localChanges = result.getStatusResult().getChangeSet();
 			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 
 			// Index
+			// [NOTE] This call analyses individual files and does the deduplication. This could also be done in
+			// parallel with sending changes. E.g., by returning early and providing a stream of chunks that have
+			// been updated.
 			newDatabaseVersion = index(locallyUpdatedFiles);
 
 			if (newDatabaseVersion.getFileHistories().size() == 0) {
@@ -188,10 +192,13 @@ public class UpOperation extends AbstractTransferOperation {
 
 			// Add multichunks to transaction
 			logger.log(Level.INFO, "Uploading new multichunks ...");
+			// [NOTE] This call adds newly changed chunks to a "RemoteTransaction", so they can be uploaded later.
 			addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
 		}
 
 		// Create delta database and commit transaction
+		// [NOTE] The information about file changes is written to disk to locally "commit" the transaction. This
+		// enables Syncany to later resume the transaction if it is interrupted before completion.
 		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
 
 		boolean committingFailed = true;
@@ -200,6 +207,8 @@ public class UpOperation extends AbstractTransferOperation {
 		// the transaction and metadata in memory such that the transaction can be resumed later.
 		Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(newDatabaseVersion);
 
+		// [NOTE] This performs the actual sync to the remote. It is executed synchronously. Only after the changes
+		// are confirmed to have been safely pushed to the remote, will the transaction be marked as complete.
 		try {
 			if (!resuming) {
 				remoteTransaction.commit();
