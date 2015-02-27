@@ -113,16 +113,11 @@ public class Indexer {
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
 		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
-		index(files, Long.MAX_VALUE, new IndexerNewDatabaseVersionListener() {
-			@Override
-			public void newDatabaseVersion(DatabaseVersion newDatabaseVersion) {
-				databaseVersionQueue.add(newDatabaseVersion);
-			}
-		});
+		index(files, Long.MAX_VALUE, new DatabaseVersionListener(databaseVersionQueue));
 		return databaseVersionQueue.poll();
 	}
 
-	public void index(List<File> files, long transactionSizeLimit, IndexerNewDatabaseVersionListener databaseVersionListener)
+	public void index(List<File> files, long transactionSizeLimit, Listener<DatabaseVersion> databaseVersionListener)
 			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
@@ -149,7 +144,7 @@ public class Indexer {
 			// Find and remove deleted files
 			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 
-			databaseVersionListener.newDatabaseVersion(newDatabaseVersion);
+			databaseVersionListener.process(newDatabaseVersion);
 		}
 	}
 
@@ -244,12 +239,6 @@ public class Indexer {
 		public IndexerException(String message) {
 			super(message);
 		}
-	}
-
-	public interface IndexerNewDatabaseVersionListener {
-
-		void newDatabaseVersion(DatabaseVersion newDatabaseVersion);
-
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {

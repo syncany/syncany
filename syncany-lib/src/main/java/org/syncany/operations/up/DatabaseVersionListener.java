@@ -17,50 +17,25 @@
  */
 package org.syncany.operations.up;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
-import org.syncany.chunk.Deduper;
-import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
 
 /**
  * @author jesse
  *
  */
-public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
+public class DatabaseVersionListener extends FilteredQueueAdderListener<DatabaseVersion> {
 
-	private AsyncIndexer asyncIndexer;
-	private Queue<DatabaseVersion> queue;
-
-	public DatabaseVersionIterator(final Config config, Deduper deduper, List<File> files, long transactionSizeLimit) {
-		queue = new LinkedList<>();
-		asyncIndexer = new AsyncIndexer(config, deduper, files, transactionSizeLimit, queue);
-		new Thread(asyncIndexer).start();
+	/**
+	 * @param queue
+	 */
+	public DatabaseVersionListener(Queue<DatabaseVersion> queue) {
+		super(queue);
 	}
 
 	@Override
-	public boolean hasNext() {
-		while (!asyncIndexer.isDone()) {
-			if (queue.size() > 0) {
-				return false;
-			}
-			try {
-				Thread.sleep(100);
-			}
-			catch (InterruptedException e) {
-				// We don't care.
-			}
-		}
-		return true;
+	public boolean isValid(DatabaseVersion databaseVersion) {
+		return databaseVersion.getFileHistories().size() > 0;
 	}
-
-	@Override
-	public DatabaseVersion next() {
-		return queue.poll();
-	}
-
 }

@@ -18,7 +18,6 @@
 package org.syncany.operations.up;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -166,17 +165,6 @@ public class UpOperation extends AbstractTransferOperation {
 				return result;
 			}
 
-			// FIXME Move to iterator.
-			if (databaseVersionToResume.getFileHistories().size() == 0) {
-				logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
-				result.setResultCode(UpResultCode.OK_NO_CHANGES);
-
-				finishOperation();
-				fireEndEvent();
-
-				return result;
-			}
-
 			// Add multichunks to transaction
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			// [NOTE] This call adds newly changed chunks to a "RemoteTransaction", so they can be uploaded later.
@@ -208,7 +196,8 @@ public class UpOperation extends AbstractTransferOperation {
 		return new RemoteTransaction(config, transferManager, TransactionTO.load(null, config.getTransactionFile()));
 	}
 
-	private void executeTransactions(DatabaseVersionIterator databaseVersions) throws InterruptedException, StorageException, IOException,
+	private void executeTransactions(DatabaseVersionIterator databaseVersions) throws InterruptedException, StorageException,
+			IOException,
 			SQLException, BlockingTransfersException {
 		executeTransactions(databaseVersions, null, null);
 	}
@@ -220,7 +209,7 @@ public class UpOperation extends AbstractTransferOperation {
 		if (transactionRemoteFileToResume == null) {
 			resuming = false;
 		}
-		
+
 		if (!(resuming || databaseVersions.hasNext())) {
 			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 			result.setResultCode(UpResultCode.OK_NO_CHANGES);
@@ -246,11 +235,6 @@ public class UpOperation extends AbstractTransferOperation {
 
 				if (blockingTransactionExist) {
 					throw new BlockingTransfersException();
-				}
-
-				// FIXME Bring this to indexer.
-				if (databaseVersion.getFileHistories().size() == 0) {
-					
 				}
 
 				// Add multichunks to transaction
@@ -611,28 +595,6 @@ public class UpOperation extends AbstractTransferOperation {
 			StorageException {
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
-	}
-
-	/**
-	 * This method starts the indexing process, using the configured Chunker, MultiChunker and Transformer.
-	 *
-	 * @param localFiles List of Files that have been altered in some way.
-	 *
-	 * @return @{link DatabaseVersion} containing the indexed data.
-	 */
-	private DatabaseVersion index(List<File> localFiles) throws FileNotFoundException, IOException {
-		// Index
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		Indexer indexer = new Indexer(config, deduper);
-
-		DatabaseVersion newDatabaseVersion = indexer.index(localFiles);
-
-		VectorClock newVectorClock = findNewVectorClock();
-		newDatabaseVersion.setVectorClock(newVectorClock);
-		newDatabaseVersion.setTimestamp(new Date());
-		newDatabaseVersion.setClient(config.getMachineName());
-
-		return newDatabaseVersion;
 	}
 
 	/**
