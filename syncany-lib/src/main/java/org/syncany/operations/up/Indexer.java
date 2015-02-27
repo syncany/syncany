@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -110,8 +112,22 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
+		index(files, Long.MAX_VALUE, new IndexerNewDatabaseVersionListener() {
+			@Override
+			public void newDatabaseVersion(DatabaseVersion newDatabaseVersion) {
+				databaseVersionQueue.add(newDatabaseVersion);
+			}
 
+			@Override
+			public void close() {
+			}
+		});
+		return databaseVersionQueue.poll();
+	}
+
+	public void index(List<File> files, long transactionSizeLimit, IndexerNewDatabaseVersionListener databaseVersionListener)
+			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
 
@@ -119,13 +135,26 @@ public class Indexer {
 		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 
-		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));
+		int nextFileToProcess = 0;
+		while (nextFileToProcess != -1) {
+			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
-		// Find and remove deleted files
-		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+			// Create the DeduperListener that will receive MultiChunks and store them in the DatabaseVersion object
+			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache);
 
-		return newDatabaseVersion;
+			// Signal the start of indexing if we are about to deduplicate the first file
+			if (nextFileToProcess == 0) {
+				deduperListener.onStart(files.size());
+			}
+
+			// Find and index new files
+			nextFileToProcess = deduper.deduplicate(files, nextFileToProcess, transactionSizeLimit, deduperListener);
+
+			// Find and remove deleted files
+			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+
+			databaseVersionListener.newDatabaseVersion(newDatabaseVersion);
+		}
 	}
 
 	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
@@ -219,6 +248,14 @@ public class Indexer {
 		public IndexerException(String message) {
 			super(message);
 		}
+	}
+
+	public interface IndexerNewDatabaseVersionListener {
+
+		void newDatabaseVersion(DatabaseVersion newDatabaseVersion);
+
+		void close();
+
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
