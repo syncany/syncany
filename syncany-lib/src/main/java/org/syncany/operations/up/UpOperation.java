@@ -131,31 +131,39 @@ public class UpOperation extends AbstractTransferOperation {
 
 		if (options.isResume()) {
 			// If we want to resume, we look for the local files that contain data about a resumable transaction.
+			// [NOTE] Here they try to reconstruct the failed or interrupted transaction
 			newDatabaseVersion = attemptResumeTransaction();
 
+			// [NOTE] They have a reconstructed the transaction
 			if (newDatabaseVersion != null) {
 				logger.log(Level.INFO, "Found local transaction to resume.");
 				resuming = true;
 
 				logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
 
+				// [NOTE] They look for the matching transaction on the remote.
 				List<TransactionRemoteFile> transactions = transferManager.getTransactionsByClient(config.getMachineName());
 
+				// [NOTE] If there are blocking transactions, they stop completely.
+				// Not sure yet what these blocking structures are.
 				if (transactions == null) {
 					// We have blocking transactions
 					stopBecauseOfBlockingTransactions();
 					return result;
 				}
 
+				// [NOTE] There is no sign of the transaction on the remote. Clean up the local transaction.
 				if (transactions.size() != 1) {
 					logger.log(Level.INFO, "Unable to find (unique) transactionRemoteFile. Not resuming.");
 					resuming = false;
 					transferManager.clearResumableTransactions();
 				}
+				// [NOTE] Remote transaction file found.
 				else {
 					transactionRemoteFile = transactions.get(0);
 				}
 			}
+			// [NOTE] No local transaction could be reconstructed. Clean up.
 			else {
 				transferManager.clearResumableTransactions();
 			}
