@@ -69,7 +69,7 @@ install:
 
 script: 
   # Run JUnit tests and generate reports
-  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll sonarRunner
+  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll
 
 after_success:
   # Line of code stats
