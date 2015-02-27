@@ -87,3 +87,6 @@ after_success:
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh
 
+	# Do SonarQube analysis
+  - ./gradle/sonarqube/sonarqube.sh
+
