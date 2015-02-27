@@ -118,10 +118,6 @@ public class Indexer {
 			public void newDatabaseVersion(DatabaseVersion newDatabaseVersion) {
 				databaseVersionQueue.add(newDatabaseVersion);
 			}
-
-			@Override
-			public void close() {
-			}
 		});
 		return databaseVersionQueue.poll();
 	}
@@ -254,8 +250,6 @@ public class Indexer {
 
 		void newDatabaseVersion(DatabaseVersion newDatabaseVersion);
 
-		void close();
-
 	}
 
 	private class IndexerDeduperListener implements DeduperListener {
@@ -322,10 +316,10 @@ public class Indexer {
 		@Override
 		public void onFileEnd(File file, byte[] rawFileChecksum) {
 			// Get file attributes (get them while file exists)
-			
+
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part,
 			// because the file could vanish!
-			
+
 			FileChecksum fileChecksum = (rawFileChecksum != null) ? new FileChecksum(rawFileChecksum) : null;
 			endFileProperties = fileVersionComparator.captureFileProperties(file, fileChecksum, false);
 
@@ -380,7 +374,7 @@ public class Indexer {
 
 				logger.log(Level.INFO, "   * Added file version:    " + fileVersion);
 				logger.log(Level.INFO, "     based on file version: " + lastFileVersion);
-				
+
 				fireHasChangesEvent();
 			}
 			else {
@@ -407,7 +401,7 @@ public class Indexer {
 
 		private void fireHasChangesEvent() {
 			boolean firstNewFileDetected = newDatabaseVersion.getFileHistories().size() == 1;
-			
+
 			if (firstNewFileDetected) { // Only fires once!
 				eventBus.post(new UpIndexChangesDetectedSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 			}
@@ -449,7 +443,7 @@ public class Indexer {
 			// Permissions
 			if (EnvironmentUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
-				
+
 				if (fileVersion.getType() == FileType.FOLDER) {
 					fileVersion.setPosixPermissions(DEFAULT_POSIX_PERMISSIONS_FOLDER);
 				}
@@ -466,7 +460,7 @@ public class Indexer {
 			if (lastFileVersion != null) {
 				if (fileVersion.getType() == FileType.FILE
 						&& FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
-					
+
 					fileVersion.setStatus(FileStatus.CHANGED);
 				}
 				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
@@ -691,7 +685,7 @@ public class Indexer {
 		@Override
 		public void onFinish() {
 			eventBus.post(new UpIndexEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
-		} 
+		}
 
 		/**
 		 * Checks if chunk already exists in all database versions

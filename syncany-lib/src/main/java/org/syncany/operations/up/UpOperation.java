@@ -94,7 +94,6 @@ public class UpOperation extends AbstractTransferOperation {
 	private UpOperationResult result;
 
 	private SqlDatabase localDatabase;
-	private RemoteTransaction remoteTransaction;
 
 	public UpOperation(Config config) {
 		this(config, new UpOperationOptions());
@@ -106,7 +105,6 @@ public class UpOperation extends AbstractTransferOperation {
 		this.options = options;
 		this.result = new UpOperationResult();
 		this.localDatabase = new SqlDatabase(config);
-		this.remoteTransaction = new RemoteTransaction(config, transferManager);
 	}
 
 	@Override
@@ -125,45 +123,35 @@ public class UpOperation extends AbstractTransferOperation {
 		// Upload action file (lock for cleanup)
 		startOperation();
 
-		DatabaseVersion newDatabaseVersion = null;
-		TransactionRemoteFile transactionRemoteFile = null;
+		// [NOTE] Changes are gathered in one go; this could be done in parallel with sending known changes.
+		ChangeSet localChanges = result.getStatusResult().getChangeSet();
+		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
+		// TODO Move magic 40M to config. This is the transaction size.
+		DatabaseVersionIterator databaseVersionIterator = new DatabaseVersionIterator(config, deduper, locallyUpdatedFiles, 40_000_000);
+
+		DatabaseVersion databaseVersionToResume = null;
+		TransactionRemoteFile transactionRemoteFileToResume = null;
+		RemoteTransaction remoteTransactionToResume = null;
 		boolean resuming = false;
 
 		if (options.isResume()) {
-			// If we want to resume, we look for the local files that contain data about a resumable transaction.
-			// [NOTE] Here they try to reconstruct the failed or interrupted transaction
-			newDatabaseVersion = attemptResumeTransaction();
-
-			// [NOTE] They have a reconstructed the transaction
-			if (newDatabaseVersion != null) {
+			databaseVersionToResume = attemptResumeDatabaseVersion();
+			if (databaseVersionToResume != null) {
 				logger.log(Level.INFO, "Found local transaction to resume.");
-				resuming = true;
-
 				logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
-
-				// [NOTE] They look for the matching transaction on the remote.
-				List<TransactionRemoteFile> transactions = transferManager.getTransactionsByClient(config.getMachineName());
-
-				// [NOTE] If there are blocking transactions, they stop completely.
-				// Not sure yet what these blocking structures are.
-				if (transactions == null) {
-					// We have blocking transactions
+				try {
+					remoteTransactionToResume = attemptResumeRemoteTransaction();
+					transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();
+				}
+				catch (BlockingTransfersException e) {
 					stopBecauseOfBlockingTransactions();
 					return result;
 				}
-
-				// [NOTE] There is no sign of the transaction on the remote. Clean up the local transaction.
-				if (transactions.size() != 1) {
-					logger.log(Level.INFO, "Unable to find (unique) transactionRemoteFile. Not resuming.");
-					resuming = false;
-					transferManager.clearResumableTransactions();
-				}
-				// [NOTE] Remote transaction file found.
-				else {
-					transactionRemoteFile = transactions.get(0);
+				if (databaseVersionToResume != null) {
+					resuming = true;
 				}
 			}
-			// [NOTE] No local transaction could be reconstructed. Clean up.
 			else {
 				transferManager.clearResumableTransactions();
 			}
@@ -178,17 +166,8 @@ public class UpOperation extends AbstractTransferOperation {
 				return result;
 			}
 
-			// [NOTE] Changes are gathered in one go; this could be done in parallel with sending known changes.
-			ChangeSet localChanges = result.getStatusResult().getChangeSet();
-			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
-
-			// Index
-			// [NOTE] This call analyses individual files and does the deduplication. This could also be done in
-			// parallel with sending changes. E.g., by returning early and providing a stream of chunks that have
-			// been updated.
-			newDatabaseVersion = index(locallyUpdatedFiles);
-
-			if (newDatabaseVersion.getFileHistories().size() == 0) {
+			// FIXME Move to iterator.
+			if (databaseVersionToResume.getFileHistories().size() == 0) {
 				logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
 				result.setResultCode(UpResultCode.OK_NO_CHANGES);
 
@@ -201,54 +180,15 @@ public class UpOperation extends AbstractTransferOperation {
 			// Add multichunks to transaction
 			logger.log(Level.INFO, "Uploading new multichunks ...");
 			// [NOTE] This call adds newly changed chunks to a "RemoteTransaction", so they can be uploaded later.
-			addMultiChunksToTransaction(newDatabaseVersion.getMultiChunks());
+			addMultiChunksToTransaction(remoteTransactionToResume, databaseVersionToResume.getMultiChunks());
 		}
 
-		// Create delta database and commit transaction
-		// [NOTE] The information about file changes is written to disk to locally "commit" the transaction. This
-		// enables Syncany to later resume the transaction if it is interrupted before completion.
-		writeAndAddDeltaDatabase(newDatabaseVersion, resuming);
-
-		boolean committingFailed = true;
-
-		// This thread is to be run when the transaction is interrupted for connectivity reasons. It will serialize
-		// the transaction and metadata in memory such that the transaction can be resumed later.
-		Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(newDatabaseVersion);
-
-		// [NOTE] This performs the actual sync to the remote. It is executed synchronously. Only after the changes
-		// are confirmed to have been safely pushed to the remote, will the transaction be marked as complete.
-		try {
-			if (!resuming) {
-				remoteTransaction.commit();
-			}
-			else {
-				remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFile);
-			}
-
-			localDatabase.commit();
-			committingFailed = false;
+		if (resuming) {
+			executeTransactions(databaseVersionIterator, remoteTransactionToResume, transactionRemoteFileToResume);
 		}
-		catch (Exception e) {
-			// The operation did not go as expected. To ensure local atomicity, we rollback the local database.
-			localDatabase.rollback();
-			throw e;
+		else {
+			executeTransactions(databaseVersionIterator);
 		}
-		finally {
-			// The JVM has not shut down, so we can remove the shutdown hook.
-			// If it turns out that committing has failed, we run it explicitly.
-			removeShutdownHook(writeResumeFilesShutDownHook);
-
-			if (committingFailed) {
-				serializeRemoteTransactionAndMetadata(newDatabaseVersion);
-			}
-		}
-
-		// Save local database
-		logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", newDatabaseVersion.getHeader().toString());
-		long newDatabaseVersionId = localDatabase.writeDatabaseVersion(newDatabaseVersion);
-
-		logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
-		localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
 
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
@@ -256,12 +196,148 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Sync up done.");
 
 		// Result
-		addNewDatabaseChangesToResultChanges(newDatabaseVersion, result.getChangeSet());
+		addNewDatabaseChangesToResultChanges(databaseVersionToResume, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 
 		fireEndEvent();
 
 		return result;
+	}
+
+	private RemoteTransaction attemptResumeRemoteTransaction() throws Exception {
+		return new RemoteTransaction(config, transferManager, TransactionTO.load(null, config.getTransactionFile()));
+	}
+
+	private void executeTransactions(DatabaseVersionIterator databaseVersions) throws InterruptedException, StorageException, IOException,
+			SQLException, BlockingTransfersException {
+		executeTransactions(databaseVersions, null, null);
+	}
+
+	private void executeTransactions(DatabaseVersionIterator databaseVersions, RemoteTransaction remoteTransactionToResume,
+			TransactionRemoteFile transactionRemoteFileToResume)
+			throws InterruptedException, StorageException, IOException, SQLException, BlockingTransfersException {
+		boolean resuming = true;
+		if (transactionRemoteFileToResume == null) {
+			resuming = false;
+		}
+		
+		if (!(resuming || databaseVersions.hasNext())) {
+			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+
+			finishOperation();
+			fireEndEvent();
+		}
+
+		while (databaseVersions.hasNext()) {
+			DatabaseVersion databaseVersion = databaseVersions.next();
+			RemoteTransaction remoteTransaction = null;
+
+			if (!resuming) {
+				VectorClock newVectorClock = findNewVectorClock();
+				databaseVersion.setVectorClock(newVectorClock);
+				databaseVersion.setTimestamp(new Date());
+				databaseVersion.setClient(config.getMachineName());
+
+				remoteTransaction = new RemoteTransaction(config, transferManager);
+
+				// If we are not resuming, we need to clean transactions.
+				boolean blockingTransactionExist = !transferManager.cleanTransactions();
+
+				if (blockingTransactionExist) {
+					throw new BlockingTransfersException();
+				}
+
+				// FIXME Bring this to indexer.
+				if (databaseVersion.getFileHistories().size() == 0) {
+					
+				}
+
+				// Add multichunks to transaction
+				logger.log(Level.INFO, "Uploading new multichunks ...");
+				// [NOTE] This call adds newly changed chunks to a "RemoteTransaction", so they can be uploaded later.
+				addMultiChunksToTransaction(remoteTransaction, databaseVersion.getMultiChunks());
+			}
+			else {
+				remoteTransaction = remoteTransactionToResume;
+			}
+
+			// Create delta database and commit transaction
+			// [NOTE] The information about file changes is written to disk to locally "commit" the transaction. This
+			// enables Syncany to later resume the transaction if it is interrupted before completion.
+			writeAndAddDeltaDatabase(remoteTransaction, databaseVersion, resuming);
+
+			boolean committingFailed = true;
+
+			// This thread is to be run when the transaction is interrupted for connectivity reasons. It will serialize
+			// the transaction and metadata in memory such that the transaction can be resumed later.
+			Thread writeResumeFilesShutDownHook = createAndAddShutdownHook(remoteTransaction, databaseVersion);
+
+			// [NOTE] This performs the actual sync to the remote. It is executed synchronously. Only after the changes
+			// are confirmed to have been safely pushed to the remote, will the transaction be marked as complete.
+			try {
+				if (!resuming) {
+					remoteTransaction.commit();
+				}
+				else {
+					remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFileToResume);
+				}
+
+				// TODO Should we not wait with this commit until after the versionId has been updated?
+				localDatabase.commit();
+				committingFailed = false;
+			}
+			catch (Exception e) {
+				// The operation did not go as expected. To ensure local atomicity, we rollback the local database.
+				localDatabase.rollback();
+				throw e;
+			}
+			finally {
+				// The JVM has not shut down, so we can remove the shutdown hook.
+				// If it turns out that committing has failed, we run it explicitly.
+				removeShutdownHook(writeResumeFilesShutDownHook);
+
+				if (committingFailed) {
+					serializeRemoteTransactionAndMetadata(remoteTransaction, databaseVersion);
+				}
+			}
+
+			// Save local database
+			// TODO Should we not commit the local database after this step?
+			logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
+			long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
+
+			logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+			localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+			resuming = false;
+		}
+	}
+
+	private TransactionRemoteFile attemptResumeTransactionRemoteFile() throws StorageException, BlockingTransfersException {
+		TransactionRemoteFile transactionRemoteFile = null;
+
+		// [NOTE] They look for the matching transaction on the remote.
+		List<TransactionRemoteFile> transactions = transferManager.getTransactionsByClient(config.getMachineName());
+
+		// [NOTE] If there are blocking transactions, they stop completely.
+		// Not sure yet what these blocking structures are.
+		if (transactions == null) {
+			// We have blocking transactions
+			stopBecauseOfBlockingTransactions();
+			throw new BlockingTransfersException();
+		}
+
+		// [NOTE] There is no sign of the transaction on the remote. Clean up the local transaction.
+		if (transactions.size() != 1) {
+			logger.log(Level.INFO, "Unable to find (unique) transactionRemoteFile. Not resuming.");
+			transferManager.clearResumableTransactions();
+		}
+		// [NOTE] Remote transaction file found.
+		else {
+			transactionRemoteFile = transactions.get(0);
+		}
+		return transactionRemoteFile;
 	}
 
 	/**
@@ -272,11 +348,11 @@ public class UpOperation extends AbstractTransferOperation {
 	 *
 	 * @return Thread which is attached as a shutdownHook.
 	 */
-	private Thread createAndAddShutdownHook(final DatabaseVersion newDatabaseVersion) {
+	private Thread createAndAddShutdownHook(final RemoteTransaction remoteTransaction, final DatabaseVersion newDatabaseVersion) {
 		Thread writeResumeFilesShutDownHook = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				serializeRemoteTransactionAndMetadata(newDatabaseVersion);
+				serializeRemoteTransactionAndMetadata(remoteTransaction, newDatabaseVersion);
 			}
 		}, "ResumeShtdwn");
 
@@ -374,7 +450,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 * @param newDatabaseVersion {@link DatabaseVersion} containing all metadata that would be locally persisted if the transaction succeeds.
 	 * @param resuming boolean indicating if the current transaction is in the process of being resumed.
 	 */
-	private void writeAndAddDeltaDatabase(DatabaseVersion newDatabaseVersion, boolean resuming) throws InterruptedException, StorageException,
+	private void writeAndAddDeltaDatabase(RemoteTransaction remoteTransaction, DatabaseVersion newDatabaseVersion, boolean resuming)
+			throws InterruptedException, StorageException,
 			IOException,
 			SQLException {
 		// Clone database version (necessary, because the original must not be touched)
@@ -400,7 +477,7 @@ public class UpOperation extends AbstractTransferOperation {
 		if (!resuming) {
 			// Upload delta database, if we are not resuming (in which case the db is in the transaction already)
 			logger.log(Level.INFO, "- Uploading local delta database file ...");
-			addLocalDatabaseToTransaction(localDeltaDatabaseFile, remoteDeltaDatabaseFile);
+			addLocalDatabaseToTransaction(remoteTransaction, localDeltaDatabaseFile, remoteDeltaDatabaseFile);
 		}
 		// Remember uploaded database as known.
 		List<DatabaseRemoteFile> newDatabaseRemoteFiles = new ArrayList<DatabaseRemoteFile>();
@@ -509,7 +586,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 *
 	 * @param multiChunkEntries Collection of multiChunkEntries that are included in the new {@link DatabaseVersion}
 	 */
-	private void addMultiChunksToTransaction(Collection<MultiChunkEntry> multiChunksEntries) throws InterruptedException, StorageException {
+	private void addMultiChunksToTransaction(RemoteTransaction remoteTransaction, Collection<MultiChunkEntry> multiChunksEntries)
+			throws InterruptedException, StorageException {
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
@@ -528,7 +606,8 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 	}
 
-	private void addLocalDatabaseToTransaction(File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile) throws InterruptedException,
+	private void addLocalDatabaseToTransaction(RemoteTransaction remoteTransaction, File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile)
+			throws InterruptedException,
 			StorageException {
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
@@ -611,7 +690,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 * Side-effect: A resumable transaction will be loaded into remoteTransaction, if it exists.
 	 * @return the loaded databaseVersion if found. Null otherwise.
 	 */
-	private DatabaseVersion attemptResumeTransaction() throws Exception {
+	private DatabaseVersion attemptResumeDatabaseVersion() throws Exception {
 		File transactionFile = config.getTransactionFile();
 
 		if (!transactionFile.exists()) {
@@ -633,8 +712,6 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 
 		}
-
-		remoteTransaction = new RemoteTransaction(config, transferManager, transactionTO);
 
 		File databaseFile = config.getTransactionDatabaseFile();
 
@@ -658,7 +735,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 * that would be added if Up was successful.
 	 * @param newDatabaseVersion the current metadata
 	 */
-	private void serializeRemoteTransactionAndMetadata(final DatabaseVersion newDatabaseVersion) {
+	private void serializeRemoteTransactionAndMetadata(RemoteTransaction remoteTransaction, final DatabaseVersion newDatabaseVersion) {
 		try {
 			logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
 

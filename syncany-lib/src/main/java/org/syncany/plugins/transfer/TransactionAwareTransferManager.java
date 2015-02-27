@@ -155,6 +155,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 * @return false if we cannot proceed (Deleting transaction by another client exists).
 	 */
 	public boolean cleanTransactions() throws StorageException {
+		// TODO Make this throw BlockingTransfersException in stead of returning false?
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();

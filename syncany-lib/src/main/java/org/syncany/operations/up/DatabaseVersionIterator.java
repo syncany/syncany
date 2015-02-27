@@ -1,0 +1,76 @@
+/*
+ * Syncany, www.syncany.org
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.syncany.operations.up;
+
+import java.io.File;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import org.syncany.chunk.Deduper;
+import org.syncany.config.Config;
+import org.syncany.database.DatabaseVersion;
+import org.syncany.database.VectorClock;
+import org.syncany.operations.up.Indexer.IndexerNewDatabaseVersionListener;
+
+/**
+ * @author jesse
+ *
+ */
+public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
+
+	private AsyncIndexer asyncIndexer;
+	private Queue<DatabaseVersion> queue;
+
+	public DatabaseVersionIterator(final Config config, Deduper deduper, List<File> files, long transactionSizeLimit) {
+		queue = new LinkedList<>();
+		asyncIndexer = new AsyncIndexer(config, deduper, files, transactionSizeLimit, new IndexerNewDatabaseVersionListener() {
+			@Override
+			public void newDatabaseVersion(DatabaseVersion newDatabaseVersion) {
+				if (newDatabaseVersion.getFileHistories().size() > 0) {
+					queue.offer(newDatabaseVersion);
+				}
+			}
+		});
+		new Thread(asyncIndexer).start();
+	}
+
+	@Override
+	public boolean hasNext() {
+		while (!asyncIndexer.isDone()) {
+			if (queue.size() > 0) {
+				return false;
+			}
+			try {
+				Thread.sleep(100);
+			}
+			catch (InterruptedException e) {
+				// We don't care.
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public DatabaseVersion next() {
+		return queue.poll();
+	}
+
+}
