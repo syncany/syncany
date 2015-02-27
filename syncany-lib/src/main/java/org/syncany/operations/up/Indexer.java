@@ -59,6 +59,7 @@ import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
+import org.syncany.util.Listener;
 import org.syncany.util.StringUtil;
 
 /**

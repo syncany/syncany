@@ -15,12 +15,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.util;
+
+import java.util.Queue;
+
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @author jesse
  *
  */
-public interface FilteredListener<T> extends Listener<T> {
-	boolean isValid(T t);
+public abstract class FilteredQueueAdderListener<T> extends QueueAdderListener<T> implements FilteredListener<T> {
+
+	/**
+	 * @param queue
+	 */
+	public FilteredQueueAdderListener(Queue<T> queue) {
+		super(queue);
+	}
+
+	@Override
+	public void process(T t) {
+		if (isValid(t)) {
+			super.process(t);
+		}
+	};
+
+	@Override
+	public boolean isValid(T t) {
+		throw new NotImplementedException();
+	}
+
 }

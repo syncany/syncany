@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.util;
 
 /**
  * @author jesse
  *
  */
-public interface Listener<T> {
-	void process(T t);
+public interface FilteredListener<T> extends Listener<T> {
+	boolean isValid(T t);
 }

@@ -20,6 +20,7 @@ package org.syncany.operations.up;
 import java.util.Queue;
 
 import org.syncany.database.DatabaseVersion;
+import org.syncany.util.FilteredQueueAdderListener;
 
 /**
  * @author jesse
