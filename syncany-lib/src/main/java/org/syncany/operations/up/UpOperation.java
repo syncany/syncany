@@ -157,9 +157,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 		if (!resuming) {
 			// If we are not resuming, we need to clean transactions and index local files.
-			boolean blockingTransactionExist = !transferManager.cleanTransactions();
-
-			if (blockingTransactionExist) {
+			try {
+				transferManager.cleanTransactions();
+			} catch (BlockingTransfersException e) {
 				stopBecauseOfBlockingTransactions();
 				return result;
 			}
@@ -230,11 +230,7 @@ public class UpOperation extends AbstractTransferOperation {
 				remoteTransaction = new RemoteTransaction(config, transferManager);
 
 				// If we are not resuming, we need to clean transactions.
-				boolean blockingTransactionExist = !transferManager.cleanTransactions();
-
-				if (blockingTransactionExist) {
-					throw new BlockingTransfersException();
-				}
+				transferManager.cleanTransactions();
 
 				// Add multichunks to transaction
 				logger.log(Level.INFO, "Uploading new multichunks ...");

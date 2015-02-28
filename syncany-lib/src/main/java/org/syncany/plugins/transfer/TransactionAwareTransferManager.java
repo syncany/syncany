@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
+import org.syncany.operations.up.BlockingTransfersException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -152,10 +153,9 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
 	 *
-	 * @return false if we cannot proceed (Deleting transaction by another client exists).
+	 * @throws BlockingTransfersException if we cannot proceed (Deleting transaction by another client exists).
 	 */
-	public boolean cleanTransactions() throws StorageException {
-		// TODO Make this throw BlockingTransfersException in stead of returning false?
+	public void cleanTransactions() throws StorageException, BlockingTransfersException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
@@ -179,7 +179,10 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 
 		logger.log(Level.INFO, "Done rolling back previous transactions.");
-		return noBlockingTransactionsExist;
+
+		if (!noBlockingTransactionsExist) {
+			throw new BlockingTransfersException();
+		}
 	}
 
 	/**
