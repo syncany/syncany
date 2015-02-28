@@ -36,9 +36,9 @@ public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 	private AsyncIndexer asyncIndexer;
 	private Queue<DatabaseVersion> queue;
 
-	public DatabaseVersionIterator(final Config config, Deduper deduper, List<File> files, long transactionSizeLimit) {
+	public DatabaseVersionIterator(final Config config, Deduper deduper, List<File> files) {
 		queue = new LinkedList<>();
-		asyncIndexer = new AsyncIndexer(config, deduper, files, transactionSizeLimit, queue);
+		asyncIndexer = new AsyncIndexer(config, deduper, files, queue);
 		new Thread(asyncIndexer).start();
 	}
 

@@ -125,9 +125,8 @@ public class UpOperation extends AbstractTransferOperation {
 		// [NOTE] Changes are gathered in one go; this could be done in parallel with sending known changes.
 		ChangeSet localChanges = result.getStatusResult().getChangeSet();
 		List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
-		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer());
-		// TODO Move magic 40M to config. This is the transaction size.
-		DatabaseVersionIterator databaseVersionIterator = new DatabaseVersionIterator(config, deduper, locallyUpdatedFiles, 40_000_000);
+		Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), config.getTransactionSizeLimit());
+		DatabaseVersionIterator databaseVersionIterator = new DatabaseVersionIterator(config, deduper, locallyUpdatedFiles);
 
 		DatabaseVersion databaseVersionToResume = null;
 		TransactionRemoteFile transactionRemoteFileToResume = null;

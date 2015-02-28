@@ -17,13 +17,11 @@ public class AsyncIndexer implements Runnable {
 
 	private final Indexer indexer;
 	private final List<File> files;
-	private final long transactionSizeLimit;
 	private final Listener<DatabaseVersion> databaseVersionListener;
 	private boolean done;
 
-	public AsyncIndexer(Config config, Deduper deduper, List<File> files, long transactionSizeLimit, Queue<DatabaseVersion> queue) {
+	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
 		this.files = files;
-		this.transactionSizeLimit = transactionSizeLimit;
 		this.databaseVersionListener = new DatabaseVersionListener(queue);
 		this.indexer = new Indexer(config, deduper);
 		this.done = false;
@@ -32,7 +30,7 @@ public class AsyncIndexer implements Runnable {
 	@Override
 	public void run() {
 		try {
-			indexer.index(files, transactionSizeLimit, databaseVersionListener);
+			indexer.index(files, databaseVersionListener);
 		}
 		catch (IOException e) {
 			// TODO: Store this exception as a "result"?

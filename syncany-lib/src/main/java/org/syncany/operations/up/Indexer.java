@@ -114,11 +114,11 @@ public class Indexer {
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
 		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
-		index(files, Long.MAX_VALUE, new DatabaseVersionListener(databaseVersionQueue));
+		index(files, new DatabaseVersionListener(databaseVersionQueue));
 		return databaseVersionQueue.poll();
 	}
 
-	public void index(List<File> files, long transactionSizeLimit, Listener<DatabaseVersion> databaseVersionListener)
+	public void index(List<File> files, Listener<DatabaseVersion> databaseVersionListener)
 			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
@@ -140,7 +140,7 @@ public class Indexer {
 			}
 
 			// Find and index new files
-			nextFileToProcess = deduper.deduplicate(files, nextFileToProcess, transactionSizeLimit, deduperListener);
+			nextFileToProcess = deduper.deduplicate(files, nextFileToProcess, deduperListener);
 
 			// Find and remove deleted files
 			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);

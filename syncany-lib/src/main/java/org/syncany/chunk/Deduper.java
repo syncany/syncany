@@ -48,11 +48,13 @@ public class Deduper {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
+	private long transactionSizeLimit;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer) {		
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long transactionSizeLimit) {
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
+		this.transactionSizeLimit = transactionSizeLimit;
 	}
 	
 	/**
@@ -65,7 +67,7 @@ public class Deduper {
 	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
 	 * @throws IOException If a file cannot be read or an unexpected exception occurs
 	 */
-	public int deduplicate(List<File> files, int firstFile, long transactionSizeLimit, DeduperListener listener) throws IOException {
+	public int deduplicate(List<File> files, int firstFile, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		long totalMultiChunkSize = 0L;
