@@ -146,7 +146,7 @@ public class UpOperation extends AbstractTransferOperation {
 					stopBecauseOfBlockingTransactions();
 					return result;
 				}
-				if (databaseVersionToResume != null) {
+				if (transactionRemoteFileToResume != null) {
 					resuming = true;
 				}
 			}
@@ -165,9 +165,9 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 
 			// Add multichunks to transaction
-			logger.log(Level.INFO, "Uploading new multichunks ...");
+			//logger.log(Level.INFO, "Uploading new multichunks ...");
 			// [NOTE] This call adds newly changed chunks to a "RemoteTransaction", so they can be uploaded later.
-			addMultiChunksToTransaction(remoteTransactionToResume, databaseVersionToResume.getMultiChunks());
+			//addMultiChunksToTransaction(remoteTransactionToResume, databaseVersionToResume.getMultiChunks());
 		}
 
 		if (resuming) {
@@ -183,7 +183,6 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Sync up done.");
 
 		// Result
-		addNewDatabaseChangesToResultChanges(databaseVersionToResume, result.getChangeSet());
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 
 		fireEndEvent();
@@ -288,6 +287,10 @@ public class UpOperation extends AbstractTransferOperation {
 
 			logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
 			localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+			addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
+
+			result.incrementTransactionsCompleted();
 
 			resuming = false;
 		}

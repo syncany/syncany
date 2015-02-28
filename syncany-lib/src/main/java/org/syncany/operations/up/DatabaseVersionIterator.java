@@ -44,10 +44,7 @@ public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 
 	@Override
 	public boolean hasNext() {
-		while (!asyncIndexer.isDone()) {
-			if (queue.size() > 0) {
-				return false;
-			}
+		while (!asyncIndexer.isDone() && queue.size() == 0) {
 			try {
 				Thread.sleep(100);
 			}
@@ -55,7 +52,7 @@ public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 				// We don't care.
 			}
 		}
-		return true;
+		return queue.size() > 0;
 	}
 
 	@Override
