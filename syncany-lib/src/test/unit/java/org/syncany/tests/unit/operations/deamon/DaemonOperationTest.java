@@ -27,7 +27,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.operations.daemon.DaemonOperation;
@@ -48,14 +50,19 @@ public class DaemonOperationTest {
 	private DaemonOperationOptions options;
 	private DaemonOperation deamonOp;
 
-	private final String WATCH_ROOT_FOLDER = "watch_root_folder";
-	private final String WATCH_ROOT_APP_FOLDER = "watch_root_folder/" + Config.DIR_APPLICATION;
+	private static final String WATCH_ROOT_FOLDER = "watch_root_folder";
+	private static final String WATCH_ROOT_APP_FOLDER = "watch_root_folder/" + Config.DIR_APPLICATION;
+
+	@BeforeClass
+	public static void initialize() {
+		//create required folder
+		new File(WATCH_ROOT_APP_FOLDER).mkdirs();
+	}
 
 	@Before
 	public void setUp() {
 		options = mock(DaemonOperationOptions.class);
 		deamonOp = new DaemonOperation(options);
-		new File(WATCH_ROOT_APP_FOLDER).mkdirs();
 	}
 
 	@Test
@@ -100,4 +107,11 @@ public class DaemonOperationTest {
 		assertNotNull(res.getWatchList());
 		assertTrue(res.getWatchList().isEmpty());
 	}
+
+	@AfterClass
+	public static void cleanUp() {
+		// remove created folders
+		new File(WATCH_ROOT_FOLDER).delete();
+	}
+
 }
