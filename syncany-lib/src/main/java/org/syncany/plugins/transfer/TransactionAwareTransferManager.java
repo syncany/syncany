@@ -226,9 +226,9 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 	}
 
-	public void clearResumableTransactionBacklog() throws IOException {
+	public void clearPendingTransactions() throws IOException {
 		Objects.requireNonNull(config, "Cannot delete resumable transaction backlog if config is null.");
-		Collection<Long> resumableTransactionList = loadResumableTransactionList();
+		Collection<Long> resumableTransactionList = loadPendingTransactionList();
 
 		for (long resumableTransactionId : resumableTransactionList) {
 			File transactionFile = config.getTransactionFile(resumableTransactionId);
@@ -248,8 +248,8 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 	}
 
-	public Collection<Long> loadResumableTransactionList() throws IOException {
-		Objects.requireNonNull(config, "Cannot read resumable transaction backlog if config is null.");
+	public Collection<Long> loadPendingTransactionList() throws IOException {
+		Objects.requireNonNull(config, "Cannot read pending transaction list if config is null.");
 		Collection<Long> databaseVersionNumbers = new ArrayList<>();
 		File transactionListFile = config.getTransactionListFile();
 		if (!transactionListFile.exists()) {

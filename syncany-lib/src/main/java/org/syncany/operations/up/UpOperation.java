@@ -22,8 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -135,7 +133,7 @@ public class UpOperation extends AbstractTransferOperation {
 		boolean resuming = false;
 
 		if (options.isResume()) {
-			Collection<Long> versionsToResume = attemptLoadResumableDatabaseVersions();
+			Collection<Long> versionsToResume = transferManager.loadPendingTransactionList();
 			if (versionsToResume != null && versionsToResume.size() != 0) {
 				logger.log(Level.INFO, "Found local transaction to resume.");
 				logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
@@ -230,7 +228,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 		// At this point, if a failure occurs from which we can resume, new transaction files will be written
 		// Delete any old transaction files
-		transferManager.clearResumableTransactionBacklog();
+		transferManager.clearPendingTransactions();
 
 		boolean detectedFailure = false;
 		Exception caughtFailure = null;
@@ -664,20 +662,6 @@ public class UpOperation extends AbstractTransferOperation {
 		newVectorClock.setClock(config.getMachineName(), newLocalValue);
 
 		return newVectorClock;
-	}
-
-	private Collection<Long> attemptLoadResumableDatabaseVersions() throws Exception {
-		Collection<Long> databaseVersionNumbers = new ArrayList<>();
-		File transactionListFile = config.getTransactionListFile();
-		if (!transactionListFile.exists()) {
-			return null;
-		}
-
-		Collection<String> transactionLines = Files.readAllLines(transactionListFile.toPath(), Charset.forName("UTF-8"));
-		for (String transactionLine : transactionLines) {
-			databaseVersionNumbers.add(Long.parseLong(transactionLine));
-		}
-		return databaseVersionNumbers;
 	}
 
 	private Collection<RemoteTransaction> attemptResumeTransactions(Collection<Long> versions) throws Exception {

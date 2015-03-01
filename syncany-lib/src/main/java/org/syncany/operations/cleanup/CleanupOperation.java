@@ -165,6 +165,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// If we do cleanup, we are no longer allowed to resume a transaction
 		transferManager.clearResumableTransactions();
+		transferManager.clearPendingTransactions();
 
 		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");
