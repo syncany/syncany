@@ -19,14 +19,9 @@ package org.syncany.plugins.transfer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -229,6 +224,43 @@ public class TransactionAwareTransferManager implements TransferManager {
 		if (transactionDatabaseFile.exists()) {
 			transactionFile.delete();
 		}
+	}
+
+	public void clearResumableTransactionBacklog() throws IOException {
+		Objects.requireNonNull(config, "Cannot delete resumable transaction backlog if config is null.");
+		Collection<Long> resumableTransactionList = loadResumableTransactionList();
+
+		for (long resumableTransactionId : resumableTransactionList) {
+			File transactionFile = config.getTransactionFile(resumableTransactionId);
+			if (transactionFile.exists()) {
+				transactionFile.delete();
+			}
+
+			File transactionDatabaseFile = config.getTransactionDatabaseFile(resumableTransactionId);
+			if (transactionDatabaseFile.exists()) {
+				transactionDatabaseFile.delete();
+			}
+		}
+
+		File transactionListFile = config.getTransactionListFile();
+		if (transactionListFile.exists()) {
+			transactionListFile.delete();
+		}
+	}
+
+	public Collection<Long> loadResumableTransactionList() throws IOException {
+		Objects.requireNonNull(config, "Cannot read resumable transaction backlog if config is null.");
+		Collection<Long> databaseVersionNumbers = new ArrayList<>();
+		File transactionListFile = config.getTransactionListFile();
+		if (!transactionListFile.exists()) {
+			return Collections.emptyList();
+		}
+
+		Collection<String> transactionLines = Files.readAllLines(transactionListFile.toPath(), Charset.forName("UTF-8"));
+		for (String transactionLine : transactionLines) {
+			databaseVersionNumbers.add(Long.parseLong(transactionLine));
+		}
+		return databaseVersionNumbers;
 	}
 
 	/**

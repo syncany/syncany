@@ -171,6 +171,17 @@ public class UpOperation extends AbstractTransferOperation {
 			databaseVersionIterator = new DatabaseVersionIterator(config, deduper, locallyUpdatedFiles);
 		}
 
+		// Check if there is anything to do
+		if (!databaseVersionIterator.hasNext()) {
+			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+
+			finishOperation();
+			fireEndEvent();
+
+			return result;
+		}
+
 		// If we are not resuming from a remote transaction, we need to clean transactions.
 		if (transactionRemoteFileToResume == null) {
 			try {
@@ -217,16 +228,11 @@ public class UpOperation extends AbstractTransferOperation {
 			resuming = false;
 		}
 
-		if (!(resuming || databaseVersions.hasNext())) {
-			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
-			result.setResultCode(UpResultCode.OK_NO_CHANGES);
-
-			finishOperation();
-			fireEndEvent();
-		}
+		// At this point, if a failure occurs from which we can resume, new transaction files will be written
+		// Delete any old transaction files
+		transferManager.clearResumableTransactionBacklog();
 
 		boolean detectedFailure = false;
-		long failoverDelta = 0;
 		Exception caughtFailure = null;
 		List<RemoteTransaction> remainingRemoteTransactions = new ArrayList<>();
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
@@ -235,7 +241,7 @@ public class UpOperation extends AbstractTransferOperation {
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
-				VectorClock newVectorClock = findNewVectorClock(failoverDelta);
+				VectorClock newVectorClock = findNewVectorClock();
 				databaseVersion.setVectorClock(newVectorClock);
 				databaseVersion.setTimestamp(new Date());
 				databaseVersion.setClient(config.getMachineName());
@@ -276,7 +282,6 @@ public class UpOperation extends AbstractTransferOperation {
 					committingFailed = false;
 				} catch (Exception e) {
 					detectedFailure = true;
-					failoverDelta = 1;
 					caughtFailure = e;
 				}
 				finally {
@@ -303,7 +308,6 @@ public class UpOperation extends AbstractTransferOperation {
 			else {
 				remainingRemoteTransactions.add(remoteTransaction);
 				remainingDatabaseVersions.add(databaseVersion);
-				failoverDelta++;
 			}
 		}
 
@@ -625,7 +629,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 * In the latter case, the method looks at the previous database version numbers
 	 * to determine a new vector clock
 	 */
-	private VectorClock findNewVectorClock(long failoverDelta) {
+	private VectorClock findNewVectorClock() {
 		// Get last vector clock
 		DatabaseVersionHeader lastDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
 		VectorClock lastVectorClock = (lastDatabaseVersionHeader != null) ? lastDatabaseVersionHeader.getVectorClock() : new VectorClock();
@@ -646,14 +650,14 @@ public class UpOperation extends AbstractTransferOperation {
 		Long newLocalValue = null;
 
 		if (lastDirtyLocalValue != null) {
-			newLocalValue = lastDirtyLocalValue + 1 + failoverDelta;
+			newLocalValue = lastDirtyLocalValue + 1;
 		}
 		else {
 			if (lastLocalValue != null) {
-				newLocalValue = lastLocalValue + 1 + failoverDelta;
+				newLocalValue = lastLocalValue + 1;
 			}
 			else {
-				newLocalValue = 1 + failoverDelta;
+				newLocalValue = 1L;
 			}
 		}
 
@@ -737,11 +741,28 @@ public class UpOperation extends AbstractTransferOperation {
 		try {
 			logger.log(Level.INFO, "Persisting status of UpOperation to " + config.getStateDir() + " ...");
 
-			Collection<Long> databaseVersionClocks = new ArrayList<>();
+			// Collect a list of all database version numbers that will be saved
+			List<Long> databaseVersionClocks = new ArrayList<>();
 			for (int i = 0; i < remoteTransactions.size(); i++) {
 				DatabaseVersion databaseVersion = newDatabaseVersions.get(i);
 				long databaseVersionClock = databaseVersion.getVectorClock().getClock(config.getMachineName());
 				databaseVersionClocks.add(databaseVersionClock);
+			}
+
+			// Write the list of version number to a file, before serializing any transactions!
+			// This ensures that no transaction files can exist without a "reference" to them.
+			File transactionListFile = config.getTransactionListFile();
+			PrintWriter transactionListWriter = new PrintWriter(new OutputStreamWriter(
+					new FileOutputStream(transactionListFile), "UTF-8"));
+			for (Long databaseVersion : databaseVersionClocks) {
+				transactionListWriter.println(databaseVersion);
+			}
+			transactionListWriter.close();
+
+			// For each database version write the transaction and database files
+			for (int i = 0; i < remoteTransactions.size(); i++) {
+				DatabaseVersion databaseVersion = newDatabaseVersions.get(i);
+				long databaseVersionClock = databaseVersionClocks.get(i);
 
 				// Writing transaction file to state dir
 				remoteTransactions.get(i).writeToFile(null, config.getTransactionFile(databaseVersionClock));
@@ -754,13 +775,8 @@ public class UpOperation extends AbstractTransferOperation {
 				dao.save(memoryDatabase.getDatabaseVersions(), config.getTransactionDatabaseFile(databaseVersionClock));
 			}
 
-			File transactionListFile = config.getTransactionListFile();
-			PrintWriter transactionListWriter = new PrintWriter(new OutputStreamWriter(
-					new FileOutputStream(transactionListFile), "UTF-8"));
-			for (Long databaseVersion : databaseVersionClocks) {
-				transactionListWriter.println(databaseVersion);
-			}
-			transactionListWriter.close();
+			// The first transaction may be resumable, so write it to the default transaction file
+			remoteTransactions.get(0).writeToFile(null, config.getTransactionFile());
 		}
 		catch (Exception e) {
 			logger.log(Level.WARNING, "Failure when persisting status of Up: ", e);
