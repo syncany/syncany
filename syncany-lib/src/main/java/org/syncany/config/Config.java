@@ -96,13 +96,6 @@ public class Config {
 	private Transformer transformer;
 	private IgnoredFiles ignoredFiles;
 
-	// The transaction size limit determines how much data (in bytes) is combined into a single transaction during an
-	// up operation. Note that this is a lower bound; the Indexer and Deduper iterate through all changed files, and
-	// create and commit a new DatabaseVersion whenever MultiChunks with a total size of at least this limit have been
-	// processed, or when all files have been processed.
-	public static final long DEFAULT_TRANSACTION_SIZE_LIMIT = 10 * 1024 * 1024;
-	private long transactionSizeLimit = DEFAULT_TRANSACTION_SIZE_LIMIT;
-
 	static {
 		UserConfig.init();
 		Logging.init();
@@ -361,13 +354,5 @@ public class Config {
 
 	public File getTransactionDatabaseFile(long databaseVersionNumber) {
 		return new File(stateDir, String.format(FILE_TRANSACTION_DATABASE_PATTERN, databaseVersionNumber));
-	}
-
-	public long getTransactionSizeLimit() {
-		return transactionSizeLimit;
-	}
-
-	public void setTransactionSizeLimit(long transactionSizeLimit) {
-		this.transactionSizeLimit = transactionSizeLimit;
 	}
 }
