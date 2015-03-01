@@ -59,5 +59,11 @@ public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 	public DatabaseVersion next() {
 		return queue.poll();
 	}
+	
+	@Override
+	public void remove() {
+		// Skip! Queue.poll already removes the element.
+		return;
+	}
 
 }
