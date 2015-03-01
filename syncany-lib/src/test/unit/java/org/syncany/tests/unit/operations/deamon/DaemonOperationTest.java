@@ -37,6 +37,7 @@ import org.syncany.operations.daemon.DaemonOperationOptions;
 import org.syncany.operations.daemon.DaemonOperationOptions.DaemonAction;
 import org.syncany.operations.daemon.DaemonOperationResult;
 import org.syncany.operations.daemon.DaemonOperationResult.DaemonResultCode;
+import org.syncany.tests.unit.util.TestFileUtil;
 
 /**
  * Unit tests for the {@link DaemonOperation} class, 
@@ -50,13 +51,12 @@ public class DaemonOperationTest {
 	private DaemonOperationOptions options;
 	private DaemonOperation deamonOp;
 
-	private static final String WATCH_ROOT_FOLDER = "watch_root_folder";
 	private static final String WATCH_ROOT_APP_FOLDER = "watch_root_folder/" + Config.DIR_APPLICATION;
+	private static File tempWatchRootAppFolder;
 
 	@BeforeClass
-	public static void initialize() {
-		//create required folder
-		new File(WATCH_ROOT_APP_FOLDER).mkdirs();
+	public static void initialize() throws Exception {
+		tempWatchRootAppFolder = TestFileUtil.createTempDirectoryInSystemTemp(WATCH_ROOT_APP_FOLDER);
 	}
 
 	@Before
@@ -80,16 +80,16 @@ public class DaemonOperationTest {
 		when(options.getAction()).thenReturn(DaemonAction.ADD);
 
 		List<String> watchRoots = new ArrayList<String>();
-		watchRoots.add(WATCH_ROOT_FOLDER);
+		watchRoots.add(tempWatchRootAppFolder.getParent());
 		when(options.getWatchRoots()).thenReturn(watchRoots);
 
 		DaemonOperationResult res = deamonOp.execute();
 
 		assertNotNull(res);
-		assertEquals(DaemonResultCode.NOK, res.getResultCode());
+		assertEquals(DaemonResultCode.OK, res.getResultCode());
 		assertNotNull(res.getWatchList());
 		assertEquals(1, res.getWatchList().size());
-		assertEquals(new File(WATCH_ROOT_FOLDER).getAbsolutePath(), res.getWatchList().get(0).getPath());
+		assertEquals(tempWatchRootAppFolder.getParentFile().getAbsolutePath(), res.getWatchList().get(0).getPath());
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public class DaemonOperationTest {
 		when(options.getAction()).thenReturn(DaemonAction.REMOVE);
 
 		List<String> watchRoots = new ArrayList<String>();
-		watchRoots.add(WATCH_ROOT_FOLDER);
+		watchRoots.add(tempWatchRootAppFolder.getParent());
 		when(options.getWatchRoots()).thenReturn(watchRoots);
 
 		DaemonOperationResult res = deamonOp.execute();
@@ -111,7 +111,7 @@ public class DaemonOperationTest {
 	@AfterClass
 	public static void cleanUp() {
 		// remove created folders
-		new File(WATCH_ROOT_FOLDER).delete();
+		TestFileUtil.deleteDirectory(tempWatchRootAppFolder.getParentFile());
 	}
 
 }
