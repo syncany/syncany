@@ -184,7 +184,8 @@ public class UpOperation extends AbstractTransferOperation {
 		if (transactionRemoteFileToResume == null) {
 			try {
 				transferManager.cleanTransactions();
-			} catch (BlockingTransfersException e) {
+			}
+			catch (BlockingTransfersException e) {
 				stopBecauseOfBlockingTransactions();
 				return result;
 			}
@@ -196,28 +197,42 @@ public class UpOperation extends AbstractTransferOperation {
 		else {
 			executeTransactions(databaseVersionIterator);
 		}
-
+		
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
-
 		logger.log(Level.INFO, "Sync up done.");
-
+		
 		// Result
 		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
-
 		fireEndEvent();
-
 		return result;
 	}
 
-	private RemoteTransaction attemptResumeRemoteTransaction() throws Exception {
-		return new RemoteTransaction(config, transferManager, TransactionTO.load(null, config.getTransactionFile()));
-	}
-
+	/**
+	 *	Transfers the given {@link DatabaseVersion} objects to the remote.
+	 *	Each {@link DatabaseVersion} will be transferred in its own {@link RemoteTransaction} object.
+	 *
+	 *	@param databaseVersions The {@link DatabaseVersion} objects to send to the remote.
+	 */
 	private void executeTransactions(Iterator<DatabaseVersion> databaseVersions) throws Exception {
 		executeTransactions(databaseVersions, null, null);
 	}
 
+	/**
+	 *	Transfers the given {@link DatabaseVersion} objects to the remote.
+	 *	Each {@link DatabaseVersion} will be transferred in its own {@link RemoteTransaction} object.
+	 *	
+	 *	This method resumes an interrupted sequence of earlier transactions.
+	 *	It expects the {@link DatabaseVersion} and {@link RemoteTransaction} files to be in the same order as they were originally generated.
+	 *	The first {@link DatabaseVersion} and {@link RemoteTransaction} objects should match the interrupted transaction.
+	 *
+	 *	The assumption is that the given {@link RemoteTransaction} objects match the given {@link DatabaseVersion} objects.
+	 *	The given {@link TransactionRemoteFile} corresponds to the file on the remote from the interrupted transaction.
+	 *
+	 *	@param databaseVersions The {@link DatabaseVersion} objects to send to the remote.
+	 *	@param remoteTransactionsToResume {@link RemoteTransaction} objects that correspond to the given {@link DatabaseVersion} objects.
+	 *	@param transactionRemoteFileToResume The file on the remote that was used for the specific transaction that was interrupted.
+	 */
 	private void executeTransactions(Iterator<DatabaseVersion> databaseVersions, Iterator<RemoteTransaction> remoteTransactionsToResume,
 			TransactionRemoteFile transactionRemoteFileToResume)
 			throws Exception {
@@ -271,14 +286,16 @@ public class UpOperation extends AbstractTransferOperation {
 				try {
 					if (transactionRemoteFileToResume == null) {
 						remoteTransaction.commit();
-					} else {
+					}
+					else {
 						remoteTransaction.commit(config.getTransactionFile(), transactionRemoteFileToResume);
 						transactionRemoteFileToResume = null;
 					}
 
 					localDatabase.commit();
 					committingFailed = false;
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					detectedFailure = true;
 					caughtFailure = e;
 				}
@@ -290,7 +307,8 @@ public class UpOperation extends AbstractTransferOperation {
 					if (committingFailed) {
 						remainingRemoteTransactions.add(remoteTransaction);
 						remainingDatabaseVersions.add(databaseVersion);
-					} else {
+					}
+					else {
 						logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
 						long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
 

@@ -1,6 +1,7 @@
 package org.syncany.tests.integration.scenarios;
 
 import org.junit.Test;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestClient;
@@ -30,7 +31,8 @@ public class FailedSplitSyncUpScenarioTest {
 				Arrays.asList("rel=[4567].+upload.+multichunk"));
 
 		TestClient clientA = new TestClient("A", testConnection);
-		clientA.getConfig().setTransactionSizeLimit(0L);
+		UpOperationOptions options = new UpOperationOptions();
+		options.setTransactionSizeLimit(0L);
 
 		// Write three files (three transactions), with the first file spanning two multichunks
 		clientA.createNewFile("file1", 5 * 1024 * 1024);
@@ -40,7 +42,7 @@ public class FailedSplitSyncUpScenarioTest {
 		// 1. Attempt upload, should fail
 		boolean operationFailed = false;
 		try {
-			clientA.up();
+			clientA.up(options);
 		}
 		catch (Exception ex) {
 			operationFailed = true;

@@ -8,6 +8,7 @@ import org.syncany.database.*;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
@@ -29,10 +30,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class SplitSyncUpOperationTest {
 	private Config testConfig;
+	private UpOperationOptions opOptions;
 
 	@Before
 	public void setUp() throws Exception {
 		testConfig = TestConfigUtil.createTestLocalConfig();
+		opOptions = new UpOperationOptions();
 	}
 
 	@After
@@ -46,9 +49,8 @@ public class SplitSyncUpOperationTest {
 		int fileAmount = 3;
 		int expectedTransactions = 3;
 
-		testConfig.setTransactionSizeLimit(0L);
-
-		testUploadLocalDatabase(fileSize, fileAmount, expectedTransactions);
+		opOptions.setTransactionSizeLimit(0L);
+		testUploadLocalDatabase(fileSize, fileAmount, expectedTransactions, opOptions);
 	}
 
 	@Test
@@ -57,17 +59,16 @@ public class SplitSyncUpOperationTest {
 		int fileAmount = 6;
 		int expectedTransactions = 3;
 
-		testConfig.setTransactionSizeLimit(fileSize + 1);
-
-		testUploadLocalDatabase(fileSize, fileAmount, expectedTransactions);
+		opOptions.setTransactionSizeLimit(fileSize + 1);
+		testUploadLocalDatabase(fileSize, fileAmount, expectedTransactions, opOptions);
 	}
 
-	private void testUploadLocalDatabase(int fileSize, int fileAmount, int expectedTransactions) throws Exception {
+	private void testUploadLocalDatabase(int fileSize, int fileAmount, int expectedTransactions, UpOperationOptions options) throws Exception {
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(testConfig.getLocalDir(), fileSize,
 				fileAmount);
 
 		// Run!
-		AbstractTransferOperation op = new UpOperation(testConfig);
+		AbstractTransferOperation op = new UpOperation(testConfig, options);
 		UpOperationResult opResult = (UpOperationResult)op.execute();
 
 		// Ensure that the expected number of transactions has been completed to upload the files
