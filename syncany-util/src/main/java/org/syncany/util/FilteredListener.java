@@ -18,7 +18,7 @@
 package org.syncany.util;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public interface FilteredListener<T> extends Listener<T> {

@@ -23,7 +23,7 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.util.FilteredQueueAdderListener;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public class DatabaseVersionListener extends FilteredQueueAdderListener<DatabaseVersion> {

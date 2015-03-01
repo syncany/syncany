@@ -18,7 +18,7 @@
 package org.syncany.operations.up;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public class BlockingTransfersException extends Exception {

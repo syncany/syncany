@@ -22,7 +22,7 @@ import java.util.Queue;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public abstract class FilteredQueueAdderListener<T> extends QueueAdderListener<T> implements FilteredListener<T> {

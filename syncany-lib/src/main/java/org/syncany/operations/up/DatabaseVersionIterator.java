@@ -28,7 +28,7 @@ import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public class DatabaseVersionIterator implements Iterator<DatabaseVersion> {

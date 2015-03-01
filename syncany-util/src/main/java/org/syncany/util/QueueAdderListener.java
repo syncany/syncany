@@ -20,7 +20,7 @@ package org.syncany.util;
 import java.util.Queue;
 
 /**
- * @author jesse
+ * @author Jesse Donkervliet
  *
  */
 public class QueueAdderListener<T> implements Listener<T> {
