@@ -63,6 +63,7 @@ public class ControlServer implements TailerListener {
 	/**
 	 * Constructor required for unit testing, as you can inject mocks in this way.
 	 */
+	@Deprecated
 	public ControlServer(File ctrlFile, Tailer ctrTailer, LocalEventBus eventBus) {
 		this.controlFile = ctrlFile;
 		this.controlFileTailer = ctrTailer;
