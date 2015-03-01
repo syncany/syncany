@@ -69,7 +69,7 @@ install:
 
 script: 
   # Run JUnit tests and generate reports
-  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll
+  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll `./gradle/sonarqube/sonarqube.sh`
 
 after_success:
   # Line of code stats
@@ -86,7 +86,4 @@ after_success:
     
   # Upload distributables and JavaDoc
   - ./gradle/lftp/lftpupload.sh
-
-  # Do SonarQube analysis
-  - ./gradle/sonarqube/sonarqube.sh
 
