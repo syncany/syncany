@@ -31,6 +31,7 @@ import org.syncany.tests.integration.operations.NotificationListenerTest;
 import org.syncany.tests.integration.operations.OperationPerformanceTest;
 import org.syncany.tests.integration.operations.PluginOperationTest;
 import org.syncany.tests.integration.operations.RecursiveWatcherTest;
+import org.syncany.tests.integration.operations.SplitSyncUpOperationTest;
 import org.syncany.tests.integration.operations.StatusOperationTest;
 import org.syncany.tests.integration.operations.SyncUpOperationTest;
 
@@ -47,6 +48,7 @@ import org.syncany.tests.integration.operations.SyncUpOperationTest;
 	OperationPerformanceTest.class,
 	PluginOperationTest.class,
 	RecursiveWatcherTest.class,
+	SplitSyncUpOperationTest.class,
 	StatusOperationTest.class,
 	SyncUpOperationTest.class	
 })
