@@ -73,7 +73,7 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * The up operation implements a central part of Syncany's business logic. It analyzes the local
  * folder, deduplicates new or changed files and uploads newly packed multichunks to the remote
  * storage. The up operation is the complement to the {@link DownOperation}.
- *
+ * 
  * <p>The general operation flow is as follows:
  * <ol>
  *   <li>Load local database (if not already loaded)</li>
@@ -85,6 +85,13 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  *   <li>Save new {@link DatabaseVersion} to a new (delta) {@link MemoryDatabase} and upload it</li>
  *   <li>Add delta database to local database and store it locally</li>
  * </ol>
+ * 
+ * Besides the normal behavior of creating transactions from local changes and uploading these,
+ * this class is also able to upload existing transactions that have been interrupted during a previous upload attempt.
+ * The up operation analyzes maps the local changes over a number of transactions. The size of these transactions are based
+ * on the settings in {@link UpOperationOptions}.
+ * If a sequence of transactions is interrupted, all queued transactions are written to disk to be resumed later.
+ * The next up operation then reads these transactions and resumes them in the same order as they were queued before the interruption.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
