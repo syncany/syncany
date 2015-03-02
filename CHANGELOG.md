@@ -1,16 +1,18 @@
 Change Log
 ==========
 
-### Syncany 0.4.3-alpha (Date: Tbd.)
+### Syncany 0.4.3-alpha (Date: 25 Feb 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + First Mac OSX release (.app.zip) #34
   + Native Mac OSX notifications #335
   + Added support for WS/REST in JSON format #285
   + Make plugins updatable via `sy plugin update` command #300
-  + History browser in the GUI #333
-  + Better defaults for Cleanup. #345
+  + History browser in the GUI (excl. Mac OSX) #333
+  + Better defaults for cleanup #345
 - Bugfixes and other things:
+  + Add man pages and bash completion to tar.gz/.zip distribution, 
+    to allow using them in Arch and potentially other releases #148/#388
   + Fix black notification bubble on Linux #339
   + Fix file version table in browse history detail view has too
     much left cell spacing #346

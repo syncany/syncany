@@ -67,6 +67,9 @@ after_success:
   # Line of code stats
   - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
   
+  # Generate manpages
+  - ./gradlew manpages
+
   # Create distributables
   - ./gradlew distTar
   - ./gradlew distZip
