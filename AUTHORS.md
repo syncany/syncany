@@ -15,7 +15,7 @@ Contributors / Former Team Members:
 - Christof Schulze (christf)
 - Fabrice Rossi (fabrice-rossi)
 - Florian Spiegel
-- Gaétan Collau
+- Gaétan Collaud
 - Gregor Trefs (gtrefs)
 - Jesse Donkervliet (jdonkervliet)
 - Joel Pettersson (joelpet)
