@@ -223,8 +223,8 @@ public class LocalTransferManager extends AbstractTransferManager {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
 			for (Path path : directoryStream) {
 				try {
-					files.put(path.getFileName().toString(), RemoteFile.createRemoteFile(path.getFileName().toString(), remoteFileClass));
-
+					T remoteFile = RemoteFile.createRemoteFile(path.getFileName().toString(), remoteFileClass);
+					files.put(path.getFileName().toString(), remoteFile);
 				}
 				catch (StorageException e) {
 					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + path

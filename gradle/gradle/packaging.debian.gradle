@@ -16,7 +16,7 @@ task debianManpages(dependsOn: installApp) {
 	
 		exec {
 			workingDir rootProject.file("gradle/debian")
-			commandLine "./makemanpages.pl"
+			commandLine "./makemanpages.sh"
 		}
 	}
 }

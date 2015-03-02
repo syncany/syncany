@@ -67,4 +67,6 @@ OPTIONS
     This option shouldn't be used, because the password might be visible to 
     other users or be stored in history files.
 
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel
