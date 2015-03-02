@@ -88,14 +88,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public void writePurgeFileHistories(Connection connection, long purgeDatabaseVersionId, Collection<PartialFileHistory> purgeFileHistories)
-			throws SQLException {
-		for (PartialFileHistory purgeFileHistory : purgeFileHistories) {
-			fileVersionDao.writePurgeFileVersions(connection, purgeFileHistory.getFileHistoryId(), purgeDatabaseVersionId, purgeFileHistory
-					.getFileVersions().values());
-		}
-	}
-
 	public void removeDirtyFileHistories() throws SQLException {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.delete.dirty.removeDirtyFileHistories.sql")) {
 			preparedStatement.executeUpdate();

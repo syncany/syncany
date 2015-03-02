@@ -45,7 +45,7 @@ task javadocAll(type: Javadoc) {
 				<a href=\"http://www.syncany.org/\" target=\"_top\">Syncany</a> is an open-source cloud storage and filesharing application.<br /><br /> \
 				Code located at <a href=\"https://github.com/syncany/syncany\" target=\"_top\">https://github.com/syncany/syncany</a><br /> \
 				JavaDoc for version $applicationVersion generated based on commit <a href=\"https://github.com/syncany/syncany/tree/$applicationRevision\" target=\"_top\">$applicationRevision</a> at $applicationDate<br /><br /> \
-				Copyright &copy; 2011-2014 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
+				Copyright &copy; 2011-2015 <a href=\"http://www.philippheckel.com/\" target=\"_top\">Philipp C. Heckel</a> \
 			</span> \
 		"
 	}

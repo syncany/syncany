@@ -40,6 +40,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.down.DatabaseBranch;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
@@ -181,10 +182,6 @@ public class SqlDatabase {
 		return databaseVersionDao.writeDatabaseVersion(databaseVersion);
 	}
 
-	public void persistPurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
-		databaseVersionDao.writePurgeDatabaseVersion(purgeDatabaseVersion);
-	}
-
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
@@ -239,11 +236,10 @@ public class SqlDatabase {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
 
-	@Deprecated
-	public FileVersion getFileVersionByPath(String path) {
-		return fileVersionDao.getFileVersionByPath(path);
+	public void removeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
+		fileVersionDao.removeSpecificFileVersions(purgeFileVersions);
 	}
-
+	
 	public List<FileVersion> getFileList(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
 			Set<FileType> fileTypes) {
 		
@@ -258,8 +254,20 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
 	}
 
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
+		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, timeUnit);
+	}
+
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
+		return fileVersionDao.getFileHistoriesToPurgeBefore(timestamp);
+	}
+
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
+	}
+
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
+		return fileVersionDao.getDeletedFileVersionsBefore(timestamp);
 	}
 
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
@@ -331,4 +339,5 @@ public class SqlDatabase {
 	private void removeUnreferencedFileContents() throws SQLException {
 		fileContentDao.removeUnreferencedFileContents();
 	}
+
 }

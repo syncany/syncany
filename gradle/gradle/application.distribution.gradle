@@ -98,7 +98,7 @@ startScripts {
 
 		// - Read max memory (-Xmx) from userconfig.xml
 		String forceSwtGtk2Commands = "# Force SWT/GTK2 (workaround until SWT/GTK3 tables work right) #SYNCANY_INCL_1#\n"
-		forceSwtGtk2Commands += "SWT_GTK3=0\n";
+		forceSwtGtk2Commands += "export SWT_GTK3=0\n";
 
 		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${forceSwtGtk2Commands}"))
 
@@ -186,7 +186,38 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
+
+	// Copy man pages (if they were built via 'manpages' task)
+        if (file("${rootProject.projectDir}/build/man").exists()) {
+		from("build/man") {
+			include "syncany.manpages"
+			into "man"
+		}   
+
+		from("build/man/man") {
+			include "*"
+			into "man/man"
+		}
+	}
+
+	// Copy bash completion to distribution
+	from("${rootProject.projectDir}/gradle/bash") {
+		include "syncany.bash-completion"
+		into "bash"
+	}
 }
+
+task manpages(dependsOn: compileJava) {
+	doLast {
+		rootProject.file("build/man").mkdirs()
+
+		exec {
+			workingDir rootProject.file("gradle/man")
+			commandLine "./makemanpages.sh"
+		}
+	}
+}
+
 
 distTar {
 	baseName = "syncany"

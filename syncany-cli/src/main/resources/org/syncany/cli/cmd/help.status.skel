@@ -24,4 +24,6 @@ OPTIONS
     do not change). For large local folders, this option can tremendously
     decrease the performance of this command and increase I/O significantly.  
  
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

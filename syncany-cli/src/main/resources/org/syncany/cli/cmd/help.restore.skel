@@ -45,4 +45,6 @@ EXAMPLES
     target file 'restored-file.txt'. If this file exists, an error will be
     thrown.
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

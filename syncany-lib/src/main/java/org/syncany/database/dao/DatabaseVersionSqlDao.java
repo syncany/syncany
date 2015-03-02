@@ -120,25 +120,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes the purge database to the database, including the purge file histories.
-	 * 
-	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
-	 */
-	public long writePurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
-		try {
-			// Insert
-			long databaseVersionId = writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-			fileHistoryDao.writePurgeFileHistories(connection, databaseVersionId, purgeDatabaseVersion.getFileHistories());
-
-			return databaseVersionId;
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "SQL Error: ", e);
-			throw new RuntimeException("Cannot persist database.", e);
-		}
-	}
-
-	/**
 	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
 	 * contained {@link VectorClock}. Be aware that the method writes the header independent
 	 * of whether or not a corresponding database version actually exists.

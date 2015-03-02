@@ -2,64 +2,70 @@ NAME
   sy-cleanup - remove old versions and free remote disk space  
  
 SYNOPSIS
-  sy cleanup [-V | --no-version-removal]
-             [-T | --no-temp-removal] [-k | --keep-versions=<count>] 
-             [-t | --time-between-cleanups ] [-x | --max-database-files]             
-             [-f | --force] [<status-options>]
+  sy cleanup [-o | --delete-older-than=<relative-time>] [-f | --force]
+             [-I | --no-delete-interval] [-O | --no-delete-older-than]
+             [-T | --no-temp-removal] [<status-options>]
             
 DESCRIPTION 
   This command performs different operations to cleanup the local database as 
   well as the remote store. It removes old versions from the local database,
-  deletes unused multichunks (if possible) and merges a client's own remote
-  database files (if necessary).
-    
-  Merge remote databases: Unless -M is specified, the remote databases of the
-  local client are merged together if there are more than 15 remote databases.
-  The purpose of this is to avoid endless amounts of small database files on
-  the remote storage and a quicker download process for new clients.
+  deletes unused multichunks (if possible) and merges remote database files, 
+  if necessary.
   
-  Remove old file versions: Unless -V is specified, file versions marked as 
-  'deleted' and files with as history longer than <count> versions will be
-  removed from the database, and the remote storage. This will cleanup the 
-  local database and free up remote storage space. Per default, the number of
-  available file versions per file is set to 5. This value can be overridden
-  by setting -k.     
+  Remove old file versions: File versions are deleted by two criteria. The
+  first is if it is older than 30 days (configurable with -o, disable with -O). 
+  The second is an interval based strategy, to keep the version history 
+  readable. By default, one version is kept per minute in the last hour,
+  one verison is kept per hour in the last three days and one version
+  per day is kept in the last month. This strategy can be disabled with -I. 
+  
+  Merge remote databases: The remote databases of the local client are merged 
+  together if there are more than 15 remote databases per client. The purpose 
+  of this is to avoid endless amounts of small database files on the remote 
+  storage and a quicker download process for new clients. In addition, 
+  databases are merged whenever versions are removed.
   
   This command uses the 'status' and 'ls-remote' commands and is only executed
   if there are neither local nor remote changes.
   
-  This command is used by the 'up' command.
-  
 OPTIONS
-  -V, --no-version-removal 
+  -o, --delete-older-than=<relative-time>
+    Sets the time that cleanup waits before deleting all versions that are 
+    older than this time. Until this time, deleted files can still be restored. 
+    Cleanup will fully delete files that were deleted longer ago in the past
+    than this amount of time and they will be gone permanently. In addition,
+    any versions of files which are not the current version, and older than
+    this threshold will also be deleted.
+    Default is 30 days (30d).
+    
+    Relative time format: <value><unit>, for which <value> may be any 
+    floating point number and <unit> may be any of the following: s(econds),
+    m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
+    shortened if they are unique. Examples: 5h30m or 1y1mo2d
+  
+  -I, --no-delete-interval
+    Turns off the version removal strategy based on intervals. 
+    By default the following policy is applied:
+    For the last hour,        the last version from each minute is kept.
+    For the last three days,  the last version from each hour   is kept.
+    For the last thirty days, the last version from each day    is kept.
+    
+    With this option, only old file versions (-o) will be deleted. 
+    
+  -O, --no-delete-older-than 
     Turns off the removal of old versions for the command. If this is set, this
-    command will not shorten file histories to the <count> given by -k, and it
-    will not delete file versions marked as 'deleted' in the database.  
+    command will not delete file versions purely because they are old. 
     
   -T, --no-temp-removal   
     Turns off the removal of leftover temporary files for the command. If this
     is set, this command will leave temporary files on the offsite storage
     untouched.   
-        
-  -k, --keep-versions=<count>      
-    Sets the number of file versions per file to keep in the database and the 
-    remote storage. The file histories of all files in the database will be 
-    shortened to <count> file versions. Metadata and file content of these old
-    versions will be deleted, and cannot be restored! This option only works if
-    -V is not set.
-
-  -t, --time-between-cleanups=<seconds>
-    Sets the minimal amount of time between two cleanups. If the last cleanup
-    from this client is less then <seconds> seconds ago, no database files
-    will be merged. Versions will still be removed.
-
-  -x, --max-database-files=<count>
-    Sets the number of database files per client. If the total number of 
-    databases exceeds <count> times the number of clients, all database
-    files will be merged to one per client.
-  
+    
   -f, --force
-    Forces a the cleanup, even if the time between cleanups (-t) has not been 
-    run out yet. Use this option only if a cleanup is absolutely necessary.
-      
-%RESOURCE:incl/footer.skel%
+    Forces a the cleanup, even if the time between cleanups (3 hours) has not 
+    passed. Use this option only if a cleanup is absolutely necessary and you
+    know what you are doing.
+
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel
