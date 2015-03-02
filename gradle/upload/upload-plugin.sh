@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPTDIR="$( cd "$( dirname "$0" )" && pwd )"
 REPODIR=$(readlink -f "$SCRIPTDIR/../../../")
 
