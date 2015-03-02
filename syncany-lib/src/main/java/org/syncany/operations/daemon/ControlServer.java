@@ -59,6 +59,16 @@ public class ControlServer implements TailerListener {
 		this.controlFileTailer = new Tailer(controlFile, this, 1000, true);
 		this.eventBus = LocalEventBus.getInstance();		
 	}
+	
+	/**
+	 * Constructor required for unit testing, as you can inject mocks in this way.
+	 */
+	@Deprecated
+	public ControlServer(File ctrlFile, Tailer ctrTailer, LocalEventBus eventBus) {
+		this.controlFile = ctrlFile;
+		this.controlFileTailer = ctrTailer;
+		this.eventBus = eventBus;
+	}
 
 	public void enterLoop() throws IOException, ServiceAlreadyStartedException {
 		File userAppDir = UserConfig.getUserConfigDir();
