@@ -120,25 +120,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes the purge database to the database, including the purge file histories.
-	 * 
-	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
-	 */
-	public long writePurgeDatabaseVersion(DatabaseVersion purgeDatabaseVersion) {
-		try {
-			// Insert
-			long databaseVersionId = writeDatabaseVersionHeader(purgeDatabaseVersion.getHeader());
-			fileHistoryDao.writePurgeFileHistories(connection, databaseVersionId, purgeDatabaseVersion.getFileHistories());
-
-			return databaseVersionId;
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "SQL Error: ", e);
-			throw new RuntimeException("Cannot persist database.", e);
-		}
-	}
-
-	/**
 	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
 	 * contained {@link VectorClock}. Be aware that the method writes the header independent
 	 * of whether or not a corresponding database version actually exists.
@@ -327,14 +308,42 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersions.sql")) {
+			maxDatabaseVersionCount = (maxDatabaseVersionCount > 0) ? maxDatabaseVersionCount : Integer.MAX_VALUE;
+			startDatabaseVersionIndex = (startDatabaseVersionIndex > 0) ? startDatabaseVersionIndex : 0;
+			
+			preparedStatement.setInt(1, maxDatabaseVersionCount);
+			preparedStatement.setInt(2, startDatabaseVersionIndex);
+			
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return new DatabaseVersionIterator(preparedStatement.executeQuery(), true, maxFileHistoryCount);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 	private class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 		private ResultSet resultSet;
+		private boolean excludeChunkData;
+		private int fileHistoryMaxCount;
+
 		private boolean hasNext;
 
 		public DatabaseVersionIterator(ResultSet resultSet) throws SQLException {
+			this(resultSet, false, -1);
+		}
+
+		public DatabaseVersionIterator(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
 			this.resultSet = resultSet;
-			this.hasNext = resultSet.next();
+			this.excludeChunkData = excludeChunkData;
+			this.fileHistoryMaxCount = fileHistoryMaxCount;
+					
+			this.hasNext = resultSet.next();					
 		}
 
 		@Override
@@ -346,7 +355,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		public DatabaseVersion next() {
 			if (hasNext) {
 				try {
-					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet);
+					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, excludeChunkData, fileHistoryMaxCount);
 					hasNext = resultSet.next();
 
 					return databaseVersion;
@@ -367,32 +376,34 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	}
 
-	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet) throws SQLException {
+	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
-		return createDatabaseVersionFromRowDefault(databaseVersionHeader, resultSet);		
-	}
 
-	private DatabaseVersion createDatabaseVersionFromRowDefault(DatabaseVersionHeader databaseVersionHeader, ResultSet resultSet) {
 		DatabaseVersion databaseVersion = new DatabaseVersion();
 		databaseVersion.setHeader(databaseVersionHeader);
 
-		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
-		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
-		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
+		// Add chunk/multichunk/filecontent data
+		if (!excludeChunkData) {
+			Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
+			Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
+			Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
+			
+			for (ChunkEntry chunk : chunks.values()) {
+				databaseVersion.addChunk(chunk);
+			}
+
+			for (MultiChunkEntry multiChunk : multiChunks.values()) {
+				databaseVersion.addMultiChunk(multiChunk);
+			}
+
+			for (FileContent fileContent : fileContents.values()) {
+				databaseVersion.addFileContent(fileContent);
+			}
+		}
+		
+		// Add file histories
 		Map<FileHistoryId, PartialFileHistory> fileHistories = fileHistoryDao
-				.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
-
-		for (ChunkEntry chunk : chunks.values()) {
-			databaseVersion.addChunk(chunk);
-		}
-
-		for (MultiChunkEntry multiChunk : multiChunks.values()) {
-			databaseVersion.addMultiChunk(multiChunk);
-		}
-
-		for (FileContent fileContent : fileContents.values()) {
-			databaseVersion.addFileContent(fileContent);
-		}
+				.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock(), fileHistoryMaxCount);
 
 		for (PartialFileHistory fileHistory : fileHistories.values()) {
 			databaseVersion.addFileHistory(fileHistory);
@@ -418,7 +429,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	private DatabaseVersionHeader createDatabaseVersionHeaderFromRow(ResultSet resultSet) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 

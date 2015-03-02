@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,24 +20,20 @@ package org.syncany.operations.plugin;
 import org.syncany.operations.OperationOptions;
 
 public class PluginOperationOptions implements OperationOptions {
-	public enum PluginAction {
-		LIST, INSTALL, REMOVE
-	}
-
 	public enum PluginListMode {
 		ALL, LOCAL, REMOTE
 	}
-	
-	private PluginAction action = null;
+
+	private PluginOperationAction action = null;
 	private String pluginId = null;
 	private PluginListMode listMode = PluginListMode.ALL;
 	private boolean snapshots = false;
 
-	public PluginAction getAction() {
+	public PluginOperationAction getAction() {
 		return action;
 	}
 
-	public void setAction(PluginAction action) {
+	public void setAction(PluginOperationAction action) {
 		this.action = action;
 	}
 

@@ -1,12 +1,49 @@
 Change Log
 ==========
 
-### Syncany 0.4.1-alpha (Date: Tbd.)
+### Syncany 0.4.3-alpha (Date: 25 Feb 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + First Mac OSX release (.app.zip) #34
+  + Native Mac OSX notifications #335
+  + Added support for WS/REST in JSON format #285
+  + Make plugins updatable via `sy plugin update` command #300
+  + History browser in the GUI (excl. Mac OSX) #333
+  + Better defaults for cleanup #345
+- Bugfixes and other things:
+  + Add man pages and bash completion to tar.gz/.zip distribution, 
+    to allow using them in Arch and potentially other releases #148/#388
+  + Fix black notification bubble on Linux #339
+  + Fix file version table in browse history detail view has too
+    much left cell spacing #346
+  + Fix flickering and newline-problem on Windows tray icon #337
+  + Fix ampersands (&) in menus #367
+  + Fix last modified pre-1970 issue #374
+  + Fix autostart not working on OSX #371
+  + Fix tests to make them clean up after themselves #377/#386
+
+### Syncany 0.4.2-alpha (Date: 10 Jan 2015)
+- Patch release to fix serialization issue in 'sy ls'
+  when daemon/GUI is running.
+
+### Syncany 0.4.1-alpha (Date: 10 Jan 2015)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + New 'Preferences' dialog with ability to remove/add plugins, 
+    enable/disable notifications, and change the proxy settings #334/#321
+  + New 'Remove folder' feature in tray menu #330
+  + New 'Copy link' feature in tray menu #336
+  + Added recent changes command 'sy log' #298
 - Bugfixes and other things:
   + Fix Dropbox plugin bug when deleting non-existing files #325
   + Cleanup status information / status texts in tray #317/#329
   + Code refactoring based on SonarQube output #302/#326
+  + Fix invalid "uploading" status message #314
+  + Fix confusing error message when plugin not installed #328
+  + Fix sync-forever issue with Windows watcher #338
+  + Removed `<hooks>` and `<runAfterDown>` because largly unused #311
+  + Fix `sy ls` doesn't display deleted file versions; add `--deleted` #282
+  + Fix Syncany trying to read all files in home dir on Arch Linux #342
   
 ### Syncany 0.4.0-alpha (Date: 28 Dec 2014)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

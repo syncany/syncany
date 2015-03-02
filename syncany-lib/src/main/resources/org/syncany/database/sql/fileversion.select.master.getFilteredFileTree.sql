@@ -1,8 +1,9 @@
 select *
 from fileversion 
 where 
-	status<>'DELETED'
+	status<>?
 	and path like ?
+	and filehistory_id like ?	
 	and substr_count(path, '/')>=?
 	and substr_count(path, '/')<=?		
 	and type in (unnest(?))			

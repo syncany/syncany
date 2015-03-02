@@ -18,6 +18,7 @@
 package org.syncany.database;
 
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -39,8 +40,16 @@ import java.util.regex.Pattern;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class VectorClock extends TreeMap<String, Long> {
-	private static final long serialVersionUID = 109876543L;
-	public static final Pattern MACHINE_PATTERN = Pattern.compile("[a-zA-Z]+");
+	private static final long serialVersionUID = 109876543L;	
+	
+	private static final Pattern CLOCK_PATTERN = Pattern.compile("\\(([^)]*)\\)");
+	private static final int CLOCK_PATTERN_GROUP_CONTENT = 1;
+	
+	private static final Pattern ENTRY_PATTERN = Pattern.compile("([a-zA-Z]+)(\\d+)");
+	private static final int ENTRY_PATTERN_GROUP_NAME = 1;
+	private static final int ENTRY_PATTERN_GROUP_TIME = 2;
+
+	public static final Pattern MACHINE_PATTERN = Pattern.compile("[a-zA-Z]+");	
 
 	public enum VectorClockComparison {
 		SMALLER, GREATER, EQUAL, SIMULTANEOUS;
@@ -128,6 +137,40 @@ public class VectorClock extends TreeMap<String, Long> {
 		builder.append(')');
 
 		return builder.toString();
+	}
+	
+	/**
+	 * Converts a serialized vector clock back into a {@link VectorClock} object.
+	 * @see #toString()
+	 */
+	public static VectorClock parseVectorClock(String serializedVectorClock) {
+		VectorClock vectorClock = new VectorClock();
+		
+		Matcher clockMatcher = CLOCK_PATTERN.matcher(serializedVectorClock);
+		
+		if (clockMatcher.matches()) {
+			String clockContents = clockMatcher.group(CLOCK_PATTERN_GROUP_CONTENT);
+			String[] clockEntries = clockContents.split(",");
+			
+			for (String clockEntry : clockEntries) {
+				Matcher clockEntryMatcher = ENTRY_PATTERN.matcher(clockEntry);
+				
+				if (clockEntryMatcher.matches()) {
+					String machineName = clockEntryMatcher.group(ENTRY_PATTERN_GROUP_NAME);
+					Long clockValue = Long.parseLong(clockEntryMatcher.group(ENTRY_PATTERN_GROUP_TIME));
+					
+					vectorClock.put(machineName, clockValue);
+				}
+				else {
+					throw new IllegalArgumentException("Not a valid vector clock, entry does not match pattern: " + clockEntry);
+				}
+			}
+			
+			return vectorClock;
+		}
+		else {
+			throw new IllegalArgumentException("Not a valid vector clock: " + serializedVectorClock);
+		}
 	}
 
 	/**

@@ -1,4 +1,4 @@
-// Application Plugin Settings and Hooks ///////////////////////////////////////	
+// Application Plugin Settings and Hooks ///////////////////////////////////////
 
 import java.util.regex.Matcher
 
@@ -9,8 +9,8 @@ mainClassName = "org.syncany.Syncany"
 
 startScripts {
 	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
-		
-	doLast {		
+
+	doLast {
 		def defaultMaxMemory = "2048M"
 
 		///// Windows batch files fixes/enhancements  /////
@@ -18,8 +18,8 @@ startScripts {
 
 		// - Add lib/* to classpath
 		winFile.text = winFile.text.replaceAll("(set CLASSPATH=.+)", 'set CLASSPATH=%APP_HOME%\\\\lib\\\\*;%AppData%\\\\Syncany\\\\plugins\\\\lib\\\\*')
-		
-		// - Read max memory (-Xmx) from userconfig.xml 
+
+		// - Read max memory (-Xmx) from userconfig.xml
 		String winMaxMemoryCommands = "@rem Read max memory from userconfig.xml #SYNCANY_INCL_1#\r\n"
 		winMaxMemoryCommands += "set APP_USERCONFIG_FILE=%AppData%\\\\Syncany\\\\userconfig.xml\r\n";
 		winMaxMemoryCommands += "\r\n";
@@ -36,9 +36,9 @@ startScripts {
 		winMaxMemoryCommands += ") else (\r\n";
 		winMaxMemoryCommands += "  set DEFAULT_JVM_OPTS=%DEFAULT_JVM_OPTS% \"-Xmx" + defaultMaxMemory + "\"\r\n";
 		winMaxMemoryCommands += ")";
-		
+
 		winFile.text = winFile.text.replaceAll("(set DEFAULT_JVM_OPTS.+)", '$1' + Matcher.quoteReplacement("\r\n\r\n${winMaxMemoryCommands}"))
-		
+
 		// - Post Java process commands: Delayed plugin JAR file deletion (Windows only)
 		String winPurgeFileDeletionCommands = "@rem Delete plugin JARs #SYNCANY_INCL_2#\r\n"
 		winPurgeFileDeletionCommands += "SET PURGEFILE=%AppData%\\\\Syncany\\\\purgefile\r\n";
@@ -46,25 +46,35 @@ startScripts {
 		winPurgeFileDeletionCommands += "  @for /f %%b in (%PURGEFILE%) do del /q \"%%b\" 2>NUL\r\n";
 		winPurgeFileDeletionCommands += "  del /q %PURGEFILE% 2>NUL\r\n";
 		winPurgeFileDeletionCommands += ")\r\n\r\n";
-		
+
 		winFile.text = winFile.text.replaceAll("(:end)", "${winPurgeFileDeletionCommands}:end")
-		
+
+		// - Post Java process commands: Delayed plugin JAR file install (Windows only)
+		String winUpdateFileCommands = "@rem Reinstall plugins after update removal #SYNCANY_INCL_4#\r\n"
+		winUpdateFileCommands += "SET UPDATEFILE=%AppData%\\\\Syncany\\\\updatefile\r\n";
+		winUpdateFileCommands += "if exist %UPDATEFILE% (\r\n";
+		winUpdateFileCommands += "  @for /f %%b in (%UPDATEFILE%) do (\r\n    <nul set /p =Updating %%b... \r\n    \"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %SYNCANY_OPTS%  -classpath \"%CLASSPATH%\" org.syncany.Syncany plugin install %%b -m 2>NUL)\r\n";
+		winUpdateFileCommands += "  del /q %UPDATEFILE% 2>NUL\r\n";
+		winUpdateFileCommands += ")\r\n\r\n";
+
+		winFile.text = winFile.text.replaceAll("(:end)", "${winUpdateFileCommands}:end")
+
 		// - Append daemon batch script (handle 'sy daemon'); contains #SYNCANY_INCL_3#
 		def winTextTmp = ""
 		def winText = winFile.text
-		def windowsDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.bat.skel").text		
-		
+		def windowsDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.bat.skel").text
+
 		winText.readLines().each {
 			line ->
 				if (line.startsWith("\"%JAVA_EXE%\"")) {
 					winTextTmp += "if \"%1\" == \"daemon\" goto daemon" + "\r\n"
 					winTextTmp += line + "\r\n"
 					winTextTmp += "goto afterdaemon" + "\r\n"
-					
+
 					winTextTmp += "\r\n"
 					winTextTmp += ":daemon" + "\r\n"
 					winTextTmp += windowsDaemonScript + "\r\n"
-					
+
 					winTextTmp += "\r\n"
 					winTextTmp += ":afterdaemon" + "\r\n"
 				}
@@ -72,22 +82,28 @@ startScripts {
 					winTextTmp += line + '\n'
 				}
 		}
-		
+
 		winFile.text = winTextTmp
-		
+
 		// - Double check that all replaces were successful
-		if (!winFile.text.contains("#SYNCANY_INCL_1#") || !winFile.text.contains("#SYNCANY_INCL_2#") || 
-		    !winFile.text.contains("#SYNCANY_INCL_3#")) {			
-		    
+		if (!winFile.text.contains("#SYNCANY_INCL_1#") || !winFile.text.contains("#SYNCANY_INCL_2#") ||
+		    !winFile.text.contains("#SYNCANY_INCL_3#") || !winFile.text.contains("#SYNCANY_INCL_4#")) {
+
 			throw new RuntimeException("Windows shell script creation failed.");
 		}
-		
-		
+
+
 		///// Linux/Unix script fixes/enhancements /////
 		def unixFile = file getUnixScript()
-		
+
 		// - Read max memory (-Xmx) from userconfig.xml
-		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml #SYNCANY_INCL_1#\n"
+		String forceSwtGtk2Commands = "# Force SWT/GTK2 (workaround until SWT/GTK3 tables work right) #SYNCANY_INCL_1#\n"
+		forceSwtGtk2Commands += "export SWT_GTK3=0\n";
+
+		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${forceSwtGtk2Commands}"))
+
+		// - Read max memory (-Xmx) from userconfig.xml
+		String unixMaxMemoryCommands = "# Read max memory from userconfig.xml #SYNCANY_INCL_2#\n"
 		unixMaxMemoryCommands += "APP_USERCONFIG_DIR=~/.config/syncany\n";
 		unixMaxMemoryCommands += "APP_USERCONFIG_FILE=\$APP_USERCONFIG_DIR/userconfig.xml\n";
 		unixMaxMemoryCommands += "\n";
@@ -101,18 +117,18 @@ startScripts {
 		unixMaxMemoryCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-Xmx\$APP_MAX_MEMORY\\\"\"\n";
 		unixMaxMemoryCommands += "fi";
 
-		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))		
+		unixFile.text = unixFile.text.replaceAll("(DEFAULT_JVM_OPTS=.+)", '$0' + Matcher.quoteReplacement("\n\n${unixMaxMemoryCommands}"))
 
 		// - Mac OS X: Add -XstartOnFirstThread (to fix SWT)
-		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT) #SYNCANY_INCL_2#\n"
-		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"		
+		String unixDarwinFirstThreadFlagCommands = "# For Darwin / Mac OS X: Add -XstartOnFirstThread (to fix SWT) #SYNCANY_INCL_3#\n"
+		unixDarwinFirstThreadFlagCommands += "if \$darwin; then\n"
 		unixDarwinFirstThreadFlagCommands += "    DEFAULT_JVM_OPTS=\"\$DEFAULT_JVM_OPTS \\\"-XstartOnFirstThread\\\"\"\n";
 		unixDarwinFirstThreadFlagCommands += "fi"
 
-		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$0' + Matcher.quoteReplacement("\n\n${unixDarwinFirstThreadFlagCommands}"))		
+		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", '$0' + Matcher.quoteReplacement("\n\n${unixDarwinFirstThreadFlagCommands}"))
 
 		// - Add lib/* to classpath
-		String unixClassPathCommands = "# Determine CLASSPATH (with user plugin JAR preference) #SYNCANY_INCL_3#\n"
+		String unixClassPathCommands = "# Determine CLASSPATH (with user plugin JAR preference) #SYNCANY_INCL_4#\n"
 		unixClassPathCommands += "CLASSPATH=\"\$APP_USERCONFIG_DIR/plugins/lib/*\"\n"
 		unixClassPathCommands += "LIBS_GLOBAL=\$(ls \$APP_HOME/lib/*.jar)\n"
 		unixClassPathCommands += "LIBS_PLUGINS_GLOBAL=\$(ls \$APP_HOME/lib/syncany-plugin-*.jar 2> /dev/null)\n"
@@ -126,19 +142,19 @@ startScripts {
 		unixClassPathCommands += "\n"
 		unixClassPathCommands += "		if [ -z \"\$IN_USER_PLUGINS\" ]; then\n"
 		unixClassPathCommands += "			CLASSPATH=\"\$CLASSPATH:\$LIB_GLOBAL\"\n"
-		unixClassPathCommands += "		fi\n"	
+		unixClassPathCommands += "		fi\n"
 		unixClassPathCommands += "	else\n"
 		unixClassPathCommands += "		CLASSPATH=\"\$CLASSPATH:\$LIB_GLOBAL\"\n"
 		unixClassPathCommands += "	fi\n"
 		unixClassPathCommands += "done"
-		
+
 		unixFile.text = unixFile.text.replaceAll("(CLASSPATH=\\\$APP_HOME.+)", Matcher.quoteReplacement("${unixClassPathCommands}"))
-		
-		// - Append daemon batch script (handle 'sy daemon'); contains #SYNCANY_INCL_4#	
+
+		// - Append daemon batch script (handle 'sy daemon'); contains #SYNCANY_INCL_5#
 		def unixTextTmp = ""
 		def unixText = unixFile.text
-		def unixDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.skel").text		
-		
+		def unixDaemonScript = new File("${rootProject.projectDir}/gradle/daemon/syncanyd.skel").text
+
 		unixText.readLines().each {
 			line ->
 				if (line.startsWith("exec")) {
@@ -148,13 +164,14 @@ startScripts {
 					unixTextTmp += line + '\n'
 				}
 		}
-		
+
 		unixFile.text = unixTextTmp
-		
+
 		// - Double check that all replaces were successful
-		if (!unixFile.text.contains("#SYNCANY_INCL_1#") || !unixFile.text.contains("#SYNCANY_INCL_2#") || 
-		    !unixFile.text.contains("#SYNCANY_INCL_3#") || !unixFile.text.contains("#SYNCANY_INCL_4#")) {			
-		    
+		if (!unixFile.text.contains("#SYNCANY_INCL_1#") || !unixFile.text.contains("#SYNCANY_INCL_2#") ||
+		    !unixFile.text.contains("#SYNCANY_INCL_3#") || !unixFile.text.contains("#SYNCANY_INCL_4#") ||
+		    !unixFile.text.contains("#SYNCANY_INCL_5#")) {
+
 			throw new RuntimeException("Unix/Linux shell script creation failed.");
 		}
 	}
@@ -169,31 +186,62 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		rename(/syncany(\.bat)?/, 'sy$1')
 		into "bin"
 	}
+
+	// Copy man pages (if they were built via 'manpages' task)
+        if (file("${rootProject.projectDir}/build/man").exists()) {
+		from("build/man") {
+			include "syncany.manpages"
+			into "man"
+		}   
+
+		from("build/man/man") {
+			include "*"
+			into "man/man"
+		}
+	}
+
+	// Copy bash completion to distribution
+	from("${rootProject.projectDir}/gradle/bash") {
+		include "syncany.bash-completion"
+		into "bash"
+	}
 }
+
+task manpages(dependsOn: compileJava) {
+	doLast {
+		rootProject.file("build/man").mkdirs()
+
+		exec {
+			workingDir rootProject.file("gradle/man")
+			commandLine "./makemanpages.sh"
+		}
+	}
+}
+
 
 distTar {
 	baseName = "syncany"
 	version = "$applicationVersionFull"
 	compression = Compression.GZIP
-	extension = "tar.gz"	
-	
+	extension = "tar.gz"
+
 	doLast {
 		copy {
 			from archivePath
 			into rootProject.file("${buildDir}/upload")
-		}	
+		}
 	}
 }
 
 distZip {
 	baseName = "syncany"
 	version = "$applicationVersionFull"
-	
+
 	doLast {
 		copy {
 			from archivePath
 			into rootProject.file("${buildDir}/upload")
-		}	
+		}
 	}
 }
 

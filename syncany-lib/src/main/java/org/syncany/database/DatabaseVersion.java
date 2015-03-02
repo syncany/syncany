@@ -43,12 +43,12 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseVersion {
-	private DatabaseVersionStatus status;
-	private DatabaseVersionHeader header;
-
 	public enum DatabaseVersionStatus {
 		MASTER, DIRTY
 	}
+
+	private DatabaseVersionStatus status;
+	private DatabaseVersionHeader header;
 
 	// Full DB in RAM
 	private Map<ChunkChecksum, ChunkEntry> chunks;

@@ -60,6 +60,7 @@ _sy() {
 		down\
 		genlink\
 		init\
+		log\
 		ls\
 		ls-remote\
 		plugin\
@@ -127,13 +128,21 @@ _sy() {
 		-s --short\
 		   --password"
 
+	LOG_OPTIONS="\
+		-n --database-count\
+		-s --database-start\		
+		-f --file-count\
+		-x --exclude-empty"
+		
 	LS_OPTIONS="\
 		-V --versions\
 		-t --types\
 		-D --date\
 		-r --recursive\
+		-q --deleted\
 		-f --full-checksums\
-		-g --group"
+		-g --group\
+		-H --file-history"
 
 	LS_TYPES="\
 		t\
@@ -143,6 +152,7 @@ _sy() {
 	PLUGIN_COMMANDS="\
 		list\
 		install\
+		update\
 		remove"
 
 	PLUGIN_IDS_TRANSFER="\
@@ -153,12 +163,13 @@ _sy() {
 		s3\
 		samba\
 		sftp\
+		swift\
 		webdav"
 		
 	PLUGIN_IDS_ALL="\
 		$PLUGIN_IDS_TRANSFER\
-		gui\
-		simpleweb"		
+		flickr\
+		gui"		
 		
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
@@ -166,7 +177,8 @@ _sy() {
 		-s --snapshots"
 
 	PLUGIN_INSTALL_OPTIONS="\
-		-s --snapshot"
+		-s --snapshot\
+		-m --minimal-output"
 
 	PLUGIN_DROPBOX_OPTIONS="\
 		authToken=\
@@ -203,6 +215,11 @@ _sy() {
 		path=\
 		port="
 
+	PLUGIN_SWIFT_OPTIONS="\
+		authUrl=\
+		username=\
+		password="
+
 	PLUGIN_WEBDAV_OPTIONS="\
 		url=\
 		username=\
@@ -230,11 +247,10 @@ _sy() {
 
 	CLEANUP_OPTIONS="\
 		-F --force\
-		-V --no-version-removal\
+		-o --delete-older-than\
+		-I --no-delete-interval\
+		-O --no-delete-older-than\
 		-T --no-temp-removal\
-		-k --keep-versions\
-		-t --time-between-cleanups\
-		-x --max-database-files\
 		$STATUS_OPTIONS"
 
 	# Un-comment this for debug purposes:
@@ -321,6 +337,10 @@ _sy() {
 				;;
 		esac
 		;;
+		
+	log)
+		complete_options="$LOG_OPTIONS"
+		;;
 
 	ls)
 		case "${prev}" in
@@ -329,7 +349,20 @@ _sy() {
 				;;
 
 			*)
-				complete_options="$LS_OPTIONS"
+				case "${cur}" in
+					-*)
+						complete_options="$LS_OPTIONS"
+						;;
+
+					*)
+						# Special handling: return directories, no space at the end
+
+						compopt -o nospace
+						COMPREPLY=( $( compgen -d -S "/" -- $cur ) )
+
+						return 0
+						;;
+				esac
 				;;
 		esac
 		;;
@@ -341,14 +374,17 @@ _sy() {
 		case "${lastword}" in
 		list)
 			complete_options="$PLUGIN_LIST_OPTIONS"
-
 			;;
+			
 		install)
 			complete_words="$PLUGIN_IDS_ALL"
 			complete_options="$PLUGIN_INSTALL_OPTIONS"
-
 			;;
-
+			
+		update)
+			complete_words="$PLUGIN_IDS_ALL"
+			;;
+			
 		remove)
 			complete_words="$PLUGIN_IDS_ALL"
 			;;
@@ -480,6 +516,10 @@ _sy_plugin_option_words_for_plugin() {
 
 		sftp)
 			plugin_completions="$PLUGIN_SFTP_OPTIONS"
+			;;
+
+		swift)
+			plugin_completions="$PLUGIN_SWIFT_OPTIONS"
 			;;
 
 		webdav)
