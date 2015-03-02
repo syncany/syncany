@@ -14,3 +14,9 @@ dependencies {
 	            	
 	testCompile		"junit:junit:4.9"   	      
 }
+
+sonarRunner {
+	sonarProperties {
+			properties["sonar.tests"] += "src/test/integration/java"
+	}
+}
