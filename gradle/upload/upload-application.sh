@@ -10,7 +10,7 @@ if [ -n "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
 	exit 0
 fi
 
-source "$SCRIPTDIR/upload-functions.sh"
+source "$SCRIPTDIR/upload-functions"
 
 properties_file=$REPODIR/syncany-lib/build/resources/main/application.properties
 
@@ -81,20 +81,20 @@ file_javadoc=$(ls $REPODIR/build/upload/javadoc.tar.gz)
 [ -f "$file_javadoc" ] || (echo "ERROR: Not found: $file_javadoc" && exit 3)
 
 echo "Uploading TAR.GZ: $(basename $file_targz) ..."
-upload_file "$file_targz" "tar.gz" "app" "$snapshot" "all" "all"
+upload_app "$file_targz" "tar.gz" "$snapshot"
 
 echo "Uploading ZIP: $(basename $file_zip) ..."
-upload_file "$file_zip" "zip" "app" "$snapshot" "all" "all"
+upload_app "$file_zip" "zip" "$snapshot"
 
 echo "Uploading DEB: $(basename $file_deb) ..."
-upload_file "$file_deb" "deb" "app" "$snapshot" "all" "all"
+upload_app "$file_deb" "deb" "$snapshot" 
 
 echo "Uploading EXE: $(basename $file_exe) ..."
-upload_file "$file_exe" "exe" "app" "$snapshot" "all" "all"
+upload_app "$file_exe" "exe" "$snapshot"
 
 echo "Uploading REPORTS: $(basename $file_reports) ..."
-upload_file "$file_reports" "exe" "app/reports" "$snapshot" "all" "all"
+upload_file "$file_reports" "app/reports" "snapshot=$snapshot"
 
 echo "Uploading JAVADOC: $(basename $file_javadoc) ..."
-upload_file "$file_javadoc" "exe" "app/javadoc" "$snapshot" "all" "all"
+upload_file "$file_javadoc" "app/javadoc" "snapshot=$snapshot"
 

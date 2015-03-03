@@ -10,9 +10,9 @@ if [ -n "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
 	exit 0
 fi
 
-source "$SCRIPTDIR/upload-functions.sh"
+source "$SCRIPTDIR/upload-functions"
 
-properties_file=$(ls -d build/resources/main/org/syncany/plugins/*/plugin.properties)
+properties_file=$(ls build/resources/main/org/syncany/plugins/*/plugin.properties)
 
 if [ ! -f "$properties_file" ]; then
 	echo "ERROR: Cannot find properties file with plugin details."
@@ -42,38 +42,22 @@ files_appzip=$(ls $REPODIR/build/upload/*.app.zip 2> /dev/null)
 
 for file in $files_jar; do
 	echo "Uploading JAR: $(basename $file) ..."
-
-	os=$(get_os_from_filename "$(basename "$file")")
-	arch=$(get_arch_from_filename "$(basename "$file")")
-
-	upload_file "$file" "jar" "plugins/$plugin_id" "$snapshot" "$os" "$arch"
+	upload_plugin "$file" "jar" "$plugin_id" "$snapshot"	
 done
 
 for file in $files_deb; do
 	echo "Uploading DEB: $(basename $file) ..."
-
-	os=$(get_os_from_filename "$(basename "$file")")
-	arch=$(get_arch_from_filename "$(basename "$file")")
-
-	upload_file "$file" "deb" "plugins/$plugin_id" "$snapshot" "$os" "$arch"
+	upload_plugin "$file" "deb" "$plugin_id" "$snapshot"	
 done
 
 if [ "$plugin_id" == "gui" ]; then
 	for file in $files_exe; do
 		echo "Uploading EXE: $(basename $file) ..."
-
-		os=$(get_os_from_filename "$(basename "$file")")
-		arch=$(get_arch_from_filename "$(basename "$file")")
-
-		upload_file "$file" "exe" "plugins/$plugin_id" "$snapshot" "$os" "$arch"
+		upload_plugin "$file" "exe" "$plugin_id" "$snapshot"	
 	done
 
 	for file in $files_appzip; do
 		echo "Uploading APP.ZIP: $(basename $file) ..."
-
-		os=$(get_os_from_filename "$(basename "$file")")
-		arch=$(get_arch_from_filename "$(basename "$file")")
-
-		upload_file "$file" "app.zip" "plugins/$plugin_id" "$snapshot" "$os" "$arch"
+		upload_plugin "$file" "app.zip" "$plugin_id" "$snapshot"	
 	done
 fi
