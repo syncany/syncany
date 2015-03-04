@@ -19,8 +19,6 @@ package org.syncany.util;
 
 import java.util.Queue;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * @author Jesse Donkervliet
  *
@@ -40,10 +38,4 @@ public abstract class FilteredQueueAdderListener<T> extends QueueAdderListener<T
 			super.process(t);
 		}
 	};
-
-	@Override
-	public boolean isValid(T t) {
-		throw new NotImplementedException();
-	}
-
 }
