@@ -37,6 +37,10 @@ public class DatabaseVersionListener extends FilteredQueueAdderListener<Database
 
 	@Override
 	public boolean isValid(DatabaseVersion databaseVersion) {
+		if (databaseVersion == null) {
+			// end-of-stream poison object.
+			return true;
+		}
 		return databaseVersion.getFileHistories().size() > 0;
 	}
 }

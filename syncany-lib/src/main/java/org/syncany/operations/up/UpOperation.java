@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -136,7 +138,7 @@ public class UpOperation extends AbstractTransferOperation {
 		TransactionRemoteFile transactionRemoteFileToResume = null;
 		Collection<RemoteTransaction> remoteTransactionsToResume = null;
 
-		Iterator<DatabaseVersion> databaseVersionIterator = null;
+		BlockingQueue<DatabaseVersion> databaseVersionQueue = new LinkedBlockingQueue<>();
 		boolean resuming = false;
 
 		if (options.isResume()) {
@@ -150,7 +152,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 				if (remoteDatabaseVersionsToResume != null && remoteTransactionsToResume != null &&
 						remoteDatabaseVersionsToResume.size() == remoteTransactionsToResume.size()) {
-					databaseVersionIterator = remoteDatabaseVersionsToResume.iterator();
+					databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);
 					resuming = true;
 				}
 
@@ -173,18 +175,9 @@ public class UpOperation extends AbstractTransferOperation {
 			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 			// Iterate over the changes, deduplicate, and feed DatabaseVersions into an iterator
 			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit());
-			databaseVersionIterator = new DatabaseVersionIterator(config, deduper, locallyUpdatedFiles);
-		}
-
-		// Check if there is anything to do
-		if (!databaseVersionIterator.hasNext()) {
-			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
-			result.setResultCode(UpResultCode.OK_NO_CHANGES);
-
-			finishOperation();
-			fireEndEvent();
-
-			return result;
+			
+			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, databaseVersionQueue);
+			new Thread(asyncIndexer).start();
 		}
 
 		// If we are not resuming from a remote transaction, we need to clean transactions.
@@ -198,19 +191,24 @@ public class UpOperation extends AbstractTransferOperation {
 			}
 		}
 
+		int numberOfPerformedTransactions = 0;
 		if (resuming) {
-			executeTransactions(databaseVersionIterator, remoteTransactionsToResume.iterator(), transactionRemoteFileToResume);
+			numberOfPerformedTransactions = executeTransactions(databaseVersionQueue, remoteTransactionsToResume.iterator(), transactionRemoteFileToResume);
 		}
 		else {
-			executeTransactions(databaseVersionIterator);
+			numberOfPerformedTransactions = executeTransactions(databaseVersionQueue);
 		}
 		
+		// Check if anything has happened.
+		if (numberOfPerformedTransactions == 0) {
+			logger.log(Level.INFO, "Local database is up-to-date. NOTHING TO DO!");
+			result.setResultCode(UpResultCode.OK_NO_CHANGES);
+		} else {
+			logger.log(Level.INFO, "Sync up done.");
+			result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
+		}
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
-		logger.log(Level.INFO, "Sync up done.");
-		
-		// Result
-		result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 		fireEndEvent();
 		return result;
 	}
@@ -221,8 +219,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 *
 	 *	@param databaseVersions The {@link DatabaseVersion} objects to send to the remote.
 	 */
-	private void executeTransactions(Iterator<DatabaseVersion> databaseVersions) throws Exception {
-		executeTransactions(databaseVersions, null, null);
+	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue) throws Exception {
+		return executeTransactions(databaseVersionQueue, null, null);
 	}
 
 	/**
@@ -236,13 +234,14 @@ public class UpOperation extends AbstractTransferOperation {
 	 *	The assumption is that the given {@link RemoteTransaction} objects match the given {@link DatabaseVersion} objects.
 	 *	The given {@link TransactionRemoteFile} corresponds to the file on the remote from the interrupted transaction.
 	 *
-	 *	@param databaseVersions The {@link DatabaseVersion} objects to send to the remote.
+	 *	@param databaseVersionQueue The {@link DatabaseVersion} objects to send to the remote.
 	 *	@param remoteTransactionsToResume {@link RemoteTransaction} objects that correspond to the given {@link DatabaseVersion} objects.
 	 *	@param transactionRemoteFileToResume The file on the remote that was used for the specific transaction that was interrupted.
 	 */
-	private void executeTransactions(Iterator<DatabaseVersion> databaseVersions, Iterator<RemoteTransaction> remoteTransactionsToResume,
+	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue, Iterator<RemoteTransaction> remoteTransactionsToResume,
 			TransactionRemoteFile transactionRemoteFileToResume)
 			throws Exception {
+		int numberOfCompletedTransactions = 0;
 		boolean resuming = true;
 		if (remoteTransactionsToResume == null) {
 			resuming = false;
@@ -256,8 +255,9 @@ public class UpOperation extends AbstractTransferOperation {
 		Exception caughtFailure = null;
 		List<RemoteTransaction> remainingRemoteTransactions = new ArrayList<>();
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
-		while (databaseVersions.hasNext()) {
-			DatabaseVersion databaseVersion = databaseVersions.next();
+		
+		DatabaseVersion databaseVersion = databaseVersionQueue.take();
+		while (databaseVersion != null) {
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
@@ -301,6 +301,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 					localDatabase.commit();
 					committingFailed = false;
+					numberOfCompletedTransactions++;
 				}
 				catch (Exception e) {
 					detectedFailure = true;
@@ -332,6 +333,8 @@ public class UpOperation extends AbstractTransferOperation {
 				remainingRemoteTransactions.add(remoteTransaction);
 				remainingDatabaseVersions.add(databaseVersion);
 			}
+			
+			databaseVersion = databaseVersionQueue.take();
 		}
 
 		if (detectedFailure) {
@@ -339,6 +342,7 @@ public class UpOperation extends AbstractTransferOperation {
 			serializeRemoteTransactionsAndMetadata(remainingRemoteTransactions, remainingDatabaseVersions);
 			throw caughtFailure;
 		}
+		return numberOfCompletedTransactions;
 	}
 
 	private TransactionRemoteFile attemptResumeTransactionRemoteFile() throws StorageException, BlockingTransfersException {

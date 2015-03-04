@@ -36,6 +36,8 @@ public class AsyncIndexer implements Runnable {
 			// TODO: Store this exception as a "result"?
 			e.printStackTrace();
 		}
+		// Signal end-of-stream.
+		databaseVersionListener.process(null);
 		this.done = true;
 	}
 
