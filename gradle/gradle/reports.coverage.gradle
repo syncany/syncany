@@ -18,7 +18,6 @@ apply plugin: org.kt3k.gradle.plugin.CoverallsPlugin
 
 subprojects {
 	apply plugin: net.saliman.gradle.plugin.cobertura.CoberturaPlugin
-    apply plugin: org.kt3k.gradle.plugin.CoverallsPlugin
 }
 
 cobertura {
@@ -38,3 +37,6 @@ cobertura {
 	}
 }
 
+coveralls {
+    coberturaReportPath = "${buildDir}/reports/coverage/coverage.xml"
+}
