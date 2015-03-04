@@ -3,7 +3,7 @@
 set -e
 
 # Run JUnit tests and generate reports
-./gradlew testGlobal coberturaReport performCoverageCheck javadocAll
+./gradlew testGlobal coberturaReport performCoverageCheck coveralls javadocAll
 
 # SonarQube disabled for now. Took >43min on Travis!
 
@@ -12,7 +12,7 @@ set -e
 
 # Line of code stats
 cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
-  
+
 # Generate manpages
 ./gradlew manpages
 
@@ -21,6 +21,6 @@ cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep
 ./gradlew distZip
 ./gradlew debian
 ./gradlew exe
-    
+
 # Upload distributables and JavaDoc
 ./gradle/lftp/lftpupload.sh
