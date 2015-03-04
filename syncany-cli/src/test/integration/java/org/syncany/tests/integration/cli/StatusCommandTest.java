@@ -18,7 +18,6 @@
 package org.syncany.tests.integration.cli;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -27,7 +26,6 @@ import java.util.Map;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.config.Config;
-import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.tests.unit.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
