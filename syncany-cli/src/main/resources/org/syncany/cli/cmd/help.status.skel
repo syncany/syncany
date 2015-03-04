@@ -25,9 +25,8 @@ OPTIONS
     decrease the performance of this command and increase I/O significantly.
 
   -D, --no-delete
-    With this option, locally deleted files will be ignored. This option
-    should be used if files in the remote repository should not be deleted
-    if missing on the local machine.
+    With this option, this command will not list locally deleted files. If
+    used with the 'up' command, these changes will not be uploaded.
     
 COPYRIGHT
   Syncany %applicationVersionFull%, Distributed under GPLv3,
