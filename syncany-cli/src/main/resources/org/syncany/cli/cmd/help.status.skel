@@ -2,7 +2,7 @@ NAME
   sy-status - list new and changed files in local Syncany folder
     
 SYNOPSIS
-  sy status [-f | --force-checksum]
+  sy status [-f | --force-checksum] [-D | --no-delete]
   
 DESCRIPTION
   This command compares the local file tree on the disk with the local
@@ -25,7 +25,7 @@ OPTIONS
     decrease the performance of this command and increase I/O significantly.
 
   -D, --no-delete
-    With tihs option, locally deleted files will be ignored. This option
+    With this option, locally deleted files will be ignored. This option
     should be used if files in the remote repository should not be deleted
     if missing on the local machine.
     
