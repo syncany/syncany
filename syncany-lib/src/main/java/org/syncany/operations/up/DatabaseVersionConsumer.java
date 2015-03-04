@@ -15,12 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.util;
+package org.syncany.operations.up;
+
+import java.util.Queue;
+
+import org.syncany.database.DatabaseVersion;
+import org.syncany.util.FilteredQueueAdderConsumer;
 
 /**
  * @author Jesse Donkervliet
  *
  */
-public interface FilteredListener<T> extends Listener<T> {
-	boolean isValid(T t);
+public class DatabaseVersionConsumer extends FilteredQueueAdderConsumer<DatabaseVersion> {
+
+	/**
+	 * @param queue
+	 */
+	public DatabaseVersionConsumer(Queue<DatabaseVersion> queue) {
+		super(queue);
+	}
+
+	@Override
+	public boolean isValid(DatabaseVersion databaseVersion) {
+		if (databaseVersion == null) {
+			// end-of-stream poison object.
+			return true;
+		}
+		return databaseVersion.getFileHistories().size() > 0;
+	}
 }

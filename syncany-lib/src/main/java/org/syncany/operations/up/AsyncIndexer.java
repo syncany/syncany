@@ -8,7 +8,7 @@ import java.util.Queue;
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.util.Listener;
+import org.syncany.util.Consumer;
 
 /**
  * @author Tim Hegeman
@@ -17,12 +17,12 @@ public class AsyncIndexer implements Runnable {
 
 	private final Indexer indexer;
 	private final List<File> files;
-	private final Listener<DatabaseVersion> databaseVersionListener;
+	private final Consumer<DatabaseVersion> databaseVersionListener;
 	private boolean done;
 
 	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
 		this.files = files;
-		this.databaseVersionListener = new DatabaseVersionListener(queue);
+		this.databaseVersionListener = new DatabaseVersionConsumer(queue);
 		this.indexer = new Indexer(config, deduper);
 		this.done = false;
 	}
@@ -40,4 +40,5 @@ public class AsyncIndexer implements Runnable {
 		databaseVersionListener.process(null);
 		this.done = true;
 	}
+
 }

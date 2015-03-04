@@ -57,9 +57,9 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.UpIndexChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
+import org.syncany.util.Consumer;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
-import org.syncany.util.Listener;
 import org.syncany.util.StringUtil;
 
 /**
@@ -114,11 +114,11 @@ public class Indexer {
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
 		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
-		index(files, new DatabaseVersionListener(databaseVersionQueue));
+		index(files, new DatabaseVersionConsumer(databaseVersionQueue));
 		return databaseVersionQueue.poll();
 	}
 
-	public void index(List<File> files, Listener<DatabaseVersion> databaseVersionListener)
+	public void index(List<File> files, Consumer<DatabaseVersion> databaseVersionListener)
 			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();

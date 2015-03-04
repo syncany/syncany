@@ -23,17 +23,19 @@ import java.util.Queue;
  * @author Jesse Donkervliet
  *
  */
-public class QueueAdderListener<T> implements Listener<T> {
+public abstract class FilteredQueueAdderConsumer<T> extends QueueAdderConsumer<T> implements FilteredConsumer<T> {
 
-	private final Queue<T> queue;
-
-	public QueueAdderListener(Queue<T> queue) {
-		this.queue = queue;
+	/**
+	 * @param queue
+	 */
+	public FilteredQueueAdderConsumer(Queue<T> queue) {
+		super(queue);
 	}
 
 	@Override
 	public void process(T t) {
-		queue.offer(t);
-	}
-
+		if (isValid(t)) {
+			super.process(t);
+		}
+	};
 }

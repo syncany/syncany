@@ -17,19 +17,23 @@
  */
 package org.syncany.util;
 
+import java.util.Queue;
+
 /**
- * This interface can be used for any class that listens for incoming objects and processes them.
- * 
- * 
  * @author Jesse Donkervliet
  *
  */
-public interface Listener<T> {
-	
-	/**
-	 * Perform an operation on the incoming object.
-	 * 
-	 * @param t The incoming object.
-	 */
-	void process(T t);
+public class QueueAdderConsumer<T> implements Consumer<T> {
+
+	private final Queue<T> queue;
+
+	public QueueAdderConsumer(Queue<T> queue) {
+		this.queue = queue;
+	}
+
+	@Override
+	public void process(T t) {
+		queue.offer(t);
+	}
+
 }

@@ -17,25 +17,10 @@
  */
 package org.syncany.util;
 
-import java.util.Queue;
-
 /**
  * @author Jesse Donkervliet
  *
  */
-public abstract class FilteredQueueAdderListener<T> extends QueueAdderListener<T> implements FilteredListener<T> {
-
-	/**
-	 * @param queue
-	 */
-	public FilteredQueueAdderListener(Queue<T> queue) {
-		super(queue);
-	}
-
-	@Override
-	public void process(T t) {
-		if (isValid(t)) {
-			super.process(t);
-		}
-	};
+public interface FilteredConsumer<T> extends Consumer<T> {
+	boolean isValid(T t);
 }

@@ -15,32 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
-
-import java.util.Queue;
-
-import org.syncany.database.DatabaseVersion;
-import org.syncany.util.FilteredQueueAdderListener;
+package org.syncany.util;
 
 /**
+ * This interface can be used for any class that listens for incoming objects and processes them.
+ * 
+ * 
  * @author Jesse Donkervliet
  *
  */
-public class DatabaseVersionListener extends FilteredQueueAdderListener<DatabaseVersion> {
-
+public interface Consumer<T> {
+	
 	/**
-	 * @param queue
+	 * Perform an operation on the incoming object.
+	 * 
+	 * @param t The incoming object.
 	 */
-	public DatabaseVersionListener(Queue<DatabaseVersion> queue) {
-		super(queue);
-	}
-
-	@Override
-	public boolean isValid(DatabaseVersion databaseVersion) {
-		if (databaseVersion == null) {
-			// end-of-stream poison object.
-			return true;
-		}
-		return databaseVersion.getFileHistories().size() > 0;
-	}
+	void process(T t);
 }
