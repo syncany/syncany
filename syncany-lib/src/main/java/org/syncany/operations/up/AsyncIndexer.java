@@ -40,8 +40,4 @@ public class AsyncIndexer implements Runnable {
 		databaseVersionListener.process(null);
 		this.done = true;
 	}
-
-	public boolean isDone() {
-		return this.done;
-	}
 }
