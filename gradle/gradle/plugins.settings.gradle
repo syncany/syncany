@@ -13,16 +13,12 @@
 
 rootProject.projectDir = file('../../../core')
 
-
-//Not needed and breaks sonar
-//include 'syncany'
+// Including the 'syncany' project is not necessary, because it is included
+// by rootProject.projectDir. See issue #403/#405
 
 include 'syncany-lib'
 include 'syncany-cli'
 include 'syncany-util'
-
-//Not needed and breaks sonar
-//project(':syncany').projectDir = file('../../../core') 
 
 project(':syncany-lib').projectDir = file('../../../core/syncany-lib')
 project(':syncany-cli').projectDir = file('../../../core/syncany-cli')
