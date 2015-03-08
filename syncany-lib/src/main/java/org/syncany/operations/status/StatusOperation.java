@@ -83,6 +83,10 @@ public class StatusOperation extends Operation {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
 		
+		if (options != null && !options.isDelete()) {
+			logger.log(Level.INFO, "Delete missing files DISABLED.");
+		}
+		
 		// Get local database
 		logger.log(Level.INFO, "Querying current file tree from database ...");				
 		eventBus.post(new StatusStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
@@ -109,7 +113,10 @@ public class StatusOperation extends Operation {
 
 	private ChangeSet findLocalChanges(final Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
 		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir(), filesInDatabase);
-		findAndAppendDeletedFiles(localChanges, filesInDatabase);
+		
+		if (options == null || options.isDelete()) {
+			findAndAppendDeletedFiles(localChanges, filesInDatabase);
+		}
 		
 		return localChanges;
 	}		

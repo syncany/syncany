@@ -83,5 +83,48 @@ public class StatusCommandTest {
 		
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
-	}			
+	}
+	
+
+	@Test
+	public void testStatusCommandWithNoDelete() throws Exception {
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+		
+		new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"up"
+		}).start();
+
+		for (int i = 1; i <= 20; i++) {
+			new File(clientA.get("localdir") + "/somefolder" + i).mkdir();
+
+			new CommandLineClient(new String[] {
+					"--localdir", clientA.get("localdir"),
+					"up"
+			}).start();
+		}
+
+		// Delete file
+		new File(clientA.get("localdir") + "/somefolder1").delete();
+
+		// Test status without no-delete parameter
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status"
+		}));
+
+		assertEquals("Number of output lines", 3, cliOut.length);
+		assertTrue(cliOut[2].contains("D somefolder1"));
+		
+		// Test status with no-delete parameter
+		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status", "--no-delete"
+		}));
+
+		assertEquals("Number of output lines", 3, cliOut.length);
+		assertTrue(cliOut[2].contains("No local changes."));
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
 }
