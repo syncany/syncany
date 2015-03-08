@@ -13,12 +13,17 @@
 
 rootProject.projectDir = file('../../../core')
 
-include 'syncany'
+
+//Not needed and breaks sonar
+//include 'syncany'
+
 include 'syncany-lib'
 include 'syncany-cli'
 include 'syncany-util'
 
-project(':syncany').projectDir = file('../../../core')
+//Not needed and breaks sonar
+//project(':syncany').projectDir = file('../../../core') 
+
 project(':syncany-lib').projectDir = file('../../../core/syncany-lib')
 project(':syncany-cli').projectDir = file('../../../core/syncany-cli')
 project(':syncany-util').projectDir = file('../../../core/syncany-util')
