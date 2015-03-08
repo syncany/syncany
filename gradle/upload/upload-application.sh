@@ -19,25 +19,26 @@ if [ ! -f "$properties_file" ]; then
 	exit 2
 fi
 
+mkdir -p $REPODIR/build/upload/
 
-# Gather JavaDoc & Test Reports
+# Gather Docs & Test Reports
 echo ""
-echo "Gathering JavaDoc & Test Reports ..."
+echo "Gathering Docs & Test Reports ..."
 echo "------------------------------------"
 
 PWD=`pwd`
 cd $REPODIR/build
-rm javadoc.tar.gz || true 2> /dev/null
-rm reports.tar.gz || true 2> /dev/null
+rm docs.zip || true 2> /dev/null
+rm reports.zip || true 2> /dev/null
 
-if [ -d javadoc ]; then 
-	tar -czf javadoc.tar.gz javadoc/
-	mv javadoc.tar.gz $REPODIR/build/upload/
+if [ -d docs ]; then 
+	zip -r docs.zip docs/
+	mv docs.zip $REPODIR/build/upload/
 fi
 
 if [ -d reports ]; then 
-	tar -czf reports.tar.gz reports/
-	mv reports.tar.gz $REPODIR/build/upload/
+	tar -czf reports.zip reports/
+	mv reports.zip $REPODIR/build/upload/
 fi
 
 cd "$PWD"
@@ -54,13 +55,12 @@ cd $REPODIR/build/upload/
 sha256sum * 2>/dev/null 
 cd "$PWD"
 
-if [ $(ls $REPODIR/build/upload/ | wc -l) != "6" ]; then # 4 releases, javadoc and reports
+if [ $(ls $REPODIR/build/upload/ | wc -l) != "6" ]; then # 4 releases, docs and reports
 	echo "ERROR: Wrong files in $REPODIR/build/upload/: "
 	ls -l $REPODIR/build/upload/
 	
 	exit 2
 fi
-
 
 echo ""
 echo "Uploading"
@@ -70,15 +70,15 @@ file_targz=$(ls $REPODIR/build/upload/syncany*.tar.gz)
 file_zip=$(ls $REPODIR/build/upload/syncany*.zip)
 file_deb=$(ls $REPODIR/build/upload/syncany*.deb)
 file_exe=$(ls $REPODIR/build/upload/syncany*.exe)
-file_reports=$(ls $REPODIR/build/upload/reports.tar.gz)
-file_javadoc=$(ls $REPODIR/build/upload/javadoc.tar.gz)
+file_reports=$(ls $REPODIR/build/upload/reports.zip)
+file_docs=$(ls $REPODIR/build/upload/docs.zip)
 
 [ -f "$file_targz" ] || (echo "ERROR: Not found: $file_targz" && exit 3)
 [ -f "$file_zip" ] || (echo "ERROR: Not found: $file_zip" && exit 3)
 [ -f "$file_deb" ] || (echo "ERROR: Not found: $file_deb" && exit 3)
 [ -f "$file_exe" ] || (echo "ERROR: Not found: $file_exe" && exit 3)
 [ -f "$file_reports" ] || (echo "ERROR: Not found: $file_reports" && exit 3)
-[ -f "$file_javadoc" ] || (echo "ERROR: Not found: $file_javadoc" && exit 3)
+[ -f "$file_docs" ] || (echo "ERROR: Not found: $file_docs" && exit 3)
 
 echo "Uploading TAR.GZ: $(basename $file_targz) ..."
 upload_app "$file_targz" "tar.gz" "$snapshot"
@@ -95,6 +95,6 @@ upload_app "$file_exe" "exe" "$snapshot"
 echo "Uploading REPORTS: $(basename $file_reports) ..."
 upload_file "$file_reports" "app/reports" "snapshot=$snapshot"
 
-echo "Uploading JAVADOC: $(basename $file_javadoc) ..."
-upload_file "$file_javadoc" "app/javadoc" "snapshot=$snapshot"
+echo "Uploading DOCS: $(basename $file_docs) ..."
+upload_file "$file_docs" "app/docs" "snapshot=$snapshot"
 

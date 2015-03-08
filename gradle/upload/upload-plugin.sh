@@ -19,6 +19,8 @@ if [ ! -f "$properties_file" ]; then
 	exit 2
 fi
 
+mkdir -p $REPODIR/build/upload/
+
 plugin_id=$(get_property $properties_file "pluginId")
 release=$(get_property $properties_file "pluginRelease")
 snapshot=$([ "$release" == "true" ] && echo "false" || echo "true") # Invert 'release'
