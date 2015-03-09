@@ -1,12 +1,13 @@
 Change Log
 ==========
 
-### Syncany 0.4.4-alpha (Date: TBA)
+### Syncany 0.4.4-alpha (Date: Tbd.)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Unit tests for daemon #384/#397
 - Bugfixes and other things:
   + Splitting test suite between unit and integration #384/#391
+  + Allowing SFTP public key auth without private key password #390
 
 ### Syncany 0.4.3-alpha (Date: 25 Feb 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
