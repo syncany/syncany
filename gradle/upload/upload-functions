@@ -1,5 +1,5 @@
 SYNCANY_API_ENDPOINT="https://api.syncany.org/v3"
-#SYNCANY_API_ENDPOINT="http://tests.lan/syncany-website/api.syncany.org/html/v3"
+SYNCANY_API_ENDPOINT="http://tests.lan/api.syncany.org/html/v3"
 
 if [ "$SYNCANY_API_KEY" == "" ]; then
 	echo "ERROR: SYNCANY_API_KEY environment variable not set."
