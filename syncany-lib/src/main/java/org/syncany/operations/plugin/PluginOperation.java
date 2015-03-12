@@ -57,6 +57,7 @@ import org.syncany.plugins.Plugins;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
+
 import com.github.zafarkhaja.semver.Version;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -90,7 +91,9 @@ import com.google.common.collect.Lists;
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());
 
-	private static final String PLUGIN_LIST_URL = "https://api.syncany.org/v2/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
+	private static final String API_DEFAULT_ENDPOINT_URL = "https://api.syncany.org/v3";
+	private static final String API_PLUGIN_LIST_REQUEST_FORMAT = "%s/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
+	
 	private static final String PURGEFILE_FILENAME = "purgefile";
 	private static final String UPDATE_FILENAME = "updatefile";
 
@@ -110,7 +113,7 @@ public class PluginOperation extends Operation {
 
 	@Override
 	public PluginOperationResult execute() throws Exception {
-		result.setAction(options.getAction());
+		result.setAction(options.getAction());		
 
 		switch (options.getAction()) {
 			case LIST:
@@ -611,9 +614,10 @@ public class PluginOperation extends Operation {
 		String osStr = EnvironmentUtil.getOperatingSystemDescription();
 		String archStr = EnvironmentUtil.getArchDescription();
 
-		URL pluginListUrl = new URL(String.format(PLUGIN_LIST_URL, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
+		String apiEndpointUrl = (options.getApiEndpoint() != null) ? options.getApiEndpoint() : API_DEFAULT_ENDPOINT_URL;
+		URL pluginListUrl = new URL(String.format(API_PLUGIN_LIST_REQUEST_FORMAT, apiEndpointUrl, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
+		
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
-
 		eventBus.post(new PluginConnectToHostExternalEvent(pluginListUrl.getHost()));
 
 		URLConnection urlConnection = pluginListUrl.openConnection();

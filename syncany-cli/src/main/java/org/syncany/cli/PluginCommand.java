@@ -41,7 +41,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 public class PluginCommand extends Command {
-
 	private boolean minimalOutput = false;
 
 	@Override
@@ -73,6 +72,7 @@ public class PluginCommand extends Command {
 		OptionSpec<Void> optionRemote = parser.acceptsAll(asList("R", "remote-only"));
 		OptionSpec<Void> optionSnapshots = parser.acceptsAll(asList("s", "snapshot", "snapshots"));
 		OptionSpec<Void> optionMinimalOutput = parser.acceptsAll(asList("m", "minimal-output"));
+		OptionSpec<String> optionApiEndpoint = parser.acceptsAll(asList("a", "api-endpoint")).withRequiredArg();
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -94,6 +94,11 @@ public class PluginCommand extends Command {
 
 		// --snapshots
 		operationOptions.setSnapshots(options.has(optionSnapshots));
+		
+		// --api-endpoint
+		if (options.has(optionApiEndpoint)) {
+			operationOptions.setApiEndpoint(options.valueOf(optionApiEndpoint));
+		}
 
 		// install|remove <plugin-id>
 		if (action == PluginOperationAction.INSTALL || action == PluginOperationAction.REMOVE) {
@@ -171,9 +176,12 @@ public class PluginCommand extends Command {
 	private void printResultList(PluginOperationResult operationResult) {
 		if (operationResult.getResultCode() == PluginResultCode.OK) {
 			List<String[]> tableValues = new ArrayList<String[]>();
-			tableValues.add(new String[]{"Id", "Name", "Local Version", "Type", "Remote Version", "Updatable"});
-			int outdated = 0;
-			int updatable = 0;
+			
+			tableValues.add(new String[]{"Id", "Name", "Local Version", "Type", "Remote Version", "Updatable", "Provided By"});
+			
+			int outdatedCount = 0;
+			int updatableCount = 0;
+			int thirdPartyCount = 0;
 
 			for (ExtendedPluginInfo extPluginInfo : operationResult.getPluginList()) {
 				PluginInfo pluginInfo = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo() : extPluginInfo.getRemotePluginInfo();
@@ -181,28 +189,40 @@ public class PluginCommand extends Command {
 				String localVersionStr = (extPluginInfo.isInstalled()) ? extPluginInfo.getLocalPluginInfo().getPluginVersion() : "";
 				String installedStr = extPluginInfo.isInstalled() ? (extPluginInfo.canUninstall() ? "User" : "Global") : "";
 				String remoteVersionStr = (extPluginInfo.isRemoteAvailable()) ? extPluginInfo.getRemotePluginInfo().getPluginVersion() : "";
-				String isOutdated = "";
+				String thirdPartyStr = (pluginInfo.isPluginThirdParty()) ? "Third Party" : "Syncany Team"; 
+				String updatableStr = "";
 
 				if (extPluginInfo.isInstalled() && extPluginInfo.isOutdated()) {
 					if (extPluginInfo.canUninstall()) {
-						isOutdated = "Auto";
-						updatable++;
+						updatableStr = "Auto";
+						updatableCount++;
 					}
 					else {
-						isOutdated = "Manual";
+						updatableStr = "Manual";
 					}
 
-					outdated++;
+					outdatedCount++;
 				}
 
-				tableValues.add(new String[]{pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr, isOutdated});
+				if (pluginInfo.isPluginThirdParty()) {
+					thirdPartyCount++;
+				}
+				
+				tableValues.add(new String[]{pluginInfo.getPluginId(), pluginInfo.getPluginName(), localVersionStr, installedStr, remoteVersionStr, updatableStr, thirdPartyStr});
 			}
 
 			CliTableUtil.printTable(out, tableValues, "No plugins found.");
 
-			if (outdated > 0) {
-				String isare = outdated == 1 ? "is" : "are";
-				out.printf("\nThere %s %d outdated %s, %d of them %s automatically updatable.\n", isare, outdated, outdated == 1 ? "plugin" : "plugins", updatable, isare);
+			if (outdatedCount > 0) {
+				String isAre = (outdatedCount == 1) ? "is" : "are";
+				String pluginPlugins = (outdatedCount == 1) ? "plugin" : "plugins";
+				
+				out.printf("\nUpdates:\nThere %s %d outdated %s, %d of them %s automatically updatable.\n", isAre, outdatedCount, pluginPlugins, updatableCount, isAre);
+			}
+			
+			if (thirdPartyCount > 0) {
+				String pluginPlugins = (thirdPartyCount == 1) ? "plugin" : "plugins";				
+				out.printf("\nThird party plugins:\nPlease note that the Syncany Team does not take review or maintain the third-party %s\nlisted above. Please report issues to the corresponding plugin site.\n", pluginPlugins);
 			}
 		}
 		else {

@@ -174,7 +174,8 @@ _sy() {
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
 		-L --local-only\
-		-s --snapshots"
+		-s --snapshots\
+		-a --api-endpoint"
 
 	PLUGIN_INSTALL_OPTIONS="\
 		-s --snapshot\
