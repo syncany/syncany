@@ -23,4 +23,4 @@ cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep
 ./gradlew exe
 
 # Upload distributables and JavaDoc
-./gradle/lftp/lftpupload.sh
+./gradle/upload/upload-application.sh
