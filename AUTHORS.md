@@ -13,6 +13,7 @@ Contributors / Former Team Members:
 - Anthony Miyaguchi (acmiyaguchi)
 - Armin Fisslthaler (afics)
 - Christof Schulze (christf)
+- Darryl Tam (Lyrrad)
 - Fabrice Rossi (fabrice-rossi)
 - Florian Spiegel
 - Gaétan Collaud

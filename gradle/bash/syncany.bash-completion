@@ -231,7 +231,8 @@ _sy() {
 		-t --target"
 
 	STATUS_OPTIONS="\
-		-f --force-checksum"
+		-f --force-checksum\
+		-D --no-delete"
 
 	UP_OPTIONS="\
 		-R --no-resume\
