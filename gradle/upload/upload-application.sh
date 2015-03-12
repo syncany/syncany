@@ -24,17 +24,19 @@ mkdir -p $REPODIR/build/upload/
 # Gather Docs & Test Reports
 PWD=`pwd`
 cd $REPODIR/build
-rm docs.zip 2> /dev/null || true 
-rm reports.zip 2> /dev/null || true
+rm upload/docs.zip 2> /dev/null || true 
+rm upload/reports.zip 2> /dev/null || true
 
 if [ -d docs ]; then 
-	zip --recurse-paths --quiet docs.zip docs/
-	mv docs.zip $REPODIR/build/upload/
+	cd docs
+	zip --recurse-paths --quiet $REPODIR/build/upload/docs.zip .
+	cd ..
 fi
 
 if [ -d reports ]; then 
-	zip --recurse-paths --quiet reports.zip reports/
-	mv reports.zip $REPODIR/build/upload/
+	cd reports
+	zip --recurse-paths --quiet $REPODIR/build/upload/reports.zip .
+	cd ..	
 fi
 
 cd "$PWD"
@@ -79,4 +81,7 @@ upload_app "$file_reports" "reports" "$snapshot"
 
 echo "Uploading DOCS: $(basename $file_docs) ..."
 upload_app "$file_docs" "docs" "$snapshot"
+
+echo ""
+echo "DONE."
 
