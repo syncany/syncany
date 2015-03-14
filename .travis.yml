@@ -7,9 +7,7 @@ env:
     - TERM=dumb
     
     # Syncany API credentials (SYNCANY_API_KEY environment variable)
-    - secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
-    - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
-    - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
+    - secure: "LtfXTZ6czCL0GhGubTtb5NI/JCUTz5zrU7BkV1QO0PE1wmYB8KxH9kC0hVLzuaLAiSvOWoJVq2qtSh7NXk+ABRw4EKcKPwp+mcjIGmxrncjgdSbWB8zPC3QWrV3rLiaN2w9vJoB5iDU3RcSogSXfV68VeDxUdWgxamPXSrKTzp4="
 
     # Syncany SonarQube credentials (SYNCANY_SONARQUBE_* environment variables)    
     - secure: "BDo4IO82sX64vRCxZx3voQ4HcbuTAfTiuNR3MsXlTrBhULAjLU8+EtD+RuXLqYSTEvpzIskiV2EWS4IRHsjYt5lAXl1/YrZsAU6v8UDNh9jkm6TVkxVlACTcEyBHU1SIxn14gXW405sxIAxPZ4YqVwVGNL41rauKXIj0jNp/5Q0="
