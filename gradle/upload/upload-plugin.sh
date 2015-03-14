@@ -37,22 +37,23 @@ echo ""
 echo "Uploading plugin $plugin_id"
 echo "------------------------------"
 
-files_jar=$(ls $REPODIR/build/upload/*.jar 2> /dev/null)
-files_deb=$(ls $REPODIR/build/upload/*.deb 2> /dev/null)
-files_exe=$(ls $REPODIR/build/upload/*.exe 2> /dev/null)
-files_appzip=$(ls $REPODIR/build/upload/*.app.zip 2> /dev/null)
+files_jar=$(ls $REPODIR/build/upload/*.jar 2> /dev/null || true)
+files_deb=$(ls $REPODIR/build/upload/*.deb 2> /dev/null || true)
+
+for file in $files_deb; do
+	echo "Uploading DEB: $(basename $file) ..."
+	upload_plugin "$file" "deb" "$plugin_id" "$snapshot" # Most likely to fail first
+done
 
 for file in $files_jar; do
 	echo "Uploading JAR: $(basename $file) ..."
 	upload_plugin "$file" "jar" "$plugin_id" "$snapshot"	
 done
 
-for file in $files_deb; do
-	echo "Uploading DEB: $(basename $file) ..."
-	upload_plugin "$file" "deb" "$plugin_id" "$snapshot"	
-done
-
 if [ "$plugin_id" == "gui" ]; then
+	files_exe=$(ls $REPODIR/build/upload/*.exe 2> /dev/null || true)
+	files_appzip=$(ls $REPODIR/build/upload/*.app.zip 2> /dev/null || true)
+
 	for file in $files_exe; do
 		echo "Uploading EXE: $(basename $file) ..."
 		upload_plugin "$file" "exe" "$plugin_id" "$snapshot"	

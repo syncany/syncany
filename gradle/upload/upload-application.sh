@@ -64,17 +64,17 @@ file_exe=$(ls $REPODIR/build/upload/syncany*.exe)
 file_reports=$(ls $REPODIR/build/upload/reports.zip)
 file_docs=$(ls $REPODIR/build/upload/docs.zip)
 
+echo "Uploading DEB: $(basename $file_deb) ..."
+upload_app "$file_deb" "deb" "$snapshot" # Most likely to fail first
+
+echo "Uploading EXE: $(basename $file_exe) ..."
+upload_app "$file_exe" "exe" "$snapshot"
+
 echo "Uploading TAR.GZ: $(basename $file_targz) ..."
 upload_app "$file_targz" "tar.gz" "$snapshot"
 
 echo "Uploading ZIP: $(basename $file_zip) ..."
 upload_app "$file_zip" "zip" "$snapshot"
-
-echo "Uploading DEB: $(basename $file_deb) ..."
-upload_app "$file_deb" "deb" "$snapshot" 
-
-echo "Uploading EXE: $(basename $file_exe) ..."
-upload_app "$file_exe" "exe" "$snapshot"
 
 echo "Uploading REPORTS: $(basename $file_reports) ..."
 upload_app "$file_reports" "reports" "$snapshot"
