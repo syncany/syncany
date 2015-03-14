@@ -28,6 +28,7 @@ public class PluginOperationOptions implements OperationOptions {
 	private String pluginId = null;
 	private PluginListMode listMode = PluginListMode.ALL;
 	private boolean snapshots = false;
+	private String apiEndpoint = null;
 
 	public PluginOperationAction getAction() {
 		return action;
@@ -59,5 +60,13 @@ public class PluginOperationOptions implements OperationOptions {
 
 	public void setSnapshots(boolean snapshots) {
 		this.snapshots = snapshots;
+	}
+
+	public String getApiEndpoint() {
+		return apiEndpoint;
+	}
+
+	public void setApiEndpoint(String apiEndpoint) {
+		this.apiEndpoint = apiEndpoint;
 	}
 }
