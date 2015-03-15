@@ -37,7 +37,7 @@ upload_file() {
 	
 	basename=$(basename "$filename")
 	basename_encoded=$(urlencode $basename)
-	checksum=$(sha256sum "$filename" | awk '{ print $1 }')
+	checksum=$(shasum -a 256 "$filename" | awk '{ print $1 }')
 		
 	time=$(date +%s)
 	rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
