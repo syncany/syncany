@@ -3,7 +3,7 @@ NAME
     
 SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]
-                 [<plugin-id>]
+                 [-a | --api-endpoint=<url>] [<plugin-id>]
                  
   sy plugin install [-s | --snapshot] [-m | --minimal-output] 
                     (<URL> | <file> | <plugin-id>)
@@ -63,6 +63,10 @@ ACIONS
     -s, --snapshots               
       Instead of listing only plugin release versions (default), the result 
       list will also include daily snapshots (if newer snapshots exist).
+      
+    -a, --api-endpoint=<url>
+      Selects the API endpoint to query for remote plugins. If not given,
+      the default endpoint URL will be used (https://api.syncany.org/v3).
     
   install [<args>] (<URL> | <file> | <plugin-id>) 
     Installs a plugin from an arbitrary URL, local file or from the 

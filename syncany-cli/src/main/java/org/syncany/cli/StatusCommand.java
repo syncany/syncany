@@ -58,11 +58,15 @@ public class StatusCommand extends Command {
 		parser.allowsUnrecognizedOptions();
 		
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
+		OptionSpec<Void> optionNoDeleteUpload = parser.acceptsAll(asList("D", "no-delete"));
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --force-checksum
 		operationOptions.setForceChecksum(options.has(optionForceChecksum));
+		
+		// -D, --no-delete
+		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
 		
 		return operationOptions;
 	}	

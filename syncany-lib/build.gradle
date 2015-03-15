@@ -30,3 +30,9 @@ dependencies {
 	testCompile		"org.mockito:mockito-all:1.10.19"	
 	testCompile		"junit:junit:4.9"
 }
+
+sonarRunner {
+	sonarProperties {
+			properties["sonar.tests"] += "src/test/integration/java"
+	}
+}
