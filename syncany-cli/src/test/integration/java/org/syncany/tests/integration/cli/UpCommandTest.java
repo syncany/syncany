@@ -132,6 +132,7 @@ public class UpCommandTest {
 		assertTrue(cliOut[5].contains("Sync down finished"));
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+		TestCliUtil.deleteTestLocalConfigAndData(clientB);
 	}
 
 	@Test

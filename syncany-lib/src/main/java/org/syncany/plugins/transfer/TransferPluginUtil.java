@@ -28,9 +28,7 @@ import com.google.common.base.CaseFormat;
 /**
  * Helper class for {@link TransferPlugin}s, using to retrieve
  * the required transfer plugin classes -- namely {@link TransferSettings},
- * {@link TransferManager} and {@link TransferPlugin}. <br/>
- * <br/>
- * <i>Plugins have to follow convention</i>
+ * {@link TransferManager} and {@link TransferPlugin}.
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
@@ -111,20 +109,20 @@ public abstract class TransferPluginUtil {
 			}
 		}
 	}
-	
+
 	/**
 	 * Determines the {@link OAuthGenerator} class for the given class
 	 * if an {@link OAuth} annotation is present.
 	 */
 	public static Class<? extends OAuthGenerator> getOAuthGeneratorClass(Class<? extends TransferSettings> clazz) {
 		OAuth oauthAnnotation = clazz.getAnnotation(OAuth.class);
-		
+
 		if (oauthAnnotation != null) {
 			return oauthAnnotation.value();
 		}
 		else {
 			return null;
-		}		
+		}
 	}
 
 	private static String getPluginPackageName(Class<?> clazz) {

@@ -26,11 +26,22 @@ public class StatusOperationOptions implements OperationOptions {
 	@Element(required = false)
 	private boolean forceChecksum = false;
 
+	@Element(required = false)
+	private boolean delete = true;
+
 	public boolean isForceChecksum() {
 		return forceChecksum;
 	}
 
 	public void setForceChecksum(boolean forceChecksum) {
 		this.forceChecksum = forceChecksum;
-	}				
+	}
+	
+	public boolean isDelete() {
+		return delete;
+	}
+
+	public void setDelete(boolean delete) {
+		this.delete = delete;
+	}
 }

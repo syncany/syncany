@@ -13,12 +13,13 @@
 
 rootProject.projectDir = file('../../../core')
 
-include 'syncany'
+// Including the 'syncany' project is not necessary, because it is included
+// by rootProject.projectDir. See issue #403/#405
+
 include 'syncany-lib'
 include 'syncany-cli'
 include 'syncany-util'
 
-project(':syncany').projectDir = file('../../../core')
 project(':syncany-lib').projectDir = file('../../../core/syncany-lib')
 project(':syncany-cli').projectDir = file('../../../core/syncany-cli')
 project(':syncany-util').projectDir = file('../../../core/syncany-util')
