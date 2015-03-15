@@ -22,11 +22,11 @@ allprojects {
 
 task javadocAll(type: Javadoc) {
 	group = "documentation"
-	description = "Creates the JavaDoc for all subprojects and puts it into build/javadoc"
+	description = "Creates the JavaDoc for all subprojects and puts it into build/docs/javadoc"
 	
 	source subprojects.collect { project -> project.sourceSets.main.allJava } 
 	classpath = files(subprojects.collect { project -> project.sourceSets.main.compileClasspath }) 
-	destinationDir = new File(projectDir, 'build/javadoc')
+	destinationDir = new File(projectDir, 'build/docs/javadoc')
 	
 	doFirst {
 	  subprojects.each { project -> project.sourceSets.main.output.each { dir -> dir.mkdirs() } }
@@ -53,7 +53,7 @@ task javadocAll(type: Javadoc) {
 
 task cleanJavadocAll(type: Delete) {
 	group = "documentation"
-	description = "Deletes the all subprojects from build/javadoc (completent to javadocAll)"
-	delete 'build/javadoc'	
+	description = "Deletes the all subprojects from build/docs/javadoc (completent to javadocAll)"
+	delete 'build/docs/javadoc'	
 }
 

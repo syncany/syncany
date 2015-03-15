@@ -6,10 +6,16 @@ env:
     # Terminal does not support colors (Gradle display issue)
     - TERM=dumb
     
-    # Syncany FTP credentials (SYNCANY_FTP_* environment variables)
-    - secure: "OWv7tJZiDQYxZpxw25Qs4B086veBPzjGvrVApfd8tAAOI7xG8Ifp9+TFsRO27xw99ZDFDLzjSZyffR45sgGCTuRapdSWNwIEmma4dAn299bFl1ayU5IXQYtIRsaXjyAm8QPmLbdl5YHFE77ArzFIsaysb7ZXB3cKnYfJGkiNLFs="
-    - secure: "I0+Aw5CgV5wGfsW8hO/HB9FgCUQI/UDg1ppUV7ATq6UpaxmftSpycxR5TOx3D1ISewoD079BqLxSB1i4grns5vKccGxgjeGt4vFr3X1c1NHth0jOPVMJDEVcKZ4odxM8BbSa4MOk+ZpqsgjfDqGZzxt8eRBai1chlKx8WEKao+4="
-    - secure: "JPLqhdDfP3y12dlCtyNfNg32vEQzJAKAp9CFrvz1uogZr61bp0NEi3cDS2TGSqWep7X/uPgJ84LFI22Fy5zH/1pJxY9Y9NpmVnRtFy9Cp3Qb0A9fUZ2ePO2TtyHBwLHCDO9FolrhPpqX6WuCSW26igIEzyAwaslFAJUhF09qadw="
+    # Syncany API credentials (SYNCANY_API_KEY environment variable)
+    - secure: "LtfXTZ6czCL0GhGubTtb5NI/JCUTz5zrU7BkV1QO0PE1wmYB8KxH9kC0hVLzuaLAiSvOWoJVq2qtSh7NXk+ABRw4EKcKPwp+mcjIGmxrncjgdSbWB8zPC3QWrV3rLiaN2w9vJoB5iDU3RcSogSXfV68VeDxUdWgxamPXSrKTzp4="
+
+    # Syncany SonarQube credentials (SYNCANY_SONARQUBE_* environment variables)    
+    - secure: "BDo4IO82sX64vRCxZx3voQ4HcbuTAfTiuNR3MsXlTrBhULAjLU8+EtD+RuXLqYSTEvpzIskiV2EWS4IRHsjYt5lAXl1/YrZsAU6v8UDNh9jkm6TVkxVlACTcEyBHU1SIxn14gXW405sxIAxPZ4YqVwVGNL41rauKXIj0jNp/5Q0="
+    - secure: "QOwOtpvsVqmzrtPslyc7AOE6adq8sFFmGp37KPb3dsHHkb4yESOslQLBPVE745dqcL5K/UX8JQCvv5qpXHBzXS06UMNjwxSM1zxiYEkHFF6BV56RyJBnVx09Wyco8jKUSUaZ6ErOROyhyq75cP6SBEVSUKFvtgR1xYYm4YJy+DY="
+    - secure: "LOwK8mGTVfOz9diX0eB1mhZgEV5yADnNuh2iK4clhjt6O3LxjDJ2KBaO3RTkfTqa4f9VMqVZxoL2af/JvTJnQfOOHiypZqKopS2v0cqlRh4xd8bPRygwOh4b0QkTWozt9WLJsavozxa/Fuj4XpQkL/iA346yrHjV+q2BDMzgprQ="    
+    - secure: "KPZ/bsv+Wdbz61YJeZnO1wQ0yZ4No7VUZ9U61I7P908aAcblRgkpdmPopf59rhFWoRjc74rDb9b2mkPwoNzUvLA0S7GynyTCGh339jWoqVu3YM3jM3HPN4zarcbCTu5Ge4+xDDf8I/ghzsZHSJduqUMp3N0yytoG79tV4tSfhBA="
+    - secure: "d7/TQzfKg94GlYsuRvcf1tdI6F3JKKKf/QS7spDy4OWTFeUyj+K+stPWXw1BeZLK5YnYbe7tsdQdBpxl0Az+YZgZZMJ3B9hVMr1yo5N+QXo3/wvbrm+CWEjDPNCK3iVP63w9KAxOkcZ6+7eHl0zSpEoPZEX+6wMJH57cQk33kO0="
+    - secure: "Wu1VTR/AOjAZhcKJ4xkauhZWMzbu/lIW3j/sQScv1p4vPWK9Eu930c714+M2JUymPQQuJY0q2Lb8+sBOyJumM34SCyEvEq7Pq7Bu2evtobekRo7ICiDSqy98+hCMbI0rU7qaYOckhCVC/Oqe3OjO4tB33gauVF0L4bwpKPvVeks="
 
 branches:
   only:
@@ -29,9 +35,9 @@ before_install:
   - debuild --version
   - perl -v
   
-  # LFTP (to upload the distributables and JavaDoc)
-  - sudo apt-get install -y -q lftp 
-  - lftp -v 
+  # curl (to upload the distributables and JavaDoc)
+  - sudo apt-get install -y -q curl
+  - curl --version
 
   # Graphviz (for JavaDoc images; see Gradle tasks)
   - sudo apt-get install -y -q graphviz 
@@ -60,22 +66,4 @@ install:
   - ./gradlew -v
 
 script: 
-  # Run JUnit tests and generate reports
-  - ./gradlew testGlobal coberturaReport performCoverageCheck javadocAll
-
-after_success:
-  # Line of code stats
-  - cloc --quiet --xml --out=build/reports/cloc.xml $(find -type d -name main | grep src/main)
-  
-  # Generate manpages
-  - ./gradlew manpages
-
-  # Create distributables
-  - ./gradlew distTar
-  - ./gradlew distZip
-  - ./gradlew debian
-  - ./gradlew exe
-    
-  # Upload distributables and JavaDoc
-  - ./gradle/lftp/lftpupload.sh
-
+  - ./.travis.sh

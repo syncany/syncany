@@ -13,22 +13,26 @@ Contributors / Former Team Members:
 - Anthony Miyaguchi (acmiyaguchi)
 - Armin Fisslthaler (afics)
 - Christof Schulze (christf)
+- Darryl Tam (Lyrrad)
 - Fabrice Rossi (fabrice-rossi)
 - Florian Spiegel
 - Gaétan Collaud
 - Gregor Trefs (gtrefs)
+- Jesse Donkervliet (jdonkervliet)
 - Joel Pettersson (joelpet)
 - Julien Nicoulaud
 - kt3k
 - Marius Voilă
 - MatMaul
+- Niels Spruit (nspruit)
 - Neal Gompa (Conan-Kudo)
 - Nikolai Hellwig
+- Olivier Tisun
 - Stefan Mai (iamnafets)
 - Stefan Hugtenburg (MrHug)
 - Steffen Dangmann (guitarlum)
 - spikeh
-- Olivier Tisun
+- Tim Hegeman (thegeman)
 - Paul Steinhilber
 - Vadim Panin (vadimpanin)
 - Vincent Wiencek (vwiencek)

@@ -2,28 +2,32 @@ NAME
   sy-status - list new and changed files in local Syncany folder
     
 SYNOPSIS
-  sy status [-f | --force-checksum] 
+  sy status [-f | --force-checksum] [-D | --no-delete]
   
-DESCRIPTION 
+DESCRIPTION
   This command compares the local file tree on the disk with the local
   database and detects local changes. These changes are printed to the
   console.
   
   Local changes are detected using the last modified date and the file size
   of a file. If they match the local database, the command assumes that the
-  content has not changed (no checksum comparison). If -f is enabled, the 
+  content has not changed (no checksum comparison). If -f is enabled, the
   checksum is additionally compared.
   
-  This command is used by the 'up' command to detect local changes.  
+  This command is used by the 'up' command to detect local changes.
   
 OPTIONS
   -f, --force-checksum
     Enforces this command to compare files by checksum, not by file size
     and last modified date only. This option is particularly useful if
-    files are modified in-place very often (last modified date and size 
+    files are modified in-place very often (last modified date and size
     do not change). For large local folders, this option can tremendously
-    decrease the performance of this command and increase I/O significantly.  
- 
+    decrease the performance of this command and increase I/O significantly.
+
+  -D, --no-delete
+    With this option, this command will not list locally deleted files. If
+    used with the 'up' command, these changes will not be uploaded.
+    
 COPYRIGHT
   Syncany %applicationVersionFull%, Distributed under GPLv3,
   Copyright (c) 2011-2015 Philipp C. Heckel
