@@ -40,11 +40,11 @@ upload_file() {
 	checksum=$(shasum -a 256 "$filename" | awk '{ print $1 }')
 		
 	time=$(date +%s)
-	rand=$(openssl rand -base64 100 | tr -d =/ | fold -w 16 | head -n 1)
+	rand=$(openssl rand -base64 100 | tr -d '=/+' | fold -w 16 | head -n 1)
 	method_args="$method_args&filename=$basename_encoded&checksum=$checksum&time=$time&rand=$rand"
 
 	protected="PUT:$request:$method_args"
-	signature=$(echo -n "$protected" | openssl dgst -sha256 -hmac $SYNCANY_API_KEY | awk '{ print $2 }')
+	signature=$(echo -n "$protected" | openssl dgst -sha256 -hmac "$SYNCANY_API_KEY" | awk '{ print $2 }')
 	full_url="$SYNCANY_API_ENDPOINT/$request?$method_args&signature=$signature"
 
 	rm /tmp/curlerr.tmp 2> /dev/null || true
