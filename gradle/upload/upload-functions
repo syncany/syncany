@@ -40,7 +40,7 @@ upload_file() {
 	checksum=$(shasum -a 256 "$filename" | awk '{ print $1 }')
 		
 	time=$(date +%s)
-	rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
+	rand=$(openssl rand -base64 100 | tr -d =/ | fold -w 16 | head -n 1)
 	method_args="$method_args&filename=$basename_encoded&checksum=$checksum&time=$time&rand=$rand"
 
 	protected="PUT:$request:$method_args"
@@ -68,7 +68,7 @@ upload_file() {
 			echo ""
 			echo "Details:"
 			echo ""
-			cat /tmp/curlerr.tmp | sed -r 's/signature=\w+/signature=[REMOVED]/'
+			cat /tmp/curlerr.tmp | sed -E 's/signature=\w+/signature=[REMOVED]/'
 			echo ""
 		fi
 
