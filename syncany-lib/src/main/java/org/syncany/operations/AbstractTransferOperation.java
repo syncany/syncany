@@ -27,6 +27,7 @@ import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.plugins.transfer.features.TransactionAwareTransferManager;
@@ -67,24 +68,28 @@ public abstract class AbstractTransferOperation extends Operation {
 
 		this.eventBus = LocalEventBus.getInstance();
 
-		// Do NOT reuse TransferManager for action file renewal; see #140
-
 		try {
-			this.actionHandler = new ActionFileHandler(createTransferManager(config), operationName, config.getMachineName());
-			this.transferManager = createTransactionAwareTransferManager(config);
+			// Do NOT reuse TransferManager for action file renewal; see #140
+
+			TransferManager actionFileTransferManager = TransferManagerFactory
+					.buildFromConfig(config)
+					.withFeature(Retriable.class)
+					.asDefault();
+			
+			TransactionAwareTransferManager regularFileTransferManager = TransferManagerFactory
+					.buildFromConfig(config)
+					.withFeature(TransactionAware.class)
+					.withFeature(Retriable.class)
+					.withFeature(PathAware.class)
+					.as(TransactionAware.class);
+			
+			this.actionHandler = new ActionFileHandler(actionFileTransferManager, operationName, config.getMachineName());
+			this.transferManager = regularFileTransferManager;
 		}
 		catch (StorageException e) {
 			logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
 			throw new RuntimeException("Unable to create AbstractTransferOperation: Unable to create TransferManager: " + e.getMessage());
 		}
-	}
-
-	private TransactionAwareTransferManager createTransactionAwareTransferManager(Config config) throws StorageException {
-		return TransferManagerFactory.buildFromConfig(config).withAllFeatures().as(TransactionAware.class);
-	}
-
-	private TransferManager createTransferManager(Config config) throws StorageException {
-		return TransferManagerFactory.buildFromConfig(config).withFeature(TransactionAware.class).withFeature(Retriable.class).asDefault();
 	}
 
 	protected void startOperation() throws Exception {

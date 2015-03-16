@@ -32,6 +32,7 @@ import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory;
+import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
@@ -71,9 +72,7 @@ public class LsRemoteOperation extends Operation {
 
 		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 
-		TransferManager transferManager = (loadedTransferManager != null)
-				? loadedTransferManager
-				: TransferManagerFactory.buildFromConfig(config).withAllFeatures().asDefault();
+		TransferManager transferManager = createTransferManager(loadedTransferManager);
 
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);
@@ -84,6 +83,18 @@ public class LsRemoteOperation extends Operation {
 		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));
 
 		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
+	}
+
+	private TransferManager createTransferManager(TransferManager loadedTransferManager) throws StorageException {
+		if (loadedTransferManager != null) {
+			return loadedTransferManager;
+		}
+		else {
+			return TransferManagerFactory
+					.buildFromConfig(config)
+					.withFeature(PathAware.class)
+					.asDefault();
+		}
 	}
 
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases)

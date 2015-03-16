@@ -47,7 +47,7 @@ public abstract class RemoteFile {
 	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
 
 	private String name;
-	private Set<RemoteFileAttributes> remoteFileAttributes = Sets.newHashSet();
+	private Set<RemoteFileAttributes> attributes = Sets.newHashSet();
 
 	/**
 	 * Creates a new remote file by its name. The name is used by {@link TransferManager}s
@@ -79,8 +79,7 @@ public abstract class RemoteFile {
 	 * Returns a list of attributes for a given file
 	 */
 	public final <T extends RemoteFileAttributes> T getAttributes(Class<T> remoteFileAttributesClass) throws NoSuchFieldException {
-
-		for (RemoteFileAttributes remoteFileAttribute : remoteFileAttributes) {
+		for (RemoteFileAttributes remoteFileAttribute : attributes) {
 			if (remoteFileAttribute.getClass().isAssignableFrom(remoteFileAttributesClass)) {
 				return remoteFileAttributesClass.cast(remoteFileAttribute);
 			}
@@ -90,7 +89,7 @@ public abstract class RemoteFile {
 	}
 
 	public final void addAttributes(RemoteFileAttributes newRemoteFileAttributes) {
-		remoteFileAttributes.add(newRemoteFileAttributes);
+		attributes.add(newRemoteFileAttributes);
 	}
 
 	/**

@@ -36,6 +36,7 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFileAttributes;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -44,40 +45,39 @@ import com.google.common.hash.Hashing;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public class PathAwareTransferManager implements TransferManager {
 	private static final Logger logger = Logger.getLogger(PathAwareTransferManager.class.getSimpleName());
 
 	private final TransferManager underlyingTransferManager;
-	private final Config config;
+	
 	private final int subfolderDepth;
 	private final int bytesPerFolder;
 	private final char folderSeparator;
 	private final List<Class<? extends RemoteFile>> affectedFiles;
 	private final PathAwareFeatureExtension pathAwareFeatureExtension;
 
-	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation, TransferManager originTransferManager) {
+	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation, TransferManager originalTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
-		this.config = config;
 
 		subfolderDepth = pathAwareAnnotation.subfolderDepth();
 		bytesPerFolder = pathAwareAnnotation.bytesPerFolder();
 		folderSeparator = pathAwareAnnotation.folderSeparator();
 		affectedFiles = ImmutableList.copyOf(pathAwareAnnotation.affected());
 
-		pathAwareFeatureExtension = getPathAwareFeatureExtension(originTransferManager, pathAwareAnnotation);
+		pathAwareFeatureExtension = getPathAwareFeatureExtension(originalTransferManager, pathAwareAnnotation);
 	}
 
 	@SuppressWarnings("unchecked")
-	private PathAwareFeatureExtension getPathAwareFeatureExtension(TransferManager originTransferManager, PathAware pathAwareAnnotation) {
-		Class<? extends TransferManager> originTransferManagerClass = originTransferManager.getClass();
+	private PathAwareFeatureExtension getPathAwareFeatureExtension(TransferManager originalTransferManager, PathAware pathAwareAnnotation) {
+		Class<? extends TransferManager> originalTransferManagerClass = originalTransferManager.getClass();
 		Class<PathAwareFeatureExtension> pathAwareFeatureExtensionClass = (Class<PathAwareFeatureExtension>) pathAwareAnnotation.extension();
 
 		try {
-			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(pathAwareFeatureExtensionClass, originTransferManagerClass);
+			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(pathAwareFeatureExtensionClass, originalTransferManagerClass);
 
 			if (constructor != null) {
-				return (PathAwareFeatureExtension) constructor.newInstance(originTransferManagerClass.cast(originTransferManager));
+				return (PathAwareFeatureExtension) constructor.newInstance(originalTransferManager);
+				// return (PathAwareFeatureExtension) constructor.newInstance(originTransferManagerClass.cast(originalTransferManager));   @ Christian: Why do we need this?
 			}
 
 			return pathAwareFeatureExtensionClass.newInstance();
@@ -133,11 +133,12 @@ public class PathAwareTransferManager implements TransferManager {
 
 	@Override
 	public boolean delete(final RemoteFile remoteFile) throws StorageException {
-		final RemoteFile pathAwareRemoteFile = createPathAwareRemoteFile(remoteFile);
-		boolean delete = underlyingTransferManager.delete(pathAwareRemoteFile);
-		boolean folder = removeFolder(pathAwareRemoteFile);
+		RemoteFile pathAwareRemoteFile = createPathAwareRemoteFile(remoteFile);
+		
+		boolean fileDeleted = underlyingTransferManager.delete(pathAwareRemoteFile);
+		boolean folderDeleted = removeFolder(pathAwareRemoteFile);
 
-		return delete && folder;
+		return fileDeleted && folderDeleted;
 	}
 
 	@Override
@@ -151,18 +152,23 @@ public class PathAwareTransferManager implements TransferManager {
 	}
 
 	private <T extends RemoteFile> void list(String remoteFilePath, Map<String, T> remoteFiles, Class<T> remoteFileClass) throws StorageException {
-		logger.log(Level.SEVERE, "Listing folder: " + remoteFilePath);
+		logger.log(Level.INFO, "Listing folder: " + remoteFilePath);
 
-		for (Map.Entry<String, FileType> item : pathAwareFeatureExtension.listFolder(remoteFilePath).entrySet()) {
-			String itemName = item.getKey();
+		Map<String, FileType> folderList = pathAwareFeatureExtension.listFolder(remoteFilePath);
+		
+		for (Map.Entry<String, FileType> folderListEntry : folderList.entrySet()) {
+			String fileName = folderListEntry.getKey();
+			FileType fileType = folderListEntry.getValue();
 
-			switch (item.getValue()) {
+			logger.log(Level.INFO, "- " + fileName);
+
+			switch (fileType) {
 				case FILE:
-					remoteFiles.put(itemName, RemoteFile.createRemoteFile(itemName, remoteFileClass));
+					remoteFiles.put(fileName, RemoteFile.createRemoteFile(fileName, remoteFileClass));
 					break;
 
 				case FOLDER:
-					String newRemoteFilePath = remoteFilePath + folderSeparator + itemName;
+					String newRemoteFilePath = remoteFilePath + folderSeparator + fileName;
 					list(newRemoteFilePath, remoteFiles, remoteFileClass);
 					break;
 

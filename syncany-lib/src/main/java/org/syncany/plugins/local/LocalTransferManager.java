@@ -344,10 +344,11 @@ public class LocalTransferManager extends AbstractTransferManager {
 		@Override
 		public boolean createPath(String path) throws StorageException {
 			try {
-				Files.createDirectory(Paths.get(path));
+				Files.createDirectories(Paths.get(path));
 				return true;
 			}
 			catch (Exception e) {
+				logger.log(Level.SEVERE, "Cannot create path at " + path, e);
 				return false;
 			}
 		}
@@ -359,6 +360,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 				return true;
 			}
 			catch (Exception e) {
+				logger.log(Level.SEVERE, "Cannot remove path at " + path, e);
 				return false;
 			}
 		}
@@ -370,7 +372,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
 				for (Path subPath : directoryStream) {
 					FileType fileType = (Files.isDirectory(subPath)) ? FileType.FOLDER : FileType.FILE;
-					folderList.put(subPath.toString(), fileType);
+					folderList.put(subPath.getFileName().toString(), fileType);
 				}
 				
 				return folderList;
