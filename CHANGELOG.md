@@ -11,6 +11,7 @@ Change Log
 - Bugfixes and other things:
   + Splitting test suite between unit and integration #384/#391
   + Allowing SFTP public key auth without private key password #390
+  + Setting default maxMemory to 512M to enable booting in VMs/low memory devices.
 
 ### Syncany 0.4.3-alpha (Date: 25 Feb 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
