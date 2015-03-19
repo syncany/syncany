@@ -12,18 +12,28 @@ fi
 
 source "$SCRIPTDIR/upload-functions"
 
-properties_file=$(ls build/resources/main/org/syncany/plugins/*/plugin.properties)
+plugin_properties_file=$(ls build/resources/main/org/syncany/plugins/*/plugin.properties)
+application_properties_file=$REPODIR/core/syncany-lib/build/resources/main/application.properties
 
-if [ ! -f "$properties_file" ]; then
-	echo "ERROR: Cannot find properties file with plugin details."
+if [ ! -f "$plugin_properties_file" ]; then
+	echo "ERROR: Cannot find plugin properties file with plugin details."
+	exit 2
+fi
+
+if [ ! -f "$application_properties_file" ]; then
+	echo "ERROR: Cannot find application properties file application details."
 	exit 2
 fi
 
 mkdir -p $REPODIR/build/upload/
 
-plugin_id=$(get_property $properties_file "pluginId")
-release=$(get_property $properties_file "pluginRelease")
+# List files to upload
+plugin_id=$(get_property $plugin_properties_file "pluginId")
+release=$(get_property $plugin_properties_file "pluginRelease")
 snapshot=$([ "$release" == "true" ] && echo "false" || echo "true") # Invert 'release'
+
+version=$(urlencode "$(get_property $application_properties_file 'applicationVersionFull')")
+date=$(urlencode "$(get_property $application_properties_file 'applicationDate')")
 
 echo ""
 echo "Files to upload for $plugin_id"
@@ -56,11 +66,11 @@ if [ "$plugin_id" == "gui" ]; then
 
 	for file in $files_exe; do
 		echo "Uploading EXE: $(basename $file) ..."
-		upload_plugin "$file" "exe" "$plugin_id" "$snapshot"	
+		upload_app "$file" "gui" "exe" "$version" "$date" "$snapshot"
 	done
 
 	for file in $files_appzip; do
 		echo "Uploading APP.ZIP: $(basename $file) ..."
-		upload_plugin "$file" "app.zip" "$plugin_id" "$snapshot"	
+		upload_app "$file" "gui" "app.zip" "$version" "$date" "$snapshot"
 	done
 fi
