@@ -97,20 +97,24 @@ upload_plugin() {
 }
 
 upload_app() {
-	# upload_app <filename> <type> <appVersion> <date> <snapshot>
+	# upload_app <filename> <dist> <type> <appVersion> <date> <snapshot>
 
 	file="$1"
-	type="$2"
-	appVersion="$3"
-	date="$4"
-	snapshot="$5"
+	dist="$2"
+	type="$3"
+	appVersion="$4"
+	date="$5"
+	snapshot="$6"
 
-	if [ -z "$file" -o -z "$type" -o -z "$appVersion" -o -z "$date" -o -z "$snapshot" ]; then
+	if [ -z "$file" -o -z "$dist" -o -z "$type" -o -z "$appVersion" -o -z "$date" -o -z "$snapshot" ]; then
 		echo "ERROR: Invalid arguments for upload_app. None of the arguments can be zero."
 		exit 2
 	fi
 
-	upload_file "$file" "app" "type=$type&appVersion=$appVersion&date=$date&snapshot=$snapshot"
+	os=$(get_os_from_filename "$(basename "$file")")
+	arch=$(get_arch_from_filename "$(basename "$file")")
+
+	upload_file "$file" "app" "dist=$dist&type=$type&appVersion=$appVersion&date=$date&snapshot=$snapshot&os=$os&arch=$arch"
 }
 
 get_property() {
@@ -127,11 +131,11 @@ get_os_from_filename() {
 
 	filename="$1"
 
-	if [ -n "$(echo $filename | grep linux)" ]; then
+	if [ -n "$(echo "$filename" | grep linux)" -o -n "$(echo "$filename" | grep -E "\.deb$")" ]; then
 		echo "linux"
-	elif [ -n "$(echo $filename | grep windows)" ]; then
+	elif [ -n "$(echo "$filename" | grep windows)" -o -n "$(echo "$filename" | grep -E "\.exe$")" ]; then
 		echo "windows"
-	elif [ -n "$(echo $filename | grep macosx)" ]; then
+	elif [ -n "$(echo "$filename" | grep macosx)" -o -n "$(echo "$filename" | grep -E "\.app\.zip$")" ]; then
 		echo "macosx"
 	else
 		echo "all"
@@ -151,4 +155,3 @@ get_arch_from_filename() {
 		echo "all"
 	fi
 }
-
