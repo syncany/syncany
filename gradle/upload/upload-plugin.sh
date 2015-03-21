@@ -13,15 +13,9 @@ fi
 source "$SCRIPTDIR/upload-functions"
 
 plugin_properties_file=$(ls build/resources/main/org/syncany/plugins/*/plugin.properties)
-application_properties_file=$REPODIR/core/syncany-lib/build/resources/main/application.properties
 
 if [ ! -f "$plugin_properties_file" ]; then
 	echo "ERROR: Cannot find plugin properties file with plugin details."
-	exit 2
-fi
-
-if [ ! -f "$application_properties_file" ]; then
-	echo "ERROR: Cannot find application properties file application details."
 	exit 2
 fi
 
@@ -31,9 +25,6 @@ mkdir -p $REPODIR/build/upload/
 plugin_id=$(get_property $plugin_properties_file "pluginId")
 release=$(get_property $plugin_properties_file "pluginRelease")
 snapshot=$([ "$release" == "true" ] && echo "false" || echo "true") # Invert 'release'
-
-version=$(urlencode "$(get_property $application_properties_file 'applicationVersionFull')")
-date=$(urlencode "$(get_property $application_properties_file 'applicationDate')")
 
 echo ""
 echo "Files to upload for $plugin_id"
@@ -61,6 +52,16 @@ for file in $files_jar; do
 done
 
 if [ "$plugin_id" == "gui" ]; then
+	application_properties_file=$REPODIR/core/syncany-lib/build/resources/main/application.properties
+
+	if [ ! -f "$application_properties_file" ]; then
+		echo "ERROR: Cannot find application properties file application details."
+		exit 2
+	fi
+
+	version=$(urlencode "$(get_property $application_properties_file 'applicationVersionFull')")
+	date=$(urlencode "$(get_property $application_properties_file 'applicationDate')")
+
 	files_exe=$(ls $REPODIR/build/upload/*.exe 2> /dev/null || true)
 	files_appzip=$(ls $REPODIR/build/upload/*.app.zip 2> /dev/null || true)
 
