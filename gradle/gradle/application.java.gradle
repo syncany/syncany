@@ -19,9 +19,22 @@ subprojects {
 		}
 		
 		test {
-			java      { srcDir 'src/test/java'}
+			java      { srcDir 'src/test/unit/java'}
 			resources { srcDir 'src/test/resources'}
 		}
+
+    integration {
+			java      { srcDir 'src/test/integration/java' }
+			resources { srcDir 'src/test/resources'}
+			compileClasspath += sourceSets.test.compileClasspath
+			runtimeClasspath += sourceSets.test.runtimeClasspath
+			output.classesDir = sourceSets.test.output.classesDir
+    }
+
+	}
+
+	dependencies {
+		integrationCompile sourceSets.test.output
 	}
 	
 	processResources {	

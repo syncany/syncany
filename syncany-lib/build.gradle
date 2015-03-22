@@ -27,5 +27,12 @@ dependencies {
 	compile			"com.google.code.gson:gson:2.3"
 
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
+	testCompile		"org.mockito:mockito-all:1.10.19"	
 	testCompile		"junit:junit:4.9"
+}
+
+sonarRunner {
+	sonarProperties {
+			properties["sonar.tests"] += "src/test/integration/java"
+	}
 }

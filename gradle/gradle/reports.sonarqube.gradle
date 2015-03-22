@@ -1,0 +1,28 @@
+// SonarQube runner
+
+// This requires the env variables given below. To update, run:
+//   travis encrypt SYNCANY_SONARQUBE_JDBC_URL_PREFIX="jdbc:mysql://somehost:9876/somedatabase"
+//   travis encrypt SYNCANY_SONARQUBE_API_ENDPOINT_URL="http://somehost:1234/sq/"
+//   ...
+
+apply plugin: 'sonar-runner'
+
+String sonarApiEndpointUrl = System.getenv("SYNCANY_SONARQUBE_API_ENDPOINT_URL")
+String sonarApiUser = System.getenv("SYNCANY_SONARQUBE_API_USER")
+String sonarApiPass = System.getenv("SYNCANY_SONARQUBE_API_PASS")
+String sonarJdbcUrlPrefix = System.getenv("SYNCANY_SONARQUBE_JDBC_URL_PREFIX")
+String sonarJdbcUser = System.getenv("SYNCANY_SONARQUBE_JDBC_USER")
+String sonarJdbcPass = System.getenv("SYNCANY_SONARQUBE_JDBC_PASS")
+
+sonarRunner {
+	toolVersion = '2.4'
+	sonarProperties {
+		property "sonar.host.url", sonarApiEndpointUrl
+		property "sonar.login", sonarApiUser
+		property "sonar.password", sonarApiPass
+		property "sonar.jdbc.url", sonarJdbcUrlPrefix + "?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance"
+		property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
+		property "sonar.jdbc.username", sonarJdbcUser
+		property "sonar.jdbc.password", sonarJdbcPass
+	}
+}

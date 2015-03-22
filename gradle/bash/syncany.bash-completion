@@ -67,6 +67,7 @@ _sy() {
 		restore\
 		status\
 		up\
+		update\
 		watch"
 
 	GLOBAL_OPTIONS="\
@@ -174,7 +175,8 @@ _sy() {
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
 		-L --local-only\
-		-s --snapshots"
+		-s --snapshots\
+		-a --api-endpoint"
 
 	PLUGIN_INSTALL_OPTIONS="\
 		-s --snapshot\
@@ -230,11 +232,19 @@ _sy() {
 		-t --target"
 
 	STATUS_OPTIONS="\
-		-f --force-checksum"
+		-f --force-checksum\
+		-D --no-delete"
 
 	UP_OPTIONS="\
 		-R --no-resume\
 		$STATUS_OPTIONS"
+		
+	UPDATE_COMMANDS="\
+		check"
+				
+	UPDATE_CHECK_OPTIONS="\
+		-a --api-endpoint\
+		-s --snapshots"		
 
 	WATCH_OPTIONS="\
 		-i --interval\
@@ -417,6 +427,18 @@ _sy() {
 	up)
 		complete_options="$UP_OPTIONS"
 		;;
+		
+	update)
+		case "${lastword}" in
+		check)
+			complete_options="$UPDATE_CHECK_OPTIONS"
+			;;
+		
+		*)
+			complete_words="$UPDATE_COMMANDS"
+			;;
+		esac
+		;;		
 
 	watch)
 		case "${prev}" in

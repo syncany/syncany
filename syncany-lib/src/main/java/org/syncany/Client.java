@@ -65,6 +65,9 @@ import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
+import org.syncany.operations.update.UpdateOperation;
+import org.syncany.operations.update.UpdateOperationOptions;
+import org.syncany.operations.update.UpdateOperationResult;
 import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 import org.syncany.plugins.UserInteractionListener;
@@ -185,6 +188,10 @@ public class Client {
 
 	public PluginOperationResult plugin(PluginOperationOptions options) throws Exception {
 		return new PluginOperation(config, options).execute();
+	}
+	
+	public UpdateOperationResult update(UpdateOperationOptions options) throws Exception {
+		return new UpdateOperation(config, options).execute();
 	}
 	
 	public static Properties getApplicationProperties() {

@@ -140,7 +140,7 @@ public class CommandLineClient extends Client {
 			OptionSpec<String> optionLog = parser.acceptsAll(asList("log")).withRequiredArg();
 			OptionSpec<Void> optionLogPrint = parser.acceptsAll(asList("print"));
 			OptionSpec<String> optionLogLevel = parser.acceptsAll(asList("loglevel")).withOptionalArg();
-			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("D", "debug"));
+			OptionSpec<Void> optionDebug = parser.acceptsAll(asList("d", "debug"));
 			OptionSpec<Void> optionShortVersion = parser.acceptsAll(asList("v"));
 			OptionSpec<Void> optionFullVersion = parser.acceptsAll(asList("vv"));
 
