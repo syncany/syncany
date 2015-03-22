@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.4-alpha (Date: Tbd.)
+### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Unit tests for daemon #384/#397
