@@ -48,7 +48,7 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
-import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
+import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
@@ -558,7 +558,11 @@ public class PluginOperation extends Operation {
 					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
 					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
 
-					extendedPluginInfo.setOutdated(localVersion.lessThan(remoteVersion) && applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion));
+					boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
+					boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
+					boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
+					
+					extendedPluginInfo.setOutdated(pluginIsOutdated);
 				}
 
 				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
@@ -618,7 +622,7 @@ public class PluginOperation extends Operation {
 		URL pluginListUrl = new URL(String.format(API_PLUGIN_LIST_REQUEST_FORMAT, apiEndpointUrl, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
 		
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
-		eventBus.post(new PluginConnectToHostExternalEvent(pluginListUrl.getHost()));
+		eventBus.post(new ConnectToHostExternalEvent(pluginListUrl.getHost()));
 
 		URLConnection urlConnection = pluginListUrl.openConnection();
 		urlConnection.setConnectTimeout(2000);

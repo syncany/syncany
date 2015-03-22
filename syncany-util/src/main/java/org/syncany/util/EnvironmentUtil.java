@@ -18,6 +18,8 @@
 package org.syncany.util;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class EnvironmentUtil {
 	public enum OperatingSystem {
@@ -72,6 +74,10 @@ public class EnvironmentUtil {
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
+	}
+	
+	public static boolean isDebianBased() {
+		return isUnixLikeOperatingSystem() && Files.exists(Paths.get("/usr/bin/dpkg"));
 	}
 
 	/**

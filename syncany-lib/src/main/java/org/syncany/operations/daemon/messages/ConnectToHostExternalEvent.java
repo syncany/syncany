@@ -19,14 +19,14 @@ package org.syncany.operations.daemon.messages;
 
 import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-public class PluginConnectToHostExternalEvent extends ExternalEvent {
+public class ConnectToHostExternalEvent extends ExternalEvent {
 	private String host;
 
-	public PluginConnectToHostExternalEvent() {
+	public ConnectToHostExternalEvent() {
 		// Nothing
 	}
 	
-	public PluginConnectToHostExternalEvent(String host) {
+	public ConnectToHostExternalEvent(String host) {
 		this.host = host;
 	}		
 
