@@ -6,8 +6,9 @@ Change Log
 - Features and significant changes:
   + Unit tests for daemon #384/#397
   + Completely re-written Syncany API and website, and open-sourced it
-    in the [syncany-website](https://github.com/syncany/syncany-website) repository
+    in the [syncany-website](https://github.com/syncany/syncany-website) repository #167
   + Added 3rd-party plugins, and a 3rd party flag in `sy plugin list` responses
+  + Added `sy update check` to manually check for application updates #412
 - Bugfixes and other things:
   + Splitting test suite between unit and integration #384/#391
   + Allowing SFTP public key auth without private key password #390
