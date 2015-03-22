@@ -100,8 +100,10 @@ public class UpdateOperation extends Operation {
 	}
 
 	private String getAppInfoResponseStr() throws Exception {
-		String typeStr = determineType();
-		String distStr = determineDist(typeStr);
+		boolean hasGuiPlugin = Plugins.get("gui") != null;
+		
+		String typeStr = determineType(hasGuiPlugin);
+		String distStr = determineDist(hasGuiPlugin, typeStr);
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String osStr = EnvironmentUtil.getOperatingSystemDescription();
 		String archStr = EnvironmentUtil.getArchDescription();		
@@ -131,26 +133,22 @@ public class UpdateOperation extends Operation {
 		return responseStr;
 	}
 
-	private String determineType() {
+	private String determineType(boolean hasGuiPlugin) {
 		if (EnvironmentUtil.isWindows()) {
 			return "exe";		
 		}
 		else if (EnvironmentUtil.isMacOSX()) {
-			return "app.zip";			
+			return (hasGuiPlugin) ? "app.zip" : "zip";			
 		}
 		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
-			if (EnvironmentUtil.isDebianBased()) {
-				return "deb";
-			}
+			return (EnvironmentUtil.isDebianBased()) ? "deb" : "tar.gz";
 		}
 		
 		return "zip";
 	}
 
-	private String determineDist(String type) {
-		boolean hasGuiPlugin = Plugins.get("gui") != null;
-		boolean packageWithGuiExists = type.equals("exe") || type.equals("app.zip");
-		
+	private String determineDist(boolean hasGuiPlugin, String type) {
+		boolean packageWithGuiExists = type.equals("exe") || type.equals("app.zip");		
 		return (hasGuiPlugin && packageWithGuiExists) ? "gui" : "cli";
 	}
 }

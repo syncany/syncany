@@ -122,11 +122,11 @@ public class UpdateCommand extends Command {
 			String remoteAppVersion = remoteAppInfo.getAppVersion();
 			
 			if (operationResult.isNewVersionAvailable()) {
-				out.println("A new version is available. Local version is " + localAppVersion + ", remote version is " + remoteAppVersion + ".");
+				out.println("A new version is available. Local version is " + localAppVersion + ", remote version is " + remoteAppVersion);
 				out.println("Download at " + remoteAppInfo.getDownloadUrl());
 			}
 			else {
-				out.println("Up to date. At version " + localAppVersion + ".");	
+				out.println("Up to date, at version " + localAppVersion);	
 			}			
 		}
 		else {
