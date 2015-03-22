@@ -9,6 +9,7 @@ Change Log
     in the [syncany-website](https://github.com/syncany/syncany-website) repository #167
   + Added 3rd-party plugins, and a 3rd party flag in `sy plugin list` responses
   + Added `sy update check` to manually check for application updates #412
+  + Added `--no-delete` option for `up` #263/#399
 - Bugfixes and other things:
   + Splitting test suite between unit and integration #384/#391
   + Allowing SFTP public key auth without private key password #390
