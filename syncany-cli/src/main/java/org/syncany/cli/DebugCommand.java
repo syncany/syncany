@@ -28,7 +28,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import org.apache.commons.io.IOUtils;
-import org.syncany.config.Config;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
 
@@ -88,7 +87,6 @@ public class DebugCommand extends Command {
 			throw new Exception("Given file does not exist: "+decryptFile);			
 		}
 		
-		Config config = client.getConfig();
 		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
 		
 		IOUtils.copy(fileInputStream, System.out);		
@@ -96,7 +94,7 @@ public class DebugCommand extends Command {
 	}
 	
 	private boolean isInitializedScope() {
-		return client != null && client.getConfig() != null;
+		return config != null;
 	}
 
 	@Override

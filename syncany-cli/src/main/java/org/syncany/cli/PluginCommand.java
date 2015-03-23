@@ -28,14 +28,17 @@ import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.ExtendedPluginInfo;
 import org.syncany.operations.plugin.PluginInfo;
+import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationAction;
 import org.syncany.operations.plugin.PluginOperationOptions;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.util.StringUtil;
+
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -56,7 +59,7 @@ public class PluginCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		PluginOperationOptions operationOptions = parseOptions(operationArgs);
-		PluginOperationResult operationResult = client.plugin(operationOptions);
+		PluginOperationResult operationResult = new PluginOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

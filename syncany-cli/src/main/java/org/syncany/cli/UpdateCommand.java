@@ -29,6 +29,7 @@ import org.syncany.Client;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.update.AppInfo;
+import org.syncany.operations.update.UpdateOperation;
 import org.syncany.operations.update.UpdateOperationAction;
 import org.syncany.operations.update.UpdateOperationOptions;
 import org.syncany.operations.update.UpdateOperationResult;
@@ -50,7 +51,7 @@ public class UpdateCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpdateOperationOptions operationOptions = parseOptions(operationArgs);
-		UpdateOperationResult operationResult = client.update(operationOptions);
+		UpdateOperationResult operationResult = new UpdateOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

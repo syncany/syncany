@@ -381,7 +381,7 @@ public class CommandLineClient extends Client {
 	}
 
 	private int runLocally(Command command, String[] commandArgs) {
-		command.setClient(this);
+		command.setConfig(config);
 		command.setLocalDir(localDir);
 
 		// Run!

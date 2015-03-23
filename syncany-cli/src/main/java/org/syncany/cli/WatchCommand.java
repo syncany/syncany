@@ -27,6 +27,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 
 public class WatchCommand extends Command {
@@ -47,7 +48,7 @@ public class WatchCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		WatchOperationOptions operationOptions = parseOptions(operationArgs);
-		client.watch(operationOptions);
+		new WatchOperation(config, operationOptions).execute();
 
 		return 0;
 	}
