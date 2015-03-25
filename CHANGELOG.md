@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### Syncany 0.4.5-alpha (Date: tba)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Bugfixes and other things:
+  + Make sure that plugin update on Windows is able to install snapshots #418
+
+
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
