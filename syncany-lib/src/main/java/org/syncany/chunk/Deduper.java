@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Queue;
 
 import org.syncany.chunk.Chunker.ChunkEnumeration;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
@@ -48,13 +47,13 @@ public class Deduper {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
-	private long transactionSizeLimit;
+	private long maxTotalSize;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long transactionSizeLimit) {
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long maxTotalSize) {
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
-		this.transactionSizeLimit = transactionSizeLimit;
+		this.maxTotalSize = maxTotalSize;
 	}
 	
 	/**
@@ -145,13 +144,13 @@ public class Deduper {
 
 			// Check if we have reached the transaction limit
 			if (multiChunk != null) {
-				if (totalMultiChunkSize + multiChunk.getSize() >= transactionSizeLimit) {
+				if (totalMultiChunkSize + multiChunk.getSize() >= maxTotalSize) {
 					multiChunk.close();
 					listener.onMultiChunkClose(multiChunk);
 					return i + 1;
 				}
 			}
-			else if (totalMultiChunkSize >= transactionSizeLimit) {
+			else if (totalMultiChunkSize >= maxTotalSize) {
 				return i + 1;
 			}
 		}
