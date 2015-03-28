@@ -9,6 +9,7 @@ import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.util.Consumer;
+import org.syncany.util.QueueAdderConsumer;
 
 /**
  * @author Tim Hegeman
@@ -22,7 +23,7 @@ public class AsyncIndexer implements Runnable {
 
 	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
 		this.files = files;
-		this.databaseVersionListener = new DatabaseVersionConsumer(queue);
+		this.databaseVersionListener = new QueueAdderConsumer<DatabaseVersion>(queue);
 		this.indexer = new Indexer(config, deduper);
 		this.done = false;
 	}
@@ -37,7 +38,7 @@ public class AsyncIndexer implements Runnable {
 			e.printStackTrace();
 		}
 		// Signal end-of-stream.
-		databaseVersionListener.process(null);
+		databaseVersionListener.process(new DatabaseVersion());
 		this.done = true;
 	}
 

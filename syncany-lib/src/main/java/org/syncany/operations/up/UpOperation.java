@@ -257,7 +257,8 @@ public class UpOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
-		while (databaseVersion != null) {
+		while (!databaseVersion.getFileHistories().isEmpty()) {
+			logger.log(Level.INFO, "Processing databaseversion: " + databaseVersion.getVectorClock());
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
@@ -299,7 +300,15 @@ public class UpOperation extends AbstractTransferOperation {
 						transactionRemoteFileToResume = null;
 					}
 
+					logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
+					long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
+
+					logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+					localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+					logger.log(Level.INFO, "Committing lococal database.");
 					localDatabase.commit();
+
 					committingFailed = false;
 					numberOfCompletedTransactions++;
 				}
@@ -317,12 +326,7 @@ public class UpOperation extends AbstractTransferOperation {
 						remainingDatabaseVersions.add(databaseVersion);
 					}
 					else {
-						logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
-						long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
-
-						logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
-						localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
-
+						logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion.getVectorClock());
 						addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
 
 						result.incrementTransactionsCompleted();
@@ -334,6 +338,7 @@ public class UpOperation extends AbstractTransferOperation {
 				remainingDatabaseVersions.add(databaseVersion);
 			}
 			
+			logger.log(Level.FINE, "Waiting for new database version.");
 			databaseVersion = databaseVersionQueue.take();
 		}
 
