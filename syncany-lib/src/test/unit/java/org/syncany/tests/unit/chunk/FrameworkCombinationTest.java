@@ -186,8 +186,8 @@ public class FrameworkCombinationTest {
 
 		final ChunkIndex chunkIndex = new ChunkIndex();
 
-		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer);
-		deduper.deduplicate(inputFiles, new DeduperListener() {
+		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer, Long.MAX_VALUE);
+		deduper.deduplicate(inputFiles, 0, new DeduperListener() {
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
 				logger.log(Level.INFO, "    - Adding chunk " + StringUtil.toHex(chunk.getChecksum()) + " to multichunk " + multiChunk.getId()
