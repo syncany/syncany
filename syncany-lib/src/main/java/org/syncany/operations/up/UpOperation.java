@@ -155,6 +155,8 @@ public class UpOperation extends AbstractTransferOperation {
 					databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);
 					resuming = true;
 				}
+				// Add stopping marker
+				databaseVersionQueue.add(new DatabaseVersion());
 
 				try {
 					transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();
@@ -258,7 +260,6 @@ public class UpOperation extends AbstractTransferOperation {
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
 		while (!databaseVersion.getFileHistories().isEmpty()) {
-			logger.log(Level.INFO, "Processing databaseversion: " + databaseVersion.getVectorClock());
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
@@ -277,6 +278,8 @@ public class UpOperation extends AbstractTransferOperation {
 			else {
 				remoteTransaction = remoteTransactionsToResume.next();
 			}
+
+			logger.log(Level.INFO, "Uploading database: " + databaseVersion);
 
 			// Create delta database and commit transaction
 			// The information about file changes is written to disk to locally "commit" the transaction. This
@@ -300,13 +303,9 @@ public class UpOperation extends AbstractTransferOperation {
 						transactionRemoteFileToResume = null;
 					}
 
-					logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
-					long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
 
-					logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
-					localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
 
-					logger.log(Level.INFO, "Committing lococal database.");
+					logger.log(Level.INFO, "Committing local database.");
 					localDatabase.commit();
 
 					committingFailed = false;
@@ -326,7 +325,13 @@ public class UpOperation extends AbstractTransferOperation {
 						remainingDatabaseVersions.add(databaseVersion);
 					}
 					else {
-						logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion.getVectorClock());
+						logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
+						long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
+
+						logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+						localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+						logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion);
 						addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
 
 						result.incrementTransactionsCompleted();
@@ -340,6 +345,7 @@ public class UpOperation extends AbstractTransferOperation {
 			
 			logger.log(Level.FINE, "Waiting for new database version.");
 			databaseVersion = databaseVersionQueue.take();
+			logger.log(Level.FINE, "Took new database version: " + databaseVersion);
 		}
 
 		if (detectedFailure) {

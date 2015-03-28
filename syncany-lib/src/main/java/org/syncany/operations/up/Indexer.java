@@ -146,6 +146,7 @@ public class Indexer {
 			// Find and remove deleted files
 			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 
+			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
 			databaseVersionListener.process(newDatabaseVersion);
 		}
 	}

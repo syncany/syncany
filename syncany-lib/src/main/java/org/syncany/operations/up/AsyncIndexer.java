@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
@@ -15,6 +17,7 @@ import org.syncany.util.QueueAdderConsumer;
  * @author Tim Hegeman
  */
 public class AsyncIndexer implements Runnable {
+	private static final Logger logger = Logger.getLogger(AsyncIndexer.class.getSimpleName());
 
 	private final Indexer indexer;
 	private final List<File> files;
@@ -31,6 +34,7 @@ public class AsyncIndexer implements Runnable {
 	@Override
 	public void run() {
 		try {
+			logger.log(Level.INFO, "Starting Indexing.");
 			indexer.index(files, databaseVersionListener);
 		}
 		catch (IOException e) {
@@ -38,6 +42,7 @@ public class AsyncIndexer implements Runnable {
 			e.printStackTrace();
 		}
 		// Signal end-of-stream.
+		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
 		databaseVersionListener.process(new DatabaseVersion());
 		this.done = true;
 	}
