@@ -3,6 +3,8 @@ Change Log
 
 ### Syncany 0.4.5-alpha (Date: tba)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
 - Bugfixes and other things:
   + Make sure that plugin update on Windows is able to install snapshots #418
   + Working single repos for dropbox plugin #417
