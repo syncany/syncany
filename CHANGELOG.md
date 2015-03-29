@@ -6,6 +6,7 @@ Change Log
 - Bugfixes and other things:
   + Make sure that plugin update on Windows is able to install snapshots #418
   + Working single repos for dropbox plugin #417
+  + Fix Unity detection for tray icon selection #413
 
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
