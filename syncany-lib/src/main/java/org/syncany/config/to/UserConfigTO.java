@@ -62,8 +62,12 @@ public class UserConfigTO {
 		return systemProperties;
 	}
 
-	public boolean preventStandbyEnabled() {
+	public boolean isPreventStandby() {
 		return preventStandby;
+	}
+	
+	public void setPreventStandby(boolean preventStandby) {
+		this.preventStandby = preventStandby;
 	}
 
 	public SaltedSecretKey getConfigEncryptionKey() {

@@ -180,7 +180,7 @@ public class UserConfig {
 			}
 
 			// Other options
-			preventStandby = userConfigTO.preventStandbyEnabled();
+			preventStandby = userConfigTO.isPreventStandby();
 			configEncryptionKey = userConfigTO.getConfigEncryptionKey();
 		}
 		catch (ConfigException e) {
