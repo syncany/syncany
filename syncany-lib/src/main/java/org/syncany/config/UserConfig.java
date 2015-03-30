@@ -112,8 +112,12 @@ public class UserConfig {
 		return userConfigFile;
 	}
 
-	public static boolean preventStandbyEnabled() {
+	public static boolean isPreventStandby() {
 		return preventStandby;
+	}
+	
+	public static void setPreventStandby(boolean newPreventStandby) {
+		preventStandby = newPreventStandby;
 	}
 
 	public static SaltedSecretKey getConfigEncryptionKey() {
