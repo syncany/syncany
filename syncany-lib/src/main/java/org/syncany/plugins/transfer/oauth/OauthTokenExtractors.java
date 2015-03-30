@@ -11,41 +11,52 @@ import com.google.common.base.Charsets;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class OAuthTokenExtractors {
-
-	public static NamedQueryTokenExtractor newNamedQueryTokenExtractor() {
-		return new NamedQueryTokenExtractor();
-	}
-
-	public static NamedQueryTokenExtractor newNamedQueryTokenExtractor(String tokenId) {
-		return new NamedQueryTokenExtractor(tokenId);
-	}
+public abstract class OAuthTokenExtractors {
 
 	public static class NamedQueryTokenExtractor implements OAuthTokenExtractor {
 
-		public static final String DEFAULT_TOKEN_ID = "token";
+		public static final String DEFAULT_TOKEN_ID = "access_token";
+		public static final String DEFAULT_CSRF_ID = "state";
 
 		private final String tokenId;
+		private final String csrfId;
 
 		public NamedQueryTokenExtractor() {
 			this.tokenId = DEFAULT_TOKEN_ID;
+			this.csrfId = DEFAULT_CSRF_ID;
 		}
 
 		public NamedQueryTokenExtractor(String tokenId) {
 			this.tokenId = tokenId;
+			this.csrfId = DEFAULT_CSRF_ID;
+		}
+
+		public NamedQueryTokenExtractor(String tokenId, String csrfId) {
+			this.tokenId = tokenId;
+			this.csrfId = csrfId;
 		}
 
 		@Override
-		public String parse(String uriWithToken) throws NoSuchFieldException {
+		public OAuthTokenFinish parse(String uriWithToken) throws NoSuchFieldException {
 			List<NameValuePair> params = URLEncodedUtils.parse(URI.create(uriWithToken), Charsets.UTF_8.name());
+
+			String token = null;
+			String state = null;
 
 			for (NameValuePair param : params) {
 				if (tokenId.equalsIgnoreCase(param.getName())) {
-					return param.getValue();
+					token = param.getValue();
+				}
+				else if (csrfId.equalsIgnoreCase(param.getName())) {
+					state = param.getValue();
 				}
 			}
 
-			throw new NoSuchFieldException(String.format("URI (%s) does not contain token field (%s)", uriWithToken, tokenId));
+			if (token == null || state == null) {
+				throw new NoSuchFieldException(String.format("URI (%s) does not contain token field (%s)", uriWithToken, tokenId));
+			}
+
+			return new OAuthTokenFinish(token, state);
 		}
 	}
 

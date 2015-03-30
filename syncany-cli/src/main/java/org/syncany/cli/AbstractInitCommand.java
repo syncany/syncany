@@ -52,6 +52,7 @@ import org.syncany.plugins.transfer.TransferPluginOptions;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.oauth.OAuthGenerator;
+import org.syncany.plugins.transfer.oauth.OAuthTokenFinish;
 import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
@@ -166,13 +167,17 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				askPluginSettings(settings, option, knownPluginSettings, "");
 			}
 		}
-		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | IOException | InterruptedException | ExecutionException e) {
-			logger.log(Level.SEVERE, "Unable to execute option generator", e);
-			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
+		catch (NoSuchFieldException e) {
+			logger.log(Level.SEVERE, "No token could be found, maybe user denied access", e);
+			throw new StorageException("No token found. Did you accept the authorization?", e);
 		}
 		catch (TimeoutException e) {
 			logger.log(Level.SEVERE, "No token was received in the given time interval", e);
 			throw new StorageException("No token was received in the given time interval", e);
+		}
+		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | IOException | InterruptedException | ExecutionException e) {
+			logger.log(Level.SEVERE, "Unable to execute option generator", e);
+			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
 
 		if (!settings.isValid()) {
@@ -189,7 +194,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	private void printOAuthInformation(TransferSettings settings) throws StorageException, NoSuchMethodException, SecurityException,
-					InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ExecutionException, InterruptedException, TimeoutException {
+					InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ExecutionException, InterruptedException, TimeoutException, NoSuchFieldException {
 		Class<? extends OAuthGenerator> oAuthGeneratorClass = TransferPluginUtil.getOAuthGeneratorClass(settings.getClass());
 
 		if (oAuthGeneratorClass != null) {
@@ -215,14 +220,15 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
 
 			URI oAuthURL = oAuthGenerator.generateAuthUrl(tokenListener.start());
-			Future<String> token = tokenListener.getToken();
+			Future<OAuthTokenFinish> futureTokenResponse = tokenListener.getToken();
 
 			out.println();
 			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
 			out.printf("Please navigate to the URL below and accept the given permissions:\n\n  %s\n\n", oAuthURL.toString());
 			out.println("Waiting for authorization...");
 
-			oAuthGenerator.checkToken(token.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS));
+			OAuthTokenFinish tokenResponse = futureTokenResponse.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS);
+			oAuthGenerator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
 		}
 	}
 

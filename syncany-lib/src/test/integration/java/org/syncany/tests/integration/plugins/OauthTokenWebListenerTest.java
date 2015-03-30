@@ -16,6 +16,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.oauth.OAuthGenerator;
 import org.syncany.plugins.transfer.oauth.OAuthTokenExtractor;
 import org.syncany.plugins.transfer.oauth.OAuthTokenExtractors;
+import org.syncany.plugins.transfer.oauth.OAuthTokenFinish;
 import org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors;
 import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
@@ -50,11 +51,11 @@ public class OAuthTokenWebListenerTest {
 	public void testTokenAsQuery() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
-						.setTokenExtractor(OAuthTokenExtractors.newNamedQueryTokenExtractor(TOKEN_ID))
+						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID))
 						.build();
 
 		URI baseUri = twl.start();
-		Future<String> submittedToken = twl.getToken();
+		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
 		final URI requestUri = URI.create(baseUri.toString() + "?" + TOKEN_ID + "=" + REFERENCE_TOKEN);
 
@@ -76,19 +77,19 @@ public class OAuthTokenWebListenerTest {
 			}
 		}).start();
 
-		assertEquals(REFERENCE_TOKEN, submittedToken.get());
+		assertEquals(REFERENCE_TOKEN, submittedToken.get().getToken());
 	}
 
 	@Test
 	public void testTokenAsHash() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
-						.setTokenInterceptor(OAuthTokenInterceptors.newHashTokenInterceptor())
-						.setTokenExtractor(OAuthTokenExtractors.newNamedQueryTokenExtractor(TOKEN_ID))
+						.setTokenInterceptor(new OAuthTokenInterceptors.HashTokenInterceptor())
+						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID))
 						.build();
 
 		URI baseUri = twl.start();
-		Future<String> submittedToken = twl.getToken();
+		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
 		final URI requestUri = URI.create(baseUri.toString() + "?a=b#" + TOKEN_ID + "=" + REFERENCE_TOKEN);
 
@@ -111,7 +112,7 @@ public class OAuthTokenWebListenerTest {
 			}
 		}).start();
 
-		assertEquals(REFERENCE_TOKEN, submittedToken.get());
+		assertEquals(REFERENCE_TOKEN, submittedToken.get().getToken());
 	}
 
 	@Test
@@ -131,13 +132,13 @@ public class OAuthTokenWebListenerTest {
 		}
 
 		@Override
-		public void checkToken(String token) throws StorageException {
+		public void checkToken(String token, String csrfState) throws StorageException {
 			// empty
 		}
 
 		@Override
 		public OAuthTokenExtractor getExtractor() {
-			return OAuthTokenExtractors.newNamedQueryTokenExtractor("custom");
+			return new OAuthTokenExtractors.NamedQueryTokenExtractor("custom");
 		}
 	}
 

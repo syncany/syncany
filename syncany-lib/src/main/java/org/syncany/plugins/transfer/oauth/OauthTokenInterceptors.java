@@ -11,20 +11,12 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
-public class OAuthTokenInterceptors {
+public abstract class OAuthTokenInterceptors {
 
 	private static final Logger logger = Logger.getLogger(OAuthTokenInterceptors.class.getName());
 	public static final String PATH_PREFIX = "/";
 
-	public static HashTokenInterceptor newHashTokenInterceptor() {
-		return new HashTokenInterceptor();
-	}
-
-	public static RedirectTokenInterceptor newRedirectTokenInterceptor() {
-		return new RedirectTokenInterceptor();
-	}
-
-	static class HashTokenInterceptor implements OAuthTokenInterceptor {
+	public static class HashTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";
 		private static final InputStream HTML_SITE_STREAM = HashTokenInterceptor.class.getResourceAsStream("/org/syncany/plugins/oauth/HashTokenInterceptor.html");
@@ -55,7 +47,7 @@ public class OAuthTokenInterceptors {
 		}
 	}
 
-	static class RedirectTokenInterceptor implements OAuthTokenInterceptor {
+	public static class RedirectTokenInterceptor implements OAuthTokenInterceptor {
 
 		@Override
 		public String getPathPrefix() {

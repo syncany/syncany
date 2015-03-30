@@ -25,7 +25,7 @@ import io.undertow.util.Headers;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class OAuthTokenWebListener implements Callable<String> {
+public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private static final Logger logger = Logger.getLogger(OAuthTokenWebListener.class.getName());
 	private static final int PORT_LOWER = 55500;
@@ -50,8 +50,8 @@ public class OAuthTokenWebListener implements Callable<String> {
 		private final String id;
 		private final List<InetAddress> allowedClients = Lists.newArrayList();
 
-		private OAuthTokenInterceptor interceptor = OAuthTokenInterceptors.newRedirectTokenInterceptor();
-		private OAuthTokenExtractor extractor = OAuthTokenExtractors.newNamedQueryTokenExtractor();
+		private OAuthTokenInterceptor interceptor = new OAuthTokenInterceptors.RedirectTokenInterceptor();
+		private OAuthTokenExtractor extractor = new OAuthTokenExtractors.NamedQueryTokenExtractor();
 		private int port;
 
 		private Builder(String id) {
@@ -107,23 +107,23 @@ public class OAuthTokenWebListener implements Callable<String> {
 		return URI.create(String.format("http://localhost:%d/%s/", port, id));
 	}
 
-	public Future<String> getToken() {
+	public Future<OAuthTokenFinish> getToken() {
 		return Executors.newFixedThreadPool(1).submit(this);
 	}
 
 	@Override
-	public String call() throws Exception {
+	public OAuthTokenFinish call() throws Exception {
 		logger.log(Level.INFO, "Waiting for token response");
 		String urlWithIdAndToken = (String) ioQueue.take();
 
 		logger.log(Level.INFO, "Parsing token response " + urlWithIdAndToken);
 
-		String token;
+		OAuthTokenFinish tokenResponse;
 		try {
-			token = extractor.parse(urlWithIdAndToken);
+			tokenResponse = extractor.parse(urlWithIdAndToken);
 		}
 		catch (NoSuchFieldException e) {
-			logger.log(Level.SEVERE, "Unable to find token in respobse", e);
+			logger.log(Level.SEVERE, "Unable to find token in response", e);
 			ioQueue.put(OAuthResponses.createBadResponse());
 			throw e;
 		}
@@ -131,7 +131,7 @@ public class OAuthTokenWebListener implements Callable<String> {
 		ioQueue.put(OAuthResponses.createValidResponse());
 
 		logger.log(Level.INFO, "Returning token");
-		return token;
+		return tokenResponse;
 	}
 
 	@Override

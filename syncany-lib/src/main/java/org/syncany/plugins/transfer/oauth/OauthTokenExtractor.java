@@ -6,6 +6,6 @@ package org.syncany.plugins.transfer.oauth;
 
 public interface OAuthTokenExtractor {
 
-	public String parse(String urlWithToken) throws NoSuchFieldException;
+	public OAuthTokenFinish parse(String urlWithToken) throws NoSuchFieldException;
 
 }
