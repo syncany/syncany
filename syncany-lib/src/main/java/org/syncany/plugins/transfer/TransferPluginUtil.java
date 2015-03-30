@@ -22,6 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.plugins.Plugin;
+import org.syncany.plugins.transfer.oauth.OAuth;
+import org.syncany.plugins.transfer.oauth.OAuthGenerator;
 
 import com.google.common.base.CaseFormat;
 

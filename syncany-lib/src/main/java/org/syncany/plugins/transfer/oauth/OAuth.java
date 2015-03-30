@@ -15,27 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer;
+package org.syncany.plugins.transfer.oauth;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.syncany.plugins.transfer.TransferSettings;
+
 /**
  * This annotation is used to identify OAuth plugins by marking the corresponding
  * {@link TransferSettings} class. An OAuth plugin will provide a 'token' field
  * during the initialization process and the {@link OAuthGenerator} (provided via the
- * help of the {@link #value()} field) will be able to check that token. 
+ * help of the {@link #value()} field) will be able to check that token.
  *
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface OAuth {	
+public @interface OAuth {
 	/**
-	 * @see org.syncany.plugins.transfer.OAuthGenerator
+	 * @see OAuthGenerator
 	 */
 	Class<? extends OAuthGenerator> value();
 }

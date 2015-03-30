@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer;
+package org.syncany.plugins.transfer.oauth;
 
 import java.net.URI;
 
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
+
 /**
  * For {@link TransferPlugin}s that base their authentication on OAuth,
- * a generator class can be used to create the authentication URL and 
+ * a generator class can be used to create the authentication URL and
  * check the user-provided token. The concrete implementation of this
  * interface should be provided to the {@link TransferSettings} class
- * via the {@link OAuth} annotation. 
- *  
+ * via the {@link OAuth} annotation.
+ *
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface OAuthGenerator {
-	  public URI generateAuthUrl() throws StorageException;
-	  public void checkToken(String token) throws StorageException;
+	public URI generateAuthUrl() throws StorageException;
+	public void checkToken(String token) throws StorageException;
+	public OauthTokenInterceptor getTokenExtractor();
 }

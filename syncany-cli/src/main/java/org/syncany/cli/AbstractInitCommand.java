@@ -39,7 +39,7 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.NestedTransferPluginOption;
-import org.syncany.plugins.transfer.OAuthGenerator;
+import org.syncany.plugins.transfer.oauth.OAuthGenerator;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
@@ -99,7 +99,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		TransferPlugin plugin;
 		TransferSettings transferSettings;
 
-		// Parse --plugin and --plugin-option values 
+		// Parse --plugin and --plugin-option values
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
 		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
 
@@ -153,7 +153,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		try {
 			// Show OAuth output
 			printOAuthInformation(settings);
-			
+
 			// Ask for plugin settings
 			List<TransferPluginOption> pluginOptions = TransferPluginOptions.getOrderedOptions(settings.getClass());
 
@@ -185,15 +185,15 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 		if (oAuthGeneratorClass != null) {
 			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthGeneratorClass.getDeclaredConstructor(settings.getClass());
-			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);			
+			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
 			URI oAuthURL = oAuthGenerator.generateAuthUrl();
-			
+
 			out.println();
 			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
-			out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());			
+			out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());
 			out.print("- Token (paste from URL): ");
-			
+
 			String token = console.readLine();
 			oAuthGenerator.checkToken(token);
 		}
@@ -440,11 +440,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
 			String defaultValueDescription = settings.getField(option.getField().getName());
-			
+
 			if (defaultValueDescription == null) {
 				defaultValueDescription = "none";
 			}
-			
+
 			out.printf("- %s (optional, default is %s): ", option.getDescription(), defaultValueDescription);
 			value = console.readLine();
 		}
@@ -524,31 +524,31 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	private TransferPluginOptionConverter createOptionConverter(TransferSettings settings,
 			Class<? extends TransferPluginOptionConverter> optionConverterClass) throws InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		
+
 		TransferPluginOptionConverter optionConverter = null;
-		
+
 		if (optionConverterClass != null) {
 			Constructor<? extends TransferPluginOptionConverter> optionConverterClassConstructor = optionConverterClass.getDeclaredConstructor(settings.getClass());
-			optionConverter = optionConverterClassConstructor.newInstance(settings);			
+			optionConverter = optionConverterClassConstructor.newInstance(settings);
 		}
-		
+
 		return optionConverter;
 	}
 
 	private TransferPluginOptionCallback createOptionCallback(TransferSettings settings,
 			Class<? extends TransferPluginOptionCallback> optionCallbackClass) throws InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		
+
 		TransferPluginOptionCallback optionCallback = null;
-		
+
 		if (optionCallbackClass != null) {
 			Constructor<? extends TransferPluginOptionCallback> optionCallbackClassConstructor = optionCallbackClass.getDeclaredConstructor(settings.getClass());
-			optionCallback = optionCallbackClassConstructor.newInstance(settings);			
+			optionCallback = optionCallbackClassConstructor.newInstance(settings);
 		}
-		
+
 		return optionCallback;
 	}
-	
+
 	protected String getRandomMachineName() {
 		return CipherUtil.createRandomAlphabeticString(20);
 	}
@@ -648,9 +648,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	@Override
 	public String onUserPassword(String header, String message) {
 		if (!isInteractive) {
-			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");			
+			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");
 		}
-		
+
 		out.println();
 
 		if (header != null) {
