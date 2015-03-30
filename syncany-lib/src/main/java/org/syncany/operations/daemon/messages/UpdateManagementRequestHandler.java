@@ -22,44 +22,44 @@ import java.util.logging.Level;
 import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.daemon.messages.api.ManagementRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
-import org.syncany.operations.plugin.PluginOperation;
-import org.syncany.operations.plugin.PluginOperationResult;
+import org.syncany.operations.update.UpdateOperation;
+import org.syncany.operations.update.UpdateOperationResult;
 
-public class PluginManagementRequestHandler extends ManagementRequestHandler {
-	public PluginManagementRequestHandler() {
+public class UpdateManagementRequestHandler extends ManagementRequestHandler {
+	public UpdateManagementRequestHandler() {
 		// Nothing
 	}
 
 	@Override
 	public Response handleRequest(final ManagementRequest request) {
-		final PluginManagementRequest concreteRequest = (PluginManagementRequest) request;		
-		logger.log(Level.SEVERE, "Executing PluginOperation for action " + concreteRequest.getOptions().getAction() + " ...");
+		final UpdateManagementRequest concreteRequest = (UpdateManagementRequest) request;		
+		logger.log(Level.SEVERE, "Executing UpdateOperation for action " + concreteRequest.getOptions().getAction() + " ...");
 
-		Thread pluginThread = new Thread(new Runnable() {
+		Thread updateThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {					
-					PluginOperation pluginOperation = new PluginOperation(null, concreteRequest.getOptions());
-					PluginOperationResult operationResult = pluginOperation.execute();
+					UpdateOperation updateOperation = new UpdateOperation(null, concreteRequest.getOptions());
+					UpdateOperationResult operationResult = updateOperation.execute();
 					
 					switch (operationResult.getResultCode()) {
 					case OK:
-						eventBus.post(new PluginManagementResponse(PluginManagementResponse.OK, operationResult, request.getId()));
+						eventBus.post(new UpdateManagementResponse(UpdateManagementResponse.OK, operationResult, request.getId()));
 						break;
 
 					case NOK:
-						eventBus.post(new PluginManagementResponse(PluginManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
+						eventBus.post(new UpdateManagementResponse(UpdateManagementResponse.NOK_FAILED_UNKNOWN, operationResult, request.getId()));
 						break;
 					}
 				}
 				catch (Exception e) {
-					logger.log(Level.WARNING, "Error executing plugin management request.", e);
-					eventBus.post(new PluginManagementResponse(PluginManagementResponse.NOK_OPERATION_FAILED, new PluginOperationResult(), request.getId()));
+					logger.log(Level.WARNING, "Error executing update management request.", e);
+					eventBus.post(new UpdateManagementResponse(UpdateManagementResponse.NOK_OPERATION_FAILED, new UpdateOperationResult(), request.getId()));
 				}
 			}
-		}, "PlugRq/" + concreteRequest.getOptions().getAction());
+		}, "UpdRq/" + concreteRequest.getOptions().getAction());
 
-		pluginThread.start();
+		updateThread.start();
 		
 		return null;
 	}
