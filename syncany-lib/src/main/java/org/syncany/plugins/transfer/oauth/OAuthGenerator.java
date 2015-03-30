@@ -34,7 +34,15 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface OAuthGenerator {
-	public URI generateAuthUrl() throws StorageException;
+	public URI generateAuthUrl(URI redirectUri) throws StorageException;
 	public void checkToken(String token) throws StorageException;
-	public OauthTokenInterceptor getTokenExtractor();
+
+	// Annotation don't support concrete instances of objects, only classes. Thus we need to add two additional interfaces
+	public static interface WithInterceptor {
+		public OAuthTokenInterceptor getInterceptor();
+	}
+
+	public static interface WithExtractor {
+		public OAuthTokenExtractor getExtractor();
+	}
 }

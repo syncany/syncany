@@ -11,27 +11,27 @@ import com.google.common.base.Charsets;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class OauthTokenExtractors {
+public class OAuthTokenExtractors {
 
-	public static NamedQueryOauthTokenExtractor newNamedQueryOauthTokenExtractor() {
-		return new NamedQueryOauthTokenExtractor();
+	public static NamedQueryTokenExtractor newNamedQueryTokenExtractor() {
+		return new NamedQueryTokenExtractor();
 	}
 
-	public static NamedQueryOauthTokenExtractor newNamedQueryOauthTokenExtractor(String tokenId) {
-		return new NamedQueryOauthTokenExtractor(tokenId);
+	public static NamedQueryTokenExtractor newNamedQueryTokenExtractor(String tokenId) {
+		return new NamedQueryTokenExtractor(tokenId);
 	}
 
-	public static class NamedQueryOauthTokenExtractor implements OauthTokenExtractor {
+	public static class NamedQueryTokenExtractor implements OAuthTokenExtractor {
 
 		public static final String DEFAULT_TOKEN_ID = "token";
 
 		private final String tokenId;
 
-		public NamedQueryOauthTokenExtractor() {
+		public NamedQueryTokenExtractor() {
 			this.tokenId = DEFAULT_TOKEN_ID;
 		}
 
-		public NamedQueryOauthTokenExtractor(String tokenId) {
+		public NamedQueryTokenExtractor(String tokenId) {
 			this.tokenId = tokenId;
 		}
 

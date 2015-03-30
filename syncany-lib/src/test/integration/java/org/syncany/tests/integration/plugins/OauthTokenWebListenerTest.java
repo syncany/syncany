@@ -1,6 +1,9 @@
 package org.syncany.tests.integration.plugins;
 
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.net.URI;
 import java.util.concurrent.Future;
@@ -9,9 +12,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.syncany.plugins.transfer.oauth.OauthTokenExtractors;
-import org.syncany.plugins.transfer.oauth.OauthTokenInterceptors;
-import org.syncany.plugins.transfer.oauth.OauthTokenWebListener;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.oauth.OAuthGenerator;
+import org.syncany.plugins.transfer.oauth.OAuthTokenExtractor;
+import org.syncany.plugins.transfer.oauth.OAuthTokenExtractors;
+import org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors;
+import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.ScriptException;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -21,7 +27,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class OauthTokenWebListenerTest {
+public class OAuthTokenWebListenerTest {
 
 	public static final String TOKEN_ID = "token_field";
 	public static final String REFERENCE_TOKEN = "aabbccddeeff";
@@ -42,9 +48,9 @@ public class OauthTokenWebListenerTest {
 
 	@Test
 	public void testTokenAsQuery() throws Exception {
-		OauthTokenWebListener twl = OauthTokenWebListener
+		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
-						.setTokenExtractor(OauthTokenExtractors.newNamedQueryOauthTokenExtractor(TOKEN_ID))
+						.setTokenExtractor(OAuthTokenExtractors.newNamedQueryTokenExtractor(TOKEN_ID))
 						.build();
 
 		URI baseUri = twl.start();
@@ -75,10 +81,10 @@ public class OauthTokenWebListenerTest {
 
 	@Test
 	public void testTokenAsHash() throws Exception {
-		OauthTokenWebListener twl = OauthTokenWebListener
+		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
-						.setTokenInterceptor(OauthTokenInterceptors.newHashTokenInterceptor())
-						.setTokenExtractor(OauthTokenExtractors.newNamedQueryOauthTokenExtractor(TOKEN_ID))
+						.setTokenInterceptor(OAuthTokenInterceptors.newHashTokenInterceptor())
+						.setTokenExtractor(OAuthTokenExtractors.newNamedQueryTokenExtractor(TOKEN_ID))
 						.build();
 
 		URI baseUri = twl.start();
@@ -106,6 +112,33 @@ public class OauthTokenWebListenerTest {
 		}).start();
 
 		assertEquals(REFERENCE_TOKEN, submittedToken.get());
+	}
+
+	@Test
+	public void testOAuthGenerator() {
+		OAuthGenerator testOAuthGenerator = new TestOAuthGenerator();
+
+		assertThat(testOAuthGenerator, instanceOf(OAuthGenerator.class));
+		assertThat(testOAuthGenerator, instanceOf(OAuthGenerator.WithExtractor.class));
+		assertThat(testOAuthGenerator, not(instanceOf(OAuthGenerator.WithInterceptor.class)));
+	}
+
+	private static class TestOAuthGenerator implements OAuthGenerator, OAuthGenerator.WithExtractor {
+
+		@Override
+		public URI generateAuthUrl(URI redirectUri) throws StorageException {
+			return URI.create("http://1234/?redirect=" + redirectUri);
+		}
+
+		@Override
+		public void checkToken(String token) throws StorageException {
+			// empty
+		}
+
+		@Override
+		public OAuthTokenExtractor getExtractor() {
+			return OAuthTokenExtractors.newNamedQueryTokenExtractor("custom");
+		}
 	}
 
 }

@@ -11,9 +11,9 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
-public class OauthTokenInterceptors {
+public class OAuthTokenInterceptors {
 
-	private static final Logger logger = Logger.getLogger(OauthTokenInterceptors.class.getName());
+	private static final Logger logger = Logger.getLogger(OAuthTokenInterceptors.class.getName());
 	public static final String PATH_PREFIX = "/";
 
 	public static HashTokenInterceptor newHashTokenInterceptor() {
@@ -24,7 +24,7 @@ public class OauthTokenInterceptors {
 		return new RedirectTokenInterceptor();
 	}
 
-	static class HashTokenInterceptor implements OauthTokenInterceptor {
+	static class HashTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";
 		private static final InputStream HTML_SITE_STREAM = HashTokenInterceptor.class.getResourceAsStream("/org/syncany/plugins/oauth/HashTokenInterceptor.html");
@@ -33,7 +33,7 @@ public class OauthTokenInterceptors {
 
 		public HashTokenInterceptor() {
 			try {
-				this.html = IOUtils.toString(HTML_SITE_STREAM).replace(PLACEHOLDER_FOR_EXTRACT_PATH, OauthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX);
+				this.html = IOUtils.toString(HTML_SITE_STREAM).replace(PLACEHOLDER_FOR_EXTRACT_PATH, OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX);
 			}
 			catch (IOException e) {
 				logger.log(Level.SEVERE, "Unable to read html site from " + HTML_SITE_STREAM, e);
@@ -55,7 +55,7 @@ public class OauthTokenInterceptors {
 		}
 	}
 
-	static class RedirectTokenInterceptor implements OauthTokenInterceptor {
+	static class RedirectTokenInterceptor implements OAuthTokenInterceptor {
 
 		@Override
 		public String getPathPrefix() {
@@ -64,7 +64,7 @@ public class OauthTokenInterceptors {
 
 		@Override
 		public void handleRequest(HttpServerExchange exchange) throws Exception {
-			String redirectToUrl = String.format("%s/%s?%s", exchange.getRequestURL(), OauthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX, exchange.getQueryString());
+			String redirectToUrl = String.format("%s/%s?%s", exchange.getRequestURL(), OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX, exchange.getQueryString());
 			URI redirectToUri = URI.create(redirectToUrl).normalize();
 			logger.log(Level.INFO, "Redirecting to " + redirectToUri);
 

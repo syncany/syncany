@@ -24,9 +24,9 @@ import io.undertow.util.Headers;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class OauthTokenWebListener implements Callable<String> {
+public class OAuthTokenWebListener implements Callable<String> {
 
-	private static final Logger logger = Logger.getLogger(OauthTokenWebListener.class.getName());
+	private static final Logger logger = Logger.getLogger(OAuthTokenWebListener.class.getName());
 	private static final int PORT_LOWER = 55500;
 	private static final int PORT_UPPER = 55599;
 	private static final List<InetAddress> ALLOWED_CLIENT_IPS = Lists.newArrayList();
@@ -34,8 +34,8 @@ public class OauthTokenWebListener implements Callable<String> {
 	private final int port;
 	private final String id;
 	private final SynchronousQueue<Object> ioQueue = Queues.newSynchronousQueue();
-	private final OauthTokenInterceptor interceptor;
-	private final OauthTokenExtractor extractor;
+	private final OAuthTokenInterceptor interceptor;
+	private final OAuthTokenExtractor extractor;
 	private final List<InetAddress> allowedClients;
 
 	private Undertow server;
@@ -49,8 +49,8 @@ public class OauthTokenWebListener implements Callable<String> {
 		private final String id;
 		private final List<InetAddress> allowedClients = Lists.newArrayList();
 
-		private OauthTokenInterceptor interceptor = OauthTokenInterceptors.newRedirectTokenInterceptor();
-		private OauthTokenExtractor extractor = OauthTokenExtractors.newNamedQueryOauthTokenExtractor();
+		private OAuthTokenInterceptor interceptor = OAuthTokenInterceptors.newRedirectTokenInterceptor();
+		private OAuthTokenExtractor extractor = OAuthTokenExtractors.newNamedQueryTokenExtractor();
 		private int port;
 
 		private Builder(String id) {
@@ -58,13 +58,19 @@ public class OauthTokenWebListener implements Callable<String> {
 			this.port = new Random().nextInt((PORT_UPPER - PORT_LOWER) + 1) + PORT_LOWER;
 		}
 
-		public Builder setTokenInterceptor(OauthTokenInterceptor interceptor) {
-			this.interceptor = interceptor;
+		public Builder setTokenInterceptor(OAuthTokenInterceptor interceptor) {
+			if (interceptor != null) {
+				this.interceptor = interceptor;
+			}
+
 			return this;
 		}
 
-		public Builder setTokenExtractor(OauthTokenExtractor extractor) {
-			this.extractor = extractor;
+		public Builder setTokenExtractor(OAuthTokenExtractor extractor) {
+			if (extractor != null) {
+				this.extractor = extractor;
+			}
+
 			return this;
 		}
 
@@ -78,13 +84,12 @@ public class OauthTokenWebListener implements Callable<String> {
 			return this;
 		}
 
-		public OauthTokenWebListener build() {
-			return new OauthTokenWebListener(id, port, interceptor, extractor, allowedClients);
+		public OAuthTokenWebListener build() {
+			return new OAuthTokenWebListener(id, port, interceptor, extractor, allowedClients);
 		}
-
 	}
 
-	private OauthTokenWebListener(String id, int port, OauthTokenInterceptor interceptor, OauthTokenExtractor extractor, List<InetAddress> allowedClients) {
+	private OAuthTokenWebListener(String id, int port, OAuthTokenInterceptor interceptor, OAuthTokenExtractor extractor, List<InetAddress> allowedClients) {
 		this.id = id;
 		this.port = port;
 		this.interceptor = interceptor;
@@ -114,11 +119,11 @@ public class OauthTokenWebListener implements Callable<String> {
 		}
 		catch (NoSuchFieldException e) {
 			logger.log(Level.SEVERE, "Unable to find token in respobse", e);
-			ioQueue.put(OauthResponses.createBadResponse());
+			ioQueue.put(OAuthResponses.createBadResponse());
 			throw e;
 		}
 
-		ioQueue.put(OauthResponses.createValidResponse());
+		ioQueue.put(OAuthResponses.createValidResponse());
 
 		logger.log(Level.INFO, "Returning token");
 		return token;
@@ -137,7 +142,7 @@ public class OauthTokenWebListener implements Callable<String> {
 
 		logger.log(Level.FINE, "Locked to build server...");
 
-		OauthTokenInterceptor extractingHttpHandler = new ExtractingTokenInterceptor(ioQueue);
+		OAuthTokenInterceptor extractingHttpHandler = new ExtractingTokenInterceptor(ioQueue);
 
 		server = Undertow.builder()
 						.addHttpListener(port, "localhost")
@@ -155,7 +160,7 @@ public class OauthTokenWebListener implements Callable<String> {
 		return URI.create(String.format("/%s/%s", id, prefix)).normalize().toString();
 	}
 
-	static final class ExtractingTokenInterceptor implements OauthTokenInterceptor {
+	static final class ExtractingTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PATH_PREFIX = "/extract";
 
@@ -178,7 +183,7 @@ public class OauthTokenWebListener implements Callable<String> {
 
 			TimeUnit.SECONDS.sleep(2);
 
-			OauthResponse oauthResponse = (OauthResponse) queue.take();
+			OAuthResponse oauthResponse = (OAuthResponse) queue.take();
 			logger.log(Level.INFO, "Got an oauth response with code " + oauthResponse.getCode());
 			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 			exchange.setResponseCode(oauthResponse.getCode());

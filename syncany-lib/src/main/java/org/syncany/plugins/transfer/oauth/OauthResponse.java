@@ -4,12 +4,12 @@ package org.syncany.plugins.transfer.oauth;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-class OauthResponse {
+class OAuthResponse {
 
 	private final int code;
 	private final String body;
 
-	OauthResponse(int code, String body) {
+	OAuthResponse(int code, String body) {
 		this.code = code;
 		this.body = body;
 	}
