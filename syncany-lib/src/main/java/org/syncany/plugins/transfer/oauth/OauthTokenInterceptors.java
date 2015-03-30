@@ -1,9 +1,12 @@
 package org.syncany.plugins.transfer.oauth;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
@@ -17,26 +20,25 @@ public class OauthTokenInterceptors {
 		return new HashTokenInterceptor();
 	}
 
-	public static HashTokenInterceptor newHashTokenInterceptor(String tokenId) {
-		return new HashTokenInterceptor(tokenId);
-	}
-
 	public static RedirectTokenInterceptor newRedirectTokenInterceptor() {
 		return new RedirectTokenInterceptor();
 	}
 
 	static class HashTokenInterceptor implements OauthTokenInterceptor {
 
-		public static final String DEFAULT_TOKEN_ID = "token";
+		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";
+		private static final InputStream HTML_SITE_STREAM = HashTokenInterceptor.class.getResourceAsStream("/org/syncany/plugins/oauth/HashTokenInterceptor.html");
 
-		private String tokenId = DEFAULT_TOKEN_ID;
+		private final String html;
 
 		public HashTokenInterceptor() {
-			this.tokenId = DEFAULT_TOKEN_ID;
-		}
-
-		public HashTokenInterceptor(String tokenId) {
-			this.tokenId = tokenId;
+			try {
+				this.html = IOUtils.toString(HTML_SITE_STREAM).replace(PLACEHOLDER_FOR_EXTRACT_PATH, OauthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX);
+			}
+			catch (IOException e) {
+				logger.log(Level.SEVERE, "Unable to read html site from " + HTML_SITE_STREAM, e);
+				throw new RuntimeException("Unable to read html site from " + HTML_SITE_STREAM);
+			}
 		}
 
 		@Override
@@ -46,7 +48,10 @@ public class OauthTokenInterceptors {
 
 		@Override
 		public void handleRequest(HttpServerExchange exchange) throws Exception {
-
+			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
+			exchange.setResponseCode(StatusCodes.OK);
+			exchange.getResponseSender().send(html);
+			exchange.endExchange();
 		}
 	}
 

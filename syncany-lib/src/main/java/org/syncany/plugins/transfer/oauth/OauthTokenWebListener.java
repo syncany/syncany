@@ -63,7 +63,7 @@ public class OauthTokenWebListener implements Callable<String> {
 			return this;
 		}
 
-		public Builder setTokenInterceptor(OauthTokenExtractor extractor) {
+		public Builder setTokenExtractor(OauthTokenExtractor extractor) {
 			this.extractor = extractor;
 			return this;
 		}
@@ -155,7 +155,7 @@ public class OauthTokenWebListener implements Callable<String> {
 		return URI.create(String.format("/%s/%s", id, prefix)).normalize().toString();
 	}
 
-	static class ExtractingTokenInterceptor implements OauthTokenInterceptor {
+	static final class ExtractingTokenInterceptor implements OauthTokenInterceptor {
 
 		public static final String PATH_PREFIX = "/extract";
 

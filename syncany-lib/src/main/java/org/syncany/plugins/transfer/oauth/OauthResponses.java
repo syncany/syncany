@@ -1,6 +1,6 @@
 package org.syncany.plugins.transfer.oauth;
 
-import org.apache.http.HttpStatus;
+import io.undertow.util.StatusCodes;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -9,11 +9,11 @@ import org.apache.http.HttpStatus;
 public abstract class OauthResponses {
 
 	public static OauthResponse createValidResponse() {
-		return new OauthResponse(HttpStatus.SC_OK, "thanks for the token dude");
+		return new OauthResponse(StatusCodes.OK, "thanks for the token dude");
 	}
 
 	public static OauthResponse createBadResponse() {
-		return new OauthResponse(HttpStatus.SC_BAD_REQUEST, "please check your request");
+		return new OauthResponse(StatusCodes.BAD_REQUEST, "please check your request");
 	}
 
 }
