@@ -208,6 +208,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				tokenListerBuilder.setTokenExtractor(((OAuthGenerator.WithExtractor) oAuthGenerator).getExtractor());
 			}
 
+			if (oAuthGenerator instanceof OAuthGenerator.WithFixedPort) {
+				tokenListerBuilder.setPort(((OAuthGenerator.WithFixedPort) oAuthGenerator).getPort());
+			}
+
 			OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
 
 			URI oAuthURL = oAuthGenerator.generateAuthUrl(tokenListener.start());

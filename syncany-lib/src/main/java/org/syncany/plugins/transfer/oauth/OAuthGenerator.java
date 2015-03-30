@@ -45,4 +45,8 @@ public interface OAuthGenerator {
 	public static interface WithExtractor {
 		public OAuthTokenExtractor getExtractor();
 	}
+
+	public static interface WithFixedPort {
+		public int getPort();
+	}
 }

@@ -2,6 +2,7 @@ package org.syncany.plugins.transfer.oauth;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.util.List;
 import java.util.Random;
@@ -75,6 +76,10 @@ public class OAuthTokenWebListener implements Callable<String> {
 		}
 
 		public Builder setPort(int port) {
+			if (!isPortAvailable(port)) {
+				throw new RuntimeException("Token listener tried to use a defined but already taken port " + port);
+			}
+
 			this.port = port;
 			return this;
 		}
@@ -134,6 +139,7 @@ public class OAuthTokenWebListener implements Callable<String> {
 		super.finalize();
 
 		if (server != null) {
+			logger.log(Level.INFO, "Stopping server");
 			server.stop();
 		}
 	}
@@ -158,6 +164,14 @@ public class OAuthTokenWebListener implements Callable<String> {
 
 	private String createPath(String prefix) {
 		return URI.create(String.format("/%s/%s", id, prefix)).normalize().toString();
+	}
+
+	private static boolean isPortAvailable(int port) {
+		try (Socket ignored = new Socket("localhost", port)) {
+			return false;
+		} catch (IOException ignored) {
+			return true;
+		}
 	}
 
 	static final class ExtractingTokenInterceptor implements OAuthTokenInterceptor {
@@ -189,8 +203,6 @@ public class OAuthTokenWebListener implements Callable<String> {
 			exchange.setResponseCode(oauthResponse.getCode());
 			exchange.getResponseSender().send(oauthResponse.getBody());
 			exchange.endExchange();
-
-			logger.log(Level.INFO, "Stopping server");
 		}
 	}
 }
