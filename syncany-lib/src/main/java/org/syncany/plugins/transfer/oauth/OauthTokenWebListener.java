@@ -118,19 +118,19 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 		logger.log(Level.INFO, "Parsing token response " + urlWithIdAndToken);
 
-		OAuthTokenFinish tokenResponse;
+		OAuthTokenFinish tokenResponse = null; // null if parsing failed (user canceled, api error, ...
 		try {
 			tokenResponse = extractor.parse(urlWithIdAndToken);
+			ioQueue.put(OAuthResponses.createValidResponse());
 		}
 		catch (NoSuchFieldException e) {
 			logger.log(Level.SEVERE, "Unable to find token in response", e);
 			ioQueue.put(OAuthResponses.createBadResponse());
-			throw e;
 		}
 
-		ioQueue.put(OAuthResponses.createValidResponse());
+		ioQueue.take(); // make sure undertow has send an response
 
-		logger.log(Level.INFO, "Returning token");
+		logger.log(Level.INFO, tokenResponse != null ? "Returning token" : "No token received, returning null");
 		return tokenResponse;
 	}
 
@@ -203,6 +203,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 			exchange.setResponseCode(oauthResponse.getCode());
 			exchange.getResponseSender().send(oauthResponse.getBody());
 			exchange.endExchange();
+			queue.add(Boolean.TRUE);
 		}
 	}
 }

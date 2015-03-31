@@ -225,10 +225,18 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			out.println();
 			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
 			out.printf("Please navigate to the URL below and accept the given permissions:\n\n  %s\n\n", oAuthURL.toString());
-			out.println("Waiting for authorization...");
+			out.print("Waiting for authorization...");
 
 			OAuthTokenFinish tokenResponse = futureTokenResponse.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS);
-			oAuthGenerator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
+
+			if (tokenResponse != null) {
+				out.printf(" received token '%s'\n\n", tokenResponse.getToken());
+				oAuthGenerator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
+			}
+			else {
+				out.println(" canceled");
+				throw new StorageException("Error while acquiring token, perhaps user denied authorization");
+			}
 		}
 	}
 
