@@ -167,6 +167,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		}
 
 		ioQueue.take(); // make sure undertow has send a response
+		stop();
 
 		logger.log(Level.INFO, tokenResponse != null ? "Returning token" : "No token received, returning null");
 		return tokenResponse;
@@ -175,11 +176,6 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 	@Override
 	public void finalize() throws Throwable {
 		super.finalize();
-
-		if (server != null) {
-			logger.log(Level.INFO, "Stopping server");
-			server.stop();
-		}
 	}
 
 	private void createServer() {
@@ -201,6 +197,14 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private String createPath(String prefix) {
 		return URI.create(String.format("/%s/%s", id, prefix)).normalize().toString();
+	}
+
+	private void stop() {
+		if (server != null) {
+			logger.log(Level.INFO, "Stopping server");
+			server.stop();
+			server = null;
+		}
 	}
 
 	private static boolean isPortAvailable(int port) {
