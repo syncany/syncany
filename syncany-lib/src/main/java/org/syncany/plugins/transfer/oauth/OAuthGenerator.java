@@ -38,14 +38,24 @@ public interface OAuthGenerator {
 	public void checkToken(String token, String csrfState) throws StorageException;
 
 	// Annotation don't support concrete instances of objects, only classes. Thus we need to add two additional interfaces
+
+	/**
+	 * @see {@link OAuthTokenInterceptor}
+	 */
 	public static interface WithInterceptor {
 		public OAuthTokenInterceptor getInterceptor();
 	}
 
+	/**
+	 * @see {@link OAuthTokenExtractor}
+	 */
 	public static interface WithExtractor {
 		public OAuthTokenExtractor getExtractor();
 	}
 
+	/**
+	 * @see {@link OAuthTokenWebListener}
+	 */
 	public static interface WithFixedPort {
 		public int getPort();
 	}

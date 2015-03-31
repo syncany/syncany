@@ -1,15 +1,17 @@
 package org.syncany.plugins.transfer.oauth;
 
 /**
+ * A website which is shown to a user during the oauth process.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-class OAuthResponse {
+class OAuthWebResponse {
 
 	private final int code;
 	private final String body;
 
-	OAuthResponse(int code, String body) {
+	OAuthWebResponse(int code, String body) {
 		this.code = code;
 		this.body = body;
 	}
