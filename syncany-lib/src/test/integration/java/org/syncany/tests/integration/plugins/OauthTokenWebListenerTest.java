@@ -3,6 +3,7 @@ package org.syncany.tests.integration.plugins;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.net.URI;
@@ -31,6 +32,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class OAuthTokenWebListenerTest {
 
 	public static final String TOKEN_ID = "token_field";
+	public static final String STATE_ID = "state";
 	public static final String REFERENCE_TOKEN = "aabbccddeeff";
 
 	private WebClient webClient;
@@ -51,13 +53,13 @@ public class OAuthTokenWebListenerTest {
 	public void testTokenAsQuery() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
-						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID))
+						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
 						.build();
 
 		URI baseUri = twl.start();
 		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
-		final URI requestUri = URI.create(baseUri.toString() + "?" + TOKEN_ID + "=" + REFERENCE_TOKEN);
+		final URI requestUri = URI.create(baseUri.toString() + "?" + TOKEN_ID + "=" + REFERENCE_TOKEN + "&" + STATE_ID + "=1234");
 
 		new Thread(new Runnable() {
 			public void run() {
@@ -85,13 +87,13 @@ public class OAuthTokenWebListenerTest {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forId("testSite")
 						.setTokenInterceptor(new OAuthTokenInterceptors.HashTokenInterceptor())
-						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID))
+						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
 						.build();
 
 		URI baseUri = twl.start();
 		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
-		final URI requestUri = URI.create(baseUri.toString() + "?a=b#" + TOKEN_ID + "=" + REFERENCE_TOKEN);
+		final URI requestUri = URI.create(baseUri.toString() + "?a=b#" + TOKEN_ID + "=" + REFERENCE_TOKEN + "&" + STATE_ID + "=1234");
 
 		new Thread(new Runnable() {
 			public void run() {
@@ -113,6 +115,41 @@ public class OAuthTokenWebListenerTest {
 		}).start();
 
 		assertEquals(REFERENCE_TOKEN, submittedToken.get().getToken());
+	}
+
+	@Test
+	public void testMissingField() throws Exception {
+		OAuthTokenWebListener twl = OAuthTokenWebListener
+						.forId("testSite")
+						.setTokenInterceptor(new OAuthTokenInterceptors.RedirectTokenInterceptor())
+						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
+						.build();
+
+		URI baseUri = twl.start();
+		Future<OAuthTokenFinish> submittedToken = twl.getToken();
+
+		final URI requestUri = URI.create(baseUri.toString() + "?" + STATE_ID + "=1234");
+
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					TimeUnit.SECONDS.sleep(2);
+
+					System.out.println("Requesting: " + requestUri);
+					HtmlPage page = webClient.getPage(requestUri.toURL());
+
+					assertEquals(400, page.getWebResponse().getStatusCode());
+				}
+				catch (ScriptException e) {
+					// ignore  "Connection is not open"
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}).start();
+
+		assertNull(submittedToken.get());
 	}
 
 	@Test
