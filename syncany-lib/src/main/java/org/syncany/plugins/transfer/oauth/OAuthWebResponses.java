@@ -1,7 +1,5 @@
 package org.syncany.plugins.transfer.oauth;
 
-import java.io.IOException;
-
 import org.apache.commons.io.IOUtils;
 import io.undertow.util.StatusCodes;
 
@@ -12,11 +10,11 @@ import io.undertow.util.StatusCodes;
 public abstract class OAuthWebResponses {
 
 	public static OAuthWebResponse createValidResponse() {
-		return new OAuthWebResponse(StatusCodes.OK, loadHtml("ValidWebResponse", "Token successfully extracted."));
+		return new OAuthWebResponse(StatusCodes.OK, loadHtml("ValidWebResponse.html", "Token successfully extracted."));
 	}
 
 	public static OAuthWebResponse createBadResponse() {
-		return new OAuthWebResponse(StatusCodes.BAD_REQUEST, loadHtml("BadRequestWebResponse", "Error while acquiring token."));
+		return new OAuthWebResponse(StatusCodes.BAD_REQUEST, loadHtml("BadRequestWebResponse.html", "Error while acquiring token."));
 	}
 
 	private static String loadHtml(String fileName, String fallbackString) {
@@ -24,7 +22,7 @@ public abstract class OAuthWebResponses {
 		try {
 			html = IOUtils.toString(OAuthWebResponses.class.getResourceAsStream("/org/syncany/plugins/oauth/" + fileName));
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			// use fallback plain string
 		}
 

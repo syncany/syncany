@@ -96,7 +96,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		 * @throws IOException Thrown if the chosen port is already taken.
 		 */
 		public Builder setPort(int port) {
-			if (Range.open(1, 65535).contains(port)) {
+			if (!Range.open(1, 65535).contains(port)) {
 				throw new IllegalArgumentException("Invalid port number " + port);
 			}
 
