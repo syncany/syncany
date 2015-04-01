@@ -21,4 +21,5 @@ public class OAuthTokenFinish {
 	public String getCsrfState() {
 		return csrfState;
 	}
+
 }

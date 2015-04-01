@@ -36,8 +36,16 @@ import org.syncany.plugins.transfer.TransferSettings;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OAuth {
+	String PLUGIN_ID = "%pluginid%";
+	int RANDOM_PORT = -1;
+
 	/**
 	 * @see OAuthGenerator
 	 */
 	Class<? extends OAuthGenerator> value();
+
+	OAuthMode mode() default OAuthMode.SERVER;
+
+	int callbackPort() default RANDOM_PORT; // -1 is random
+	String callbackId() default PLUGIN_ID; // equals plugin id
 }

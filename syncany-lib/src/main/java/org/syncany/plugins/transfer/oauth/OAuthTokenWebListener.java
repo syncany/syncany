@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -46,22 +47,33 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private Undertow server;
 
-	public static Builder forId(String id) {
-		return new Builder(id);
+	public static Builder forMode(OAuthMode mode) {
+		return new Builder(mode);
 	}
 
 	public static class Builder {
 
-		private final String id;
 		private final List<InetAddress> allowedClients = Lists.newArrayList();
 
-		private OAuthTokenInterceptor interceptor = new OAuthTokenInterceptors.RedirectTokenInterceptor();
-		private OAuthTokenExtractor extractor = new OAuthTokenExtractors.NamedQueryTokenExtractor();
+		private OAuthTokenInterceptor interceptor;
+		private OAuthTokenExtractor extractor;
 		private int port;
+		private String id;
 
-		private Builder(String id) {
-			this.id = id;
+		private Builder(OAuthMode mode) {
+			interceptor = OAuthTokenInterceptors.newTokenInterceptorForMode(mode);
+			extractor = OAuthTokenExtractors.newTokenExtractorForMode(mode);
+
+			this.id = UUID.randomUUID().toString();
 			this.port = new Random().nextInt((PORT_UPPER - PORT_LOWER) + 1) + PORT_LOWER;
+		}
+
+		public Builder setId(String id) {
+			if (id != null) {
+				this.id = id;
+			}
+
+			return this;
 		}
 
 		/**

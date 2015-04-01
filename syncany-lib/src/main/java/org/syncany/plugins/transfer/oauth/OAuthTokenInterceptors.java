@@ -16,6 +16,19 @@ public abstract class OAuthTokenInterceptors {
 	private static final Logger logger = Logger.getLogger(OAuthTokenInterceptors.class.getName());
 	public static final String PATH_PREFIX = "/";
 
+	public static OAuthTokenInterceptor newTokenInterceptorForMode(OAuthMode mode) {
+		switch (mode) {
+			case BROWSER:
+				return new HashTokenInterceptor();
+
+			case SERVER:
+				return new RedirectTokenInterceptor();
+
+			default:
+				throw new RuntimeException("Unknown OAuth mode");
+		}
+	}
+
 	public static class HashTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";

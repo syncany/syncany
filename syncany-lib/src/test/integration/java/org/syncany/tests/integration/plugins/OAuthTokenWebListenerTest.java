@@ -15,10 +15,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.oauth.OAuthGenerator;
+import org.syncany.plugins.transfer.oauth.OAuthMode;
 import org.syncany.plugins.transfer.oauth.OAuthTokenExtractor;
 import org.syncany.plugins.transfer.oauth.OAuthTokenExtractors;
 import org.syncany.plugins.transfer.oauth.OAuthTokenFinish;
-import org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors;
 import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.ScriptException;
@@ -30,9 +30,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
  */
 
 public class OAuthTokenWebListenerTest {
-
-	public static final String TOKEN_ID = "token_field";
-	public static final String STATE_ID = "state";
 	public static final String REFERENCE_TOKEN = "aabbccddeeff";
 
 	private WebClient webClient;
@@ -52,14 +49,13 @@ public class OAuthTokenWebListenerTest {
 	@Test
 	public void testTokenAsQuery() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
-						.forId("testSite")
-						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
+						.forMode(OAuthMode.SERVER)
 						.build();
 
 		URI baseUri = twl.start();
 		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
-		final URI requestUri = URI.create(baseUri.toString() + "?" + TOKEN_ID + "=" + REFERENCE_TOKEN + "&" + STATE_ID + "=1234");
+		final URI requestUri = URI.create(baseUri.toString() + "?" + OAuthTokenExtractors.RFC_CODE_FIELD + "=" + REFERENCE_TOKEN + "&" + OAuthTokenExtractors.RFC_STATE_FIELD + "=1234");
 
 		new Thread(new Runnable() {
 			public void run() {
@@ -85,15 +81,13 @@ public class OAuthTokenWebListenerTest {
 	@Test
 	public void testTokenAsHash() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
-						.forId("testSite")
-						.setTokenInterceptor(new OAuthTokenInterceptors.HashTokenInterceptor())
-						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
+						.forMode(OAuthMode.BROWSER)
 						.build();
 
 		URI baseUri = twl.start();
 		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
-		final URI requestUri = URI.create(baseUri.toString() + "?a=b#" + TOKEN_ID + "=" + REFERENCE_TOKEN + "&" + STATE_ID + "=1234");
+		final URI requestUri = URI.create(baseUri.toString() + "?a=b#" + OAuthTokenExtractors.RFC_ACCESS_TOKEN_FIELD + "=" + REFERENCE_TOKEN + "&" + OAuthTokenExtractors.RFC_STATE_FIELD + "=1234");
 
 		new Thread(new Runnable() {
 			public void run() {
@@ -120,15 +114,13 @@ public class OAuthTokenWebListenerTest {
 	@Test
 	public void testMissingField() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
-						.forId("testSite")
-						.setTokenInterceptor(new OAuthTokenInterceptors.RedirectTokenInterceptor())
-						.setTokenExtractor(new OAuthTokenExtractors.NamedQueryTokenExtractor(TOKEN_ID, STATE_ID))
+						.forMode(OAuthMode.BROWSER)
 						.build();
 
 		URI baseUri = twl.start();
 		Future<OAuthTokenFinish> submittedToken = twl.getToken();
 
-		final URI requestUri = URI.create(baseUri.toString() + "?" + STATE_ID + "=1234");
+		final URI requestUri = URI.create(baseUri.toString() + "?" + OAuthTokenExtractors.RFC_STATE_FIELD + "=1234");
 
 		new Thread(new Runnable() {
 			public void run() {
@@ -175,7 +167,7 @@ public class OAuthTokenWebListenerTest {
 
 		@Override
 		public OAuthTokenExtractor getExtractor() {
-			return new OAuthTokenExtractors.NamedQueryTokenExtractor("custom");
+			return OAuthTokenExtractors.newTokenExtractorForMode(OAuthMode.BROWSER);
 		}
 	}
 

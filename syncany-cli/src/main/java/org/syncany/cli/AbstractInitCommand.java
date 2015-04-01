@@ -51,6 +51,7 @@ import org.syncany.plugins.transfer.TransferPluginOptionConverter;
 import org.syncany.plugins.transfer.TransferPluginOptions;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.oauth.OAuth;
 import org.syncany.plugins.transfer.oauth.OAuthGenerator;
 import org.syncany.plugins.transfer.oauth.OAuthTokenFinish;
 import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
@@ -198,23 +199,28 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		Class<? extends OAuthGenerator> oAuthGeneratorClass = TransferPluginUtil.getOAuthGeneratorClass(settings.getClass());
 
 		if (oAuthGeneratorClass != null) {
+			OAuth oauthSettings =	settings.getClass().getAnnotation(OAuth.class);
+
 			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthGeneratorClass.getDeclaredConstructor(settings.getClass());
 			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
-			String pluginId = settings.getClass().getSimpleName().replace(TransferSettings.class.getSimpleName(), "").toLowerCase();
+			OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forMode(oauthSettings.mode());
 
-			OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forId(pluginId);
+			if (oauthSettings.callbackPort() != OAuth.RANDOM_PORT) {
+				tokenListerBuilder.setPort(oauthSettings.callbackPort());
+			}
 
+			if (!oauthSettings.callbackId().equals(OAuth.PLUGIN_ID)) {
+				tokenListerBuilder.setId(oauthSettings.callbackId());
+			}
+
+			// non standard plugin?
 			if (oAuthGenerator instanceof OAuthGenerator.WithInterceptor) {
 				tokenListerBuilder.setTokenInterceptor(((OAuthGenerator.WithInterceptor) oAuthGenerator).getInterceptor());
 			}
 
 			if (oAuthGenerator instanceof OAuthGenerator.WithExtractor) {
 				tokenListerBuilder.setTokenExtractor(((OAuthGenerator.WithExtractor) oAuthGenerator).getExtractor());
-			}
-
-			if (oAuthGenerator instanceof OAuthGenerator.WithFixedPort) {
-				tokenListerBuilder.setPort(((OAuthGenerator.WithFixedPort) oAuthGenerator).getPort());
 			}
 
 			OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
