@@ -196,12 +196,10 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	private void printOAuthInformation(TransferSettings settings) throws StorageException, NoSuchMethodException, SecurityException,
 					InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ExecutionException, InterruptedException, TimeoutException, NoSuchFieldException {
-		Class<? extends OAuthGenerator> oAuthGeneratorClass = TransferPluginUtil.getOAuthGeneratorClass(settings.getClass());
+		OAuth oauthSettings =	settings.getClass().getAnnotation(OAuth.class);
 
-		if (oAuthGeneratorClass != null) {
-			OAuth oauthSettings =	settings.getClass().getAnnotation(OAuth.class);
-
-			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthGeneratorClass.getDeclaredConstructor(settings.getClass());
+		if (oauthSettings != null) {
+			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oauthSettings.value().getDeclaredConstructor(settings.getClass());
 			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
 			OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forMode(oauthSettings.mode());
