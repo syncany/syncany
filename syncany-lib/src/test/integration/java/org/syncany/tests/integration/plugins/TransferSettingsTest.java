@@ -171,6 +171,12 @@ public class TransferSettingsTest {
 		DummyTransferSettings testTransferSettings = new DummyTransferSettings();
 		testTransferSettings.setField("enumField", enumValue);
 		assertEquals(DummyTransferSettings.DummyEnum.A, testTransferSettings.enumField);
+
+		final String enumValueLower = "a";
+
+		testTransferSettings = new DummyTransferSettings();
+		testTransferSettings.setField("enumField", enumValueLower);
+		assertEquals(DummyTransferSettings.DummyEnum.A, testTransferSettings.enumField);
 	}
 
 	@Test(expected = StorageException.class)
