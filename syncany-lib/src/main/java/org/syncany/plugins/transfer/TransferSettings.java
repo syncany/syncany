@@ -122,7 +122,7 @@ public abstract class TransferSettings {
 					if (value == null) {
 						field.set(this, null);
 					}
-					else if (field.getType() == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
+					else if (fieldType == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
 						field.setInt(this, Integer.parseInt(String.valueOf(value)));
 					}
 					else if (fieldType == Boolean.TYPE && (value instanceof Boolean || value instanceof String)) {
@@ -134,6 +134,10 @@ public abstract class TransferSettings {
 					else if (fieldType == File.class && value instanceof String) {
 						field.set(this, new File(String.valueOf(value)));
 					}
+					else if (ReflectionUtil.getClassFromType(fieldType).isEnum() && value instanceof String) {
+						Enum translatedEnum = Enum.valueOf((Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType), String.valueOf(value).toUpperCase());
+						field.set(this, translatedEnum);
+					}
 					else if (TransferSettings.class.isAssignableFrom(value.getClass())) {
 						field.set(this, ReflectionUtil.getClassFromType(fieldType).cast(value));
 					}
@@ -144,7 +148,7 @@ public abstract class TransferSettings {
 			}
 		}
 		catch (Exception e) {
-			throw new StorageException("Unable to parse value: " + e.getMessage(), e);
+			throw new StorageException("Unable to parse value because its format is invalid: " + e.getMessage(), e);
 		}
 	}
 
