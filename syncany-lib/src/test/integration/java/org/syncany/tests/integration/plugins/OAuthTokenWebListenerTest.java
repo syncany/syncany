@@ -10,8 +10,8 @@ import java.net.URI;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.oauth.OAuthGenerator;
@@ -32,18 +32,16 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class OAuthTokenWebListenerTest {
 	public static final String REFERENCE_TOKEN = "aabbccddeeff";
 
-	private WebClient webClient;
+	private static final WebClient WEB_CLIENT = new WebClient(BrowserVersion.CHROME);
 
-	@Before
-	public void createWebclient() {
-		webClient = new WebClient(BrowserVersion.CHROME);
-		webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+	@BeforeClass
+	public static void setupWebClient() {
+		WEB_CLIENT.getOptions().setThrowExceptionOnFailingStatusCode(false);
 	}
 
-	@After
-	public void closeWebclient() {
-		webClient.closeAllWindows();
-		webClient = null;
+	@AfterClass
+	public static void closeWebClient() {
+		WEB_CLIENT.closeAllWindows();
 	}
 
 	@Test
@@ -61,8 +59,9 @@ public class OAuthTokenWebListenerTest {
 			public void run() {
 				try {
 					TimeUnit.SECONDS.sleep(2);
+
 					System.out.println("Requesting: " + requestUri);
-					HtmlPage page = webClient.getPage(requestUri.toURL());
+					HtmlPage page = WEB_CLIENT.getPage(requestUri.toURL());
 
 					assertEquals(200, page.getWebResponse().getStatusCode());
 				}
@@ -95,7 +94,7 @@ public class OAuthTokenWebListenerTest {
 					TimeUnit.SECONDS.sleep(2);
 
 					System.out.println("Requesting: " + requestUri);
-					HtmlPage page = webClient.getPage(requestUri.toURL());
+					HtmlPage page = WEB_CLIENT.getPage(requestUri.toURL());
 
 					assertEquals(200, page.getWebResponse().getStatusCode());
 				}
@@ -114,7 +113,7 @@ public class OAuthTokenWebListenerTest {
 	@Test
 	public void testMissingField() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
-						.forMode(OAuthMode.BROWSER)
+						.forMode(OAuthMode.SERVER)
 						.build();
 
 		URI baseUri = twl.start();
@@ -128,7 +127,7 @@ public class OAuthTokenWebListenerTest {
 					TimeUnit.SECONDS.sleep(2);
 
 					System.out.println("Requesting: " + requestUri);
-					HtmlPage page = webClient.getPage(requestUri.toURL());
+					HtmlPage page = WEB_CLIENT.getPage(requestUri.toURL());
 
 					assertEquals(400, page.getWebResponse().getStatusCode());
 				}
