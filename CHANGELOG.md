@@ -7,7 +7,7 @@ Change Log
   + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
   + Add 'prevent standby' toggle in GUI #387
   + Add theme and tray icon selector in GUI
-  + Add update check to GUI in general settings panel #415
+  + Add update check to GUI in general settings panel, and daily update check #415
   + Add support for enums as transfer setting values #280
 - Bugfixes and other things:
   + Make sure that plugin update on Windows is able to install snapshots #418
