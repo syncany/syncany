@@ -19,9 +19,12 @@ package org.syncany.plugins.transfer;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
 import org.syncany.util.ReflectionUtil;
+import org.syncany.util.StringUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -34,6 +37,7 @@ import com.google.common.primitives.Ints;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class TransferPluginOptions {
+	private static final Logger logger = Logger.getLogger(TransferPluginOptions.class.getName());
 	private static final int MAX_NESTED_LEVELS = 3;
 
 	/**
@@ -61,7 +65,7 @@ public class TransferPluginOptions {
 			boolean hasCallback = setupAnnotation != null && !setupAnnotation.callback().isInterface();
 			boolean hasConverter = setupAnnotation != null && !setupAnnotation.converter().isInterface();
 			boolean hasFileType = setupAnnotation != null && setupAnnotation.fileType() != null;
-			
+
 			String name = (hasName) ? elementAnnotation.name() : field.getName();
 			String description = (hasDescription) ? setupAnnotation.description() : field.getName();
 			FileType fileType = (hasFileType) ? setupAnnotation.fileType() : null;
@@ -85,6 +89,19 @@ public class TransferPluginOptions {
 						getOrderedOptions(fieldClass)));
 			}
 			else {
+				// list all values of an enum
+				if (Enum.class.isAssignableFrom(field.getType())) {
+					logger.log(Level.FINE, "Getting enums for field " + field.getType());
+					Object[] enumValues = field.getType().getEnumConstants();
+					logger.log(Level.FINE, "Enum values are: " + StringUtil.join(enumValues, ", "));
+
+					if (enumValues == null) {
+						throw new RuntimeException("Invalid TransferSettings class found: Enum at " + transferSettingsClass + " has no values");
+					}
+
+					description = description + " (Valid values are: " + StringUtil.join(enumValues, ", ") + ")";
+				}
+
 				options.add(new TransferPluginOption(field, name, description, field.getType(), fileType, encrypted, sensitive, singular, visible, required, callback, converter));
 			}
 		}
