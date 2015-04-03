@@ -84,6 +84,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	protected InitConsole console;
 	protected boolean isInteractive;
+	protected boolean isHeadless;
 
 	public AbstractInitCommand() {
 		console = InitConsole.getInstance();
@@ -196,51 +197,78 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 	private void printOAuthInformation(TransferSettings settings) throws StorageException, NoSuchMethodException, SecurityException,
 					InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ExecutionException, InterruptedException, TimeoutException, NoSuchFieldException {
-		OAuth oauthSettings =	settings.getClass().getAnnotation(OAuth.class);
+		OAuth oAuthSettings =	settings.getClass().getAnnotation(OAuth.class);
 
-		if (oauthSettings != null) {
-			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oauthSettings.value().getDeclaredConstructor(settings.getClass());
-			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
+		if (oAuthSettings != null) {
+			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthSettings.value().getDeclaredConstructor(settings.getClass());
+			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance();
 
-			OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forMode(oauthSettings.mode());
-
-			if (oauthSettings.callbackPort() != OAuth.RANDOM_PORT) {
-				tokenListerBuilder.setPort(oauthSettings.callbackPort());
-			}
-
-			if (!oauthSettings.callbackId().equals(OAuth.PLUGIN_ID)) {
-				tokenListerBuilder.setId(oauthSettings.callbackId());
-			}
-
-			// non standard plugin?
-			if (oAuthGenerator instanceof OAuthGenerator.WithInterceptor) {
-				tokenListerBuilder.setTokenInterceptor(((OAuthGenerator.WithInterceptor) oAuthGenerator).getInterceptor());
-			}
-
-			if (oAuthGenerator instanceof OAuthGenerator.WithExtractor) {
-				tokenListerBuilder.setTokenExtractor(((OAuthGenerator.WithExtractor) oAuthGenerator).getExtractor());
-			}
-
-			OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
-
-			URI oAuthURL = oAuthGenerator.generateAuthUrl(tokenListener.start());
-			Future<OAuthTokenFinish> futureTokenResponse = tokenListener.getToken();
-
-			out.println();
-			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
-			out.printf("Please navigate to the URL below and accept the given permissions:\n\n  %s\n\n", oAuthURL.toString());
-			out.print("Waiting for authorization...");
-
-			OAuthTokenFinish tokenResponse = futureTokenResponse.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS);
-
-			if (tokenResponse != null) {
-				out.printf(" received token '%s'\n\n", tokenResponse.getToken());
-				oAuthGenerator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
+			if (isHeadless) {
+				if (oAuthGenerator instanceof OAuthGenerator.WithNoRedirectMode) {
+					doOAuthInCopyTokenMode(oAuthGenerator);
+				}
+				else {
+					throw new RuntimeException("OAuth based plugin does not support headless mode");
+				}
 			}
 			else {
-				out.println(" canceled");
-				throw new StorageException("Error while acquiring token, perhaps user denied authorization");
+				doOAuthInRedirectMode(oAuthGenerator, oAuthSettings);
 			}
+
+		}
+	}
+
+	private void doOAuthInCopyTokenMode(OAuthGenerator generator) throws StorageException {
+		URI oAuthURL = ((OAuthGenerator.WithNoRedirectMode) generator).generateAuthUrl();
+
+		out.println();
+		out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
+		out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());
+		out.print("- Token (paste from URL): ");
+
+		String token = console.readLine();
+		generator.checkToken(token, null);
+	}
+
+	private void doOAuthInRedirectMode(OAuthGenerator generator, OAuth settings) throws IOException, InterruptedException, ExecutionException, TimeoutException, StorageException {
+		OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forMode(settings.mode());
+
+		if (settings.callbackPort() != OAuth.RANDOM_PORT) {
+			tokenListerBuilder.setPort(settings.callbackPort());
+		}
+
+		if (!settings.callbackId().equals(OAuth.PLUGIN_ID)) {
+			tokenListerBuilder.setId(settings.callbackId());
+		}
+
+		// non standard plugin?
+		if (generator instanceof OAuthGenerator.WithInterceptor) {
+			tokenListerBuilder.setTokenInterceptor(((OAuthGenerator.WithInterceptor) generator).getInterceptor());
+		}
+
+		if (generator instanceof OAuthGenerator.WithExtractor) {
+			tokenListerBuilder.setTokenExtractor(((OAuthGenerator.WithExtractor) generator).getExtractor());
+		}
+
+		OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
+
+		URI oAuthURL = generator.generateAuthUrl(tokenListener.start());
+		Future<OAuthTokenFinish> futureTokenResponse = tokenListener.getToken();
+
+		out.println();
+		out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
+		out.printf("Please navigate to the URL below and accept the given permissions:\n\n  %s\n\n", oAuthURL.toString());
+		out.print("Waiting for authorization...");
+
+		OAuthTokenFinish tokenResponse = futureTokenResponse.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS);
+
+		if (tokenResponse != null) {
+			out.printf(" received token '%s'\n\n", tokenResponse.getToken());
+			generator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
+		}
+		else {
+			out.println(" canceled");
+			throw new StorageException("Error while acquiring token, perhaps user denied authorization");
 		}
 	}
 

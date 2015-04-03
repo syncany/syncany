@@ -34,8 +34,23 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface OAuthGenerator {
+	/**
+	 * Generate a URL which can be accessed by a user to authorize Syncany
+	 *
+	 * @param redirectUri The URL to which the OAuth provider should redirect in any case (either success or failure)
+	 * @return A URL to authorize Syncany using the provided redirectUri
+	 * @throws StorageException
+	 */
 	public URI generateAuthUrl(URI redirectUri) throws StorageException;
-	public void checkToken(String token, String csrfState) throws StorageException;
+
+	/**
+	 * Validate the given token and (optional) csrf parameter.
+	 *
+	 * @param token
+	 * @param csrfState Content of the state parameter (optional)
+	 * @throws StorageException
+	 */
+	public void checkToken(String token, /*@Nullable*/ String csrfState) throws StorageException;
 
 	// Annotation don't support concrete instances of objects, only classes. Thus we need to add two additional interfaces
 	// if a plugin requires custom interceptors or extractors
@@ -52,5 +67,19 @@ public interface OAuthGenerator {
 	 */
 	public static interface WithExtractor {
 		public OAuthTokenExtractor getExtractor();
+	}
+
+	/**
+	 * If an OAuth based plugin also supports copy&pasting a token from a website it should extend this interface.
+	 */
+	public static interface WithNoRedirectMode {
+		/**
+		 * Called if Syncany is started in headless mode which does not support redirect_to URLs.<br/>
+		 * The website should output a token which can be copied over to Syncany's repo wizard.
+		 *
+		 * @return A URL with no redirect URL
+		 * @throws StorageException
+		 */
+		public URI generateAuthUrl() throws StorageException;
 	}
 }
