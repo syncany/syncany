@@ -148,7 +148,7 @@ public class TransferPluginOption {
 			return true;
 		}
 		else if (ReflectionUtil.getClassFromType(type).isEnum()) {
-			return ReflectionUtil.isValidEnum(value, ReflectionUtil.getClassFromType(type));
+			return ReflectionUtil.isValidEnum(value.toUpperCase(), ReflectionUtil.getClassFromType(type));
 		}
 		else if (type == File.class) {
 			if (isRequired()) {

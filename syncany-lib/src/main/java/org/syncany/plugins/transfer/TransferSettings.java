@@ -135,7 +135,7 @@ public abstract class TransferSettings {
 						field.set(this, new File(String.valueOf(value)));
 					}
 					else if (ReflectionUtil.getClassFromType(fieldType).isEnum() && value instanceof String) {
-						Enum translatedEnum = Enum.valueOf((Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType), String.valueOf(value));
+						Enum translatedEnum = Enum.valueOf((Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType), String.valueOf(value).toUpperCase());
 						field.set(this, translatedEnum);
 					}
 					else if (TransferSettings.class.isAssignableFrom(value.getClass())) {
