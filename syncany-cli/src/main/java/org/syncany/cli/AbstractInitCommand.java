@@ -201,7 +201,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 		if (oAuthSettings != null) {
 			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthSettings.value().getDeclaredConstructor(settings.getClass());
-			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance();
+			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
 			if (isHeadless) {
 				if (oAuthGenerator instanceof OAuthGenerator.WithNoRedirectMode) {
