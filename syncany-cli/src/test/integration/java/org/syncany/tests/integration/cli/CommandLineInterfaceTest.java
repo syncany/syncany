@@ -108,7 +108,7 @@ public class CommandLineInterfaceTest {
 
 		// Test output
 		assertEquals("Different number of output lines expected.", 19, cliOut.length);
-		assertEquals("A somefolder", cliOut[15]);
+		assertEquals("A somefolder", cliOut[17]);
 
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
