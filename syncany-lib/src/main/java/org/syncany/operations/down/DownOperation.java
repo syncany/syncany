@@ -236,6 +236,16 @@ public class DownOperation extends AbstractTransferOperation {
 			return false;
 		}
 
+		// Check if other operations are running
+		// We do this on purpose before LsRemote to prevent discrepancies
+		// between the LS result and the actual situation.
+		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
+			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
+			result.setResultCode(DownResultCode.NOK);
+
+			return false;
+		}
+
 		// Check which remote databases to download based on the last local vector clock
 		LsRemoteOperationResult lsRemoteResult = listUnknownRemoteDatabases();
 		result.setLsRemoteResult(lsRemoteResult);
@@ -247,13 +257,7 @@ public class DownOperation extends AbstractTransferOperation {
 			return false;
 		}
 
-		// Check if other operations are running
-		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
-			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
-			result.setResultCode(DownResultCode.NOK);
 
-			return false;
-		}
 
 		return true;
 	}
