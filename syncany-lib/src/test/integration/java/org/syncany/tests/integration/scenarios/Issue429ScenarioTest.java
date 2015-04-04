@@ -105,8 +105,8 @@ public class Issue429ScenarioTest {
 			try {
 				AThread.start();
 				BThread.start();
-				int actionsA = -1;
-				int actionsB = -1;
+				//				int actionsA = -1;
+				//				int actionsB = -1;
 
 				for (int i = 0; i < 50; i++) {
 					TestClient clientC = new TestClient("C", testConnection);
@@ -114,13 +114,6 @@ public class Issue429ScenarioTest {
 					if (!AThread.isAlive() || !BThread.isAlive()) {
 						throw new RuntimeException("One of the threads died");
 					}
-
-					if (actionsA == A.actions || actionsB == B.actions) {
-						throw new RuntimeException("One of the threads stopped doing things");
-					}
-
-					actionsA = A.actions;
-					actionsB = B.actions;
 
 					FileUtils.deleteDirectory(clientC.getLocalFile(""));
 					Thread.sleep(2000);
@@ -144,7 +137,6 @@ public class Issue429ScenarioTest {
 		Random random;
 		TestClient client;
 		Queue<String> queue;
-		public int actions = 0;
 
 		public activeThread(Random random, TestClient client, Queue<String> queue) {
 			this.random = random;
@@ -159,7 +151,6 @@ public class Issue429ScenarioTest {
 					int choice = random.nextInt(8);
 					queue.add(client.getConfig().getDisplayName() + choice);
 					performAction(client, choice);
-					actions++;
 					int sleepTime = random.nextInt(500);
 					logger.log(Level.INFO, "Now sleeping for " + sleepTime + " ms.");
 					Thread.sleep(sleepTime);
