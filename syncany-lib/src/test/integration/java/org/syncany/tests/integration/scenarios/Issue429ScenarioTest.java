@@ -63,35 +63,60 @@ public class Issue429ScenarioTest {
 
 	@Test
 	public void testSameFileDifferentNameFuzzy() throws Exception {
-        LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();		
-		
-		TestClient clientA = new TestClient("A", testConnection);
-		TestClient clientB = new TestClient("B", testConnection);
-		
-		
+		for (int seed = 1; seed < 1000; seed++) {
+			LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
-		Random randomA = new Random(1);
-		Random randomB = new Random(randomA.nextLong());
-		
-		
-		Thread AThread = new Thread(new activeThread(randomA, clientA), "A");
-		Thread BThread = new Thread(new activeThread(randomB, clientB), "B");
+			TestClient clientA = new TestClient("A", testConnection);
+			TestClient clientB = new TestClient("B", testConnection);
 
-		AThread.run();
-		BThread.run();
+			Random randomA = new Random(2 * seed);
+			Random randomB = new Random(2 * seed + 1);
 
-		while (true) {
-			TestClient clientC = new TestClient("C", testConnection);
-			clientC.down();
-			clientC.deleteTestData();
+			activeThread A = new activeThread(randomA, clientA);
+			activeThread B = new activeThread(randomB, clientB);
+			Thread AThread = new Thread(A, "A");
+			Thread BThread = new Thread(B, "B");
+			try {
+				AThread.start();
+				BThread.start();
+				int actionsA = -1;
+				int actionsB = -1;
+
+				for (int i = 0; i < 50; i++) {
+					TestClient clientC = new TestClient("C", testConnection);
+					clientC.down();
+					if (!AThread.isAlive() || !BThread.isAlive()) {
+						throw new RuntimeException("One of the threads died");
+					}
+
+					if (actionsA == A.actions || actionsB == B.actions) {
+						throw new RuntimeException("One of the threads stopped doing things");
+					}
+
+					actionsA = A.actions;
+					actionsB = B.actions;
+
+					FileUtils.deleteDirectory(clientC.getLocalFile(""));
+					Thread.sleep(2000);
+				}
+
+				AThread.interrupt();
+				BThread.interrupt();
+			}
+			catch (Exception e) {
+				logger.log(Level.INFO, "Something went wrong at seed: " + seed);
+				throw e;
+			}
+			clientA.deleteTestData();
+			clientB.deleteTestData();
 		}
-		
-		
 	}
 
-	public class activeThread implements Runnable {
+	public static class activeThread implements Runnable {
+		private static final Logger logger = Logger.getLogger(activeThread.class.getSimpleName());
 		Random random;
 		TestClient client;
+		public int actions = 0;
 
 		public activeThread(Random random, TestClient client) {
 			this.random = random;
@@ -102,12 +127,14 @@ public class Issue429ScenarioTest {
 		public void run() {
 			try {
 				while (true) {
-					int choice = random.nextInt() % 7;
+					int choice = random.nextInt(8);
 
 					switch (choice) {
 					case 0:
 						logger.log(Level.INFO, "0. Creating file with content");
-						client.createFileWithContent(client.getConfig().getDisplayName(), "content");
+						if (!client.getLocalFile(client.getConfig().getDisplayName()).exists()) {
+							client.createFileWithContent(client.getConfig().getDisplayName(), "content");
+						}
 						break;
 					case 1:
 						logger.log(Level.INFO, "1. Deleting my file.");
@@ -133,10 +160,21 @@ public class Issue429ScenarioTest {
 						options.setForce(true);
 						client.cleanup(options);
 						break;
+					case 6:
+						logger.log(Level.INFO, "6. Syncing.");
+						client.sync();
+						break;
+					case 7:
+						logger.log(Level.INFO, "7. Creating file with content (2)");
+						if (!client.getLocalFile(client.getConfig().getDisplayName() + "2").exists()) {
+							client.createFileWithContent(client.getConfig().getDisplayName() + "2", "content");
+						}
+						break;
 					default:
 						break;
 					}
-					int sleepTime = random.nextInt(1000);
+					actions++;
+					int sleepTime = random.nextInt(500);
 					logger.log(Level.INFO, "Now sleeping for " + sleepTime + " ms.");
 					Thread.sleep(sleepTime);
 
