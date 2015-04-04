@@ -6,7 +6,7 @@ installers for Syncany. To completely integrate the exe-generation with the
 build process, we created a small Gradle task (*exe*) for it. 
 
 
-#### 1. Download an install Inno Setup
+#### 1. Download and install Inno Setup
 
 To use the *exe* task, you must first install Inno Setup and add its 
 program directory to your PATH variable. Especially, the "iscc.exe" 
@@ -30,12 +30,12 @@ In short:
 	wine is.exe
 	sudo cp iscc /usr/local/bin/iscc
 
-If the machine is a machien without display manager, Inno Setup cannot be installed. Instead, you
+If the machine has no display manager, Inno Setup cannot be installed. Instead, you
 can extract the is.exe file using [innoextract](http://constexpr.org/innoextract/). The 
 innoextract tool is available in many distro repos (e.g. Ubuntu >= 12.10, Debian >= 7).
 So in most cases, the following commands are enough:
 
-	sudo apt-get install innoextact
+	sudo apt-get install innoextract
 	innoextract is.exe
 	mkdir ~/".wine/drive_c/Program Files (x86)/Inno Setup 5"
 	cp -a app/* ~/".wine/drive_c/Program Files (x86)/Inno Setup 5"
