@@ -9,3 +9,8 @@ and id not in (
 	from databaseversion dbv
 	join chunk on dbv.id=chunk.databaseversion_id
 )
+and id not in (
+	select dbv.id
+	from databaseversion dbv
+	join multichunk on dbv.id=multichunk.databaseversion_id
+)
