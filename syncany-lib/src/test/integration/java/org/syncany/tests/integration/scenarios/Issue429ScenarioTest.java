@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.util.TestClient;
@@ -85,7 +84,7 @@ public class Issue429ScenarioTest {
 		clientB.deleteTestData();
 	}
 
-	@Test
+	@Ignore
 	public void testSameFileDifferentNameFuzzy() throws Exception {
 		for (int seed = 0; seed < 1000; seed++) {
 			LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
