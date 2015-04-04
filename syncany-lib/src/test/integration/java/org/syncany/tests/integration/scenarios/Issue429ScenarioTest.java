@@ -61,7 +61,7 @@ public class Issue429ScenarioTest {
 		//clientA.deleteTestData();
 	}
 
-	@Test
+	@Ignore
 	public void testSpecificQueue() throws Exception {
 		String[] commands = new String[] { "A5", "B5", "B0", "B0", "A7", "A3", "B6", "B1", "A7", "A6", "A7", "B5", "A1", "A0", "B6", "A5", "B0",
 				"B6", "A7", "A0", "B7", "A5", "B1", "B7", "A6", "B7", "A0", "A3", "B4", "B7", "A2", "A7", "A4", "B1", "B4", "A3", "B0", "A0", "A4",
@@ -87,7 +87,7 @@ public class Issue429ScenarioTest {
 
 	@Test
 	public void testSameFileDifferentNameFuzzy() throws Exception {
-		for (int seed = 1; seed < 1000; seed++) {
+		for (int seed = 5; seed < 1000; seed++) {
 			LocalTransferSettings testConnection = (LocalTransferSettings) TestConfigUtil.createTestLocalConnection();
 
 			TestClient clientA = new TestClient("A", testConnection);
