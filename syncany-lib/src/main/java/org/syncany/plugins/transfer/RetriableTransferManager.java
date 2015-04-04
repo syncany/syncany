@@ -199,7 +199,10 @@ public class RetriableTransferManager implements TransferManager {
 				tryCount = 0;
 				return result;
 			}
-			catch (StorageMoveException | StorageFileNotFoundException e) {
+			catch (StorageMoveException e) {
+				// StorageFileNotFoundException used to be caught here. It no longer is,
+				// since the transaction concept can cause some very ephemeral discrepancies.
+				// These can be caught by simply trying again.
 				logger.log(Level.INFO, "StorageException caused by missing file, not the connection. Not retrying.");
 				throw e;
 			}

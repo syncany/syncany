@@ -413,9 +413,15 @@ public class TransactionAwareTransferManager implements TransferManager {
 		for (TransactionRemoteFile transaction : transactionFiles.values()) {
 			try {
 				File transactionFile = createTempFile("transaction");
-
-				// Download transaction file
-				download(transaction, transactionFile);
+				try {
+					// Download transaction file
+					download(transaction, transactionFile);
+				}
+				catch (StorageFileNotFoundException e) {
+					// This happens if the file is deleted between listing and downloading. It is now final, so we skip it.
+					logger.log(Level.INFO, "Could not find transaction file: " + transaction);
+					continue;
+				}
 
 				Transformer transformer = config == null ? null : config.getTransformer();
 				TransactionTO transactionTO = TransactionTO.load(transformer, transactionFile);
