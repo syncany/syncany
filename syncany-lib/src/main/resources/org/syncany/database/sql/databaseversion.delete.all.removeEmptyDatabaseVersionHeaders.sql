@@ -4,7 +4,6 @@
 -- on databaseversion_id is fileversion, since fileversions are always
 -- contained in a filehistory. All other elements can be
 -- left in a databaseversion by themselves.
-
 delete from databaseversion 
 where id not in (
 	select dbv.id
@@ -25,4 +24,4 @@ and id not in (
     select dbv.id
 	from databaseversion dbv
 	join filecontent on dbv.id=filecontent.databaseversion_id
-}
+)
