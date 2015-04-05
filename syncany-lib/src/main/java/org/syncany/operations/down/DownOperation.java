@@ -239,6 +239,8 @@ public class DownOperation extends AbstractTransferOperation {
 		// Check if other operations are running
 		// We do this on purpose before LsRemote to prevent discrepancies
 		// between the LS result and the actual situation.
+		// This condition is so racy that it might not actually occur in
+		// practice, but it does in stresstests (#433)
 		if (otherRemoteOperationsRunning(CleanupOperation.ACTION_ID)) {
 			logger.log(Level.INFO, "* Cleanup running. Skipping down operation.");
 			result.setResultCode(DownResultCode.NOK);
