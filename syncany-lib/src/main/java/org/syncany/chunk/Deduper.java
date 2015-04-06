@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Queue;
 
 import org.syncany.chunk.Chunker.ChunkEnumeration;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
@@ -47,11 +48,13 @@ public class Deduper {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
+	private long transactionSizeLimit;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer) {		
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long transactionSizeLimit) {
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
+		this.transactionSizeLimit = transactionSizeLimit;
 	}
 	
 	/**
@@ -64,13 +67,12 @@ public class Deduper {
 	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
 	 * @throws IOException If a file cannot be read or an unexpected exception occurs
 	 */
-	public void deduplicate(List<File> files, DeduperListener listener) throws IOException {
+	public int deduplicate(List<File> files, int firstFile, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
+		long totalMultiChunkSize = 0L;
 		
-		listener.onStart(files.size());
-		
-		for (int i=0; i<files.size(); i++) {
+		for (int i=firstFile; i<files.size(); i++) {
 			File file = files.get(i);
 			
 			// Filter ignored files
@@ -100,6 +102,7 @@ public class Deduper {
 					else {					
 						// - Check if multichunk full
 						if (multiChunk != null && multiChunk.isFull()) {
+							totalMultiChunkSize += multiChunk.getSize();
 							multiChunk.close();
 							listener.onMultiChunkClose(multiChunk);
 
@@ -126,7 +129,8 @@ public class Deduper {
 				}
 
 				// Closing file is necessary!
-				chunksEnum.close(); 
+				chunksEnum.close();
+
 			}
 
 			if (chunk != null) {			
@@ -138,6 +142,18 @@ public class Deduper {
 			
 			// Reset chunk (if folder after chunk, the folder would have a checksum b/c of chunk.getFileChecksum())
 			chunk = null;
+
+			// Check if we have reached the transaction limit
+			if (multiChunk != null) {
+				if (totalMultiChunkSize + multiChunk.getSize() >= transactionSizeLimit) {
+					multiChunk.close();
+					listener.onMultiChunkClose(multiChunk);
+					return i + 1;
+				}
+			}
+			else if (totalMultiChunkSize >= transactionSizeLimit) {
+				return i + 1;
+			}
 		}
 
 		// Close and add last multichunk
@@ -147,8 +163,10 @@ public class Deduper {
 			listener.onMultiChunkClose(multiChunk);
 
 			multiChunk = null;
-		}	
+		}
 		
 		listener.onFinish();
+
+		return -1;
 	}	
 }

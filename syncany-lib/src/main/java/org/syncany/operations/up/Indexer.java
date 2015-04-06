@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +57,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.UpIndexChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
+import org.syncany.util.Consumer;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -110,8 +113,13 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
-		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
+		index(files, new DatabaseVersionConsumer(databaseVersionQueue));
+		return databaseVersionQueue.poll();
+	}
 
+	public void index(List<File> files, Consumer<DatabaseVersion> databaseVersionListener)
+			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
 
@@ -119,13 +127,26 @@ public class Indexer {
 		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 
-		// Find and index new files
-		deduper.deduplicate(files, new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache));
+		int nextFileToProcess = 0;
+		while (nextFileToProcess != -1) {
+			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
-		// Find and remove deleted files
-		removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+			// Create the DeduperListener that will receive MultiChunks and store them in the DatabaseVersion object
+			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache);
 
-		return newDatabaseVersion;
+			// Signal the start of indexing if we are about to deduplicate the first file
+			if (nextFileToProcess == 0) {
+				deduperListener.onStart(files.size());
+			}
+
+			// Find and index new files
+			nextFileToProcess = deduper.deduplicate(files, nextFileToProcess, deduperListener);
+
+			// Find and remove deleted files
+			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+
+			databaseVersionListener.process(newDatabaseVersion);
+		}
 	}
 
 	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
@@ -285,10 +306,10 @@ public class Indexer {
 		@Override
 		public void onFileEnd(File file, byte[] rawFileChecksum) {
 			// Get file attributes (get them while file exists)
-			
+
 			// Note: Do NOT move any File-methods (file.anything()) below the file.exists()-part,
 			// because the file could vanish!
-			
+
 			FileChecksum fileChecksum = (rawFileChecksum != null) ? new FileChecksum(rawFileChecksum) : null;
 			endFileProperties = fileVersionComparator.captureFileProperties(file, fileChecksum, false);
 
@@ -343,7 +364,7 @@ public class Indexer {
 
 				logger.log(Level.INFO, "   * Added file version:    " + fileVersion);
 				logger.log(Level.INFO, "     based on file version: " + lastFileVersion);
-				
+
 				fireHasChangesEvent();
 			}
 			else {
@@ -370,7 +391,7 @@ public class Indexer {
 
 		private void fireHasChangesEvent() {
 			boolean firstNewFileDetected = newDatabaseVersion.getFileHistories().size() == 1;
-			
+
 			if (firstNewFileDetected) { // Only fires once!
 				eventBus.post(new UpIndexChangesDetectedSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 			}
@@ -412,7 +433,7 @@ public class Indexer {
 			// Permissions
 			if (EnvironmentUtil.isWindows()) {
 				fileVersion.setDosAttributes(fileProperties.getDosAttributes());
-				
+
 				if (fileVersion.getType() == FileType.FOLDER) {
 					fileVersion.setPosixPermissions(DEFAULT_POSIX_PERMISSIONS_FOLDER);
 				}
@@ -429,7 +450,7 @@ public class Indexer {
 			if (lastFileVersion != null) {
 				if (fileVersion.getType() == FileType.FILE
 						&& FileChecksum.fileChecksumEquals(fileVersion.getChecksum(), lastFileVersion.getChecksum())) {
-					
+
 					fileVersion.setStatus(FileStatus.CHANGED);
 				}
 				else if (!fileVersion.getPath().equals(lastFileVersion.getPath())) {
@@ -654,7 +675,7 @@ public class Indexer {
 		@Override
 		public void onFinish() {
 			eventBus.post(new UpIndexEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
-		} 
+		}
 
 		/**
 		 * Checks if chunk already exists in all database versions

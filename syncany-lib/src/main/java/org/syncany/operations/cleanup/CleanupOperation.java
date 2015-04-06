@@ -55,6 +55,7 @@ import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationResult;
+import org.syncany.operations.up.BlockingTransfersException;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.StorageException;
@@ -140,9 +141,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// If there are any, rollback any existing/old transactions.
 		// If other clients have unfinished transactions with deletions, do not proceed.
-		boolean blockingTransactionExist = !transferManager.cleanTransactions();
-
-		if (blockingTransactionExist) {
+		try{
+			transferManager.cleanTransactions();
+		}
+		catch (BlockingTransfersException ignored) {
 			finishOperation();
 			fireEndEvent();
 			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
@@ -163,6 +165,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// If we do cleanup, we are no longer allowed to resume a transaction
 		transferManager.clearResumableTransactions();
+		transferManager.clearPendingTransactions();
 
 		// Now do the actual work!
 		logger.log(Level.INFO, "Cleanup: Starting transaction.");

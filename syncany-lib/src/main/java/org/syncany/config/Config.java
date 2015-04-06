@@ -72,6 +72,9 @@ public class Config {
 	public static final String FILE_PORT = "port.xml";
 	public static final String FILE_TRANSACTION = "transaction-actions.xml";
 	public static final String FILE_TRANSACTION_DATABASE = "transaction-database.xml";
+	public static final String FILE_TRANSACTION_PATTERN = "transaction-actions.%010d.xml";
+	public static final String FILE_TRANSACTION_DATABASE_PATTERN = "transaction-database.%010d.xml";
+	public static final String FILE_TRANSACTION_LIST = "transaction-list.txt";
 
 	private byte[] repoId;
 	private String machineName;
@@ -339,5 +342,17 @@ public class Config {
 
 	public File getTransactionDatabaseFile() {
 		return new File(stateDir, FILE_TRANSACTION_DATABASE);
+	}
+
+	public File getTransactionListFile() {
+		return new File(stateDir, FILE_TRANSACTION_LIST);
+	}
+
+	public File getTransactionFile(long databaseVersionNumber) {
+		return new File(stateDir, String.format(FILE_TRANSACTION_PATTERN, databaseVersionNumber));
+	}
+
+	public File getTransactionDatabaseFile(long databaseVersionNumber) {
+		return new File(stateDir, String.format(FILE_TRANSACTION_DATABASE_PATTERN, databaseVersionNumber));
 	}
 }
