@@ -69,71 +69,35 @@ public class AppInfo {
 		return dist;
 	}
 
-	public void setDist(String dist) {
-		this.dist = dist;
-	}
-
 	public String getType() {
 		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public String getAppVersion() {
 		return appVersion;
 	}
 
-	public void setAppVersion(String appVersion) {
-		this.appVersion = appVersion;
-	}
-
 	public String getDate() {
 		return date;
-	}
-
-	public void setDate(String date) {
-		this.date = date;
 	}
 
 	public boolean isRelease() {
 		return release;
 	}
 
-	public void setRelease(boolean release) {
-		this.release = release;
-	}
-
 	public String getOperatingSystem() {
 		return operatingSystem;
-	}
-
-	public void setOperatingSystem(String operatingSystem) {
-		this.operatingSystem = operatingSystem;
 	}
 
 	public String getArchitecture() {
 		return architecture;
 	}
 
-	public void setArchitecture(String architecture) {
-		this.architecture = architecture;
-	}
-
 	public boolean isChecksum() {
 		return checksum;
 	}
 
-	public void setChecksum(boolean checksum) {
-		this.checksum = checksum;
-	}
-
 	public String getDownloadUrl() {
 		return downloadUrl;
-	}
-
-	public void setDownloadUrl(String downloadUrl) {
-		this.downloadUrl = downloadUrl;
 	}
 }
