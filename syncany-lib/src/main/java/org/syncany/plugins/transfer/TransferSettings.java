@@ -108,6 +108,7 @@ public abstract class TransferSettings {
 	 * @throws StorageException Thrown if the field either does not exist or isn't accessible or
 	 *         conversion failed due to invalid field types.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public final void setField(String key, Object value) throws StorageException {
 		try {
 			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
@@ -134,8 +135,11 @@ public abstract class TransferSettings {
 					else if (fieldType == File.class && value instanceof String) {
 						field.set(this, new File(String.valueOf(value)));
 					}
-					else if (ReflectionUtil.getClassFromType(fieldType).isEnum() && value instanceof String) {
-						Enum translatedEnum = Enum.valueOf((Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType), String.valueOf(value).toUpperCase());
+					else if (ReflectionUtil.getClassFromType(fieldType).isEnum() && value instanceof String) {						
+						Class<? extends Enum> enumClass = (Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType);
+						String enumValue = String.valueOf(value).toUpperCase();
+						
+						Enum translatedEnum = Enum.valueOf(enumClass, enumValue);						
 						field.set(this, translatedEnum);
 					}
 					else if (TransferSettings.class.isAssignableFrom(value.getClass())) {
