@@ -67,7 +67,7 @@ public class WatchCommandTest {
 		}
 
 		// Sync down .syignore
-		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+		TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientB.get("localdir"),
 				"down"
 		}));

@@ -71,12 +71,19 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
 
 public class TestClient extends Client {
+	private Config config;
+	
 	public TestClient(String machineName, TransferSettings connection) throws Exception {
 		Config testConfig = TestConfigUtil.createTestLocalConfig(machineName, connection);
+
 		testConfig.setMachineName(machineName);
 		testConfig.setDisplayName(machineName);
 
-		setConfig(testConfig);
+		config = testConfig;
+	}
+
+	public Config getConfig() {
+		return config;
 	}
 
 	public UpOperationResult up() throws Exception {

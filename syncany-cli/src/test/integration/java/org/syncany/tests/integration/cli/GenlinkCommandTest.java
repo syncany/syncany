@@ -85,7 +85,7 @@ public class GenlinkCommandTest {
 				"--password", "somelongpassword"
 		};
 
-		String[] tmp = TestCliUtil.runAndCaptureOutput(new CommandLineClient(initArgs));
+		TestCliUtil.runAndCaptureOutput(new CommandLineClient(initArgs));
 
 		// Run Genlink (on A)		
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
