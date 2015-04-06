@@ -19,14 +19,26 @@ package org.syncany.operations.update;
 
 import org.syncany.operations.OperationResult;
 
+/**
+ * Result class returned by the {@link UpdateOperation}. 
+ * 
+ * <p>If the operation was called with the 'check' action, an instance of
+ * this class will contain information about whether the operation
+ * was successful, and if it was, the available application information. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public class UpdateOperationResult implements OperationResult {
+	/**
+	 * Result code of the update operation.
+	 */
 	public enum UpdateResultCode {
 		OK, NOK
 	}
 
 	private UpdateResultCode resultCode;
 	private UpdateOperationAction action;
-	
+
 	private AppInfo appInfo;
 	private boolean newVersionAvailable;
 

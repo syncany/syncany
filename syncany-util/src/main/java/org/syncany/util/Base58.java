@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.syncany.util;
 
 import java.io.UnsupportedEncodingException;
@@ -26,18 +25,18 @@ import java.util.Arrays;
  * <p>Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that this is not the same base58 as used by
  * Flickr, which you may see reference to around the internet.</p>
  *
- * <p>You may instead wish to work with {@link VersionedChecksummedBytes}, which adds support for testing the prefix
- * and suffix bytes commonly found in addresses.</p>
- *
  * <p>Satoshi says: why base-58 instead of standard base-64 encoding?<p>
  *
  * <ul>
- * <li>Don't want 0OIl characters that look the same in some fonts and
- *     could be used to create visually identical looking account numbers.</li>
- * <li>A string with non-alphanumeric characters is not as easily accepted as an account number.</li>
- * <li>E-mail usually won't line-break if there's no punctuation to break at.</li>
- * <li>Doubleclicking selects the whole number as one word if it's all alphanumeric.</li>
+ *   <li>Don't want 0OIl characters that look the same in some fonts and
+ *       could be used to create visually identical looking account numbers.</li>
+ *   <li>A string with non-alphanumeric characters is not as easily accepted as an account number.</li>
+ *   <li>E-mail usually won't line-break if there's no punctuation to break at.</li>
+ *   <li>Doubleclicking selects the whole number as one word if it's all alphanumeric.</li>
  * </ul>
+ * 
+ * @see <a href="https://code.google.com/p/bitcoinj/source/browse/lib/src/com/google/bitcoin/core/Base58.java?r=216deb2d35d1a128a7f617b91f2ca35438aae546">Original source of this class</a>
+ * @author Mike Hearn 
  */
 public class Base58 {
     public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
@@ -61,7 +60,9 @@ public class Base58 {
         }
     }
 
-    /** Encodes the given bytes in base58. No checksum is appended. */
+    /** 
+     * Encodes the given bytes in base58. No checksum is appended.      
+     */
     public static String encode(byte[] input) {
         if (input.length == 0) {
             return "";
@@ -172,7 +173,7 @@ public class Base58 {
     }
     
     /**
-     * See {@link Utils#doubleDigest(byte[], int, int)}.
+     * @see #doubleDigest(byte[], int, int)
      */
     public static byte[] doubleDigest(byte[] input) {
         return doubleDigest(input, 0, input.length);

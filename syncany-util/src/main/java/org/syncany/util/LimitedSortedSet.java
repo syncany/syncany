@@ -8,7 +8,8 @@ import java.util.TreeSet;
  * Entries that exceed the maximum size of the set (<em>maxSize</em>) 
  * will be removed from the set. 
  * 
- * @see http://stackoverflow.com/questions/8382529/limited-sortedset
+ * @see <a href="http://stackoverflow.com/questions/8382529/limited-sortedset">Original code on stackoverflow.com</a>
+ * @author Thomas ?, see http://stackoverflow.com/users/637853/thomas
  */
 @SuppressWarnings("unchecked")
 public class LimitedSortedSet<E> extends TreeSet<E> {

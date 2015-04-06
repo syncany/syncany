@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.auth;
+package org.syncany.operations.daemon;
 
 import io.undertow.security.idm.Account;
 import io.undertow.security.idm.Credential;
@@ -33,14 +33,13 @@ import java.util.Set;
 import org.syncany.config.to.UserTO;
 
 /**
- * A simple {@link IdentityManager} implementation, that just takes a map of users to their
- * password.
+ * A simple {@link IdentityManager} implementation, that just takes a map of users 
+ * to their password.
  * 
- * @see https://github.com/undertow-io/undertow/blob/d160f7c44951c25186595e4755c45659396d057c/examples/src/main/java/io/undertow/examples/security/basic/MapIdentityManager.java
+ * @see <a href="https://github.com/undertow-io/undertow/blob/d160f7c44951c25186595e4755c45659396d057c/examples/src/main/java/io/undertow/examples/security/basic/MapIdentityManager.java">Original implementation (from Undertow)</a>
  * @author Stuart Douglas
  */
 public class MapIdentityManager implements IdentityManager {
-
 	private final Map<String, char[]> users;
 
 	public MapIdentityManager(final Map<String, char[]> users) {

@@ -20,6 +20,18 @@ package org.syncany.operations.update;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
+/**
+ * This class represents an information object describing an application release 
+ * for a single distribution type. It is returned by the Syncany API during the
+ * {@link UpdateOperation} with the action {@link UpdateOperationAction#CHECK}. 
+ *  
+ * <p>this class uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
+ * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name = "appInfo", strict = false)
 public class AppInfo {
 	@Element(name = "dist", required = true)
@@ -30,12 +42,12 @@ public class AppInfo {
 
 	@Element(name = "appVersion", required = true)
 	private String appVersion;
-	
+
 	@Element(name = "date", required = true)
 	private String date;
-	
+
 	@Element(name = "release", required = true)
-	private boolean release;	
+	private boolean release;
 
 	@Element(name = "operatingSystem", required = true)
 	private String operatingSystem;

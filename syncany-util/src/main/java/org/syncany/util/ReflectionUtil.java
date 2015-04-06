@@ -41,6 +41,7 @@ public abstract class ReflectionUtil {
 					matchedAnnotations.add(f);
 				}
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 
@@ -56,6 +57,7 @@ public abstract class ReflectionUtil {
 					matchedAnnotations.add(m);
 				}
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 

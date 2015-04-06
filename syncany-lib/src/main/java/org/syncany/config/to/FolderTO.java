@@ -19,8 +19,21 @@ package org.syncany.config.to;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 
+/**
+ * This class is the access object to configure a folder
+ * managed by the daemon. It defines whether a folder is enabled/disabled,
+ * and with which {@link WatchOperationOptions} to start the {@link WatchOperation}
+ * in the daemon. This class is part of the daemon configuration in {@link DaemonConfigTO}. 
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.
+ *
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(strict = false)
 public class FolderTO {
 	@Element(name="path")

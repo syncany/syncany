@@ -32,6 +32,7 @@ import org.syncany.operations.Operation;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
+	
 	private LogOperationOptions options;
 	private SqlDatabase localDatabase;
 
