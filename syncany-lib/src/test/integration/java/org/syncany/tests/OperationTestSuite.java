@@ -33,24 +33,26 @@ import org.syncany.tests.integration.operations.PluginOperationTest;
 import org.syncany.tests.integration.operations.RecursiveWatcherTest;
 import org.syncany.tests.integration.operations.StatusOperationTest;
 import org.syncany.tests.integration.operations.SyncUpOperationTest;
+import org.syncany.tests.integration.operations.UpdateOperationTest;
 import org.syncany.tests.unit.operations.deamon.DaemonOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	AssemblerTest.class,
-	CleanupOperationTest.class,
-	ConnectOperationTest.class,
+		AssemblerTest.class,
+		CleanupOperationTest.class,
+		ConnectOperationTest.class,
 		DaemonOperationTest.class,
-	FileSystemActionComparatorTest.class,
-	FileSystemActionReconciliatorTest.class,
-	IndexerTest.class,
-	InitOperationTest.class,
-	NotificationListenerTest.class,
-	OperationPerformanceTest.class,
-	PluginOperationTest.class,
-	RecursiveWatcherTest.class,
-	StatusOperationTest.class,
-	SyncUpOperationTest.class	
+		FileSystemActionComparatorTest.class,
+		FileSystemActionReconciliatorTest.class,
+		IndexerTest.class,
+		InitOperationTest.class,
+		NotificationListenerTest.class,
+		OperationPerformanceTest.class,
+		PluginOperationTest.class,
+		RecursiveWatcherTest.class,
+		StatusOperationTest.class,
+		SyncUpOperationTest.class,
+		UpdateOperationTest.class
 })
 public class OperationTestSuite {
 	// This class executes all tests

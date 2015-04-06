@@ -26,9 +26,9 @@ import org.syncany.tests.integration.scenarios.longrunning.LongRunningNewAndDele
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	LongRunningLargeFileScenarioTest.class,
-	LongRunningLotsOfSmallFilesScenarioTest.class,
-	LongRunningNewAndDeleteScenarioTest.class
+		LongRunningLargeFileScenarioTest.class,
+		LongRunningLotsOfSmallFilesScenarioTest.class,
+		LongRunningNewAndDeleteScenarioTest.class
 })
 public class LongRunningTestSuite {
 	// This class executes all tests
