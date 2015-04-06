@@ -32,9 +32,9 @@ import org.syncany.tests.integration.operations.OperationPerformanceTest;
 import org.syncany.tests.integration.operations.PluginOperationTest;
 import org.syncany.tests.integration.operations.RecursiveWatcherTest;
 import org.syncany.tests.integration.operations.StatusOperationTest;
-import org.syncany.tests.integration.operations.SyncUpOperationTest;
+import org.syncany.tests.integration.operations.UpOperationTest;
 import org.syncany.tests.integration.operations.UpdateOperationTest;
-import org.syncany.tests.unit.operations.deamon.DaemonOperationTest;
+import org.syncany.tests.unit.operations.daemon.DaemonOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -51,7 +51,7 @@ import org.syncany.tests.unit.operations.deamon.DaemonOperationTest;
 		PluginOperationTest.class,
 		RecursiveWatcherTest.class,
 		StatusOperationTest.class,
-		SyncUpOperationTest.class,
+		UpOperationTest.class,
 		UpdateOperationTest.class
 })
 public class OperationTestSuite {
