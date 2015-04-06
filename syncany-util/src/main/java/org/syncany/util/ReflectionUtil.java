@@ -27,8 +27,8 @@ import java.util.List;
 
 /**
  * Utility class to find classes, methods and fields with certain properties -
- * typically having an annotation or a certain erasure. 
- * 
+ * typically having an annotation or a certain erasure.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class ReflectionUtil {
@@ -108,5 +108,19 @@ public abstract class ReflectionUtil {
 		}
 
 		return null;
+	}
+
+	public static boolean isValidEnum(String enumValue, Class<?> enumClass) {
+		if (!enumClass.isEnum()) {
+			return false;
+		}
+
+		try {
+			Enum.valueOf((Class<? extends Enum>) enumClass, enumValue);
+			return true;
+		}
+		catch (IllegalArgumentException e) {
+			return false;
+		}
 	}
 }

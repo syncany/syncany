@@ -60,10 +60,11 @@ public class DownCommandTest {
 			"down"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 10, cliOut.length);
-		assertEquals("A file1", cliOut[6]);
-		assertEquals("A file2", cliOut[7]);
-		assertEquals("A file3", cliOut[8]);		
+		assertEquals("Different number of output lines expected.", 11, cliOut.length);
+		assertEquals("A .syignore", cliOut[6]);
+		assertEquals("A file1", cliOut[7]);
+		assertEquals("A file2", cliOut[8]);
+		assertEquals("A file3", cliOut[9]);
 		
 		// Round 3: Modified and deleted files
 		TestFileUtil.changeRandomPartOfBinaryFile(new File(clientA.get("localdir")+"/file2"));

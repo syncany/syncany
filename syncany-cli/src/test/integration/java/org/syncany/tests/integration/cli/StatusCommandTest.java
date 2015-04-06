@@ -47,9 +47,10 @@ public class StatusCommandTest {
 		}));
 		
 		// Test
-		assertEquals("Different number of output lines expected.", 4, cliOut.length);
-		assertEquals("? somefolder1", cliOut[2]);
-		assertEquals("? somefolder2", cliOut[3]);
+		assertEquals("Different number of output lines expected.", 5, cliOut.length);
+		assertEquals("? .syignore", cliOut[2]);
+		assertEquals("? somefolder1", cliOut[3]);
+		assertEquals("? somefolder2", cliOut[4]);
 		// TODO [medium] This test case does NOT test the loglevel option
 		
 		// Cleanup
@@ -77,9 +78,10 @@ public class StatusCommandTest {
 		
 		// Test		
 		assertTrue("Log file should exist.", new File(tempLogFile.getAbsolutePath() + ".0").exists());
-		assertEquals(4, cliOut.length);
-		assertEquals("? somefolder1", cliOut[2]);
-		assertEquals("? somefolder2", cliOut[3]);
+		assertEquals(5, cliOut.length);
+		assertEquals("? .syignore", cliOut[2]);
+		assertEquals("? somefolder1", cliOut[3]);
+		assertEquals("? somefolder2", cliOut[4]);
 		
 		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
