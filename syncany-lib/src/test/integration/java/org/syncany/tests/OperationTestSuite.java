@@ -27,6 +27,7 @@ import org.syncany.tests.integration.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.integration.operations.FileSystemActionReconciliatorTest;
 import org.syncany.tests.integration.operations.IndexerTest;
 import org.syncany.tests.integration.operations.InitOperationTest;
+import org.syncany.tests.integration.operations.LogOperationTest;
 import org.syncany.tests.integration.operations.NotificationListenerTest;
 import org.syncany.tests.integration.operations.OperationPerformanceTest;
 import org.syncany.tests.integration.operations.PluginOperationTest;
@@ -46,6 +47,7 @@ import org.syncany.tests.unit.operations.daemon.DaemonOperationTest;
 		FileSystemActionReconciliatorTest.class,
 		IndexerTest.class,
 		InitOperationTest.class,
+		LogOperationTest.class,
 		NotificationListenerTest.class,
 		OperationPerformanceTest.class,
 		PluginOperationTest.class,

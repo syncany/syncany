@@ -319,7 +319,6 @@ public class DownOperation extends AbstractTransferOperation {
 			databaseSerializer.load(remoteDatabase, remoteDatabaseFileInCache, null, null, DatabaseReadType.HEADER_ONLY); // only load headers!
 
 			remoteDatabaseHeaders.put(remoteDatabaseFile, remoteDatabase.getDatabaseVersions());
-
 		}
 
 		return remoteDatabaseHeaders;
