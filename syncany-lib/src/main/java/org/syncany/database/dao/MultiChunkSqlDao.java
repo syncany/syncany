@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.syncany.chunk.MultiChunk;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
@@ -47,8 +46,6 @@ import org.syncany.database.VectorClock;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MultiChunkSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(MultiChunkSqlDao.class.getSimpleName());	
-
 	public MultiChunkSqlDao(Connection connection) {
 		super(connection);
 	}

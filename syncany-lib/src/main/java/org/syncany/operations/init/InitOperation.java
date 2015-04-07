@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.Map;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
@@ -261,16 +260,6 @@ public class InitOperation extends AbstractInitOperation {
 
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;
-	}
-
-	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
-		try {
-			Map<String, SyncanyRemoteFile> repoFileList = transferManager.list(SyncanyRemoteFile.class);
-			return repoFileList.size() > 0;
-		}
-		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
-		}
 	}
 
 	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {

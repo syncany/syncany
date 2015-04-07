@@ -135,15 +135,6 @@ public class CipherUtil {
 	}
 
 	/**
-	 * Returns whether the unlimited strength policy is enabled in the current JVM.
-	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography
-	 *      Extension (JCE) Unlimited Strength</a>
-	 */
-	public static boolean unlimitedStrengthEnabled() {
-		return unlimitedStrengthEnabled.get();
-	}
-
-	/**
 	 * Attempts to programmatically enable the unlimited strength Java crypto extension
 	 * using the reflection API.
 	 *

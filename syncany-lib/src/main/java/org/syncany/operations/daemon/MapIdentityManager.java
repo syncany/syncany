@@ -42,10 +42,6 @@ import org.syncany.config.to.UserTO;
 public class MapIdentityManager implements IdentityManager {
 	private final Map<String, char[]> users;
 
-	public MapIdentityManager(final Map<String, char[]> users) {
-		this.users = users;
-	}
-
 	public MapIdentityManager(List<UserTO> users) {
 		this.users = new HashMap<String, char[]>();
 

@@ -213,14 +213,6 @@ public class Indexer {
 		return null;
 	}
 
-	public static class IndexerException extends RuntimeException {
-		private static final long serialVersionUID = 5247751938336036877L;
-
-		public IndexerException(String message) {
-			super(message);
-		}
-	}
-
 	private class IndexerDeduperListener implements DeduperListener {
 		private FileVersionComparator fileVersionComparator;
 		private SecureRandom secureRandom;

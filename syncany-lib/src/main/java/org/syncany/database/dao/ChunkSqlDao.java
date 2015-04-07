@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
@@ -38,7 +37,6 @@ import org.syncany.database.VectorClock;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ChunkSqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(ChunkSqlDao.class.getSimpleName());
 	private Map<ChunkChecksum, ChunkEntry> chunkCache;
 
 	public ChunkSqlDao(Connection connection) {

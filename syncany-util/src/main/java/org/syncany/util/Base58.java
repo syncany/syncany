@@ -16,10 +16,8 @@
 package org.syncany.util;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 /**
  * <p>Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that this is not the same base58 as used by
@@ -146,30 +144,6 @@ public class Base58 {
         }
 
         return copyOfRange(temp, j - zeroCount, temp.length);
-    }
-    
-    public static BigInteger decodeToBigInteger(String input) {
-        return new BigInteger(1, decode(input));
-    }
-
-    /**
-     * Uses the checksum in the last 4 bytes of the decoded data to verify the rest are correct. The checksum is
-     * removed from the returned data.
-     *
-     */
-    public static byte[] decodeChecked(String input) {
-        byte tmp [] = decode(input);
-        if (tmp.length < 4)
-            throw new IllegalArgumentException("Input too short");
-        byte[] bytes = copyOfRange(tmp, 0, tmp.length - 4);
-        byte[] checksum = copyOfRange(tmp, tmp.length - 4, tmp.length);
-        
-        tmp = doubleDigest(bytes);
-        byte[] hash = copyOfRange(tmp, 0, 4);
-        if (!Arrays.equals(checksum, hash)) 
-            throw new IllegalArgumentException("Checksum does not validate");
-        
-        return bytes;
     }
     
     /**
