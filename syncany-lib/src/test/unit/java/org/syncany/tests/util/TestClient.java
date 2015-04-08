@@ -221,6 +221,12 @@ public class TestClient extends Client {
 		return localFile;
 	}
 
+	public File createFileWithContent(String name, String content) throws IOException {
+		File localFile = getLocalFile(name);
+		TestFileUtil.createFileWithContent(localFile, content);
+		return localFile;
+	}
+
 	public void createNewFolder(String name) {
 		getLocalFile(name).mkdirs();
 	}
