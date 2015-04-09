@@ -141,7 +141,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		// If there are any, rollback any existing/old transactions.
 		// If other clients have unfinished transactions with deletions, do not proceed.
-		try{
+		try {
 			transferManager.cleanTransactions();
 		}
 		catch (BlockingTransfersException ignored) {

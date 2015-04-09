@@ -80,7 +80,6 @@ public class NoCliRequestsWhileSyncingTest {
 
 		// Then, let's hope the response is "no, no, no!"
 		Response response = waitForResponse(2586);
-
 		assertTrue(response instanceof StatusFolderResponse);
 		StatusFolderResponse cliResponse = (StatusFolderResponse) response;
 

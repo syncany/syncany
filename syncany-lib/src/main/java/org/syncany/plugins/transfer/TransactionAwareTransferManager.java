@@ -21,7 +21,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -226,6 +234,10 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 	}
 
+	/**
+	 * clearPendingTransactions provides a way to delete the multiple transactions
+	 * that might be queued after an interrupted up.
+	 */
 	public void clearPendingTransactions() throws IOException {
 		Objects.requireNonNull(config, "Cannot delete resumable transaction backlog if config is null.");
 		Collection<Long> resumableTransactionList = loadPendingTransactionList();
@@ -248,6 +260,9 @@ public class TransactionAwareTransferManager implements TransferManager {
 		}
 	}
 
+	/**
+	 * Check if we have transactions from an Up operation that we can resume.
+	 */
 	public Collection<Long> loadPendingTransactionList() throws IOException {
 		Objects.requireNonNull(config, "Cannot read pending transaction list if config is null.");
 		Collection<Long> databaseVersionNumbers = new ArrayList<>();

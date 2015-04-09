@@ -65,6 +65,8 @@ public class Deduper {
 	 * @param files List of files to be deduplicated
 	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
 	 * @throws IOException If a file cannot be read or an unexpected exception occurs
+	 * 
+	 * @return index of the next file to be deduplicated.
 	 */
 	public int deduplicate(List<File> files, int firstFile, DeduperListener listener) throws IOException {
 		Chunk chunk = null;

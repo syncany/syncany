@@ -12,6 +12,11 @@ import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
 
 /**
+ * AsyncIndexer provides a Runnable to start as a separate thread. Running
+ * this will result in the list of files provided being indexed and deduped. 
+ * The result of this indexation will be captured in DatabaseVersions, which
+ * will be stored in the provided Queue, which must be threadsafe.
+ * 
  * @author Tim Hegeman
  */
 public class AsyncIndexer implements Runnable {
@@ -22,6 +27,12 @@ public class AsyncIndexer implements Runnable {
 	private final Queue<DatabaseVersion> databaseVersionQueue;
 	private boolean done;
 
+	/** 
+	 * @param config specifying all necessary options
+	 * @param deduper the Deduper, already configured.
+	 * @param files List of Files to be indexed.
+	 * @param queue a threadsafe Queue to communicate DatabaseVersions.
+	 */
 	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
 		this.files = files;
 		this.databaseVersionQueue = queue;
