@@ -38,11 +38,22 @@ import org.syncany.util.EnvironmentUtil;
 import com.github.zafarkhaja.semver.Version;
 
 /**
+ * This operation manages updates of the application. It currently only 
+ * performs update checks, but will likely be extended to automatically
+ * update the application. The following actions exist:
+ * 
+ * <p>The 'check' action checks if a new application version is available. 
+ * It queries the Syncany API and outputs whether the local copy of the
+ * application is up-to-date. If it is not, it outputs the newest version
+ * and a download URL.
+ * 
+ * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class UpdateOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(UpdateOperation.class.getSimpleName());
 
+	private static final String GUI_PLUGIN_ID = "gui";
 	private static final String API_DEFAULT_ENDPOINT_URL = "https://api.syncany.org/v3";
 	private static final String API_APP_LIST_REQUEST_FORMAT = "%s/app?dist=%s&type=%s&snapshots=%s&os=%s&arch=%s";
 
@@ -50,7 +61,7 @@ public class UpdateOperation extends Operation {
 	private UpdateOperationResult result;
 
 	private LocalEventBus eventBus;
-	
+
 	public UpdateOperation(Config config, UpdateOperationOptions options) {
 		super(config);
 
@@ -62,54 +73,54 @@ public class UpdateOperation extends Operation {
 
 	@Override
 	public UpdateOperationResult execute() throws Exception {
-		result.setAction(options.getAction());		
+		result.setAction(options.getAction());
 
 		switch (options.getAction()) {
-			case CHECK:
-				return executeCheck();
+		case CHECK:
+			return executeCheck();
 
-			default:
-				throw new Exception("Unknown action: " + options.getAction());
+		default:
+			throw new Exception("Unknown action: " + options.getAction());
 		}
 	}
 
 	private UpdateOperationResult executeCheck() throws Exception {
 		Version localAppVersion = Version.valueOf(Client.getApplicationVersion());
-		
-		String appInfoResponseStr = getAppInfoResponseStr();		
+
+		String appInfoResponseStr = getAppInfoResponseStr();
 		AppInfoResponse appInfoResponse = new Persister().read(AppInfoResponse.class, appInfoResponseStr);
 
 		ArrayList<AppInfo> appInfoList = appInfoResponse.getAppInfoList();
-		
+
 		if (appInfoList.size() > 0) {
 			AppInfo remoteAppInfo = appInfoList.get(0);
 			Version remoteAppVersion = Version.valueOf(remoteAppInfo.getAppVersion());
-			
+
 			boolean newVersionAvailable = remoteAppVersion.greaterThan(localAppVersion);
-					
+
 			result.setResultCode(UpdateResultCode.OK);
 			result.setAppInfo(remoteAppInfo);
 			result.setNewVersionAvailable(newVersionAvailable);
-			
+
 			return result;
 		}
 		else {
-			result.setResultCode(UpdateResultCode.NOK);			
-			return result;			
-		}		
+			result.setResultCode(UpdateResultCode.NOK);
+			return result;
+		}
 	}
 
 	private String getAppInfoResponseStr() throws Exception {
-		boolean hasGuiPlugin = Plugins.get("gui") != null;
-		
+		boolean hasGuiPlugin = Plugins.get(GUI_PLUGIN_ID) != null;
+
 		String typeStr = determineType(hasGuiPlugin);
 		String distStr = determineDist(hasGuiPlugin, typeStr);
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String osStr = EnvironmentUtil.getOperatingSystemDescription();
-		String archStr = EnvironmentUtil.getArchDescription();		
+		String archStr = EnvironmentUtil.getArchDescription();
 
 		String apiEndpointUrl = (options.getApiEndpoint() != null) ? options.getApiEndpoint() : API_DEFAULT_ENDPOINT_URL;
-		URL appListUrl = new URL(String.format(API_APP_LIST_REQUEST_FORMAT, apiEndpointUrl, distStr, typeStr, snapshotsEnabled, 
+		URL appListUrl = new URL(String.format(API_APP_LIST_REQUEST_FORMAT, apiEndpointUrl, distStr, typeStr, snapshotsEnabled,
 				osStr, archStr));
 
 		logger.log(Level.INFO, "Querying " + appListUrl + " ...");
@@ -135,20 +146,20 @@ public class UpdateOperation extends Operation {
 
 	private String determineType(boolean hasGuiPlugin) {
 		if (EnvironmentUtil.isWindows()) {
-			return "exe";		
+			return "exe";
 		}
 		else if (EnvironmentUtil.isMacOSX()) {
-			return (hasGuiPlugin) ? "app.zip" : "zip";			
+			return (hasGuiPlugin) ? "app.zip" : "zip";
 		}
 		else if (EnvironmentUtil.isUnixLikeOperatingSystem()) {
 			return (EnvironmentUtil.isDebianBased()) ? "deb" : "tar.gz";
 		}
-		
+
 		return "zip";
 	}
 
 	private String determineDist(boolean hasGuiPlugin, String type) {
-		boolean packageWithGuiExists = type.equals("exe") || type.equals("app.zip");		
+		boolean packageWithGuiExists = type.equals("exe") || type.equals("app.zip");
 		return (hasGuiPlugin && packageWithGuiExists) ? "gui" : "cli";
 	}
 }

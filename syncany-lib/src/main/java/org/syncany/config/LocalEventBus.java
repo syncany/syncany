@@ -26,6 +26,7 @@ package org.syncany.config;
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
+// TODO [medium] This class belongs in the 'util' package
 public class LocalEventBus extends InternalEventBus {	
 	public static LocalEventBus getInstance() {
 		return InternalEventBus.getInstance(LocalEventBus.class);

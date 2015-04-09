@@ -15,21 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
+package org.syncany.operations.daemon.messages;
 
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ManagementResponse;
+import org.syncany.operations.update.UpdateOperationResult;
 
-@Root(strict = false)
-public class HooksTO {
-	@Element(name = "runAfterDown", required = false)
-	private String runAfterDownCommand;
+public class UpdateManagementResponse extends ManagementResponse {
+	public static final int OK = 200;
+	public static final int NOK_OPERATION_FAILED = 501;
+	public static final int NOK_FAILED_UNKNOWN = 502;
+	
+	@Element(required = true)
+	private UpdateOperationResult result;
 
-	public String getRunAfterDownCommand() {
-		return runAfterDownCommand;
+	public UpdateManagementResponse() {
+		// Nothing
+	}
+	
+	public UpdateManagementResponse(int code, UpdateOperationResult result, int requestId) {
+		super(code, requestId, null);
+		this.result = result;
 	}
 
-	public void setRunAfterDownCommand(String runAfterDownCommand) {
-		this.runAfterDownCommand = runAfterDownCommand;
+	public UpdateOperationResult getResult() {
+		return result;
 	}
 }

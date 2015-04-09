@@ -27,6 +27,10 @@ public class GetFileFolderResponse extends FolderResponse {
 	@Element(required = true)
 	private String tempFileToken;	
 	
+	public GetFileFolderResponse() {
+		// Nothing
+	}
+	
 	public GetFileFolderResponse(int requestId, String root, String tempFileToken) {
 		super(200, requestId, null);
 		

@@ -19,7 +19,8 @@ package org.syncany.operations.init;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
@@ -58,6 +59,8 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class InitOperation extends AbstractInitOperation {
+	public static final String DEFAULT_IGNORE_FILE = "/" + InitOperation.class.getPackage().getName().replace('.', '/') + "/default.syignore";
+
 	private InitOperationOptions options;
 	private InitOperationResult result;
 
@@ -104,9 +107,46 @@ public class InitOperation extends AbstractInitOperation {
 		File appDir = createAppDirs(options.getLocalDir()); // TODO [medium] create temp dir first, ask password cannot be done after
 		File configFile = new File(appDir, Config.FILE_CONFIG);
 		File repoFile = new File(appDir, Config.FILE_REPO);
-		File masterFile = new File(appDir, Config.FILE_MASTER);
+		File masterFile = new File(appDir, Config.FILE_MASTER);		
 
 		// Save config.xml and repo file
+		saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);		
+
+		// Make remote changes
+		logger.log(Level.INFO, "Uploading local repository ...");
+		makeRemoteChanges(configFile, masterFile, repoFile);
+		
+		// Shutdown plugin
+		transferManager.disconnect();
+
+		// Add to daemon (if requested)
+		addToDaemonIfEnabled();		
+		createDefaultIgnoreFile();
+
+		// Make link
+		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
+
+		result.setResultCode(InitResultCode.OK);
+		result.setGenLinkResult(genlinkOperationResult);
+
+		return result;
+	}
+
+	private void createDefaultIgnoreFile() throws IOException {
+		try {
+			File ignoreFile = new File(options.getLocalDir(), Config.FILE_IGNORE);
+			
+			logger.log(Level.INFO, "Creating default .syignore file at " + ignoreFile + " ...");
+			
+			InputStream defaultConfigFileinputStream = InitOperation.class.getResourceAsStream(DEFAULT_IGNORE_FILE);
+			Files.copy(defaultConfigFileinputStream, ignoreFile.toPath());
+		}
+		catch (IOException e) {
+			logger.log(Level.WARNING, "Error creating default .syignore file. IGNORING.", e);
+		}		
+	}
+
+	private void saveLocalConfig(File configFile, File repoFile, File masterFile, String masterKeyPassword) throws Exception {
 		if (options.isEncryptionEnabled()) {
 			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!
 			options.getConfigTO().setMasterKey(masterKey);
@@ -119,9 +159,9 @@ public class InitOperation extends AbstractInitOperation {
 		}
 
 		options.getConfigTO().save(configFile);
+	}
 
-		// Make remote changes
-		logger.log(Level.INFO, "Uploading local repository ...");
+	private void makeRemoteChanges(File configFile, File masterFile, File repoFile) throws Exception {
 		initRemoteRepository(configFile);
 
 		try {
@@ -134,11 +174,9 @@ public class InitOperation extends AbstractInitOperation {
 		catch (StorageException | IOException e) {
 			cleanLocalRepository(e);
 		}
+	}
 
-		// Shutdown plugin
-		transferManager.disconnect();
-
-		// Add to daemon (if requested)
+	private void addToDaemonIfEnabled() {
 		if (options.isDaemon()) {
 			try {
 				boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(options.getLocalDir());
@@ -149,14 +187,6 @@ public class InitOperation extends AbstractInitOperation {
 				result.setAddedToDaemon(false);
 			}
 		}
-
-		// Make link
-		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-
-		result.setResultCode(InitResultCode.OK);
-		result.setGenLinkResult(genlinkOperationResult);
-
-		return result;
 	}
 
 	private boolean performRepoTest() {
@@ -230,16 +260,6 @@ public class InitOperation extends AbstractInitOperation {
 
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;
-	}
-
-	protected boolean repoFileExistsOnRemoteStorage(TransferManager transferManager) throws Exception {
-		try {
-			Map<String, SyncanyRemoteFile> repoFileList = transferManager.list(SyncanyRemoteFile.class);
-			return repoFileList.size() > 0;
-		}
-		catch (Exception e) {
-			throw new Exception("Unable to connect to repository.", e);
-		}
 	}
 
 	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {

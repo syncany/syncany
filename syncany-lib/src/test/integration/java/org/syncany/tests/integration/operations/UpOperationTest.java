@@ -46,7 +46,7 @@ import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.CollectionUtil;
 
-public class SyncUpOperationTest {
+public class UpOperationTest {
 	private Config testConfig;
 
 	@Before

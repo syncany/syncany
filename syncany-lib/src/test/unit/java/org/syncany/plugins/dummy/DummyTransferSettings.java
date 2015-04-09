@@ -29,6 +29,10 @@ import org.syncany.plugins.transfer.TransferSettings;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class DummyTransferSettings extends TransferSettings {
+	public enum DummyEnum {
+		A, B
+	}
+
 	@Element(required = true)
 	@Encrypted
 	@Setup(order = 1, sensitive = true, description = "A foo field")
@@ -49,6 +53,10 @@ public class DummyTransferSettings extends TransferSettings {
 	@Element(name = "nest2", required = false)
 	@Setup(order = 5, description = "Some nested settings")
 	public LocalTransferSettings subsettings2;
+
+	@Element(required = false)
+	@Setup(order = 6, description = "A enum field")
+	public DummyEnum enumField;
 
 	@Validate
 	public void validate() throws StorageException {

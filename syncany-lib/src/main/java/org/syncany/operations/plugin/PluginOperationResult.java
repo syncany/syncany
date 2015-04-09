@@ -21,8 +21,7 @@ import java.util.List;
 
 import org.syncany.operations.OperationResult;
 
-public class PluginOperationResult implements OperationResult {
-	
+public class PluginOperationResult implements OperationResult {	
 	public enum PluginResultCode {
 		OK, NOK
 	}

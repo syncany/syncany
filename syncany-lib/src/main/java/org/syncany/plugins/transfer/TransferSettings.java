@@ -108,6 +108,7 @@ public abstract class TransferSettings {
 	 * @throws StorageException Thrown if the field either does not exist or isn't accessible or
 	 *         conversion failed due to invalid field types.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public final void setField(String key, Object value) throws StorageException {
 		try {
 			Field[] elementFields = ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class);
@@ -122,7 +123,7 @@ public abstract class TransferSettings {
 					if (value == null) {
 						field.set(this, null);
 					}
-					else if (field.getType() == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
+					else if (fieldType == Integer.TYPE && (value instanceof Integer || value instanceof String)) {
 						field.setInt(this, Integer.parseInt(String.valueOf(value)));
 					}
 					else if (fieldType == Boolean.TYPE && (value instanceof Boolean || value instanceof String)) {
@@ -134,6 +135,13 @@ public abstract class TransferSettings {
 					else if (fieldType == File.class && value instanceof String) {
 						field.set(this, new File(String.valueOf(value)));
 					}
+					else if (ReflectionUtil.getClassFromType(fieldType).isEnum() && value instanceof String) {						
+						Class<? extends Enum> enumClass = (Class<? extends Enum>) ReflectionUtil.getClassFromType(fieldType);
+						String enumValue = String.valueOf(value).toUpperCase();
+						
+						Enum translatedEnum = Enum.valueOf(enumClass, enumValue);						
+						field.set(this, translatedEnum);
+					}
 					else if (TransferSettings.class.isAssignableFrom(value.getClass())) {
 						field.set(this, ReflectionUtil.getClassFromType(fieldType).cast(value));
 					}
@@ -144,7 +152,7 @@ public abstract class TransferSettings {
 			}
 		}
 		catch (Exception e) {
-			throw new StorageException("Unable to parse value: " + e.getMessage(), e);
+			throw new StorageException("Unable to parse value because its format is invalid: " + e.getMessage(), e);
 		}
 	}
 

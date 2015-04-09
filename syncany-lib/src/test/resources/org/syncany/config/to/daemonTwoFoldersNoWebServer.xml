@@ -32,9 +32,7 @@
                <status>
                   <forceChecksum>false</forceChecksum>
                </status>
-               <mergeRemoteFiles>true</mergeRemoteFiles>
                <removeOldVersions>true</removeOldVersions>
-               <keepVersionsCount>5</keepVersionsCount>
             </clean>
          </watch>
       </folder>
@@ -63,9 +61,7 @@
                <status>
                   <forceChecksum>false</forceChecksum>
                </status>
-               <mergeRemoteFiles>true</mergeRemoteFiles>
                <removeOldVersions>true</removeOldVersions>
-               <keepVersionsCount>5</keepVersionsCount>
             </clean>
          </watch>
       </folder>

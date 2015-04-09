@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
@@ -40,34 +39,21 @@ import org.syncany.operations.OperationResult;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
-	private static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
-	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
-	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
-	private static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
-	private static final String APPLICATION_PROPERTIES_DATE_KEY = "applicationDate";
-	private static final String APPLICATION_PROPERTIES_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
+	protected static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
+	protected static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
+	protected static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
+	protected static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	protected static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
+	protected static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
+	protected static final String APPLICATION_PROPERTIES_DATE_KEY = "applicationDate";
+	protected static final String APPLICATION_PROPERTIES_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
 	
-	private static Properties applicationProperties;
+	protected static Properties applicationProperties;
 	
-	protected Config config;
-
 	static {
 		initUserConfig();
 		initApplicationProperties();
-	}
-	
-	public Client() {
-		this.config = null;
-	}
-
-	public void setConfig(Config config) {
-		this.config = config;
-	}
-
-	public Config getConfig() {
-		return config;
+		initTestApplicationProperties();
 	}
 	
 	public static Properties getApplicationProperties() {
@@ -112,8 +98,6 @@ public class Client {
 		try {
 			applicationProperties = new Properties();
 			applicationProperties.load(globalPropertiesInputStream);
-			
-			initTestApplicationProperties();			
 		}  
 		catch (Exception e) {
 			throw new RuntimeException("Cannot load application properties.", e);

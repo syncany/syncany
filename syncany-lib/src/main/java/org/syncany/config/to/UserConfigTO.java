@@ -38,7 +38,7 @@ import org.syncany.crypto.SaltedSecretKeyConverter;
  * <p>It uses the Simple framework for XML serialization, and its corresponding
  * annotation-based configuration.
  *
- * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 @Root(name = "userConfig", strict = false)
@@ -62,8 +62,12 @@ public class UserConfigTO {
 		return systemProperties;
 	}
 
-	public boolean preventStandbyEnabled() {
+	public boolean isPreventStandby() {
 		return preventStandby;
+	}
+	
+	public void setPreventStandby(boolean preventStandby) {
+		this.preventStandby = preventStandby;
 	}
 
 	public SaltedSecretKey getConfigEncryptionKey() {

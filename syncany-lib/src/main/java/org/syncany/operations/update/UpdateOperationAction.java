@@ -17,6 +17,17 @@
  */
 package org.syncany.operations.update;
 
+/**
+ * Actions contained in the {@link UpdateOperation}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public enum UpdateOperationAction {
+	/**
+	 * When the update operation action is set to
+	 * this value, the operation will compare the local
+	 * application version with the one returned by the
+	 * remote Syncany API. 
+	 */
 	CHECK
 }

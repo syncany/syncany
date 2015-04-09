@@ -21,7 +21,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 import org.syncany.util.StringUtil;
@@ -90,21 +89,5 @@ public class StringUtilTest {
 		assertEquals(1, StringUtil.substrCount("some/path", "/"));
 		assertEquals(2, StringUtil.substrCount("some/path/", "/"));
 		assertEquals(1, StringUtil.substrCount("annanna", "anna"));
-	}
-	
-	@Test
-	public void testSplitCommandLineArgs() {
-		String command = "arg1 \"arg2-1 arg2-2\" \"arg3-1-with-quote\\\" arg3-2\" \"arg4\\\"\" 'arg5' 'arg6\\'' '\"arg7\"' 'arg8-1 \"arg8-2\" arg8-3'";
-		List<String> args = StringUtil.splitCommandLineArgs(command);
-		
-		assertEquals(8, args.size());
-		assertEquals("arg1", args.get(0));
-		assertEquals("arg2-1 arg2-2", args.get(1));
-		assertEquals("arg3-1-with-quote\" arg3-2", args.get(2));
-		assertEquals("arg4\"", args.get(3));
-		assertEquals("arg5", args.get(4));		
-		assertEquals("arg6'", args.get(5));
-		assertEquals("\"arg7\"", args.get(6));		
-		assertEquals("arg8-1 \"arg8-2\" arg8-3", args.get(7));		
 	}
 }

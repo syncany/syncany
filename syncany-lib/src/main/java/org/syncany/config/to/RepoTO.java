@@ -47,7 +47,7 @@ import org.syncany.util.StringUtil;
  * <p>It uses the Simple framework for XML serialization, and its corresponding
  * annotation-based configuration.
  *
- * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 @Root(name = "repo", strict = false)
@@ -136,14 +136,26 @@ public class RepoTO {
 		this.transformers = (transformers != null) ? new ArrayList<TransformerTO>(transformers) : null;
 	}
 
+	/**
+	 * Configuration object for the deduplication chunker. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class ChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
 
+	/**
+	 * Configuration object for the deduplication multi-chunker. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class MultiChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
 
+	/**
+	 * Configuration object for the deduplication transformer. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class TransformerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}

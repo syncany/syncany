@@ -581,6 +581,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * a new cleanup file to the transaction, to signify to other clients that Cleanup has occurred.
 	 */
 	private void updateCleanupFileInTransaction() throws StorageException, IOException {
+		if (remoteTransaction.isEmpty()) {
+			// No need to bump numbers
+			return;
+		}
 		// Find all existing cleanup files
 		Map<String, CleanupRemoteFile> cleanupFiles = transferManager.list(CleanupRemoteFile.class);
 

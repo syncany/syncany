@@ -3,9 +3,19 @@ Change Log
 
 ### Syncany 0.4.5-alpha (Date: tba)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
+  + Add 'prevent standby' toggle in GUI #387
+  + Add theme and tray icon selector in GUI
+  + Add update check to GUI in general settings panel, and daily update check #415
+  + Add support for enums as transfer setting values #280
 - Bugfixes and other things:
   + Make sure that plugin update on Windows is able to install snapshots #418
   + Working single repos for dropbox plugin #417
+  + Fix Unity detection for tray icon selection #413
+  + Fix Unity tray disappear after Python process crash by restarting #370
+  + Several stability bugfixes #433
+  + Don't use web sockets for IPC between daemon and GUI if in same JVM #373
 
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
