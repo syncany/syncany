@@ -10,8 +10,6 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Deduper;
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.util.Consumer;
-import org.syncany.util.QueueAdderConsumer;
 
 /**
  * @author Tim Hegeman
@@ -21,12 +19,12 @@ public class AsyncIndexer implements Runnable {
 
 	private final Indexer indexer;
 	private final List<File> files;
-	private final Consumer<DatabaseVersion> databaseVersionListener;
+	private final Queue<DatabaseVersion> databaseVersionQueue;
 	private boolean done;
 
 	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
 		this.files = files;
-		this.databaseVersionListener = new QueueAdderConsumer<DatabaseVersion>(queue);
+		this.databaseVersionQueue = queue;
 		this.indexer = new Indexer(config, deduper);
 		this.done = false;
 	}
@@ -35,7 +33,7 @@ public class AsyncIndexer implements Runnable {
 	public void run() {
 		try {
 			logger.log(Level.INFO, "Starting Indexing.");
-			indexer.index(files, databaseVersionListener);
+			indexer.index(files, databaseVersionQueue);
 		}
 		catch (IOException e) {
 			// TODO: Store this exception as a "result"?
@@ -43,7 +41,7 @@ public class AsyncIndexer implements Runnable {
 		}
 		// Signal end-of-stream.
 		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
-		databaseVersionListener.process(new DatabaseVersion());
+		databaseVersionQueue.offer(new DatabaseVersion());
 		this.done = true;
 	}
 

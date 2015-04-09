@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,10 +57,8 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.UpIndexChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
-import org.syncany.util.Consumer;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
-import org.syncany.util.QueueAdderConsumer;
 import org.syncany.util.StringUtil;
 
 /**
@@ -114,12 +112,12 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 	public DatabaseVersion index(List<File> files) throws IOException {
-		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedList<>();
-		index(files, new QueueAdderConsumer<DatabaseVersion>(databaseVersionQueue));
+		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedBlockingQueue<>();
+		index(files, databaseVersionQueue);
 		return databaseVersionQueue.poll();
 	}
 
-	public void index(List<File> files, Consumer<DatabaseVersion> databaseVersionListener)
+	public void index(List<File> files, Queue<DatabaseVersion> databaseVersionListener)
 			throws IOException {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
@@ -147,7 +145,7 @@ public class Indexer {
 			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 
 			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
-			databaseVersionListener.process(newDatabaseVersion);
+			databaseVersionListener.offer(newDatabaseVersion);
 		}
 	}
 
