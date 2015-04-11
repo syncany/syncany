@@ -23,15 +23,15 @@ public abstract class OAuthTokenInterceptors {
 	/**
 	 * Has to be {@value} because it's the first step of the OAuth process.
 	 */
-	public static final String PATH_PREFIX = "/";
+	static final String PATH_PREFIX = "/";
 
 	/**
 	 * Get a common {@link OAuthTokenInterceptor} depending on the chosen {@link OAuthMode}.
-	 * If {@link OAuthMode#BROWSER} is used a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor}
-	 * is returned and a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor} in {@link OAuthMode#SERVER}.
+	 * If {@link OAuthMode#BROWSER} is used a {@link HashTokenInterceptor}
+	 * is returned and a {@link OAuthTokenInterceptors.RedirectTokenInterceptor} in {@link OAuthMode#SERVER}.
 	 *
 	 * @param mode {@link OAuthMode} supported by the {@link org.syncany.plugins.transfer.TransferPlugin}.
-	 * @return Either a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor} or a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor}
+	 * @return Either a {@link HashTokenInterceptor} or a {@link OAuthTokenInterceptors.RedirectTokenInterceptor}
 	 */
 	public static OAuthTokenInterceptor newTokenInterceptorForMode(OAuthMode mode) {
 		switch (mode) {
@@ -49,23 +49,23 @@ public abstract class OAuthTokenInterceptors {
 	/**
 	 * {@link OAuthTokenInterceptor} implementation which bypasses some protection mechanisms to allow the token extraction.
 	 * In {@link OAuthMode#BROWSER}, the service provider uses the fragment part (the part after the #) of a URL to send over
-	 * a token. However, this part cannot be retrieved by a WebServer. A {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor}
+	 * a token. However, this part cannot be retrieved by a WebServer. A {@link HashTokenInterceptor}
 	 * appends the fragment variables to the query parameters of the URL.
 	 */
 	public static class HashTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";
-		private static final InputStream HTML_SITE_STREAM = HashTokenInterceptor.class.getResourceAsStream("/org/syncany/plugins/oauth/HashTokenInterceptor.html");
+		private static final String HTML_SITE_RESOURCE_PATH = "/org/syncany/plugins/oauth/HashTokenInterceptor.html";
 
 		private final String html;
 
 		public HashTokenInterceptor() {
-			try {
-				this.html = IOUtils.toString(HTML_SITE_STREAM).replace(PLACEHOLDER_FOR_EXTRACT_PATH, OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX);
+			try(InputStream htmlSiteStream = HashTokenInterceptor.class.getResourceAsStream(HTML_SITE_RESOURCE_PATH)) {
+				this.html = IOUtils.toString(htmlSiteStream).replace(PLACEHOLDER_FOR_EXTRACT_PATH, OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX);
 			}
 			catch (IOException e) {
-				logger.log(Level.SEVERE, "Unable to read html site from " + HTML_SITE_STREAM, e);
-				throw new RuntimeException("Unable to read html site from " + HTML_SITE_STREAM);
+				logger.log(Level.SEVERE, "Unable to read html site from " + HTML_SITE_RESOURCE_PATH, e);
+				throw new RuntimeException("Unable to read html site from " + HTML_SITE_RESOURCE_PATH);
 			}
 		}
 
@@ -97,8 +97,9 @@ public abstract class OAuthTokenInterceptors {
 
 		@Override
 		public void handleRequest(HttpServerExchange exchange) throws Exception {
-			String redirectToUrl = String.format("%s/%s?%s", exchange.getRequestURL(), OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX, exchange.getQueryString());
-			URI redirectToUri = URI.create(redirectToUrl).normalize();
+			final String redirectToUrl = String.format("%s/%s?%s", exchange.getRequestURL(), OAuthTokenWebListener.ExtractingTokenInterceptor.PATH_PREFIX, exchange.getQueryString());
+			final URI redirectToUri = URI.create(redirectToUrl).normalize();
+
 			logger.log(Level.INFO, "Redirecting to " + redirectToUri);
 
 			exchange.setResponseCode(StatusCodes.FOUND);

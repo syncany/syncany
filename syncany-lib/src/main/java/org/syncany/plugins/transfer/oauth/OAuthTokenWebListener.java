@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor;
+import org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Range;
@@ -36,9 +38,9 @@ import io.undertow.util.Headers;
 public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private static final Logger logger = Logger.getLogger(OAuthTokenWebListener.class.getName());
+	private static final Range<Integer> VALID_PORT_RANGE = Range.openClosed(0x0000, 0xFFFF);
 	private static final int PORT_LOWER = 55500;
 	private static final int PORT_UPPER = 55599;
-	private static final List<InetAddress> ALLOWED_CLIENT_IPS = Lists.newArrayList();
 
 	private final int port;
 	private final String id;
@@ -69,14 +71,14 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		private String id;
 
 		private Builder(OAuthMode mode) {
-			interceptor = OAuthTokenInterceptors.newTokenInterceptorForMode(mode);
-			extractor = OAuthTokenExtractors.newTokenExtractorForMode(mode);
+			this.interceptor = OAuthTokenInterceptors.newTokenInterceptorForMode(mode);
+			this.extractor = OAuthTokenExtractors.newTokenExtractorForMode(mode);
 
 			this.id = UUID.randomUUID().toString();
 			this.port = new Random().nextInt((PORT_UPPER - PORT_LOWER) + 1) + PORT_LOWER;
 
 			try {
-				addAllowedClient(InetAddress.getByName("127.0.0.1"));
+				this.addAllowedClient(InetAddress.getByName("127.0.0.1"));
 			}
 			catch (UnknownHostException e) {
 				throw new RuntimeException("127.0.0.1 is unknown. This should NEVER happen", e);
@@ -96,7 +98,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		}
 
 		/**
-		 * Use a custom interceptor (default {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor})
+		 * Use a custom interceptor (default {@link RedirectTokenInterceptor})
 		 */
 		public Builder setTokenInterceptor(OAuthTokenInterceptor interceptor) {
 			if (interceptor != null) {
@@ -107,7 +109,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		}
 
 		/**
-		 * Use a custom extractor (default {@link org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor})
+		 * Use a custom extractor (default {@link NamedQueryTokenExtractor})
 		 */
 		public Builder setTokenExtractor(OAuthTokenExtractor extractor) {
 			if (extractor != null) {
@@ -124,10 +126,10 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		 * @param port Fixed port to use
 		 *
 		 * @throws IllegalArgumentException Thrown if the chosen port is not in the valid port range (1-65535).
-		 * @throws IOException Thrown if the chosen port is already taken.
+		 * @throws RuntimeException Thrown if the chosen port is already taken.
 		 */
 		public Builder setPort(int port) {
-			if (!Range.open(1, 65535).contains(port)) {
+			if (!VALID_PORT_RANGE.contains(port)) {
 				throw new IllegalArgumentException("Invalid port number " + port);
 			}
 
@@ -150,6 +152,14 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		public OAuthTokenWebListener build() {
 			return new OAuthTokenWebListener(id, port, interceptor, extractor, allowedClients);
 		}
+
+		private static boolean isPortAvailable(int port) {
+			try (Socket ignored = new Socket("localhost", port)) {
+				return false;
+			} catch (IOException ignored) {
+				return true;
+			}
+		}
 	}
 
 	private OAuthTokenWebListener(String id, int port, OAuthTokenInterceptor interceptor, OAuthTokenExtractor extractor, List<InetAddress> allowedClients) {
@@ -164,10 +174,8 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 	 * Start the server created by the @{link Builder}.
 	 *
 	 * @return A callback URI which should be used during the OAuth process.
-	 *
-	 * @throws IOException Thrown if there was an error while starting the server.
 	 */
-	public URI start() throws IOException {
+	public URI start() {
 		createServer();
 		return URI.create(String.format("http://localhost:%d/%s/", port, id));
 	}
@@ -186,7 +194,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 	@Override
 	public OAuthTokenFinish call() throws Exception {
 		logger.log(Level.INFO, "Waiting for token response");
-		String urlWithIdAndToken = (String) ioQueue.take();
+		final String urlWithIdAndToken = (String) ioQueue.take();
 
 		logger.log(Level.INFO, "Parsing token response " + urlWithIdAndToken);
 
@@ -220,7 +228,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		IPAddressAccessControlHandler ipAddressAccessControlHandler = new IPAddressAccessControlHandler();
 		ipAddressAccessControlHandler.setDefaultAllow(false);
 
-		for (InetAddress inetAddress : this.allowedClients) {
+		for (InetAddress inetAddress : allowedClients) {
 			ipAddressAccessControlHandler.addAllow(inetAddress.getHostAddress());
 		}
 
@@ -249,21 +257,13 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		}
 	}
 
-	private static boolean isPortAvailable(int port) {
-		try (Socket ignored = new Socket("localhost", port)) {
-			return false;
-		} catch (IOException ignored) {
-			return true;
-		}
-	}
-
 	/**
 	 * Default {@link OAuthTokenInterceptor} which notifies the listener about an existing token. It also sends feedback
 	 * to a user.
 	 */
 	static final class ExtractingTokenInterceptor implements OAuthTokenInterceptor {
 
-		public static final String PATH_PREFIX = "/extract";
+		static final String PATH_PREFIX = "/extract";
 
 		private final SynchronousQueue<Object> queue;
 
@@ -278,13 +278,13 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 		@Override
 		public void handleRequest(HttpServerExchange exchange) throws Exception {
-			String urlWithIdAndToken = exchange.getRequestURL() + "?" + exchange.getQueryString();
+			final String urlWithIdAndToken = exchange.getRequestURL() + "?" + exchange.getQueryString();
 			logger.log(Level.INFO, "Got a request to " + urlWithIdAndToken);
 			queue.add(urlWithIdAndToken);
 
 			TimeUnit.SECONDS.sleep(2);
 
-			OAuthWebResponse oauthWebResponse = (OAuthWebResponse) queue.take();
+			final OAuthWebResponse oauthWebResponse = (OAuthWebResponse) queue.take();
 			logger.log(Level.INFO, "Got an oauth response with code " + oauthWebResponse.getCode());
 			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 			exchange.setResponseCode(oauthWebResponse.getCode());

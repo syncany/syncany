@@ -29,9 +29,9 @@ import org.syncany.plugins.transfer.TransferSettings;
  * check the user-provided token. The concrete implementation of this
  * interface should be provided to the {@link TransferSettings} class
  * via the {@link OAuth} annotation.<br/>
- * A generator can be extended with {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithInterceptor},
- * {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithExtractor} and
- * {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithNoRedirectMode}.
+ * A generator can be extended with {@link OAuthGenerator.WithInterceptor},
+ * {@link OAuthGenerator.WithExtractor} and
+ * {@link OAuthGenerator.WithNoRedirectMode}.
  *
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
@@ -44,16 +44,16 @@ public interface OAuthGenerator {
 	 * @return A URL to authorize Syncany using the provided redirectUri
 	 * @throws StorageException
 	 */
-	public URI generateAuthUrl(URI redirectUri) throws StorageException;
+	URI generateAuthUrl(URI redirectUri) throws StorageException;
 
 	/**
 	 * Validate the given token and (optional) csrf parameter.
 	 *
-	 * @param token
-	 * @param csrfState Content of the state parameter (optional)
+	 * @param token Token provided by {@link OAuthTokenWebListener}.
+	 * @param csrfState Content of the state parameter (optional).
 	 * @throws StorageException
 	 */
-	public void checkToken(String token, /*@Nullable*/ String csrfState) throws StorageException;
+	void checkToken(String token, /*@Nullable*/ String csrfState) throws StorageException;
 
 	// Annotation don't support concrete instances of objects, only classes. Thus we need to add two additional interfaces
 	// if a plugin requires custom interceptors or extractors
@@ -63,8 +63,8 @@ public interface OAuthGenerator {
 	 *
 	 * @see {@link OAuthTokenInterceptor}
 	 */
-	public static interface WithInterceptor {
-		public OAuthTokenInterceptor getInterceptor();
+	interface WithInterceptor {
+		OAuthTokenInterceptor getInterceptor();
 	}
 
 	/**
@@ -72,14 +72,14 @@ public interface OAuthGenerator {
 	 *
 	 * @see {@link OAuthTokenExtractor}
 	 */
-	public static interface WithExtractor {
-		public OAuthTokenExtractor getExtractor();
+	interface WithExtractor {
+		OAuthTokenExtractor getExtractor();
 	}
 
 	/**
 	 * If an OAuth based plugin also supports copy&pasting a token from a website it should extend this interface.
 	 */
-	public static interface WithNoRedirectMode {
+	interface WithNoRedirectMode {
 		/**
 		 * Called if Syncany is started in headless mode which does not support redirect_to URLs.<br/>
 		 * The website should output a token which can be copied over to Syncany's repo wizard.
@@ -87,6 +87,6 @@ public interface OAuthGenerator {
 		 * @return A URL with no redirect URL
 		 * @throws StorageException
 		 */
-		public URI generateAuthUrl() throws StorageException;
+		URI generateAuthUrl() throws StorageException;
 	}
 }

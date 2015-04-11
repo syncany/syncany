@@ -18,6 +18,6 @@ public interface OAuthTokenInterceptor extends HttpHandler {
 	 *
 	 * @return The path handled by the interceptor.
 	 */
-	public String getPathPrefix();
+	String getPathPrefix();
 
 }

@@ -19,6 +19,6 @@ public interface OAuthTokenExtractor {
 	 * @return A {@link OAuthTokenFinish} with a token and sometimes a state secret
 	 * @throws NoSuchFieldException Thrown if the URL does not contain a token or a state field (depending on the implementation)
 	 */
-	public OAuthTokenFinish parse(String urlWithToken) throws NoSuchFieldException;
+	OAuthTokenFinish parse(String urlWithToken) throws NoSuchFieldException;
 
 }

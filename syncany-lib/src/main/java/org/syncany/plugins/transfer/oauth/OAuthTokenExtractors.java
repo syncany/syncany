@@ -23,12 +23,12 @@ public abstract class OAuthTokenExtractors {
 
 	/**
 	 * Get a common {@link OAuthTokenExtractor} depending on the chosen {@link OAuthMode}. More precisely, this creates a
-	 * {@link org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor} with token field id set to
+	 * {@link OAuthTokenExtractors.NamedQueryTokenExtractor} with token field id set to
 	 * {@value #RFC_STATE_FIELD} in {@link OAuthMode#SERVER} and {@value #RFC_ACCESS_TOKEN_FIELD} in {@link OAuthMode#BROWSER}.
 	 * However, {@value #RFC_STATE_FIELD} is used in both cases to identify a potential CSRF value.
 	 *
 	 * @param mode {@link OAuthMode} supported by the {@link org.syncany.plugins.transfer.TransferPlugin}.
-	 * @return A corresponding {@link org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor}.
+	 * @return A corresponding {@link OAuthTokenExtractors.NamedQueryTokenExtractor}.
 	 */
 	public static OAuthTokenExtractor newTokenExtractorForMode(OAuthMode mode) {
 		switch (mode) {
@@ -68,7 +68,7 @@ public abstract class OAuthTokenExtractors {
 					token = param.getValue();
 					logger.log(Level.FINE, "Found token in URL " + token);
 				}
-				else if (this.stateId.equalsIgnoreCase(param.getName())) {
+				else if (stateId.equalsIgnoreCase(param.getName())) {
 					state = param.getValue();
 					logger.log(Level.FINE, "Found state in URL " + state);
 				}
