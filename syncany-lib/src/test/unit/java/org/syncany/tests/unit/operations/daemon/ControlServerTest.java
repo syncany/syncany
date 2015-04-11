@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.unit.operations.deamon;
+package org.syncany.tests.unit.operations.daemon;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -38,16 +38,15 @@ import org.syncany.operations.daemon.ServiceAlreadyStartedException;
  * using Mockito for mocking its instance variables.
  * 
  * @author Niels Spruit
- *
  */
 public class ControlServerTest {
-
 	private ControlServer ctrlServer;
 	private File ctrlFile;
 	private Tailer ctrlFileTailer;
 	private LocalEventBus eventBus;
 
 	@Before
+	@SuppressWarnings("deprecation")
 	public void setUp() {
 		ctrlFile = mock(File.class);
 		ctrlFileTailer = mock(Tailer.class);

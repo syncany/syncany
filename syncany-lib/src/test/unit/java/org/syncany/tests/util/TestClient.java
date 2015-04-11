@@ -71,12 +71,19 @@ import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
 
 public class TestClient extends Client {
+	private Config config;
+	
 	public TestClient(String machineName, TransferSettings connection) throws Exception {
 		Config testConfig = TestConfigUtil.createTestLocalConfig(machineName, connection);
+
 		testConfig.setMachineName(machineName);
 		testConfig.setDisplayName(machineName);
 
-		setConfig(testConfig);
+		config = testConfig;
+	}
+
+	public Config getConfig() {
+		return config;
 	}
 
 	public UpOperationResult up() throws Exception {
@@ -211,6 +218,12 @@ public class TestClient extends Client {
 		File localFile = getLocalFile(name);
 		TestFileUtil.createNonRandomFile(localFile, size);
 
+		return localFile;
+	}
+
+	public File createFileWithContent(String name, String content) throws IOException {
+		File localFile = getLocalFile(name);
+		TestFileUtil.createFileWithContent(localFile, content);
 		return localFile;
 	}
 

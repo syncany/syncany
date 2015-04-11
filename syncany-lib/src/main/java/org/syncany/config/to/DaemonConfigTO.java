@@ -26,6 +26,19 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.ConfigException;
 
+/**
+ * This class is used to configure the daemon, in particular, its web server, 
+ * the managed folders and the web server / API users. 
+ * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.
+ *
+ * @see WebServerTO
+ * @see FolderTO
+ * @see PortTO
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Root(name = "daemon", strict = false)
 public class DaemonConfigTO {
 	@Element(name = "webServer", required = false)

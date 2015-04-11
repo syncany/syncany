@@ -63,35 +63,7 @@ public class Base58Test {
             // expected
         }
 
-        Base58.decodeChecked("4stwEBjT6FYyVV");
-
-        // Checksum should fail.
-        try {
-            Base58.decodeChecked("4stwEBjT6FYyVW");
-            fail();
-        } catch (RuntimeException e) {
-            // expected
-        }
-
-        // Input is too short.
-        try {
-            Base58.decodeChecked("4s");
-            fail();
-        } catch (RuntimeException e) {
-            // expected
-        }
-
         // Test decode of empty String.
         assertEquals(0, Base58.decode("").length);
-
-        // Now check we can correctly decode the case where the high bit of the first byte is not zero, so BigInteger
-        // sign extends. Fix for a bug that stopped us parsing keys exported using sipas patch.
-        Base58.decodeChecked("93VYUMzRG9DdbRP72uQXjaWibbQwygnvaCu9DumcqDjGybD864T");
-    }
-
-    @Test
-    public void testDecodeToBigInteger() {
-        byte[] input = Base58.decode("129");
-        assertEquals(new BigInteger(1, input), Base58.decodeToBigInteger("129"));
     }
 }

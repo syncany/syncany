@@ -23,7 +23,20 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
-@Root(name="appInfoResponse")
+/**
+ * This class represents the response from the Syncany API when checking 
+ * the newest application versions. The response object returns a list 
+ * of {@link AppInfo} objects, one for each distribution type and operating
+ * system.
+ * 
+ * <p>this class uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.  
+ *  
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
+ * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+@Root(name = "appInfoResponse")
 public class AppInfoResponse {
 	@Element(name = "code", required = true)
 	private int code;

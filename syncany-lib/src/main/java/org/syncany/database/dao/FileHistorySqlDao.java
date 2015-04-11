@@ -23,16 +23,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileVersion;
-import org.syncany.database.FileVersion.FileStatus;
-import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
@@ -47,8 +43,6 @@ import com.google.common.collect.Lists;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class FileHistorySqlDao extends AbstractSqlDao {
-	protected static final Logger logger = Logger.getLogger(FileHistorySqlDao.class.getSimpleName());
-
 	private FileVersionSqlDao fileVersionDao;
 
 	public FileHistorySqlDao(Connection connection, FileVersionSqlDao fileVersionDao) {
@@ -106,13 +100,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.delete.all.removeUnreferencedFileHistories.sql")) {
 			preparedStatement.executeUpdate();
 		}
-	}
-
-	/**
-	 * Note: Also selects versions marked as {@link DatabaseVersionStatus#DIRTY DIRTY}
-	 */
-	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions(VectorClock databaseVersionVectorClock) {
-		return getFileHistoriesWithFileVersions(databaseVersionVectorClock, -1);
 	}
 	
 	/**
@@ -244,42 +231,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryId);
 					fileHistory.addFileVersion(lastFileVersion);
-
-					fileHistories.add(fileHistory);
-				}
-			}
-
-			return fileHistories;
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public List<PartialFileHistory> getPurgeFileHistoriesWithFileVersions(VectorClock purgeDatabaseVersionVectorClock) {
-		List<PartialFileHistory> fileHistories = new ArrayList<PartialFileHistory>();
-
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeFileHistoriesWithFileVersionsByVectorClock.sql")) {
-			preparedStatement.setString(1, purgeDatabaseVersionVectorClock.toString());
-
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					FileHistoryId purgeFileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
-
-					// Create max purge version with dummy values (mandatory for XML serialization)
-					FileVersion maxPurgeFileVersion = new FileVersion();
-
-					maxPurgeFileVersion.setFileHistoryId(purgeFileHistoryId);
-					maxPurgeFileVersion.setVersion(resultSet.getLong("fileversion_maxpurgeversion"));
-
-					maxPurgeFileVersion.setPath("");
-					maxPurgeFileVersion.setType(FileType.FILE);
-					maxPurgeFileVersion.setStatus(FileStatus.DELETED);
-					maxPurgeFileVersion.setSize(0L);
-					maxPurgeFileVersion.setLastModified(new Date());
-
-					PartialFileHistory fileHistory = new PartialFileHistory(purgeFileHistoryId);
-					fileHistory.addFileVersion(maxPurgeFileVersion);
 
 					fileHistories.add(fileHistory);
 				}

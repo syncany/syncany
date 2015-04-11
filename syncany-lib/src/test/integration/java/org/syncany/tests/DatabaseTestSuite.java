@@ -28,7 +28,6 @@ import org.syncany.tests.integration.database.dao.ApplicationDaoTest;
 import org.syncany.tests.integration.database.dao.ChunkDaoTest;
 import org.syncany.tests.integration.database.dao.DatabaseVersionDaoTest;
 import org.syncany.tests.integration.database.dao.FileContentDaoTest;
-import org.syncany.tests.integration.database.dao.FileHistoryDaoTest;
 import org.syncany.tests.integration.database.dao.FileVersionDaoTest;
 import org.syncany.tests.integration.database.dao.MultiChunkDaoTest;
 import org.syncany.tests.integration.database.dao.XmlDatabaseDaoTest;
@@ -43,7 +42,6 @@ import org.syncany.tests.unit.database.VectorClockTest;
 	DatabaseVersionDaoTest.class,
 	FileVersionComparatorTest.class,
 	FileVersionDaoTest.class,
-	FileHistoryDaoTest.class,
 	FileContentDaoTest.class,
 	MultiChunkDaoTest.class,
 	MemoryDatabaseCacheTest.class,

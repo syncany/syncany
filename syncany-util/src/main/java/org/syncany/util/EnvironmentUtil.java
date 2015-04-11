@@ -81,7 +81,7 @@ public class EnvironmentUtil {
 	}
 
 	/**
-	 * @see http://lopica.sourceforge.net/os.html
+	 * @see <a href="http://lopica.sourceforge.net/os.html">Possible return values</a>
 	 * @return x86, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
 	 */
 	public static String getArchDescription() {
@@ -98,7 +98,9 @@ public class EnvironmentUtil {
 	}
 	
 	/**
-	 * @see http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems
+	 * Returns the operating system short descripton.
+	 * 
+	 * @see <a href="http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems">Possible output values</a> 
 	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
 	 */
 	public static String getOperatingSystemDescription() {

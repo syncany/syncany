@@ -53,8 +53,26 @@ public class WatchCommandTest {
 			}
 		});
 
+
+
 		// Client A: Start 'watch'
 		clientThreadA.start();
+
+		// Client A: Wait for client A to sync .syignore
+		for (int i = 0; i < 50; i++) {
+			if ((new File(clientB.get("localdir") + "/.syignore")).exists()) {
+				break;
+			}
+			Thread.sleep(100);
+		}
+
+		// Sync down .syignore
+		TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientB.get("localdir"),
+				"down"
+		}));
+
+		assertFileEquals(new File(clientB.get("localdir") + "/.syignore"), new File(clientA.get("localdir") + "/.syignore"));
 
 		// Client B: New file and up
 		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);
@@ -65,14 +83,27 @@ public class WatchCommandTest {
 		}).start();
 
 		// Client A: Wait for client A to sync it
-		Thread.sleep(2000);
+		for (int i = 0; i < 50; i++) {
+			if ((new File(clientA.get("localdir"), "file1")).exists()) {
+				break;
+			}
+			Thread.sleep(500);
+		}
+
 		assertFileEquals(new File(clientB.get("localdir") + "/file1"), new File(clientA.get("localdir") + "/file1"));
+
 		assertFileListEqualsExcludeLockedAndNoRead(new File(clientB.get("localdir")), new File(clientA.get("localdir")));
 
 		// Client A: New file, wait for it to sync it
 		TestFileUtil.createRandomFile(new File(clientA.get("localdir") + "/file2"), 20 * 1024);
-		Thread.sleep(2000);
-		assertTrue(new File(clientB.get("repopath") + "/databases/database-A-0000000001").exists());
+		for (int i = 0; i < 30; i++) {
+			if ((new File(clientB.get("repopath"), "databases/database-A-0000000002")).exists()) {
+				break;
+			}
+			Thread.sleep(100);
+		}
+
+		assertTrue(new File(clientB.get("repopath") + "/databases/database-A-0000000002").exists());
 
 		clientThreadA.interrupt();
 
