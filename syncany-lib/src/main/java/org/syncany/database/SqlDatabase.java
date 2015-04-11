@@ -50,13 +50,13 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * <p>This class combines all specific SQL database data access objects (DAOs) into
  * a single class, and forwards all method calls to the responsible DAO.  
  * 
- * @see {@link ApplicationSqlDao}
- * @see {@link ChunkSqlDao}
- * @see {@link FileContentSqlDao}
- * @see {@link FileVersionSqlDao}
- * @see {@link FileHistorySqlDao}
- * @see {@link MultiChunkSqlDao}
- * @see {@link DatabaseVersionSqlDao}
+ * @see ApplicationSqlDao
+ * @see ChunkSqlDao
+ * @see FileContentSqlDao
+ * @see FileVersionSqlDao
+ * @see FileHistorySqlDao
+ * @see MultiChunkSqlDao
+ * @see DatabaseVersionSqlDao
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SqlDatabase {

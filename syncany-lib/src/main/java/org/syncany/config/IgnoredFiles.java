@@ -33,6 +33,7 @@ import java.util.logging.Logger;
  */
 public class IgnoredFiles {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
+	
 	private Set<String> ignorePatterns;
 	private Set<String> ignorePaths;
 	private File ignoreFile;
@@ -73,24 +74,13 @@ public class IgnoredFiles {
 				Scanner scanner = new Scanner(ignoreFile);
 
 				while (scanner.hasNextLine()) {
-					String ignorePattern = scanner.nextLine();
+					String ignorePatternLine = scanner.nextLine().trim();
 
-					if (!ignorePattern.isEmpty()) {
-						if (ignorePattern.startsWith("regex:")) {
-							// Chop off regex: indicator
-							ignorePatterns.add(ignorePattern.substring(6));
-						}
-						else {
-							if (ignorePattern.contains("*") || ignorePattern.contains("?")) {
-								// wildcards handling, converting them to regexps
-								ignorePatterns.add(convertWildcardsToRegexp(ignorePattern));
-							}
-							else {
-								ignorePaths.add(ignorePattern);
-							}
-						}
+					if (!ignorePatternLine.isEmpty()) {
+						parseIgnoreFileLine(ignorePatternLine);						
 					}
 				}
+				
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
@@ -101,6 +91,22 @@ public class IgnoredFiles {
 			// In case the ignoreFile has been deleted, reset patterns
 			ignorePatterns = new HashSet<String>();
 			ignorePaths = new HashSet<String>();
+		}
+	}
+
+	private void parseIgnoreFileLine(String ignorePattern) {
+		if (ignorePattern.startsWith("regex:")) {
+			// Chop off regex: indicator
+			ignorePatterns.add(ignorePattern.substring(6));
+		}
+		else {
+			if (ignorePattern.contains("*") || ignorePattern.contains("?")) {
+				// wildcards handling, converting them to regexps
+				ignorePatterns.add(convertWildcardsToRegexp(ignorePattern));
+			}
+			else {
+				ignorePaths.add(ignorePattern);
+			}
 		}
 	}
 

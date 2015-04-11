@@ -173,7 +173,7 @@ public interface TransferManager {
 	 * @return Returns the result of testing the repository. 
 	 * @param testCreateTarget If <tt>true</tt>, the test will test if the target can be created in case
 	 *        it does not exist. If <tt>false</tt>, this test will be skipped.
-	 * @see {@link StorageTestResult}
+	 * @see StorageTestResult
 	 */
 	public StorageTestResult test(boolean testCreateTarget);
 

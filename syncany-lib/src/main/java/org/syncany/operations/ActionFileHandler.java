@@ -113,7 +113,7 @@ public class ActionFileHandler {
 			public void run() {
 				renewActionFile();	
 				
-				if (UserConfig.preventStandbyEnabled()) {
+				if (UserConfig.isPreventStandby()) {
 					preventStandby();
 				}
 			}

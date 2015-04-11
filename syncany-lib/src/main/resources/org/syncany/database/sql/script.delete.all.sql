@@ -1,7 +1,6 @@
 DELETE FROM multichunk_muddy;
 DELETE FROM multichunk_chunk;
 DELETE FROM multichunk;
-DELETE FROM fileversion_purge;
 DELETE FROM fileversion;
 DELETE FROM filehistory;
 DELETE FROM filecontent_chunk;

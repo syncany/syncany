@@ -27,28 +27,34 @@ import org.syncany.tests.integration.operations.FileSystemActionComparatorTest;
 import org.syncany.tests.integration.operations.FileSystemActionReconciliatorTest;
 import org.syncany.tests.integration.operations.IndexerTest;
 import org.syncany.tests.integration.operations.InitOperationTest;
+import org.syncany.tests.integration.operations.LogOperationTest;
 import org.syncany.tests.integration.operations.NotificationListenerTest;
 import org.syncany.tests.integration.operations.OperationPerformanceTest;
 import org.syncany.tests.integration.operations.PluginOperationTest;
 import org.syncany.tests.integration.operations.RecursiveWatcherTest;
 import org.syncany.tests.integration.operations.StatusOperationTest;
-import org.syncany.tests.integration.operations.SyncUpOperationTest;
+import org.syncany.tests.integration.operations.UpOperationTest;
+import org.syncany.tests.integration.operations.UpdateOperationTest;
+import org.syncany.tests.unit.operations.daemon.DaemonOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	AssemblerTest.class,
-	CleanupOperationTest.class,
-	ConnectOperationTest.class,
-	FileSystemActionComparatorTest.class,
-	FileSystemActionReconciliatorTest.class,
-	IndexerTest.class,
-	InitOperationTest.class,
-	NotificationListenerTest.class,
-	OperationPerformanceTest.class,
-	PluginOperationTest.class,
-	RecursiveWatcherTest.class,
-	StatusOperationTest.class,
-	SyncUpOperationTest.class	
+		AssemblerTest.class,
+		CleanupOperationTest.class,
+		ConnectOperationTest.class,
+		DaemonOperationTest.class,
+		FileSystemActionComparatorTest.class,
+		FileSystemActionReconciliatorTest.class,
+		IndexerTest.class,
+		InitOperationTest.class,
+		LogOperationTest.class,
+		NotificationListenerTest.class,
+		OperationPerformanceTest.class,
+		PluginOperationTest.class,
+		RecursiveWatcherTest.class,
+		StatusOperationTest.class,
+		UpOperationTest.class,
+		UpdateOperationTest.class
 })
 public class OperationTestSuite {
 	// This class executes all tests

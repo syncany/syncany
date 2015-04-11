@@ -41,6 +41,7 @@ import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.ObjectId;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.ls.LsOperation;
 import org.syncany.operations.ls.LsOperationOptions;
 import org.syncany.operations.ls.LsOperationResult;
 
@@ -71,7 +72,7 @@ public class LsCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		LsOperationOptions operationOptions = parseOptions(operationArgs);
-		LsOperationResult operationResult = client.ls(operationOptions);
+		LsOperationResult operationResult = new LsOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

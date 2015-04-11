@@ -50,6 +50,10 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	 * @throws SQLException If the SQL statement fails
 	 */
 	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
+		if (remoteDatabases.size() == 0) {
+			// Nothing to write
+			return;
+		}
 		PreparedStatement preparedStatement = getStatement("application.insert.all.persistNewKnownRemoteDatabases.sql");
 
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {

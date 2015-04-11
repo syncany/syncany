@@ -26,9 +26,12 @@ import org.simpleframework.xml.Serializer;
 import org.syncany.config.to.XmlSerializer;
 
 /**
+ * Factory class to serialize and deserialize {@link Message}s from/to 
+ * XML (via SimpleXML).  
+ * 
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public abstract class XmlMessageFactory extends MessageFactory {
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
@@ -82,5 +85,4 @@ public abstract class XmlMessageFactory extends MessageFactory {
 			throw new Exception("Cannot find type of message. Invalid XML: " + message);
 		}
 	}
-
 }

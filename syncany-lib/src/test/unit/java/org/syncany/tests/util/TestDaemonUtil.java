@@ -20,12 +20,15 @@ package org.syncany.tests.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 
 import org.apache.commons.io.IOUtils;
+import org.syncany.config.UserConfig;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
+import org.syncany.tests.unit.util.TestFileUtil;
 
 /**
  * This class contains various helper methods for daemon related tests.
@@ -60,5 +63,20 @@ public class TestDaemonUtil {
 		portTO.setPort(port);
 		portTO.setUser(cliUser);
 		return portTO;
+	}
+
+	public static void cleanUserConfig() throws Exception {
+		Field userConfigDir = UserConfig.class.getDeclaredField("userConfigDir");
+		userConfigDir.setAccessible(true);
+		userConfigDir.set(null, null);
+		File tempFolder = TestFileUtil.createTempDirectoryInSystemTemp();
+		Field USER_APP_DIR_WINDOWS = UserConfig.class.getDeclaredField("USER_APP_DIR_WINDOWS");
+		USER_APP_DIR_WINDOWS.setAccessible(true);
+		USER_APP_DIR_WINDOWS.set(null, tempFolder);
+		Field USER_APP_DIR_UNIX_LIKE = UserConfig.class.getDeclaredField("USER_APP_DIR_UNIX_LIKE");
+		USER_APP_DIR_UNIX_LIKE.setAccessible(true);
+		USER_APP_DIR_UNIX_LIKE.set(null, tempFolder);
+		UserConfig.init();
+
 	}
 }

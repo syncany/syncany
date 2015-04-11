@@ -73,7 +73,7 @@ public class GenlinkCommandTest {
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
 		File clientLocalDirB = TestFileUtil.createTempDirectoryInSystemTemp();
 
-		systemInMock.provideText("somelongpassword\nsomelongpassword\nsomelongpassword\n");
+		//systemInMock.provideText("somelongpassword\nsomelongpassword\nsomelongpassword\n");
 
 		// Run Init
 		String[] initArgs = new String[] {
@@ -81,10 +81,11 @@ public class GenlinkCommandTest {
 				"init",
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
-				"--no-compression"
+				"--no-compression",
+				"--password", "somelongpassword"
 		};
 
-		new CommandLineClient(initArgs).start();
+		TestCliUtil.runAndCaptureOutput(new CommandLineClient(initArgs));
 
 		// Run Genlink (on A)		
 		String[] cliOutA = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
@@ -99,11 +100,12 @@ public class GenlinkCommandTest {
 		String[] cliOutB = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientLocalDirB.getAbsolutePath(),
 				"connect",
+				"--password", "somelongpassword",
 				createdLink
 		}));
 
-		assertEquals("Different number of output lines expected.", 4, cliOutB.length);
-		assertEquals("Repository connected, and local folder initialized.", cliOutB[2]);
+		assertEquals("Different number of output lines expected.", 5, cliOutB.length);
+		assertEquals("Repository connected, and local folder initialized.", cliOutB[3]);
 
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(clientLocalDirB);

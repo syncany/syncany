@@ -35,7 +35,7 @@ import org.syncany.plugins.transfer.TransferSettings;
 public class LocalTransferSettings extends TransferSettings {
 	@Element(required = true)
 	@Setup(order = 1, fileType = FileType.FOLDER, description = "Path to local repository")
-	public File path;	
+	public File path;
 
 	public File getPath() {
 		return path;

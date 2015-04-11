@@ -24,6 +24,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.CommandLineUtil;
 import org.syncany.operations.OperationResult;
+import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
@@ -46,7 +47,7 @@ public class CleanupCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		CleanupOperationOptions operationOptions = parseOptions(operationArgs);
-		CleanupOperationResult operationResult = client.cleanup(operationOptions);
+		CleanupOperationResult operationResult = new CleanupOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

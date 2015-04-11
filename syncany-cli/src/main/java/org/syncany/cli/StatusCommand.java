@@ -24,6 +24,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
+import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
 
@@ -43,7 +44,7 @@ public class StatusCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = parseOptions(operationArgs);
-		StatusOperationResult operationResult = client.status(operationOptions);
+		StatusOperationResult operationResult = new StatusOperation(config, operationOptions).execute();
 		
 		printResults(operationResult);
 		

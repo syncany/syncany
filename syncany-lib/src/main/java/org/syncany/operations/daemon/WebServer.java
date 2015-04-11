@@ -47,7 +47,6 @@ import org.syncany.config.to.UserTO;
 import org.syncany.config.to.WebServerTO;
 import org.syncany.crypto.CipherParams;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.operations.daemon.auth.MapIdentityManager;
 import org.syncany.operations.daemon.handlers.InternalRestHandler;
 import org.syncany.operations.daemon.handlers.InternalWebInterfaceHandler;
 import org.syncany.operations.daemon.handlers.InternalWebSocketHandler;
