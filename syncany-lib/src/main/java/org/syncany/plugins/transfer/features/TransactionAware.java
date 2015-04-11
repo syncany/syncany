@@ -25,10 +25,9 @@ import java.lang.annotation.Target;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
-@Feature
+@Feature(required = true)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TransactionAware {
-	// nothing
+	// Nothing
 }

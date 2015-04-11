@@ -29,8 +29,7 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
-@Feature
+@Feature(required = false)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PathAware {

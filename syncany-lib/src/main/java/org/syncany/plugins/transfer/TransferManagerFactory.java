@@ -27,20 +27,32 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.features.Feature;
+import org.syncany.plugins.transfer.features.PathAware;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.ReflectionUtil;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class TransferManagerFactory {
 	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getSimpleName());
 
-	private static final String FEATURE_TRANSFER_MANAGER_FORMAT = TransferManagerFactory.class.getPackage().getName() + ".features.%sTransferManager";
-	
-	public static Builder build(Config config) throws StorageException {
-		TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
+	private static final String FEATURE_TRANSFER_MANAGER_FORMAT = Feature.class.getPackage().getName() + ".%s" + TransferManager.class.getSimpleName();
+	private static final List<Class<? extends Annotation>> FEATURE_LIST = ImmutableList.<Class<? extends Annotation>> builder()
+			.add(TransactionAware.class)
+			.add(Retriable.class)
+			.add(PathAware.class)
+			.build();
+
+	public static Builder build(Config config) throws StorageException {		
+		TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);		
+		logger.log(Level.INFO, "Building " + transferManager.getClass().getSimpleName() + " from config '" + config.getLocalDir().getName() + "' ...");
+
 		return new Builder(transferManager, config);
 	}
 
@@ -58,6 +70,8 @@ public class TransferManagerFactory {
 		}
 
 		public Builder withFeature(Class<? extends Annotation> featureAnnotation) {
+			logger.log(Level.INFO, "- With feature " + featureAnnotation.getSimpleName());
+
 			features.add(featureAnnotation);
 			return this;
 		}
@@ -73,23 +87,35 @@ public class TransferManagerFactory {
 		}
 
 		private <T extends TransferManager> T wrap(Class<T> desiredTransferManagerClass) {
-			checkFeatureSetForDuplicates();
 			checkIfAllFeaturesSupported();
-
-			logger.log(Level.INFO, "Annotating TransferManager: " + features.size() + " feature(s) selected");
-
+			checkDuplicateFeatures();
+			checkRequiredFeatures();
+			
+			applyFeatures();
+			
+			return castToDesiredTransferManager(desiredTransferManagerClass);			
+		}
+		
+		private void applyFeatures() {
 			try {
 				for (Class<? extends Annotation> featureAnnotation : features) {
-					if (ReflectionUtil.isAnnotationPresentInHierarchy(originalTransferManager.getClass(), featureAnnotation)) {
+					boolean isFeatureSupported = ReflectionUtil.isAnnotationPresentInHierarchy(originalTransferManager.getClass(), featureAnnotation);
+					
+					if (isFeatureSupported) {
 						Class<? extends TransferManager> featureTransferManagerClass = getFeatureTransferManagerClass(featureAnnotation);
 						wrappedTransferManager = apply(wrappedTransferManager, featureTransferManagerClass, featureAnnotation);
+					}
+					else {
+						logger.log(Level.INFO, "- SKIPPING unsupported optional feature " + featureAnnotation.getSimpleName());
 					}
 				}
 			}
 			catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
 				throw new RuntimeException("Unable to annotate TransferManager with feature.", e);
 			}
-
+		}
+		
+		private <T extends TransferManager> T castToDesiredTransferManager(Class<T> desiredTransferManagerClass) {			
 			try {
 				return desiredTransferManagerClass.cast(wrappedTransferManager);
 			}
@@ -102,37 +128,86 @@ public class TransferManagerFactory {
 		private TransferManager apply(TransferManager transferManager, Class<? extends TransferManager> featureTransferManagerClass,
 				Class<? extends Annotation> featureAnnotationClass) throws IllegalAccessException, InvocationTargetException, InstantiationException {
 			
-			logger.log(Level.FINE,
-					"Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName());
-
 			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationInHierarchy(originalTransferManager.getClass(), featureAnnotationClass);
-			Constructor<?> transferManagerConstructor;
-
+			TransferManager wrappedTransferManager;
+			
 			// Try the most common constructor
-			transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass);
+			wrappedTransferManager = createDefaultTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
+			
+			if (wrappedTransferManager != null) {
+				return wrappedTransferManager;
+			}
+			
+			// Try feature constructor
+			wrappedTransferManager = createFeatureTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
+			
+			if (wrappedTransferManager != null) {
+				return wrappedTransferManager;
+			}
+			
+			// Try legacy/classic constructor
+			wrappedTransferManager = createClassicTransferManager(transferManager, featureTransferManagerClass);
+			
+			if (wrappedTransferManager != null) {
+				return wrappedTransferManager;
+			}						
+
+			throw new RuntimeException("Invalid TransferManager class detected: Unable to find constructor.");
+		}
+
+		// Try the most default constructor		
+		private TransferManager createDefaultTransferManager(TransferManager transferManager,
+				Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass,
+				Annotation concreteFeatureAnnotation) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			
+			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass);
 
 			if (transferManagerConstructor != null) {
+				logger.log(Level.FINE,
+						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using DEFAULT contructor");
+
 				return (TransferManager) transferManagerConstructor.newInstance(transferManager, config, featureAnnotationClass.cast(concreteFeatureAnnotation));
 			}
+			else {
+				return null;
+			}
+		}
 
+		private TransferManager createFeatureTransferManager(TransferManager transferManager,
+				Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass,
+				Annotation concreteFeatureAnnotation) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		
 			// Some features require the original TM instance because they use a feature extension
-			transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass, TransferManager.class);
+			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass, TransferManager.class);
 
 			if (transferManagerConstructor != null) {
-				logger.log(Level.INFO, "Feature uses an extension");
+				logger.log(Level.FINE,
+						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using FEATURE contructor");
+
 				Annotation featureAnnotation = featureAnnotationClass.cast(concreteFeatureAnnotation);
 				return (TransferManager) transferManagerConstructor.newInstance(transferManager, config, featureAnnotation, originalTransferManager);
 			}
+			else {
+				return null;
+			}
+		}
+		
+		private TransferManager createClassicTransferManager(TransferManager transferManager,
+				Class<? extends TransferManager> featureTransferManagerClass) throws InstantiationException, IllegalAccessException,
+				IllegalArgumentException, InvocationTargetException {
 
 			// legacy support for old TransferManagers
-			logger.log(Level.WARNING, "DEPRECATED: TransferManager seems to be config independent and does not use annotation settings, searching simple constructor...");
-			transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class);
+			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class);
 
 			if (transferManagerConstructor != null) {
+				logger.log(Level.FINE,
+						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using CLASSIC contructor");
+
 				return (TransferManager) transferManagerConstructor.newInstance(transferManager);
 			}
-
-			throw new RuntimeException("Invalid TransferManager class detected: Unable to find constructor");
+			else {
+				return null;
+			}
 		}
 
 		private static Class<? extends TransferManager> getFeatureTransferManagerClass(Class<? extends Annotation> featureAnnotation) {
@@ -144,18 +219,37 @@ public class TransferManagerFactory {
 			catch (Exception e) {
 				throw new RuntimeException("Unable to find class with feature " + featureAnnotation.getSimpleName() + ". Tried " + featureTransferManagerClassName, e);
 			}
+		}		
+
+		private void checkRequiredFeatures() {
+			for (Class<? extends Annotation> concreteFeatureAnnotation : FEATURE_LIST) {
+				Feature featureAnnotation = ReflectionUtil.getAnnotationInHierarchy(concreteFeatureAnnotation, Feature.class);
+				
+				if (featureAnnotation.required()) {
+					logger.log(Level.FINE, "- Checking required feature " + concreteFeatureAnnotation.getSimpleName() + " in " + originalTransferManager.getClass().getSimpleName() + " ...");					
+					boolean requiredFeaturePresent = ReflectionUtil.isAnnotationPresentInHierarchy(originalTransferManager.getClass(), concreteFeatureAnnotation);
+					
+					if (!requiredFeaturePresent) {
+						throw new RuntimeException("Required feature " + concreteFeatureAnnotation.getSimpleName() + " is not present in " + originalTransferManager.getClass().getSimpleName());
+					}
+				}
+			}
 		}
 		
-		private void checkFeatureSetForDuplicates() {
+		private void checkDuplicateFeatures() {
+			logger.log(Level.FINE, "- Checking for duplicate features ...");					
+
 			int listSize = features.size();
 			int setSize = Sets.newHashSet(features).size();
 
 			if (listSize != setSize) {
-				throw new IllegalArgumentException("There are duplicates in tfeaturesure set: " + features);
+				throw new IllegalArgumentException("There are duplicates in feature set: " + features);
 			}
 		}
 
 		private void checkIfAllFeaturesSupported() {
+			logger.log(Level.FINE, "- Checking if selected features supported ...");					
+
 			for (Class<? extends Annotation> featureAnnotation : features) {
 				if (!featureAnnotation.isAnnotationPresent(Feature.class)) {
 					throw new IllegalArgumentException("Feature " + featureAnnotation + " is unknown");
