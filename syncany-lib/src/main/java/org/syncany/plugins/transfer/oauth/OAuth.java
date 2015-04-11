@@ -44,8 +44,25 @@ public @interface OAuth {
 	 */
 	Class<? extends OAuthGenerator> value();
 
+	/**
+	 * The default Mode is {@link OAuthMode#SERVER}
+	 *
+	 * @see OAuthMode
+	 */
 	OAuthMode mode() default OAuthMode.SERVER;
 
+	/**
+	 * If no specific port is provided (or {@value #RANDOM_PORT} is used), the {@link OAuthTokenWebListener} will choose a
+	 * random port from the range of {@value OAuthTokenWebListener#PORT_LOWER} and
+	 * {@value OAuthTokenWebListener#PORT_UPPER}.<br/>
+	 * Needed if an OAuth provider uses preset and strict redirect URLs.
+	 */
 	int callbackPort() default RANDOM_PORT; // -1 is random
+
+	/**
+	 * If no specific name is provided (or {@value #PLUGIN_ID} is used), the {@link OAuthTokenWebListener} will choose a
+	 * random identifier for the OAuth process.<br/>
+	 * Needed if an OAuth provider uses preset and strict redirect URLs.
+	 */
 	String callbackId() default PLUGIN_ID; // equals plugin id
 }

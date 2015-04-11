@@ -13,7 +13,7 @@ package org.syncany.plugins.transfer.oauth;
 public interface OAuthTokenExtractor {
 
 	/**
-	 * Extract a {@link OAuthTokenFinish} from a given URL
+	 * Extract a {@link OAuthTokenFinish} from a given URL. It has to fail with an exception instead of returning null.
 	 *
 	 * @param urlWithToken The callback URL as it is invoked by the oauth provider
 	 * @return A {@link OAuthTokenFinish} with a token and sometimes a state secret

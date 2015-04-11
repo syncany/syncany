@@ -10,9 +10,10 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import com.google.common.base.Charsets;
 
 /**
+ * Factory class to generate some common {@link OAuthTokenExtractor}s.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public abstract class OAuthTokenExtractors {
 	private static final Logger logger = Logger.getLogger(OAuthTokenExtractors.class.getName());
 
@@ -20,6 +21,15 @@ public abstract class OAuthTokenExtractors {
 	public static final String RFC_ACCESS_TOKEN_FIELD = "access_token";
 	public static final String RFC_STATE_FIELD = "state";
 
+	/**
+	 * Get a common {@link OAuthTokenExtractor} depending on the chosen {@link OAuthMode}. More precisely, this creates a
+	 * {@link org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor} with token field id set to
+	 * {@value #RFC_STATE_FIELD} in {@link OAuthMode#SERVER} and {@value #RFC_ACCESS_TOKEN_FIELD} in {@link OAuthMode#BROWSER}.
+	 * However, {@value #RFC_STATE_FIELD} is used in both cases to identify a potential CSRF value.
+	 *
+	 * @param mode {@link OAuthMode} supported by the {@link org.syncany.plugins.transfer.TransferPlugin}.
+	 * @return A corresponding {@link org.syncany.plugins.transfer.oauth.OAuthTokenExtractors.NamedQueryTokenExtractor}.
+	 */
 	public static OAuthTokenExtractor newTokenExtractorForMode(OAuthMode mode) {
 		switch (mode) {
 			case BROWSER:
@@ -33,6 +43,10 @@ public abstract class OAuthTokenExtractors {
 		}
 	}
 
+	/**
+	 * A {@link NamedQueryTokenExtractor} is a simple {@link OAuthTokenExtractor} which looks for a token and a CSRF secret
+	 * in the redirect URL. Field names a variables.
+	 */
 	public static class NamedQueryTokenExtractor implements OAuthTokenExtractor {
 		private final String tokenId;
 		private final String stateId;

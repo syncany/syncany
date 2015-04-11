@@ -4,6 +4,9 @@ import org.apache.commons.io.IOUtils;
 import io.undertow.util.StatusCodes;
 
 /**
+ * Factory class to generate some common {@link OAuthWebResponse}s. It uses html sites residing in the ressource folder,
+ * but provides plain text fallbacks if a specific site cannot be read.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 

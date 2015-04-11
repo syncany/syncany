@@ -28,7 +28,10 @@ import org.syncany.plugins.transfer.TransferSettings;
  * a generator class can be used to create the authentication URL and
  * check the user-provided token. The concrete implementation of this
  * interface should be provided to the {@link TransferSettings} class
- * via the {@link OAuth} annotation.
+ * via the {@link OAuth} annotation.<br/>
+ * A generator can be extended with {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithInterceptor},
+ * {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithExtractor} and
+ * {@link org.syncany.plugins.transfer.oauth.OAuthGenerator.WithNoRedirectMode}.
  *
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
@@ -56,6 +59,8 @@ public interface OAuthGenerator {
 	// if a plugin requires custom interceptors or extractors
 
 	/**
+	 * Use a custom {@link OAuthTokenInterceptor} instead of the default one which depends on the {@link OAuthMode} in use.
+	 *
 	 * @see {@link OAuthTokenInterceptor}
 	 */
 	public static interface WithInterceptor {
@@ -63,6 +68,8 @@ public interface OAuthGenerator {
 	}
 
 	/**
+	 * Use a custom {@link OAuthTokenExtractor} instead of the default one which depends on the {@link OAuthMode} in use.
+	 *
 	 * @see {@link OAuthTokenExtractor}
 	 */
 	public static interface WithExtractor {

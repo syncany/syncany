@@ -47,6 +47,12 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private Undertow server;
 
+	/**
+	 * Create a new {@link OAuthTokenWebListener} with some clever defaults for a {@link OAuthMode}.
+	 *
+	 * @param mode  {@link OAuthMode} supported by the {@link org.syncany.plugins.transfer.TransferPlugin}.
+	 * @return A ready to use {@link OAuthTokenWebListener}.
+	 */
 	public static Builder forMode(OAuthMode mode) {
 		return new Builder(mode);
 	}
@@ -68,6 +74,10 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 			this.port = new Random().nextInt((PORT_UPPER - PORT_LOWER) + 1) + PORT_LOWER;
 		}
 
+		/**
+		 * Use a custom plugin id instead of a randomly generated one. Might be needed if the service provider does not
+		 * allow wildcard redirect URLs.
+		 */
 		public Builder setId(String id) {
 			if (id != null) {
 				this.id = id;
@@ -125,6 +135,9 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 			return this;
 		}
 
+		/**
+		 * Build an immutable {@link OAuthTokenWebListener}.
+		 */
 		public OAuthTokenWebListener build() {
 			return new OAuthTokenWebListener(id, port, interceptor, extractor, allowedClients);
 		}
@@ -229,7 +242,7 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	/**
 	 * Default {@link OAuthTokenInterceptor} which notifies the listener about an existing token. It also sends feedback
-	 * to a server.
+	 * to a user.
 	 */
 	static final class ExtractingTokenInterceptor implements OAuthTokenInterceptor {
 

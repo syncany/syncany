@@ -11,11 +11,28 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
+/**
+ * Factory class to generate some common {@link OAuthTokenInterceptor}s.
+ *
+ * @author Christian Roth <christian.roth@port17.de>
+ */
 public abstract class OAuthTokenInterceptors {
 
 	private static final Logger logger = Logger.getLogger(OAuthTokenInterceptors.class.getName());
+
+	/**
+	 * Has to be {@value} because it's the first step of the OAuth process.
+	 */
 	public static final String PATH_PREFIX = "/";
 
+	/**
+	 * Get a common {@link OAuthTokenInterceptor} depending on the chosen {@link OAuthMode}.
+	 * If {@link OAuthMode#BROWSER} is used a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor}
+	 * is returned and a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor} in {@link OAuthMode#SERVER}.
+	 *
+	 * @param mode {@link OAuthMode} supported by the {@link org.syncany.plugins.transfer.TransferPlugin}.
+	 * @return Either a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor} or a {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.RedirectTokenInterceptor}
+	 */
 	public static OAuthTokenInterceptor newTokenInterceptorForMode(OAuthMode mode) {
 		switch (mode) {
 			case BROWSER:
@@ -29,6 +46,12 @@ public abstract class OAuthTokenInterceptors {
 		}
 	}
 
+	/**
+	 * {@link OAuthTokenInterceptor} implementation which bypasses some protection mechanisms to allow the token extraction.
+	 * In {@link OAuthMode#BROWSER}, the service provider uses the fragment part (the part after the #) of a URL to send over
+	 * a token. However, this part cannot be retrieved by a WebServer. A {@link org.syncany.plugins.transfer.oauth.OAuthTokenInterceptors.HashTokenInterceptor}
+	 * appends the fragment variables to the query parameters of the URL.
+	 */
 	public static class HashTokenInterceptor implements OAuthTokenInterceptor {
 
 		public static final String PLACEHOLDER_FOR_EXTRACT_PATH = "%extractPath%";
@@ -60,6 +83,11 @@ public abstract class OAuthTokenInterceptors {
 		}
 	}
 
+	/**
+	 * A {@link RedirectTokenInterceptor} can be seen as an empty {@link OAuthTokenInterceptor} because it only redirects
+	 * to the next step of the OAuth process which is the extraction of the token from the URL. It's needed in {@link OAuthMode#SERVER}
+	 * since the token parameter is already provided in the URL's query part.
+	 */
 	public static class RedirectTokenInterceptor implements OAuthTokenInterceptor {
 
 		@Override
