@@ -22,7 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.syncany.plugins.Plugin;
-
 import com.google.common.base.CaseFormat;
 
 /**
@@ -107,21 +106,6 @@ public abstract class TransferPluginUtil {
 			catch (Exception e) {
 				throw new RuntimeException("Cannot find matching transfer plugin class for plugin settings (" + transferSettingsClass.getName() + ")");
 			}
-		}
-	}
-
-	/**
-	 * Determines the {@link OAuthGenerator} class for the given class
-	 * if an {@link OAuth} annotation is present.
-	 */
-	public static Class<? extends OAuthGenerator> getOAuthGeneratorClass(Class<? extends TransferSettings> clazz) {
-		OAuth oauthAnnotation = clazz.getAnnotation(OAuth.class);
-
-		if (oauthAnnotation != null) {
-			return oauthAnnotation.value();
-		}
-		else {
-			return null;
 		}
 	}
 

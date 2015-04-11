@@ -56,15 +56,20 @@ OPTIONS
   -n, --add-daemon
     The initialized local folder is automatically added to the daemon
     configuration for automatic synchronization if this option is used.
-    
+
   -s, --short
     The syncany:// link printed after the initialization will be shortened
     using the Syncany link shortener service. This option stores the encrypted
     link on the Syncany servers. The option does not work if -E is enabled.
 
+  -l, --headless
+    Disables some functionality which requires a full stacked desktop
+    environment. It should be run used in situations where no browser or
+    GUI-usage is applicable, for instance, when connected through a SSH tunnel.
+
   --password=<password>
     DO NOT USE THIS OPTION. Set the password used to encrypt the repository.
-    This option shouldn't be used, because the password might be visible to 
+    This option shouldn't be used, because the password might be visible to
     other users or be stored in history files.
 
 COPYRIGHT

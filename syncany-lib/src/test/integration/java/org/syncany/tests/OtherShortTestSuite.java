@@ -20,6 +20,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.tests.integration.plugins.OAuthTokenWebListenerTest;
 import org.syncany.tests.integration.plugins.PluginOptionsTest;
 import org.syncany.tests.integration.plugins.PluginsTest;
 import org.syncany.tests.integration.plugins.TransferSettingsTest;
@@ -65,6 +66,7 @@ import org.syncany.tests.util.SqlRunnerTest;
 		CleanupInterruptedTest.class,
 		TransferSettingsTest.class,
 		PluginOptionsTest.class,
+		OAuthTokenWebListenerTest.class,
 
 		// Config
 		CacheTest.class,
