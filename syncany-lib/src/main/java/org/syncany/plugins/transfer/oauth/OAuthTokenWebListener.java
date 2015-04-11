@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -21,6 +22,7 @@ import com.google.common.collect.Range;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.IPAddressAccessControlHandler;
 import io.undertow.util.Headers;
 
 /**
@@ -72,6 +74,13 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 			this.id = UUID.randomUUID().toString();
 			this.port = new Random().nextInt((PORT_UPPER - PORT_LOWER) + 1) + PORT_LOWER;
+
+			try {
+				addAllowedClient(InetAddress.getByName("127.0.0.1"));
+			}
+			catch (UnknownHostException e) {
+				throw new RuntimeException("127.0.0.1 is unknown. This should NEVER happen", e);
+			}
 		}
 
 		/**
@@ -208,8 +217,16 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 		OAuthTokenInterceptor extractingHttpHandler = new ExtractingTokenInterceptor(ioQueue);
 
+		IPAddressAccessControlHandler ipAddressAccessControlHandler = new IPAddressAccessControlHandler();
+		ipAddressAccessControlHandler.setDefaultAllow(false);
+
+		for (InetAddress inetAddress : this.allowedClients) {
+			ipAddressAccessControlHandler.addAllow(inetAddress.getHostAddress());
+		}
+
 		server = Undertow.builder()
 						.addHttpListener(port, "localhost")
+						.setHandler(ipAddressAccessControlHandler)
 						.setHandler(Handlers.path()
 														.addExactPath(createPath(extractingHttpHandler.getPathPrefix()), extractingHttpHandler)
 														.addExactPath(createPath(interceptor.getPathPrefix()), interceptor)

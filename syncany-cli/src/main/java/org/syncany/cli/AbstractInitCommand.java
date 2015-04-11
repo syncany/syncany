@@ -204,6 +204,8 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
 			if (isHeadless) {
+				logger.log(Level.FINE, "User is in headless mode and the plugin is OAuth based");
+
 				if (oAuthGenerator instanceof OAuthGenerator.WithNoRedirectMode) {
 					doOAuthInCopyTokenMode(oAuthGenerator);
 				}
