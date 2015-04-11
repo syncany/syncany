@@ -40,8 +40,6 @@ import org.syncany.util.FileUtil;
 import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
-	private long uploadedFileSize = 0;
-
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.INITIALIZED_LOCALDIR;
@@ -150,10 +148,7 @@ public class UpCommand extends Command {
 	@Subscribe
 	public void onUploadFileInTransactionEventReceived(UpUploadFileInTransactionSyncExternalEvent syncEvent) {
 		String currentFileSizeStr = FileUtil.formatFileSize(syncEvent.getCurrentFileSize());
-		int uploadedPercent = (int) Math.round((double) uploadedFileSize / syncEvent.getTotalFileSize() * 100);
 
-		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ", total "
-				+ uploadedPercent + "%) ...");
-		uploadedFileSize += syncEvent.getCurrentFileSize();
+		out.printr("Uploading " + syncEvent.getCurrentFileIndex() + "/" + syncEvent.getTotalFileCount() + " (" + currentFileSizeStr + ") ...");
 	}
 }
