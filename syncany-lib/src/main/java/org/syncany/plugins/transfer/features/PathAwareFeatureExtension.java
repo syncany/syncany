@@ -25,7 +25,6 @@ import org.syncany.plugins.transfer.StorageException;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public interface PathAwareFeatureExtension extends TransferManagerFeatureExtension {
 
 	public boolean createPath(String path) throws StorageException;

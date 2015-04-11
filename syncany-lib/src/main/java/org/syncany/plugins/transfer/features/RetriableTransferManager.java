@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.StorageFileNotFoundException;
 import org.syncany.plugins.transfer.StorageMoveException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
@@ -46,19 +45,16 @@ public class RetriableTransferManager implements TransferManager {
 		public Object execute() throws StorageException;
 	}
 
-	private final TransferManager underlyingTransferManager;
-	private final Config config;
-	private final int retryMaxCount;
-	private final int retrySleepMillis;
+	private TransferManager underlyingTransferManager;
+	private int retryMaxCount;
+	private int retrySleepMillis;
 
 	private int tryCount;
 
 	public RetriableTransferManager(TransferManager underlyingTransferManager, Config config, Retriable retriableAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
-		this.config = config;
-
-		retryMaxCount = retriableAnnotation.numberRetries();
-		retrySleepMillis = retriableAnnotation.sleepInterval();
+		this.retryMaxCount = retriableAnnotation.numberRetries();
+		this.retrySleepMillis = retriableAnnotation.sleepInterval();
 
 		this.tryCount = 0;
 	}

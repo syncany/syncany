@@ -91,7 +91,7 @@ public class LsRemoteOperation extends Operation {
 		}
 		else {
 			return TransferManagerFactory
-					.buildFromConfig(config)
+					.build(config)
 					.withFeature(PathAware.class)
 					.asDefault();
 		}

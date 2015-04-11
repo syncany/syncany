@@ -20,21 +20,16 @@ package org.syncany.plugins.transfer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.features.Feature;
-import org.syncany.plugins.transfer.features.PathAware;
-import org.syncany.plugins.transfer.features.Retriable;
-import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.ReflectionUtil;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -43,38 +38,27 @@ public class TransferManagerFactory {
 	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getSimpleName());
 
 	private static final String FEATURE_TRANSFER_MANAGER_FORMAT = TransferManagerFactory.class.getPackage().getName() + ".features.%sTransferManager";
-	private static final int DEFAULT_PRIORITY = 0;
-
-	private static final List<Class<? extends Annotation>> ALL_FEATURES = ImmutableList.<Class<? extends Annotation>> builder()
-			.add(TransactionAware.class)
-			.add(Retriable.class)
-			.add(PathAware.class)
-			.build();
-
-	public static Builder buildFromConfig(Config config) throws StorageException {
+	
+	public static Builder build(Config config) throws StorageException {
 		TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);
 		return new Builder(transferManager, config);
 	}
 
 	public static class Builder {
-		private TreeMultimap<Integer, Class<? extends Annotation>> features = TreeMultimap.create(Ordering.natural(), Ordering.explicit(ALL_FEATURES));
+		private List<Class<? extends Annotation>> features;
 		private Config config;
 		private TransferManager originalTransferManager;
 		private TransferManager wrappedTransferManager;
 
 		private Builder(TransferManager transferManager, Config config) {
+			this.features = new ArrayList<>();
 			this.wrappedTransferManager = transferManager;
 			this.originalTransferManager = transferManager;
 			this.config = config;
 		}
 
 		public Builder withFeature(Class<? extends Annotation> featureAnnotation) {
-			features.put(DEFAULT_PRIORITY, featureAnnotation);
-			return this;
-		}
-
-		public Builder withFeature(Class<? extends Annotation> featureAnnotation, int priority) {
-			features.put(priority, featureAnnotation);
+			features.add(featureAnnotation);
 			return this;
 		}
 
@@ -92,28 +76,14 @@ public class TransferManagerFactory {
 			checkFeatureSetForDuplicates();
 			checkIfAllFeaturesSupported();
 
-			logger.log(Level.INFO, "Annotating TransferManager: " + features.size() + "/" + ALL_FEATURES.size() + " features selected");
-
-			Class<? extends Annotation> applyLastFeatureAnnotation = null;
+			logger.log(Level.INFO, "Annotating TransferManager: " + features.size() + " feature(s) selected");
 
 			try {
-				for (Class<? extends Annotation> featureAnnotation : features.values()) {
+				for (Class<? extends Annotation> featureAnnotation : features) {
 					if (ReflectionUtil.isAnnotationPresentInHierarchy(originalTransferManager.getClass(), featureAnnotation)) {
 						Class<? extends TransferManager> featureTransferManagerClass = getFeatureTransferManagerClass(featureAnnotation);
-
-						if (featureTransferManagerClass.equals(desiredTransferManagerClass)) {
-							logger.log(Level.INFO, "Holding back feature " + featureTransferManagerClass.getSimpleName() + ", request to wrap last.");
-							applyLastFeatureAnnotation = featureAnnotation;
-							continue;
-						}
-
 						wrappedTransferManager = apply(wrappedTransferManager, featureTransferManagerClass, featureAnnotation);
 					}
-				}
-
-				if (applyLastFeatureAnnotation != null) {
-					Class<? extends TransferManager> featureTransferManagerClass = getFeatureTransferManagerClass(applyLastFeatureAnnotation);
-					wrappedTransferManager = apply(wrappedTransferManager, featureTransferManagerClass, applyLastFeatureAnnotation);
 				}
 			}
 			catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
@@ -175,10 +145,10 @@ public class TransferManagerFactory {
 				throw new RuntimeException("Unable to find class with feature " + featureAnnotation.getSimpleName() + ". Tried " + featureTransferManagerClassName, e);
 			}
 		}
-
+		
 		private void checkFeatureSetForDuplicates() {
-			int listSize = features.values().size();
-			int setSize = Sets.newHashSet(features.values()).size();
+			int listSize = features.size();
+			int setSize = Sets.newHashSet(features).size();
 
 			if (listSize != setSize) {
 				throw new IllegalArgumentException("There are duplicates in tfeaturesure set: " + features);
@@ -186,7 +156,7 @@ public class TransferManagerFactory {
 		}
 
 		private void checkIfAllFeaturesSupported() {
-			for (Class<? extends Annotation> featureAnnotation : features.values()) {
+			for (Class<? extends Annotation> featureAnnotation : features) {
 				if (!featureAnnotation.isAnnotationPresent(Feature.class)) {
 					throw new IllegalArgumentException("Feature " + featureAnnotation + " is unknown");
 				}

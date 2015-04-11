@@ -38,6 +38,7 @@ import org.syncany.plugins.transfer.StorageMoveException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.PathAwareFeatureExtension;
+import org.syncany.plugins.transfer.features.PathAwareTransferManager.PathAwareRemoteFileAttributes;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -268,7 +269,22 @@ public class LocalTransferManager extends AbstractTransferManager {
 	}
 
 	private File getRemoteFile(RemoteFile remoteFile) {
-		return new File(getRemoteFilePath(remoteFile.getClass()), remoteFile.getName());
+		String rootPath = getRemoteFilePath(remoteFile.getClass());
+		String subfolder = "";
+
+		try {
+			PathAwareRemoteFileAttributes attributes = remoteFile
+					.getAttributes(PathAwareRemoteFileAttributes.class);
+
+			if (attributes.hasPath()) {
+				subfolder = attributes.getPath();
+			}
+		}
+		catch (NoSuchFieldException e) {
+			logger.log(Level.WARNING, "TransferManager is annotated with @PathAware but files do not possess path aware attributes");
+		}
+
+		return Paths.get(rootPath, subfolder, remoteFile.getName()).toFile();
 	}
 
 	public String getAbsoluteParentDirectory(File file) {

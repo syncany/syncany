@@ -72,15 +72,15 @@ public abstract class AbstractTransferOperation extends Operation {
 			// Do NOT reuse TransferManager for action file renewal; see #140
 
 			TransferManager actionFileTransferManager = TransferManagerFactory
-					.buildFromConfig(config)
+					.build(config)
 					.withFeature(Retriable.class)
 					.asDefault();
 			
 			TransactionAwareTransferManager regularFileTransferManager = TransferManagerFactory
-					.buildFromConfig(config)
-					.withFeature(TransactionAware.class)
+					.build(config)
 					.withFeature(Retriable.class)
 					.withFeature(PathAware.class)
+					.withFeature(TransactionAware.class)
 					.as(TransactionAware.class);
 			
 			this.actionHandler = new ActionFileHandler(actionFileTransferManager, operationName, config.getMachineName());

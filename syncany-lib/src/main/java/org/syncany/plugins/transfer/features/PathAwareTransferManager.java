@@ -77,7 +77,6 @@ public class PathAwareTransferManager implements TransferManager {
 
 			if (constructor != null) {
 				return (PathAwareFeatureExtension) constructor.newInstance(originalTransferManager);
-				// return (PathAwareFeatureExtension) constructor.newInstance(originTransferManagerClass.cast(originalTransferManager));   @ Christian: Why do we need this?
 			}
 
 			return pathAwareFeatureExtensionClass.newInstance();
@@ -152,31 +151,29 @@ public class PathAwareTransferManager implements TransferManager {
 	}
 
 	private <T extends RemoteFile> void list(String remoteFilePath, Map<String, T> remoteFiles, Class<T> remoteFileClass) throws StorageException {
-		logger.log(Level.INFO, "Listing folder: " + remoteFilePath);
-
+		logger.log(Level.INFO, "Listing folder for files matching " + remoteFileClass.getSimpleName() + ": " + remoteFilePath);
 		Map<String, FileType> folderList = pathAwareFeatureExtension.listFolder(remoteFilePath);
 		
 		for (Map.Entry<String, FileType> folderListEntry : folderList.entrySet()) {
 			String fileName = folderListEntry.getKey();
 			FileType fileType = folderListEntry.getValue();
-
-			logger.log(Level.INFO, "- " + fileName);
-
-			switch (fileType) {
-				case FILE:
+			
+			if (fileType == FileType.FILE) {
+				try {
 					remoteFiles.put(fileName, RemoteFile.createRemoteFile(fileName, remoteFileClass));
-					break;
+					logger.log(Level.INFO, "- File: " + fileName);					
+				}
+				catch (StorageException e) {
+					// We don't care and ignore non-matching files!
+				}
+			}
+			else if (fileType == FileType.FOLDER) {
+				logger.log(Level.INFO, "- Folder: " + fileName);
 
-				case FOLDER:
-					String newRemoteFilePath = remoteFilePath + folderSeparator + fileName;
-					list(newRemoteFilePath, remoteFiles, remoteFileClass);
-					break;
-
-				default:
-					break;
+				String newRemoteFilePath = remoteFilePath + folderSeparator + fileName;
+				list(newRemoteFilePath, remoteFiles, remoteFileClass);
 			}
 		}
-
 	}
 
 	@Override
@@ -239,7 +236,7 @@ public class PathAwareTransferManager implements TransferManager {
 	}
 
 	private String pathToString(Path path) {
-		return path.toString().replaceAll(File.pathSeparator, String.valueOf(folderSeparator));
+		return path.toString().replaceAll(File.separator, String.valueOf(folderSeparator));
 	}
 
 	private boolean createFolder(RemoteFile remoteFile) throws StorageException {
