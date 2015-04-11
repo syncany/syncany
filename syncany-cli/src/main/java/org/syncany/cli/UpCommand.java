@@ -31,6 +31,7 @@ import org.syncany.operations.daemon.messages.UpStartSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpUploadFileInTransactionSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpUploadFileSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
+import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
@@ -54,7 +55,7 @@ public class UpCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		UpOperationOptions operationOptions = parseOptions(operationArgs);
-		UpOperationResult operationResult = client.up(operationOptions);
+		UpOperationResult operationResult = new UpOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

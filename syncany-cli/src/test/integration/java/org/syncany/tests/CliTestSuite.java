@@ -32,6 +32,7 @@ import org.syncany.tests.integration.cli.PluginCommandTest;
 import org.syncany.tests.integration.cli.RestoreCommandTest;
 import org.syncany.tests.integration.cli.StatusCommandTest;
 import org.syncany.tests.integration.cli.UpCommandTest;
+import org.syncany.tests.integration.cli.UpdateCommandTest;
 import org.syncany.tests.integration.cli.WatchCommandTest;
 
 @RunWith(Suite.class)
@@ -48,6 +49,7 @@ import org.syncany.tests.integration.cli.WatchCommandTest;
 	RestoreCommandTest.class,
 	StatusCommandTest.class,
 	UpCommandTest.class,	
+	UpdateCommandTest.class,
 	WatchCommandTest.class
 })
 public class CliTestSuite {

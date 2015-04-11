@@ -2,10 +2,10 @@ Authors
 =======
 Many people have contributed to Syncany. This is an attempt to list them all.
 
-Active Team Members:
-- Christian Roth (cr0, christian.roth@port17.de)
-- Philipp C. Heckel (binwiederhier, philipp.heckel@gmail.com) 
-- Pim Otte (pimotte, otte.pim@gmail.com)
+Core Team Members (contact via team@syncany.org):
+- Christian Roth (cr0)
+- Philipp C. Heckel (binwiederhier)
+- Pim Otte (pimotte)
 
 Contributors / Former Team Members:
 - Alexandre Viau (ReAzem)

@@ -67,6 +67,7 @@ _sy() {
 		restore\
 		status\
 		up\
+		update\
 		watch"
 
 	GLOBAL_OPTIONS="\
@@ -237,6 +238,13 @@ _sy() {
 	UP_OPTIONS="\
 		-R --no-resume\
 		$STATUS_OPTIONS"
+		
+	UPDATE_COMMANDS="\
+		check"
+				
+	UPDATE_CHECK_OPTIONS="\
+		-a --api-endpoint\
+		-s --snapshots"		
 
 	WATCH_OPTIONS="\
 		-i --interval\
@@ -419,6 +427,18 @@ _sy() {
 	up)
 		complete_options="$UP_OPTIONS"
 		;;
+		
+	update)
+		case "${lastword}" in
+		check)
+			complete_options="$UPDATE_CHECK_OPTIONS"
+			;;
+		
+		*)
+			complete_words="$UPDATE_COMMANDS"
+			;;
+		esac
+		;;		
 
 	watch)
 		case "${prev}" in

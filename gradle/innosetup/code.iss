@@ -144,7 +144,7 @@ begin
         TagUserConfigEnd := Pos('</userConfig>', UserConfigXml);
 
         if TagUserConfigEnd > 0 then begin
-          UserConfigXml := Copy(UserConfigXml, 1, TagUserConfigEnd-1) + '   <maxMemory>1300M</maxMemory>'#13#10'</userConfig>';
+          UserConfigXml := Copy(UserConfigXml, 1, TagUserConfigEnd-1) + '   <maxMemory>512M</maxMemory>'#13#10'</userConfig>';
           SaveStringToFile(UserConfigFileName, UserConfigXml, False);
         end
       end
@@ -152,7 +152,7 @@ begin
 
     // If userconfig.xml does not exist, create new file
     else begin
-      SaveStringToFile(UserConfigFileName, '<userConfig>'#13#10'   <maxMemory>1300M</maxMemory>'#13#10'</userConfig>', False);           
+      SaveStringToFile(UserConfigFileName, '<userConfig>'#13#10'   <maxMemory>512M</maxMemory>'#13#10'</userConfig>', False);           
     end
   end
 end;

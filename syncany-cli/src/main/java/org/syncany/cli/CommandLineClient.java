@@ -55,6 +55,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
+import org.syncany.config.Config;
 import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.LogFormatter;
@@ -108,6 +109,8 @@ public class CommandLineClient extends Client {
 	private static final String MAN_PAGE_MAIN = "sy";
 	private static final String MAN_PAGE_COMMAND_FORMAT = "sy-%s";
 
+	private Config config;
+	
 	private String[] args;
 	private File localDir;
 
@@ -381,7 +384,7 @@ public class CommandLineClient extends Client {
 	}
 
 	private int runLocally(Command command, String[] commandArgs) {
-		command.setClient(this);
+		command.setConfig(config);
 		command.setLocalDir(localDir);
 
 		// Run!

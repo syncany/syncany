@@ -17,7 +17,6 @@
  */
 package org.syncany.plugins.transfer;
 
-
 /**
  * Exception thrown when any of the methods of the {@link TransferManager}
  * fail. Usually caused by broken sockets or a not available Internet connection.

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.daemon.messages;
+package org.syncany.operations.update;
 
-import org.syncany.operations.daemon.messages.api.ExternalEvent;
-
-public class PluginConnectToHostExternalEvent extends ExternalEvent {
-	private String host;
-
-	public PluginConnectToHostExternalEvent() {
-		// Nothing
-	}
-	
-	public PluginConnectToHostExternalEvent(String host) {
-		this.host = host;
-	}		
-
-	public String getHost() {
-		return host;
-	}
+/**
+ * Actions contained in the {@link UpdateOperation}.
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
+public enum UpdateOperationAction {
+	/**
+	 * When the update operation action is set to
+	 * this value, the operation will compare the local
+	 * application version with the one returned by the
+	 * remote Syncany API. 
+	 */
+	CHECK
 }

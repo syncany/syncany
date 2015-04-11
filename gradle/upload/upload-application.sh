@@ -42,7 +42,9 @@ fi
 cd "$PWD"
 
 # List files to upload
-release=$(get_property $properties_file "applicationRelease")
+version=$(urlencode "$(get_property $properties_file 'applicationVersionFull')")
+date=$(urlencode "$(get_property $properties_file 'applicationDate')")
+release=$(get_property $properties_file 'applicationRelease')
 snapshot=$([ "$release" == "true" ] && echo "false" || echo "true") # Invert 'release'
 
 echo ""
@@ -65,22 +67,22 @@ file_reports=$(ls $REPODIR/build/upload/reports.zip)
 file_docs=$(ls $REPODIR/build/upload/docs.zip)
 
 echo "Uploading DEB: $(basename $file_deb) ..."
-upload_app "$file_deb" "deb" "$snapshot" # Most likely to fail first
+upload_app "$file_deb" "cli" "deb" "$version" "$date" "$snapshot" # Most likely to fail first
 
 echo "Uploading EXE: $(basename $file_exe) ..."
-upload_app "$file_exe" "exe" "$snapshot"
+upload_app "$file_exe" "cli" "exe" "$version" "$date" "$snapshot"
 
 echo "Uploading TAR.GZ: $(basename $file_targz) ..."
-upload_app "$file_targz" "tar.gz" "$snapshot"
+upload_app "$file_targz" "cli" "tar.gz" "$version" "$date" "$snapshot"
 
 echo "Uploading ZIP: $(basename $file_zip) ..."
-upload_app "$file_zip" "zip" "$snapshot"
+upload_app "$file_zip" "cli" "zip" "$version" "$date" "$snapshot"
 
 echo "Uploading REPORTS: $(basename $file_reports) ..."
-upload_app "$file_reports" "reports" "$snapshot"
+upload_app "$file_reports" "other" "reports" "$version" "$date" "$snapshot"
 
 echo "Uploading DOCS: $(basename $file_docs) ..."
-upload_app "$file_docs" "docs" "$snapshot"
+upload_app "$file_docs" "other" "docs" "$version" "$date" "$snapshot"
 
 echo ""
 echo "DONE."
