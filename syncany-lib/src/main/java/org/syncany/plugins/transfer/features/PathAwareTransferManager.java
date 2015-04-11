@@ -59,12 +59,12 @@ public class PathAwareTransferManager implements TransferManager {
 	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation, TransferManager originalTransferManager) {
 		this.underlyingTransferManager = underlyingTransferManager;
 
-		subfolderDepth = pathAwareAnnotation.subfolderDepth();
-		bytesPerFolder = pathAwareAnnotation.bytesPerFolder();
-		folderSeparator = pathAwareAnnotation.folderSeparator();
-		affectedFiles = ImmutableList.copyOf(pathAwareAnnotation.affected());
+		this.subfolderDepth = pathAwareAnnotation.subfolderDepth();
+		this.bytesPerFolder = pathAwareAnnotation.bytesPerFolder();
+		this.folderSeparator = pathAwareAnnotation.folderSeparator();
+		this.affectedFiles = ImmutableList.copyOf(pathAwareAnnotation.affected());
 
-		pathAwareFeatureExtension = getPathAwareFeatureExtension(originalTransferManager, pathAwareAnnotation);
+		this.pathAwareFeatureExtension = getPathAwareFeatureExtension(originalTransferManager, pathAwareAnnotation);
 	}
 
 	@SuppressWarnings("unchecked")
