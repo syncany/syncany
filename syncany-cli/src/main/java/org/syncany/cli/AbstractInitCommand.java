@@ -17,6 +17,7 @@
  */
 package org.syncany.cli;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -25,11 +26,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
@@ -39,7 +41,6 @@ import org.syncany.operations.init.GenlinkOperationResult;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.NestedTransferPluginOption;
-import org.syncany.plugins.transfer.OAuthGenerator;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferPlugin;
@@ -50,14 +51,19 @@ import org.syncany.plugins.transfer.TransferPluginOptionConverter;
 import org.syncany.plugins.transfer.TransferPluginOptions;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.oauth.OAuth;
+import org.syncany.plugins.transfer.oauth.OAuthGenerator;
+import org.syncany.plugins.transfer.oauth.OAuthTokenFinish;
+import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
-
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -74,9 +80,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	protected static final String GENERIC_PLUGIN_TYPE_IDENTIFIER = ":type";
 	protected static final int PASSWORD_MIN_LENGTH = 10;
 	protected static final int PASSWORD_WARN_LENGTH = 12;
+	protected static final int OAUTH_TOKEN_WAIT_TIMEOUT = 60;
 
 	protected InitConsole console;
 	protected boolean isInteractive;
+	protected boolean isHeadless;
 
 	public AbstractInitCommand() {
 		console = InitConsole.getInstance();
@@ -99,7 +107,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		TransferPlugin plugin;
 		TransferSettings transferSettings;
 
-		// Parse --plugin and --plugin-option values 
+		// Parse --plugin and --plugin-option values
 		List<String> pluginOptionStrings = options.valuesOf(optionPluginOpts);
 		Map<String, String> knownPluginSettings = parsePluginSettingsFromOptions(pluginOptionStrings);
 
@@ -153,7 +161,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		try {
 			// Show OAuth output
 			printOAuthInformation(settings);
-			
+
 			// Ask for plugin settings
 			List<TransferPluginOption> pluginOptions = TransferPluginOptions.getOrderedOptions(settings.getClass());
 
@@ -161,7 +169,15 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				askPluginSettings(settings, option, knownPluginSettings, "");
 			}
 		}
-		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+		catch (NoSuchFieldException e) {
+			logger.log(Level.SEVERE, "No token could be found, maybe user denied access", e);
+			throw new StorageException("No token found. Did you accept the authorization?", e);
+		}
+		catch (TimeoutException e) {
+			logger.log(Level.SEVERE, "No token was received in the given time interval", e);
+			throw new StorageException("No token was received in the given time interval", e);
+		}
+		catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | IOException | InterruptedException | ExecutionException e) {
 			logger.log(Level.SEVERE, "Unable to execute option generator", e);
 			throw new RuntimeException("Unable to execute option generator: " + e.getMessage());
 		}
@@ -180,22 +196,81 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	}
 
 	private void printOAuthInformation(TransferSettings settings) throws StorageException, NoSuchMethodException, SecurityException,
-			InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Class<? extends OAuthGenerator> oAuthGeneratorClass = TransferPluginUtil.getOAuthGeneratorClass(settings.getClass());
+					InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ExecutionException, InterruptedException, TimeoutException, NoSuchFieldException {
+		OAuth oAuthSettings =	settings.getClass().getAnnotation(OAuth.class);
 
-		if (oAuthGeneratorClass != null) {
-			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthGeneratorClass.getDeclaredConstructor(settings.getClass());
-			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);			
+		if (oAuthSettings != null) {
+			Constructor<? extends OAuthGenerator> optionCallbackClassConstructor = oAuthSettings.value().getDeclaredConstructor(settings.getClass());
+			OAuthGenerator oAuthGenerator = optionCallbackClassConstructor.newInstance(settings);
 
-			URI oAuthURL = oAuthGenerator.generateAuthUrl();
-			
-			out.println();
-			out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
-			out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());			
-			out.print("- Token (paste from URL): ");
-			
-			String token = console.readLine();
-			oAuthGenerator.checkToken(token);
+			if (isHeadless) {
+				logger.log(Level.FINE, "User is in headless mode and the plugin is OAuth based");
+
+				if (oAuthGenerator instanceof OAuthGenerator.WithNoRedirectMode) {
+					doOAuthInCopyTokenMode(oAuthGenerator);
+				}
+				else {
+					throw new RuntimeException("OAuth based plugin does not support headless mode");
+				}
+			}
+			else {
+				doOAuthInRedirectMode(oAuthGenerator, oAuthSettings);
+			}
+
+		}
+	}
+
+	private void doOAuthInCopyTokenMode(OAuthGenerator generator) throws StorageException {
+		URI oAuthURL = ((OAuthGenerator.WithNoRedirectMode) generator).generateAuthUrl();
+
+		out.println();
+		out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
+		out.printf("Please navigate to the URL below and enter the token:\n\n  %s\n\n", oAuthURL.toString());
+		out.print("- Token (paste from URL): ");
+
+		String token = console.readLine();
+		generator.checkToken(token, null);
+	}
+
+	private void doOAuthInRedirectMode(OAuthGenerator generator, OAuth settings) throws IOException, InterruptedException, ExecutionException, TimeoutException, StorageException {
+		OAuthTokenWebListener.Builder tokenListerBuilder = OAuthTokenWebListener.forMode(settings.mode());
+
+		if (settings.callbackPort() != OAuth.RANDOM_PORT) {
+			tokenListerBuilder.setPort(settings.callbackPort());
+		}
+
+		if (!settings.callbackId().equals(OAuth.PLUGIN_ID)) {
+			tokenListerBuilder.setId(settings.callbackId());
+		}
+
+		// non standard plugin?
+		if (generator instanceof OAuthGenerator.WithInterceptor) {
+			tokenListerBuilder.setTokenInterceptor(((OAuthGenerator.WithInterceptor) generator).getInterceptor());
+		}
+
+		if (generator instanceof OAuthGenerator.WithExtractor) {
+			tokenListerBuilder.setTokenExtractor(((OAuthGenerator.WithExtractor) generator).getExtractor());
+		}
+
+		OAuthTokenWebListener tokenListener = tokenListerBuilder.build();
+
+		URI oAuthURL = generator.generateAuthUrl(tokenListener.start());
+		Future<OAuthTokenFinish> futureTokenResponse = tokenListener.getToken();
+
+		out.println();
+		out.println("This plugin needs you to authenticate your account so that Syncany can access it.");
+		out.printf("Please navigate to the URL below and accept the given permissions:\n\n  %s\n\n", oAuthURL.toString());
+		out.print("Waiting for authorization...");
+
+		OAuthTokenFinish tokenResponse = futureTokenResponse.get(OAUTH_TOKEN_WAIT_TIMEOUT, TimeUnit.SECONDS);
+
+		if (tokenResponse != null) {
+			out.printf(" received token '%s'\n\n", tokenResponse.getToken());
+			generator.checkToken(tokenResponse.getToken(), tokenResponse.getCsrfState());
+		}
+		else {
+			out.println(" canceled");
+			throw new StorageException("Error while acquiring token, perhaps user denied authorization");
 		}
 	}
 
@@ -440,11 +515,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 		if (knownOptionValue == null || "".equals(knownOptionValue)) {
 			String defaultValueDescription = settings.getField(option.getField().getName());
-			
+
 			if (defaultValueDescription == null) {
 				defaultValueDescription = "none";
 			}
-			
+
 			out.printf("- %s (optional, default is %s): ", option.getDescription(), defaultValueDescription);
 			value = console.readLine();
 		}
@@ -524,31 +599,31 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	private TransferPluginOptionConverter createOptionConverter(TransferSettings settings,
 			Class<? extends TransferPluginOptionConverter> optionConverterClass) throws InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		
+
 		TransferPluginOptionConverter optionConverter = null;
-		
+
 		if (optionConverterClass != null) {
 			Constructor<? extends TransferPluginOptionConverter> optionConverterClassConstructor = optionConverterClass.getDeclaredConstructor(settings.getClass());
-			optionConverter = optionConverterClassConstructor.newInstance(settings);			
+			optionConverter = optionConverterClassConstructor.newInstance(settings);
 		}
-		
+
 		return optionConverter;
 	}
 
 	private TransferPluginOptionCallback createOptionCallback(TransferSettings settings,
 			Class<? extends TransferPluginOptionCallback> optionCallbackClass) throws InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		
+
 		TransferPluginOptionCallback optionCallback = null;
-		
+
 		if (optionCallbackClass != null) {
 			Constructor<? extends TransferPluginOptionCallback> optionCallbackClassConstructor = optionCallbackClass.getDeclaredConstructor(settings.getClass());
-			optionCallback = optionCallbackClassConstructor.newInstance(settings);			
+			optionCallback = optionCallbackClassConstructor.newInstance(settings);
 		}
-		
+
 		return optionCallback;
 	}
-	
+
 	protected String getRandomMachineName() {
 		return CipherUtil.createRandomAlphabeticString(20);
 	}
@@ -648,9 +723,9 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	@Override
 	public String onUserPassword(String header, String message) {
 		if (!isInteractive) {
-			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");			
+			throw new RuntimeException("Repository is encrypted, but no password was given in non-interactive mode.");
 		}
-		
+
 		out.println();
 
 		if (header != null) {
