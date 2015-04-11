@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import org.syncany.operations.daemon.messages.api.ManagementRequest;
 import org.syncany.operations.daemon.messages.api.ManagementRequestHandler;
 import org.syncany.operations.daemon.messages.api.Response;
-import org.syncany.operations.init.InitOperationResult;
 import org.syncany.operations.plugin.PluginOperation;
 import org.syncany.operations.plugin.PluginOperationResult;
 
@@ -54,8 +53,8 @@ public class PluginManagementRequestHandler extends ManagementRequestHandler {
 					}
 				}
 				catch (Exception e) {
-					logger.log(Level.WARNING, "Error adding watch to daemon config.", e);
-					eventBus.post(new InitManagementResponse(InitManagementResponse.NOK_OPERATION_FAILED, new InitOperationResult(), request.getId()));
+					logger.log(Level.WARNING, "Error executing plugin management request.", e);
+					eventBus.post(new PluginManagementResponse(PluginManagementResponse.NOK_OPERATION_FAILED, new PluginOperationResult(), request.getId()));
 				}
 			}
 		}, "PlugRq/" + concreteRequest.getOptions().getAction());

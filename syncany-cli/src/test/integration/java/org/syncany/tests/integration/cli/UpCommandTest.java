@@ -104,18 +104,18 @@ public class UpCommandTest {
 		}));
 
 		assertEquals(11, cliOut.length);
-		assertTrue(cliOut[8].contains("21 database files merged"));
+		assertTrue(cliOut[8].contains("22 database files merged"));
 		assertTrue(cliOut[9].contains("1 file histories shortened"));
 		assertTrue(cliOut[10].contains("Cleanup successful"));
 
-		for (int i = 1; i <= 21; i++) {
+		for (int i = 1; i <= 22; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path") + "/databases/" + expectedDatabaseRemoteFile.getName());
 
 			assertFalse("Database file SHOULD NOT exist: " + databaseFileInRepo, databaseFileInRepo.exists());
 		}
 
-		for (int i = 22; i <= 22; i++) {
+		for (int i = 23; i <= 23; i++) {
 			DatabaseRemoteFile expectedDatabaseRemoteFile = new DatabaseRemoteFile("A", i);
 			File databaseFileInRepo = new File(connectionSettings.get("path") + "/databases/" + expectedDatabaseRemoteFile.getName());
 

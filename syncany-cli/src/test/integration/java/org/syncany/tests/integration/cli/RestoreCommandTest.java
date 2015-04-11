@@ -66,7 +66,7 @@ public class RestoreCommandTest {
 		}));
 		
 		assertTrue(cliOut.length >= 1);		
-		String fileHistoryId = cliOut[0].split("\\s+")[7];
+		String fileHistoryId = cliOut[0].split("\\s+")[8];
 		
 		System.out.println("filehistory id is " + fileHistoryId);
 		

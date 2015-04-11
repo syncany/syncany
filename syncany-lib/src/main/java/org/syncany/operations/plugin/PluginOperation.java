@@ -48,7 +48,7 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
-import org.syncany.operations.daemon.messages.PluginConnectToHostExternalEvent;
+import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
@@ -93,7 +93,7 @@ public class PluginOperation extends Operation {
 
 	private static final String API_DEFAULT_ENDPOINT_URL = "https://api.syncany.org/v3";
 	private static final String API_PLUGIN_LIST_REQUEST_FORMAT = "%s/plugins/list?appVersion=%s&snapshots=%s&pluginId=%s&os=%s&arch=%s";
-	
+
 	private static final String PURGEFILE_FILENAME = "purgefile";
 	private static final String UPDATE_FILENAME = "updatefile";
 
@@ -113,7 +113,7 @@ public class PluginOperation extends Operation {
 
 	@Override
 	public PluginOperationResult execute() throws Exception {
-		result.setAction(options.getAction());		
+		result.setAction(options.getAction());
 
 		switch (options.getAction()) {
 			case LIST:
@@ -170,7 +170,7 @@ public class PluginOperation extends Operation {
 				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
 
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(updatefilePath, true)))) {
-					out.println(pluginId);
+					out.println(pluginId + (options.isSnapshots() ?  " --snapshot" : ""));
 					delayedPlugins.add(pluginId);
 				}
 				catch (IOException e) {
@@ -558,7 +558,11 @@ public class PluginOperation extends Operation {
 					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
 					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
 
-					extendedPluginInfo.setOutdated(localVersion.lessThan(remoteVersion) && applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion));
+					boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
+					boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
+					boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
+
+					extendedPluginInfo.setOutdated(pluginIsOutdated);
 				}
 
 				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
@@ -616,9 +620,9 @@ public class PluginOperation extends Operation {
 
 		String apiEndpointUrl = (options.getApiEndpoint() != null) ? options.getApiEndpoint() : API_DEFAULT_ENDPOINT_URL;
 		URL pluginListUrl = new URL(String.format(API_PLUGIN_LIST_REQUEST_FORMAT, apiEndpointUrl, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
-		
+
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
-		eventBus.post(new PluginConnectToHostExternalEvent(pluginListUrl.getHost()));
+		eventBus.post(new ConnectToHostExternalEvent(pluginListUrl.getHost()));
 
 		URLConnection urlConnection = pluginListUrl.openConnection();
 		urlConnection.setConnectTimeout(2000);

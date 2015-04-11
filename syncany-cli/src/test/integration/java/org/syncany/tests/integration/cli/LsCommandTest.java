@@ -17,7 +17,8 @@
  */
 package org.syncany.tests.integration.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -76,10 +77,11 @@ public class LsCommandTest {
 			"ls"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 3, cliOut.length);
-		assertTrue(cliOut[0].contains("1 file1"));
-		assertTrue(cliOut[1].contains("2 file2"));
-		assertTrue(cliOut[2].contains("1 folder"));
+		assertEquals("Different number of output lines expected.", 4, cliOut.length);
+		assertTrue(cliOut[0].contains("1 .syignore"));
+		assertTrue(cliOut[1].contains("1 file1"));
+		assertTrue(cliOut[2].contains("2 file2"));
+		assertTrue(cliOut[3].contains("1 folder"));
 		
 		// Check 'ls --recursive' output
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
@@ -87,13 +89,14 @@ public class LsCommandTest {
 			"ls", "--recursive"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 6, cliOut.length);
-		assertTrue(cliOut[0].contains("1 file1"));
-		assertTrue(cliOut[1].contains("2 file2"));
-		assertTrue(cliOut[2].contains("1 folder"));
-		assertTrue(cliOut[3].contains("1 folder/fileinfolder"));
-		assertTrue(cliOut[4].contains("1 folder/subfolder"));
-		assertTrue(cliOut[5].contains("2 folder/subfolder/fileinsubfolder"));
+		assertEquals("Different number of output lines expected.", 7, cliOut.length);
+		assertTrue(cliOut[0].contains("1 .syignore"));
+		assertTrue(cliOut[1].contains("1 file1"));
+		assertTrue(cliOut[2].contains("2 file2"));
+		assertTrue(cliOut[3].contains("1 folder"));
+		assertTrue(cliOut[4].contains("1 folder/fileinfolder"));
+		assertTrue(cliOut[5].contains("1 folder/subfolder"));
+		assertTrue(cliOut[6].contains("2 folder/subfolder/fileinsubfolder"));
 		
 		// Check 'ls --versions --recursive' output
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
@@ -101,15 +104,16 @@ public class LsCommandTest {
 			"ls", "--versions", "--recursive"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 8, cliOut.length);
-		assertTrue(cliOut[0].contains("1 file1"));
-		assertTrue(cliOut[1].contains("1 file2"));
-		assertTrue(cliOut[2].contains("2 file2"));
-		assertTrue(cliOut[3].contains("1 folder"));
-		assertTrue(cliOut[4].contains("1 folder/fileinfolder"));
-		assertTrue(cliOut[5].contains("1 folder/subfolder"));
-		assertTrue(cliOut[6].contains("1 folder/subfolder/fileinsubfolder"));
-		assertTrue(cliOut[7].contains("2 folder/subfolder/fileinsubfolder"));
+		assertEquals("Different number of output lines expected.", 9, cliOut.length);
+		assertTrue(cliOut[0].contains("1 .syignore"));
+		assertTrue(cliOut[1].contains("1 file1"));
+		assertTrue(cliOut[2].contains("1 file2"));
+		assertTrue(cliOut[3].contains("2 file2"));
+		assertTrue(cliOut[4].contains("1 folder"));
+		assertTrue(cliOut[5].contains("1 folder/fileinfolder"));
+		assertTrue(cliOut[6].contains("1 folder/subfolder"));
+		assertTrue(cliOut[7].contains("1 folder/subfolder/fileinsubfolder"));
+		assertTrue(cliOut[8].contains("2 folder/subfolder/fileinsubfolder"));
 		
 		// Check 'ls --versions --group' output
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
@@ -117,17 +121,19 @@ public class LsCommandTest {
 			"ls", "--versions", "--group"
 		}));
 		
-		assertEquals("Different number of output lines expected.", 9, cliOut.length); 
-		
-		assertTrue(cliOut[0].contains(", file1"));
-		assertTrue(cliOut[1].contains("1 file1"));
+		assertEquals("Different number of output lines expected.", 12, cliOut.length);
+		assertTrue(cliOut[0].contains(", .syignore"));
+		assertTrue(cliOut[1].contains("1 .syignore"));
 		assertEquals("", cliOut[2].trim());
-		assertTrue(cliOut[3].contains(", file2"));
-		assertTrue(cliOut[4].contains("1 file2"));
-		assertTrue(cliOut[5].contains("2 file2"));
-		assertEquals("", cliOut[6].trim());
-		assertTrue(cliOut[7].contains(", folder"));
-		assertTrue(cliOut[8].contains("1 folder"));
+		assertTrue(cliOut[3].contains(", file1"));
+		assertTrue(cliOut[4].contains("1 file1"));
+		assertEquals("", cliOut[5].trim());
+		assertTrue(cliOut[6].contains(", file2"));
+		assertTrue(cliOut[7].contains("1 file2"));
+		assertTrue(cliOut[8].contains("2 file2"));
+		assertEquals("", cliOut[9].trim());
+		assertTrue(cliOut[10].contains(", folder"));
+		assertTrue(cliOut[11].contains("1 folder"));
 		
 		// Check 'ls --types=d' output
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
@@ -144,10 +150,11 @@ public class LsCommandTest {
 			"ls", "--date", new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(beforeSecondUpTime)
 		}));
 		
-		assertEquals("Different number of output lines expected.", 3, cliOut.length); 		
-		assertTrue(cliOut[0].contains("1 file1"));
-		assertTrue(cliOut[1].contains("1 file2"));
-		assertTrue(cliOut[2].contains("folder"));
+		assertEquals("Different number of output lines expected.", 4, cliOut.length);
+		assertTrue(cliOut[0].contains("1 .syignore"));
+		assertTrue(cliOut[1].contains("1 file1"));
+		assertTrue(cliOut[2].contains("1 file2"));
+		assertTrue(cliOut[3].contains("folder"));
 		
 		// Check 'ls folder/' output
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {

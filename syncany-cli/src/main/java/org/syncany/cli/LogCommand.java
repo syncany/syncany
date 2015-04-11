@@ -31,6 +31,7 @@ import joptsimple.OptionSpec;
 
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.log.LightweightDatabaseVersion;
+import org.syncany.operations.log.LogOperation;
 import org.syncany.operations.log.LogOperationOptions;
 import org.syncany.operations.log.LogOperationResult;
 
@@ -55,7 +56,7 @@ public class LogCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		LogOperationOptions operationOptions = parseOptions(operationArgs);
-		LogOperationResult operationResult = client.log(operationOptions);
+		LogOperationResult operationResult = new LogOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 

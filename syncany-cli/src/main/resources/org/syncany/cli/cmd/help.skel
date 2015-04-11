@@ -11,23 +11,29 @@ DESCRIPTION
   allows users to backup and share certain folders of their workstations
   using any kind of storage.
   
-  Command overview:
-    init       Initialize the current folder as a Syncany folder.
-    connect    Connect the current folder to an existing Syncany repository.
-    status     Detect local changes and print to STDOUT.
-    up         Detect local changes and upload to repository.
-    ls-remote  Detect remote changes and print to STDOUT.
-    down       Detect remote changes and apply locally.
+  Main sync commands:
+    init       Initialize the current folder as a Syncany folder
+    connect    Connect the current folder to an existing Syncany repository
+    up         Detect local changes and upload to repository
+    down       Detect remote changes and apply locally
+    
+  Other commands:
+    status     Detect and print local changes 
+    ls-remote  Detect and print remote changes  
     ls         List and filter the current and past file tree.
-    watch      Automatically synchronizes the local folder with the repo.
-    cleanup    Remove old versions from the local database and the repo. 
-    restore    Restore the given file paths from the remote repository. 
-    genlink    Create a syncany:// link from an existing local folder. 
-    plugin     List, install and remove storage backend plugins.
-    daemon     Start and stop the background process (daemon).
+    cleanup    Remove old versions from the local database and the repo 
+    restore    Restore the given file paths from the remote repository 
+    genlink    Create a syncany:// link from an existing local folder 
+    plugin     List, install and remove storage backend plugins
+    update     Manage and check for application updates
+    daemon     Start and stop the background process (daemon)
+    watch      Automatically sync the local folder (in the foreground)
 
   Short command descriptions and options can be found below. Detailed 
-  explanations can be queried with `sy <command> --help`. 
+  explanations can be queried with `sy <command> --help`.
+  
+  An extensive user guide with many examples is also available on the
+  Syncany website: https://syncany.org/r/userguide
 
 GLOBAL OPTIONS
   -l, --localdir=<path>

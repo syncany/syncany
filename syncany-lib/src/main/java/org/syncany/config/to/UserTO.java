@@ -23,6 +23,10 @@ import org.simpleframework.xml.Root;
 /**
  * This class is the access object to user-password pairs in XML.
  * 
+ * <p>It uses the Simple framework for XML serialization, and its corresponding
+ * annotation-based configuration.
+ *
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Pim Otte
  */
 @Root(strict = false)

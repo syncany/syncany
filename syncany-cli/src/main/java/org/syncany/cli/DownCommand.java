@@ -31,6 +31,7 @@ import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
+import org.syncany.operations.down.DownOperation;
 import org.syncany.operations.down.DownOperationOptions;
 import org.syncany.operations.down.DownOperationOptions.DownConflictStrategy;
 import org.syncany.operations.down.DownOperationResult;
@@ -52,7 +53,7 @@ public class DownCommand extends Command {
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		DownOperationOptions operationOptions = parseOptions(operationArgs);		
-		DownOperationResult operationResult = client.down(operationOptions);		
+		DownOperationResult operationResult = new DownOperation(config, operationOptions).execute();		
 		
 		printResults(operationResult);
 		

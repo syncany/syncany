@@ -41,6 +41,7 @@ import org.syncany.plugins.dummy.DummyTransferManager;
 import org.syncany.plugins.dummy.DummyTransferPlugin;
 import org.syncany.plugins.dummy.DummyTransferSettings;
 import org.syncany.plugins.local.LocalTransferSettings;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
@@ -161,5 +162,28 @@ public class TransferSettingsTest {
 	public void testGetSettingsAndManagerFromPlugin() throws Exception {
 		Class<? extends TransferSettings> settingsClass = TransferPluginUtil.getTransferSettingsClass(DummyTransferPlugin.class);
 		assertEquals(DummyTransferSettings.class, settingsClass);
+	}
+
+	@Test
+	public void testEnumSettingValid() throws Exception {
+		final String enumValue = "A";
+
+		DummyTransferSettings testTransferSettings = new DummyTransferSettings();
+		testTransferSettings.setField("enumField", enumValue);
+		assertEquals(DummyTransferSettings.DummyEnum.A, testTransferSettings.enumField);
+
+		final String enumValueLower = "a";
+
+		testTransferSettings = new DummyTransferSettings();
+		testTransferSettings.setField("enumField", enumValueLower);
+		assertEquals(DummyTransferSettings.DummyEnum.A, testTransferSettings.enumField);
+	}
+
+	@Test(expected = StorageException.class)
+	public void testEnumSettingInvalid() throws Exception {
+		final String enumValue = "C"; // does not exist
+
+		DummyTransferSettings testTransferSettings = new DummyTransferSettings();
+		testTransferSettings.setField("enumField", enumValue);
 	}
 }

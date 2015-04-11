@@ -32,7 +32,7 @@ import org.simpleframework.xml.ElementMap;
  * <p>It uses the Simple framework for XML serialization, and its corresponding
  * annotation-based configuration.  
  *  
- * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class TypedPropertyListTO {

@@ -15,21 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.config.to;
+package org.syncany.operations.daemon.messages;
 
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+import org.syncany.operations.daemon.messages.api.ExternalEvent;
 
-@Root(strict = false)
-public class HooksTO {
-	@Element(name = "runAfterDown", required = false)
-	private String runAfterDownCommand;
+public class ConnectToHostExternalEvent extends ExternalEvent {
+	private String host;
 
-	public String getRunAfterDownCommand() {
-		return runAfterDownCommand;
+	public ConnectToHostExternalEvent() {
+		// Nothing
 	}
+	
+	public ConnectToHostExternalEvent(String host) {
+		this.host = host;
+	}		
 
-	public void setRunAfterDownCommand(String runAfterDownCommand) {
-		this.runAfterDownCommand = runAfterDownCommand;
+	public String getHost() {
+		return host;
 	}
 }

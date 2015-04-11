@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.VectorClock;
 
 /**
  * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a
@@ -58,17 +57,6 @@ public class DatabaseBranch {
 		if (index >= 0 && index < branch.size()) {
 			return branch.get(index);
 		}
-		return null;
-	}
-
-	// TODO [medium] Performance: Use map instead of list
-	public DatabaseVersionHeader get(VectorClock vectorClock) {
-		for (DatabaseVersionHeader databaseVersionHeader : branch) {
-			if (databaseVersionHeader.getVectorClock().equals(vectorClock)) {
-				return databaseVersionHeader;
-			}
-		}
-
 		return null;
 	}
 

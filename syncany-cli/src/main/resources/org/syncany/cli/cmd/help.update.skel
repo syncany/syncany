@@ -1,0 +1,31 @@
+NAME
+  sy-update - Manages application updates
+    
+SYNOPSIS
+  sy update check [-s | --snapshots] [-a | --api-endpoint=<url>]                 
+            
+DESCRIPTION 
+  This command manages updates of the application. It currently only 
+  performs update checks, but will likely be extended to automatically
+  update the application. The following actions exist:
+  
+  - The 'check' action checks if a new application version is available. 
+  It queries the Syncany API and outputs whether the local copy of the
+  application is up-to-date. If it is not, it outputs the newest version
+  and a download URL.
+    
+ACIONS
+  check [<args>]
+    Checks with the Syncany API (api.syncany.org) for a new version.
+      
+    -s, --snapshots               
+      Instead of checking against application release versions (default),
+      the command will also include daily snapshots.
+      
+    -a, --api-endpoint=<url>
+      Selects the API endpoint to query against. If not given, the
+      default endpoint URL will be used (https://api.syncany.org/v3).            
+
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

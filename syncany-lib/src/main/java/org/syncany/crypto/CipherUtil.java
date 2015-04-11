@@ -135,15 +135,6 @@ public class CipherUtil {
 	}
 
 	/**
-	 * Returns whether the unlimited strength policy is enabled in the current JVM.
-	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography
-	 *      Extension (JCE) Unlimited Strength</a>
-	 */
-	public static boolean unlimitedStrengthEnabled() {
-		return unlimitedStrengthEnabled.get();
-	}
-
-	/**
 	 * Attempts to programmatically enable the unlimited strength Java crypto extension
 	 * using the reflection API.
 	 *
@@ -356,7 +347,7 @@ public class CipherUtil {
 	/**
 	 * Generates a self-signed certificate, given a public/private key pair.
 	 *
-	 * @see https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138
+	 * @see <a href="https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138">Original source of this method</a>
 	 */
 	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException,
 	CertificateException,

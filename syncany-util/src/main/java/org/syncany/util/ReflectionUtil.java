@@ -27,8 +27,8 @@ import java.util.List;
 
 /**
  * Utility class to find classes, methods and fields with certain properties -
- * typically having an annotation or a certain erasure. 
- * 
+ * typically having an annotation or a certain erasure.
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 public abstract class ReflectionUtil {
@@ -41,6 +41,7 @@ public abstract class ReflectionUtil {
 					matchedAnnotations.add(f);
 				}
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 
@@ -56,6 +57,7 @@ public abstract class ReflectionUtil {
 					matchedAnnotations.add(m);
 				}
 			}
+			
 			clazz = clazz.getSuperclass();
 		}
 
@@ -92,8 +94,13 @@ public abstract class ReflectionUtil {
 		return null;
 	}
 
-	// Java 7 does not support getTypeName() :(
+	/**
+	 * Returns the {@link Class} from a {@link Type}, or
+	 * returns null if the class is not found, or the type 
+	 * is not a class.
+	 */
 	public static Class<?> getClassFromType(Type type) {
+		// Java 7 does not support getTypeName() :(
 		String fullName = type.toString();
 
 		try {
@@ -106,5 +113,28 @@ public abstract class ReflectionUtil {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns whether or not the value is a valid value
+	 * for the enum given.
+	 * 
+	 * @param checkEnumValue Value to check
+	 * @param enumClass Enum class to check the given value against
+	 * @return True if given value is valid, false otherwise 
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static boolean isValidEnum(String checkEnumValue, Class<?> enumClass) {
+		if (!enumClass.isEnum()) {
+			return false;
+		}
+
+		try {
+			Enum.valueOf((Class<? extends Enum>) enumClass, checkEnumValue);
+			return true;
+		}
+		catch (IllegalArgumentException e) {
+			return false;
+		}
 	}
 }
