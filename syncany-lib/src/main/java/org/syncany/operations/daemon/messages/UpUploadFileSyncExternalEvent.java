@@ -17,7 +17,10 @@
  */
 package org.syncany.operations.daemon.messages;
 
+import org.simpleframework.xml.Element;
+
 public class UpUploadFileSyncExternalEvent extends SyncExternalEvent {
+	@Element(required = false)
 	private String filename;
 
 	public UpUploadFileSyncExternalEvent() {

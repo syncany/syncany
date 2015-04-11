@@ -38,8 +38,4 @@ public class LogOperationResult implements OperationResult {
 	public List<LightweightDatabaseVersion> getDatabaseVersions() {
 		return databaseVersions;
 	}
-
-	public void setDatabaseVersions(ArrayList<LightweightDatabaseVersion> databaseVersions) {
-		this.databaseVersions = databaseVersions;
-	}
 }

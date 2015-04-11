@@ -24,50 +24,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.syncany.config.Config;
 import org.syncany.config.UserConfig;
-import org.syncany.crypto.CipherException;
 import org.syncany.operations.Operation;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.cleanup.CleanupOperationResult;
-import org.syncany.operations.down.DownOperation;
-import org.syncany.operations.down.DownOperationOptions;
-import org.syncany.operations.down.DownOperationResult;
-import org.syncany.operations.init.ConnectOperation;
-import org.syncany.operations.init.ConnectOperationOptions;
-import org.syncany.operations.init.ConnectOperationResult;
-import org.syncany.operations.init.GenlinkOperation;
-import org.syncany.operations.init.GenlinkOperationOptions;
-import org.syncany.operations.init.GenlinkOperationResult;
-import org.syncany.operations.init.InitOperation;
-import org.syncany.operations.init.InitOperationOptions;
-import org.syncany.operations.init.InitOperationResult;
-import org.syncany.operations.log.LogOperation;
-import org.syncany.operations.log.LogOperationOptions;
-import org.syncany.operations.log.LogOperationResult;
-import org.syncany.operations.ls.LsOperation;
-import org.syncany.operations.ls.LsOperationOptions;
-import org.syncany.operations.ls.LsOperationResult;
-import org.syncany.operations.ls_remote.LsRemoteOperation;
-import org.syncany.operations.ls_remote.LsRemoteOperationResult;
-import org.syncany.operations.plugin.PluginOperation;
-import org.syncany.operations.plugin.PluginOperationOptions;
-import org.syncany.operations.plugin.PluginOperationResult;
-import org.syncany.operations.restore.RestoreOperation;
-import org.syncany.operations.restore.RestoreOperationOptions;
-import org.syncany.operations.restore.RestoreOperationResult;
-import org.syncany.operations.status.StatusOperation;
-import org.syncany.operations.status.StatusOperationOptions;
-import org.syncany.operations.status.StatusOperationResult;
-import org.syncany.operations.up.UpOperation;
-import org.syncany.operations.up.UpOperationOptions;
-import org.syncany.operations.up.UpOperationResult;
-import org.syncany.operations.watch.WatchOperation;
-import org.syncany.operations.watch.WatchOperationOptions;
-import org.syncany.plugins.UserInteractionListener;
 
 /**
  * The client class is a convenience class to call the application's {@link Operation}s
@@ -79,112 +39,21 @@ import org.syncany.plugins.UserInteractionListener;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Client {
-	private static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
-	private static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
-	private static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
-	private static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
-	private static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
-	private static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
-	private static final String APPLICATION_PROPERTIES_DATE_KEY = "applicationDate";
-	private static final String APPLICATION_PROPERTIES_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
+	protected static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!
+	protected static final String APPLICATION_PROPERTIES_TEST_RESOURCE = "/org/syncany/application.test.properties";
+	protected static final String APPLICATION_PROPERTIES_RELEASE_KEY = "applicationRelease";
+	protected static final String APPLICATION_PROPERTIES_VERSION_KEY = "applicationVersion";
+	protected static final String APPLICATION_PROPERTIES_VERSION_FULL_KEY = "applicationVersionFull";
+	protected static final String APPLICATION_PROPERTIES_REVISION_KEY = "applicationRevision";
+	protected static final String APPLICATION_PROPERTIES_DATE_KEY = "applicationDate";
+	protected static final String APPLICATION_PROPERTIES_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
 	
-	private static Properties applicationProperties;
+	protected static Properties applicationProperties;
 	
-	protected Config config;
-
 	static {
 		initUserConfig();
 		initApplicationProperties();
-	}
-	
-	public Client() {
-		this.config = null;
-	}
-
-	public void setConfig(Config config) {
-		this.config = config;
-	}
-
-	public Config getConfig() {
-		return config;
-	}
-
-	public UpOperationResult up() throws Exception {
-		return up(new UpOperationOptions());
-	}
-
-	public UpOperationResult up(UpOperationOptions options) throws Exception {
-		return new UpOperation(config, options).execute();
-	}
-
-	public DownOperationResult down() throws Exception {
-		return down(new DownOperationOptions());
-	}
-
-	public DownOperationResult down(DownOperationOptions options) throws Exception {
-		return new DownOperation(config, options).execute();
-	}
-
-	public StatusOperationResult status() throws Exception {
-		return status(new StatusOperationOptions());
-	}
-
-	public StatusOperationResult status(StatusOperationOptions options) throws Exception {
-		return new StatusOperation(config, options).execute();
-	}
-
-	public LsRemoteOperationResult lsRemote() throws Exception {
-		return new LsRemoteOperation(config).execute();
-	}
-
-	public RestoreOperationResult restore(RestoreOperationOptions options) throws Exception {
-		return new RestoreOperation(config, options).execute();
-	}
-
-	public LsOperationResult ls(LsOperationOptions options) throws Exception {
-		return new LsOperation(config, options).execute();
-	}
-
-	public LogOperationResult log(LogOperationOptions options) throws Exception {
-		return new LogOperation(config, options).execute();
-	}
-
-	public void watch(WatchOperationOptions options) throws Exception {
-		new WatchOperation(config, options).execute();		
-	}	
-
-	public GenlinkOperationResult genlink(GenlinkOperationOptions options) throws Exception {
-		return new GenlinkOperation(config, options).execute();
-	}
-
-	public InitOperationResult init(InitOperationOptions options) throws Exception {
-		return init(options, null);
-	}
-
-	public InitOperationResult init(InitOperationOptions options, UserInteractionListener listener) throws Exception {
-		return new InitOperation(options, listener).execute();
-	}
-
-	public ConnectOperationResult connect(ConnectOperationOptions options) throws Exception {
-		return connect(options, null);
-	}
-
-	public ConnectOperationResult connect(ConnectOperationOptions options, UserInteractionListener listener) throws Exception,
-			CipherException {
-		
-		return new ConnectOperation(options, listener).execute();
-	}
-
-	public CleanupOperationResult cleanup() throws Exception {
-		return new CleanupOperation(config, new CleanupOperationOptions()).execute();
-	}
-
-	public CleanupOperationResult cleanup(CleanupOperationOptions options) throws Exception {
-		return new CleanupOperation(config, options).execute();
-	}
-
-	public PluginOperationResult plugin(PluginOperationOptions options) throws Exception {
-		return new PluginOperation(config, options).execute();
+		initTestApplicationProperties();
 	}
 	
 	public static Properties getApplicationProperties() {
@@ -229,8 +98,6 @@ public class Client {
 		try {
 			applicationProperties = new Properties();
 			applicationProperties.load(globalPropertiesInputStream);
-			
-			initTestApplicationProperties();			
 		}  
 		catch (Exception e) {
 			throw new RuntimeException("Cannot load application properties.", e);

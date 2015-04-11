@@ -22,6 +22,7 @@ import java.util.List;
 import org.syncany.operations.OperationOptions;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
+import org.syncany.operations.ls_remote.LsRemoteOperation;
 import org.syncany.operations.ls_remote.LsRemoteOperationResult;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -41,7 +42,7 @@ public class LsRemoteCommand extends Command {
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		LsRemoteOperationResult operationResult = client.lsRemote();
+		LsRemoteOperationResult operationResult = new LsRemoteOperation(config).execute();
 		printResults(operationResult);		
 		
 		return 0;

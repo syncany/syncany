@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.unit.operations.deamon;
+package org.syncany.tests.unit.operations.daemon;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,6 +38,7 @@ import org.syncany.operations.daemon.DaemonOperationOptions.DaemonAction;
 import org.syncany.operations.daemon.DaemonOperationResult;
 import org.syncany.operations.daemon.DaemonOperationResult.DaemonResultCode;
 import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestDaemonUtil;
 
 /**
  * Unit tests for the {@link DaemonOperation} class, 
@@ -57,12 +58,14 @@ public class DaemonOperationTest {
 	@BeforeClass
 	public static void initialize() throws Exception {
 		tempWatchRootAppFolder = TestFileUtil.createTempDirectoryInSystemTemp(WATCH_ROOT_APP_FOLDER);
+		TestDaemonUtil.cleanUserConfig();
 	}
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 		options = mock(DaemonOperationOptions.class);
 		deamonOp = new DaemonOperation(options);
+
 	}
 
 	@Test

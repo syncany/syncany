@@ -34,9 +34,12 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
 
 /**
+ * Factory class to serialize and deserialize {@link Message}s from/to 
+ * XML (via SimpleXML).  
+ * 
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public abstract class XmlMessageFactory extends MessageFactory {
 	private static final Pattern MESSAGE_TYPE_PATTERN = Pattern.compile("\\<([^\\/>\\s]+)");
 	private static final int MESSAGE_TYPE_PATTERN_GROUP = 1;
@@ -141,5 +144,4 @@ public abstract class XmlMessageFactory extends MessageFactory {
 			node.setValue(value.toString());
 		}
 	}
-
 }

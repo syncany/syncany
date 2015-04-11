@@ -17,20 +17,22 @@
  */
 package org.syncany.tests.unit.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Constructor;
 
 import org.junit.Test;
 import org.syncany.util.ReflectionUtil;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 public class ReflectionUtilTest {
-
 	@Test
 	public void testMatchingConstructor() throws Exception {
-
 		final Constructor<?> reference = X.class.getConstructor(A.class, A.class);
 		assertNotNull(reference);
 
@@ -51,7 +53,27 @@ public class ReflectionUtilTest {
 		assertNull(ReflectionUtil.getMatchingConstructorForClass(X.class, B.class, A.class));
 		assertNull(ReflectionUtil.getMatchingConstructorForClass(X.class, A.class, B.class, B.class));
 		assertNull(ReflectionUtil.getMatchingConstructorForClass(X.class));
-
+	}
+	
+	@Test
+	public void testIsEnum() throws Exception {
+		assertTrue(ReflectionUtil.isValidEnum("Value1", SomeEnum.class));
+		assertTrue(ReflectionUtil.isValidEnum("Value2", SomeEnum.class));
+		assertFalse(ReflectionUtil.isValidEnum("VALUE1", SomeEnum.class));
+		assertFalse(ReflectionUtil.isValidEnum("VALUE2", SomeEnum.class));
+		assertFalse(ReflectionUtil.isValidEnum("InvalidValue", SomeEnum.class));
+	}
+	
+	@Test
+	public void testGetMethodsWithAnnotation() throws Exception {
+		assertEquals(2, ReflectionUtil.getAllMethodsWithAnnotation(ClassWithAnnotations.class, SomeAnnotation.class).length);
+		assertEquals(1, ReflectionUtil.getAllMethodsWithAnnotation(ClassWithAnnotations.class, AnotherAnnotation.class).length);	
+	}
+	
+	@Test
+	public void testGetFieldsWithAnnotation() throws Exception {
+		assertEquals(2, ReflectionUtil.getAllFieldsWithAnnotation(ClassWithAnnotations.class, SomeAnnotation.class).length);
+		assertEquals(1, ReflectionUtil.getAllFieldsWithAnnotation(ClassWithAnnotations.class, AnotherAnnotation.class).length);		
 	}
 
 	public static class X {
@@ -74,4 +96,40 @@ public class ReflectionUtilTest {
 	public static class C extends A {
 	}
 
+	public enum SomeEnum {
+		Value1, Value2
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface SomeAnnotation {		
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface AnotherAnnotation {		
+	}
+	
+	@SomeAnnotation
+	@SuppressWarnings("unused")
+	public static class ClassWithAnnotations {
+		@SomeAnnotation
+		private int field1;
+		
+		@SomeAnnotation
+		@AnotherAnnotation
+		private String field2;
+		
+		private boolean field3;
+		
+		@SomeAnnotation
+		public void method1() {			
+		}
+		
+		@SomeAnnotation
+		@AnotherAnnotation
+		public void method2() {			
+		}
+		
+		public void method3() {			
+		}
+	}
 }
