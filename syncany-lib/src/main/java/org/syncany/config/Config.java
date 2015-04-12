@@ -160,7 +160,7 @@ public class Config {
 	}
 
 	private void initChunker(RepoTO repoTO) throws Exception {
-		// TODO [features request] make chunking options configurable, something like described in #29
+		// TODO [feature request] make chunking options configurable, something like described in #29
 		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
 
 		chunker = new FixedChunker(512 * 1024, "SHA1");

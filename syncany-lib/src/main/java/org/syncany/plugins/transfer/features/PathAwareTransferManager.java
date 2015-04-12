@@ -43,6 +43,9 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 
 /**
+ * // a plugin dev can access a pathaware remotefile's path using
+		//    remoteFile.getAttributes(PathAwareRemoteFileAttributes.class).getPath();
+		// which follows the java.nio files style.
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class PathAwareTransferManager implements TransferManager {
@@ -210,10 +213,7 @@ public class PathAwareTransferManager implements TransferManager {
 		return affectedFiles.contains(remoteFileClass);
 	}
 
-	private RemoteFile createPathAwareRemoteFile(RemoteFile remoteFile) throws StorageException {
-		// a plugin dev can access a pathaware remotefile's path using
-		//    remoteFile.getAttributes(PathAwareRemoteFileAttributes.class).getPath();
-		// which follows the java.nio files style.
+	private RemoteFile createPathAwareRemoteFile(RemoteFile remoteFile) throws StorageException {		
 		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes = new PathAwareRemoteFileAttributes();
 		remoteFile.addAttributes(pathAwareRemoteFileAttributes);
 

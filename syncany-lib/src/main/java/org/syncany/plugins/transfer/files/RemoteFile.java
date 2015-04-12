@@ -33,6 +33,10 @@ import com.google.common.collect.Sets;
  * <p>Transfer manager operations take either <tt>RemoteFile</tt> instances, or classes
  * that extend this class. Depending on the type of the sub-class, they might store the
  * files at a different location or in a different format to optimize performance.
+ * 
+ * <p>Remote files can be extended with {@link RemoteFileAttributes} in certain situations, 
+ * e.g. to add additional information about the sub-path. The attributes can be added set
+ * and read via {@link #addAttributes(RemoteFileAttributes)} and {@link #getAttributes(Class)}.
  *
  * <p><b>Important:</b> Sub-classes must offer a
  * {@link RemoteFile#RemoteFile(String) one-parameter constructor} that takes a
@@ -74,9 +78,17 @@ public abstract class RemoteFile {
 	public final String getName() {
 		return name;
 	}
-
+	
 	/**
-	 * Returns a list of attributes for a given file
+	 * Adds remote file attributes to this remote file class. Attributes 
+	 * can extend the parameters of this class without having to extend it.
+	 */
+	public final void addAttributes(RemoteFileAttributes remoteFileAttributes) {
+		attributes.add(remoteFileAttributes);
+	}
+	
+	/**
+	 * Returns a list of attributes for a given file.
 	 */
 	public final <T extends RemoteFileAttributes> T getAttributes(Class<T> remoteFileAttributesClass) throws NoSuchFieldException {
 		for (RemoteFileAttributes remoteFileAttribute : attributes) {
@@ -86,10 +98,6 @@ public abstract class RemoteFile {
 		}
 
 		throw new NoSuchFieldException("Unable to find attributes for class " + remoteFileAttributesClass);
-	}
-
-	public final void addAttributes(RemoteFileAttributes newRemoteFileAttributes) {
-		attributes.add(newRemoteFileAttributes);
 	}
 
 	/**

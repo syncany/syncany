@@ -36,6 +36,26 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 /**
+ * This factory class creates a {@link TransferManager} from a
+ * {@link Config} object, and wraps it into the requested {@link Feature}(s).
+ * 
+ * <p>Depending on the {@link Feature}s that the original transfer manager is
+ * annotated with, the factory will wrap it into the corresponding feature
+ * specific transfer managers. 
+ * 
+ * <p>The class uses the builder pattern. It can be used like this:
+ * 
+ * <pre>
+ *   TransactionAwareTransferManager txAwareTM = TransferManagerFactory
+ *     .build(config)
+ *     .withFeature(Retriable.class)
+ *     .withFeature(PathAware.class)
+ *     .withFeature(TransactionAware.class)
+ *     .as(TransactionAware.class);
+ * </pre>
+ * 
+ * @see Feature
+ * @see TransferManager
  * @author Christian Roth <christian.roth@port17.de>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -49,41 +69,88 @@ public class TransferManagerFactory {
 			.add(PathAware.class)
 			.build();
 
-	public static Builder build(Config config) throws StorageException {		
+	/**
+	 * Creates the transfer manager factory builder from the {@link Config}
+	 * using the configured {@link TransferPlugin}. Using this builder, the 
+	 * feature-wrapped transfer manager can be built.
+	 * 
+	 * @see TransferManagerBuilder
+	 * @param config Local folder configuration with transfer plugin settings
+	 * @return Transfer manager builder
+	 */
+	public static TransferManagerBuilder build(Config config) throws StorageException {		
 		TransferManager transferManager = config.getTransferPlugin().createTransferManager(config.getConnection(), config);		
 		logger.log(Level.INFO, "Building " + transferManager.getClass().getSimpleName() + " from config '" + config.getLocalDir().getName() + "' ...");
 
-		return new Builder(transferManager, config);
+		return new TransferManagerBuilder(config, transferManager);
 	}
 
-	public static class Builder {
+	/**
+	 * The transfer manager builder takes an original {@link TransferManager}, and
+	 * wraps it with feature-specific transfer managers, if the original transfer 
+	 * manager is annotated with a {@link Feature} annotation.
+	 * 
+	 * <p>The class uses the builder pattern. Its usage is described in the
+	 * {@link TransferManagerFactory}. The two main methods of this class are 
+	 * {@link #withFeature(Class)} and {@link #as(Class)}.
+	 * 
+	 * @see Feature
+	 * @see TransferManagerFactory
+	 */
+	public static class TransferManagerBuilder {
 		private List<Class<? extends Annotation>> features;
 		private Config config;
 		private TransferManager originalTransferManager;
 		private TransferManager wrappedTransferManager;
 
-		private Builder(TransferManager transferManager, Config config) {
-			this.features = new ArrayList<>();
-			this.wrappedTransferManager = transferManager;
-			this.originalTransferManager = transferManager;
+		private TransferManagerBuilder(Config config, TransferManager transferManager) {
 			this.config = config;
+			this.originalTransferManager = transferManager;
+			this.wrappedTransferManager = transferManager;
+			this.features = new ArrayList<>();
 		}
 
-		public Builder withFeature(Class<? extends Annotation> featureAnnotation) {
+		/**
+		 * This method requests the original transfer manager to be wrapped in the corresponding 
+		 * feature transfer manager. 
+		 * 
+		 * <p><b>Note:</b> Calling this method does not automatically wrap the transfer manager.
+		 * It will only be wrapped if the original transfer manager is annotated with the feature
+		 * annotation. 
+		 * 
+		 * <p>If the requested {@link Feature} is required (as per its definition), but the original
+		 * transfer manager is not annotated with this feature, the creation of the transfer manager
+		 * will fail.
+		 * 
+		 * @param featureAnnotation Annotation representing the feature (see features.* package)
+		 * @return Returns this builder class (for more features to be requested)
+		 */
+		public TransferManagerBuilder withFeature(Class<? extends Annotation> featureAnnotation) {
 			logger.log(Level.INFO, "- With feature " + featureAnnotation.getSimpleName());
 
 			features.add(featureAnnotation);
 			return this;
 		}
 
-		public TransferManager asDefault() {
-			return wrap(TransferManager.class);
-		}
-
+		/**
+		 * Wraps of the previously requested feature transfer managers and casts the result to the requested class.
+		 * If no specific class is requested, {@link #asDefault()} can be used instead.
+		 * 
+		 * @param featureAnnotation Feature annotation corresponding to the requested transfer manager
+		 * @return {@link TransferManager} casted to the feature lasted wrapped (and requested by this method) 
+		 */
 		@SuppressWarnings("unchecked")
 		public <T extends TransferManager> T as(Class<? extends Annotation> featureAnnotation) {
 			Class<T> implementingTransferManager = (Class<T>) getFeatureTransferManagerClass(featureAnnotation);
 			return wrap(implementingTransferManager);
+		}
+		
+		/**
+		 * Wraps of the previously requested feature transfer managers and returns a standard transfer manager.
+		 * @return {@link TransferManager} wrapped with the requested features 
+		 */
+		public TransferManager asDefault() {
+			return wrap(TransferManager.class);
 		}
 
 		private <T extends TransferManager> T wrap(Class<T> desiredTransferManagerClass) {
@@ -131,14 +198,14 @@ public class TransferManagerFactory {
 			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationInHierarchy(originalTransferManager.getClass(), featureAnnotationClass);
 			TransferManager wrappedTransferManager;
 			
-			// Try the most common constructor
+			// Try the default constructor, e.g. TransferManager(TransferManager, Config, PathAware)
 			wrappedTransferManager = createDefaultTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
 			
 			if (wrappedTransferManager != null) {
 				return wrappedTransferManager;
 			}
 			
-			// Try feature constructor
+			// Try feature constructor, e.g. TransferManager(TransferManager, Config, PathAware, TransferManager); 2nd TM is the original TM
 			wrappedTransferManager = createFeatureTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
 			
 			if (wrappedTransferManager != null) {
@@ -155,7 +222,7 @@ public class TransferManagerFactory {
 			throw new RuntimeException("Invalid TransferManager class detected: Unable to find constructor.");
 		}
 
-		// Try the most default constructor		
+		// Try the default constructor		
 		private TransferManager createDefaultTransferManager(TransferManager transferManager,
 				Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass,
 				Annotation concreteFeatureAnnotation) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -222,6 +289,8 @@ public class TransferManagerFactory {
 		}		
 
 		private void checkRequiredFeatures() {
+			// TODO [low] Instead of a feature list, all available @Feature annotations should be listed with reflection
+			
 			for (Class<? extends Annotation> concreteFeatureAnnotation : FEATURE_LIST) {
 				Feature featureAnnotation = ReflectionUtil.getAnnotationInHierarchy(concreteFeatureAnnotation, Feature.class);
 				
