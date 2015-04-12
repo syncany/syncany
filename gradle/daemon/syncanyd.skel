@@ -9,21 +9,22 @@ DAEMON_CMD="daemon run"
 
 # Daemon functions
 daemon_get_pid() {
-	if [ -e $DAEMON_PIDFILE ]; then
-		echo $(cat $DAEMON_PIDFILE)
+	if [ -e "$DAEMON_PIDFILE" ]; then
+		echo $(cat "$DAEMON_PIDFILE")
 	else
-		echo -1
+		echo "-1"
 	fi
 }
 
 daemon_running() {
 	ID=$(daemon_get_pid)
-	if [ $ID -eq -1 ]; then
-		echo 0
-	elif [ -n "$(ps -p$ID -opid=)" ]; then
-		echo 1
+	
+	if [ "$ID" == "-1" ]; then
+		echo "0"
+	elif [ -n "$(ps -p"$ID" -opid=)" ]; then
+		echo "1"
 	else
-		echo 0
+		echo "0"
 	fi	
 }
 
@@ -32,19 +33,19 @@ daemon_start() {
 	
 	echo -n "Starting daemon: "
 	
-	if [ $DAEMON_RUNNING -eq 1 ]; then
+	if [ "$DAEMON_RUNNING" == "1" ]; then
 		echo "$DAEMON_NAME already running (pid $DAEMON_PID)"
 	else
 		nohup "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.syncany.Syncany $DAEMON_CMD > /dev/null 2>&1 &
 
-		DAEMON_PID=-1
+		DAEMON_PID="-1"
 		TRIES=10
 		
-		while [ $DAEMON_RUNNING -eq 0 -a $TRIES -gt 0 ]; do
+		while [ "$DAEMON_RUNNING" == "0" -a $TRIES -gt 0 ]; do
 			DAEMON_RUNNING=$(daemon_running)
 			echo -n "."
 		
-			DAEMON_PID=$(daemon_get_pid)
+			DAEMON_PID="$(daemon_get_pid)"
 			TRIES=$(($TRIES-1))
 			sleep 1
 		done
@@ -64,13 +65,13 @@ daemon_stop() {
 
 	echo -n "Stopping daemon: "
 	
-	if [ $DAEMON_RUNNING -eq 0 ]; then
+	if [ "$DAEMON_RUNNING" == "0" ]; then
 		echo "$DAEMON_NAME not running"
 	else
 		echo "shutdown" >> $DAEMON_CONTROLFILE
 		
 		TRIES=10
-		while [ $DAEMON_RUNNING -eq 1 -a $TRIES -gt 0 ]; do
+		while [ "$DAEMON_RUNNING" == "1" -a $TRIES -gt 0 ]; do
 			DAEMON_RUNNING=$(daemon_running)
 			echo -n "."
 		
@@ -88,25 +89,26 @@ daemon_stop() {
 }
 
 daemon_force_stop() {
-	DAEMON_RUNNING=$(daemon_running)
+	DAEMON_RUNNING="$(daemon_running)"
 
 	echo -n "Force-stopping daemon: "
 
-	if [ $DAEMON_RUNNING -eq 0 ]; then
+	if [ "$DAEMON_RUNNING" == "0" ]; then
 		echo "$DAEMON_NAME not running"
 	else
-		kill -9 $DAEMON_PID
+		kill -9 "$DAEMON_PID"
 		
-		DAEMON_RUNNING=$(daemon_running)
+		DAEMON_RUNNING="$(daemon_running)"
 		
 		sleep 1
 			
 		DAEMON_RUNNING=$(daemon_running)
-		if [ $DAEMON_RUNNING -eq 1 ]; then
+		
+		if [ "$DAEMON_RUNNING" == "1" ]; then
 			echo "Failed to kill -9 $DAEMON_PID. EXITING."
 		else 
-			rm $DAEMON_PIDFILE 2> /dev/null
-			rm $DAEMON_CONTROLFILE 2> /dev/null
+			rm "$DAEMON_PIDFILE" 2> /dev/null
+			rm "$DAEMON_CONTROLFILE" 2> /dev/null
 
 			echo "Killed $DAEMON_NAME (pid $DAEMON_PID)."
 		fi
@@ -114,10 +116,10 @@ daemon_force_stop() {
 }
 
 daemon_status() {
-	DAEMON_RUNNING=$(daemon_running)
-	echo -n "Checking daemon: "$DAEMON_NAME
+	DAEMON_RUNNING="$(daemon_running)"
+	echo -n "Checking daemon: $DAEMON_NAME"
 	
-	if [ $DAEMON_RUNNING -eq 0 ]; then
+	if [ "$DAEMON_RUNNING" == "0" ]; then
 		echo " not running"
 	else
 		echo " running (pid $DAEMON_PID)."
@@ -125,10 +127,10 @@ daemon_status() {
 }
 
 daemon_reload() {
-	DAEMON_RUNNING=$(daemon_running)
-	echo -n "Reloading daemon: "$DAEMON_NAME
+	DAEMON_RUNNING="$(daemon_running)"
+	echo -n "Reloading daemon: $DAEMON_NAME"
 	
-	if [ $DAEMON_RUNNING -eq 0 ]; then
+	if [ "$DAEMON_RUNNING" == "0" ]; then
 		echo " not running"
 	else
 		echo "reload" >> $DAEMON_CONTROLFILE
@@ -138,8 +140,8 @@ daemon_reload() {
 
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
-mkdir -p $DAEMON_APPDIR
-DAEMON_PID=$(daemon_get_pid)
+mkdir -p "$DAEMON_APPDIR"
+DAEMON_PID="$(daemon_get_pid)"
 
 case "$1" in      
 	daemon)                   
