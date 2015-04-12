@@ -211,12 +211,12 @@ public class BasicWatchServerTest {
 		statusRequest.setOptions(statusOperationOption);
 
 		// Create big file to trigger sync
-		clientA.createNewFile("bigfileforlongsync", 5000);
+		clientA.createNewFile("bigfileforlongsync", 10 * 1024 * 1024);
 
 		// ^^ Now sync should start and we send 'status' requests
 		boolean syncRunningMessageReceived = false;
 
-		for (i = 30; i < 50; i++) {
+		for (i = 30; i < 59; i++) {
 			statusRequest.setId(i);
 			eventBus.post(statusRequest);
 
@@ -227,7 +227,7 @@ public class BasicWatchServerTest {
 				break;
 			}
 
-			Thread.sleep(250);
+			Thread.sleep(200);
 		}
 
 		assertTrue(syncRunningMessageReceived);
@@ -235,7 +235,7 @@ public class BasicWatchServerTest {
 		// Allow daemon to sync
 
 		Thread.sleep(10000);
-		for (i = 50; i < 60; i++) {
+		for (i = 59; i < 69; i++) {
 			statusRequest.setId(i);
 			eventBus.post(statusRequest);
 
