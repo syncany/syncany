@@ -28,7 +28,7 @@ public class UpOperationOptions implements OperationOptions {
 	// up operation. Note that this is a lower bound; the Indexer and Deduper iterate through all changed files, and
 	// create and commit a new DatabaseVersion whenever MultiChunks with a total size of at least this limit have been
 	// processed, or when all files have been processed.
-	public static final long DEFAULT_TRANSACTION_SIZE_LIMIT = 10 * 1024 * 1024;
+	public static final long DEFAULT_TRANSACTION_SIZE_LIMIT = 50 * 1024 * 1024;
 
 	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
