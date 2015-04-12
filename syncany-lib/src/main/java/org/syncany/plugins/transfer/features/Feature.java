@@ -26,7 +26,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory;
 
 /**
- * Annotation identify and configure {@link TransferManager} extensions.
+ * Annotation to identify and configure {@link TransferManager} extensions.
  * 
  * <p>Features are extensions for transfer managers, such as path awareness,
  * transaction awareness or retriability. This annotation is used to mark

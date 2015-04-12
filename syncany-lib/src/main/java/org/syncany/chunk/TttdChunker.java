@@ -51,8 +51,7 @@ import java.util.logging.Logger;
  * to emit chunks with a minimum and maximum size.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @see <a href="http://www.hpl.hp.com/techreports/2005/HPL-2005-30R1.html">Original TTTD paper: A framework for analyzing and improving content-based chunking algorithms</a>,
- *      2005, Kave Eshghi and Hsiu Khuern Tang
+ * @see <a href="http://www.hpl.hp.com/techreports/2005/HPL-2005-30R1.html">Original TTTD paper: A framework for analyzing and improving content-based chunking algorithms (2005, Kave Eshghi and Hsiu Khuern Tang)</a>
  */
 public class TttdChunker extends Chunker {
 	private static final Logger logger = Logger.getLogger(TttdChunker.class.getSimpleName());

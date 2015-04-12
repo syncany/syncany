@@ -18,8 +18,26 @@
 package org.syncany.plugins.transfer.features;
 
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
 
 /**
+ * Feature transfer managers extend the functionality of regular {@link TransferManager TransferManagers}
+ * by adding special behavior (such as path awareness, transaction awareness or retriability).
+ * 
+ * <p>A feature transfer manager is typically instantiated by the {@link TransferManagerFactory} and is 
+ * wrapped around the original plugin transfer manager. Its methods always call the underlying (or 
+ * original) transfer manager or perform the actual action.  
+ * 
+ * <p>Each feature transfer manager <b>must</b> have the following constructor signature, in this example
+ * for the the <code>PathAware</code> feature:
+ * 
+ * <pre>
+ *  public PathAwareFeatureTransferManager(TransferManager originalTransferManager, 
+ *     ransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation);
+ * </pre>
+ * 
+ * @see Feature
+ * @see FeatureExtension
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public interface FeatureTransferManager extends TransferManager {

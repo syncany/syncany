@@ -18,6 +18,13 @@
 package org.syncany.plugins.transfer.features;
 
 /**
+ * Marker interface to identify extensions for {@link FeatureTransferManager FeatureTransferManagers}.
+ * 
+ * <p>Feature extensions can be specified by the feature annotation to extend the 
+ * functionality of a transfer manager. 
+ * 
+ * @see Feature
+ * @see FeatureTransferManager
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface FeatureExtension {
