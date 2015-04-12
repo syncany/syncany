@@ -191,6 +191,7 @@ public abstract class AbstractTransferManagerTest {
 			connection.setField(pair.getKey(), pair.getValue());
 		}
 
-		return new TransactionAwareFeatureTransferManager(pluginInfo.createTransferManager(connection, null), null);
+		TransferManager originalTransferManager = pluginInfo.createTransferManager(connection, null);
+		return new TransactionAwareFeatureTransferManager(originalTransferManager, originalTransferManager, null, null);
 	}
 }
