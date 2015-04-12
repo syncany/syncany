@@ -220,7 +220,7 @@ public class RecursiveWatcherTest {
 		
 		// Start watcher 
 		watcher.start();		
-		Thread.sleep(200); // Wait for watch service to set watch on all folders
+		Thread.sleep(400); // Wait for watch service to set watch on all folders
 		
 		File largeFile = new File(tempDir+"/largefile");
 				
@@ -228,7 +228,7 @@ public class RecursiveWatcherTest {
 		fileWrittenTime.set(System.currentTimeMillis());
 		
 		// Stop watcher (close watches)
-		Thread.sleep(400); // Wait for the watcher to fire an event
+		Thread.sleep(800); // Wait for the watcher to fire an event
 		watcher.stop();
 		
 		// Test
