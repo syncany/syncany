@@ -25,7 +25,6 @@ public class AsyncIndexer implements Runnable {
 	private final Indexer indexer;
 	private final List<File> files;
 	private final Queue<DatabaseVersion> databaseVersionQueue;
-	private boolean done;
 
 	/** 
 	 * @param config specifying all necessary options
@@ -37,7 +36,6 @@ public class AsyncIndexer implements Runnable {
 		this.files = files;
 		this.databaseVersionQueue = queue;
 		this.indexer = new Indexer(config, deduper);
-		this.done = false;
 	}
 
 	@Override
@@ -53,7 +51,6 @@ public class AsyncIndexer implements Runnable {
 		// Signal end-of-stream.
 		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
 		databaseVersionQueue.offer(new DatabaseVersion());
-		this.done = true;
 	}
 
 }

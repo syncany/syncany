@@ -56,6 +56,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.daemon.messages.UpIndexChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.UpIndexMidSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpIndexStartSyncExternalEvent;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
@@ -146,6 +147,7 @@ public class Indexer {
 
 			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
 			databaseVersionListener.offer(newDatabaseVersion);
+			eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), files.size(), nextFileToProcess + 1));
 		}
 	}
 
