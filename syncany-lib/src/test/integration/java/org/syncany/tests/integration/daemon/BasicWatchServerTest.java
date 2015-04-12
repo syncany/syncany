@@ -227,7 +227,7 @@ public class BasicWatchServerTest {
 				break;
 			}
 
-			Thread.sleep(100);
+			Thread.sleep(250);
 		}
 
 		assertTrue(syncRunningMessageReceived);
