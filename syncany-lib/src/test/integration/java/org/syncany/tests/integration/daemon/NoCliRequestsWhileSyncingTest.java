@@ -22,12 +22,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.operations.daemon.WatchServer;
+import org.syncany.operations.daemon.messages.AlreadySyncingResponse;
 import org.syncany.operations.daemon.messages.StatusFolderRequest;
-import org.syncany.operations.daemon.messages.StatusFolderResponse;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.util.TestClient;
@@ -38,6 +39,11 @@ import com.google.common.eventbus.Subscribe;
 
 public class NoCliRequestsWhileSyncingTest {
 	private Map<Integer, Response> responses = new HashMap<Integer, Response>();
+
+	@BeforeClass
+	public static void setUp() throws Exception {
+		TestDaemonUtil.cleanUserConfig();
+	}
 
 	@Test
 	public void testNoCliRequestWhileSyncing() throws Exception {
@@ -74,17 +80,20 @@ public class NoCliRequestsWhileSyncingTest {
 		// Create large file, then wait 3sec for the settlement timer and
 		// send the CLI request at the same time
 		clientA.createNewFile("largefile", 10 * 1024 * 1024);
-		Thread.sleep(3000); // Settlement in Watcher!
+		Response response = null;
+		for (int i = 1; i < 100; i++) {
+			cliStatusRequest.setId(i);
+			localEventBus.post(cliStatusRequest);
 
-		localEventBus.post(cliStatusRequest);
+			// Then, let's hope the response is "no, no, no!"
+			response = waitForResponse(i);
 
-		// Then, let's hope the response is "no, no, no!"
-		Response response = waitForResponse(2586);
-
-		assertTrue(response instanceof StatusFolderResponse);
-		StatusFolderResponse cliResponse = (StatusFolderResponse) response;
-
-		//assertEquals("Cannot run CLI commands while sync is running or requested.\n", cliResponse.getOutput());
+			if (response instanceof AlreadySyncingResponse) {
+				break;
+			}
+			Thread.sleep(40);
+		}
+		assertTrue(response instanceof AlreadySyncingResponse);
 
 		watchServer.stop();
 		clientA.deleteTestData();
