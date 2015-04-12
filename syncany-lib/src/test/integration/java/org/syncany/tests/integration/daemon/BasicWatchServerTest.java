@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
@@ -64,6 +65,11 @@ public class BasicWatchServerTest {
 
 	private GetFileFolderResponseInternal internalResponse;
 	private LocalEventBus eventBus;
+
+	@BeforeClass
+	public static void setUp() throws Exception {
+		TestDaemonUtil.cleanUserConfig();
+	}
 
 	/**
 	 * The WatchServerTest tests all things WatchServer.
@@ -129,6 +135,10 @@ public class BasicWatchServerTest {
 
 			Response response = waitForResponse(i);
 
+			if (response instanceof AlreadySyncingResponse) {
+				Thread.sleep(1000);
+				continue;
+			}
 			assertTrue(response instanceof LsFolderResponse);
 			LsFolderResponse treeResponse = (LsFolderResponse) response;
 
@@ -217,7 +227,7 @@ public class BasicWatchServerTest {
 				break;
 			}
 
-			Thread.sleep(200);
+			Thread.sleep(100);
 		}
 
 		assertTrue(syncRunningMessageReceived);
@@ -288,7 +298,7 @@ public class BasicWatchServerTest {
 	private Response waitForResponse(int id) throws Exception {
 		int i = 0;
 		while (!responses.containsKey(id) && i < 1000) {
-			Thread.sleep(100);
+			Thread.sleep(50);
 			i++;
 		}
 
