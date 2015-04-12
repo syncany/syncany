@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var hash = window.location.hash.replace(/^#/, "");
+            var query = window.location.search.replace(/^\?/, "");
+            var path = window.location.pathname;
+
+            var redirectTo = path + "%extractPath%" + "?";
+
+            if (query != "") {
+                redirectTo = redirectTo + query + "&";
+            }
+
+            redirectTo = redirectTo + hash;
+
+            window.location.href = redirectTo.replace(/([^:])\/{2,}/, "$1/");
+        });
+    </script>
+</head>
+<body>
+Syncany is parsing the token...
+</body>
+</html>

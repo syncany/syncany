@@ -127,14 +127,15 @@ _sy() {
 		-a --advanced\
 		-n --add-daemon\
 		-s --short\
+		-l --headless\
 		   --password"
 
 	LOG_OPTIONS="\
 		-n --database-count\
-		-s --database-start\		
+		-s --database-start\
 		-f --file-count\
 		-x --exclude-empty"
-		
+
 	LS_OPTIONS="\
 		-V --versions\
 		-t --types\
@@ -166,12 +167,12 @@ _sy() {
 		sftp\
 		swift\
 		webdav"
-		
+
 	PLUGIN_IDS_ALL="\
 		$PLUGIN_IDS_TRANSFER\
 		flickr\
-		gui"		
-		
+		gui"
+
 	PLUGIN_LIST_OPTIONS="\
 		-R --remote-only\
 		-L --local-only\
@@ -238,13 +239,13 @@ _sy() {
 	UP_OPTIONS="\
 		-R --no-resume\
 		$STATUS_OPTIONS"
-		
+
 	UPDATE_COMMANDS="\
 		check"
-				
+
 	UPDATE_CHECK_OPTIONS="\
 		-a --api-endpoint\
-		-s --snapshots"		
+		-s --snapshots"
 
 	WATCH_OPTIONS="\
 		-i --interval\
@@ -278,7 +279,7 @@ _sy() {
 				;;
 
 			--plugin-option|-o)
-				complete_words=$(_sy_plugin_option_words) 
+				complete_words=$(_sy_plugin_option_words)
 
 				if [[ ${#COMPREPLY[@]} != 1 || $complete_words = *= ]]; then
 					compopt -o nospace
@@ -307,7 +308,7 @@ _sy() {
 		case "${lastword}" in
 			force-stop|reload|restart|start|status|stop|list)
 				;;
-				
+
 			add|remove)
 				# Special handling: return directories, no space at the end
 
@@ -334,7 +335,7 @@ _sy() {
 				;;
 
 			--plugin-option|-o)
-				complete_words=$(_sy_plugin_option_words) 
+				complete_words=$(_sy_plugin_option_words)
 
 				if [[ ${#COMPREPLY[@]} != 1 || $complete_words = *= ]]; then
 					compopt -o nospace
@@ -347,7 +348,7 @@ _sy() {
 				;;
 		esac
 		;;
-		
+
 	log)
 		complete_options="$LOG_OPTIONS"
 		;;
@@ -385,16 +386,16 @@ _sy() {
 		list)
 			complete_options="$PLUGIN_LIST_OPTIONS"
 			;;
-			
+
 		install)
 			complete_words="$PLUGIN_IDS_ALL"
 			complete_options="$PLUGIN_INSTALL_OPTIONS"
 			;;
-			
+
 		update)
 			complete_words="$PLUGIN_IDS_ALL"
 			;;
-			
+
 		remove)
 			complete_words="$PLUGIN_IDS_ALL"
 			;;
@@ -427,18 +428,18 @@ _sy() {
 	up)
 		complete_options="$UP_OPTIONS"
 		;;
-		
+
 	update)
 		case "${lastword}" in
 		check)
 			complete_options="$UPDATE_CHECK_OPTIONS"
 			;;
-		
+
 		*)
 			complete_words="$UPDATE_COMMANDS"
 			;;
 		esac
-		;;		
+		;;
 
 	watch)
 		case "${prev}" in
@@ -558,7 +559,7 @@ _sy_plugin_option_words_for_plugin() {
 	done
 }
 
-# Determines the current plugin optons for RAID0 plugin, 
+# Determines the current plugin optons for RAID0 plugin,
 # including sub-options of other plugins
 _sy_plugin_option_words_raid0() {
 	local storage1_type storage2_type i
@@ -576,7 +577,7 @@ _sy_plugin_option_words_raid0() {
 	done
 
 	if [[ $storage1_type != "" && $storage1_type != "raid0" ]]; then
-		echo $(_sy_plugin_option_words_for_plugin "$storage1_type" "storage1.")		
+		echo $(_sy_plugin_option_words_for_plugin "$storage1_type" "storage1.")
 	else
 		for plugin_id in $PLUGIN_IDS_TRANSFER; do
 			echo "storage1:type=$plugin_id"

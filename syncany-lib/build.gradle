@@ -27,8 +27,9 @@ dependencies {
 	compile			"com.google.code.gson:gson:2.3"
 
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
-	testCompile		"org.mockito:mockito-all:1.10.19"	
+	testCompile		"org.mockito:mockito-all:1.10.19"
 	testCompile		"junit:junit:4.9"
+	testCompile		"net.sourceforge.htmlunit:htmlunit:2.15"
 }
 
 sonarRunner {
