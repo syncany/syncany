@@ -32,6 +32,7 @@ import org.syncany.plugins.transfer.FileType;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFileAttributes;
 import org.syncany.util.ReflectionUtil;
@@ -43,13 +44,25 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 
 /**
- * // a plugin dev can access a pathaware remotefile's path using
-		//    remoteFile.getAttributes(PathAwareRemoteFileAttributes.class).getPath();
-		// which follows the java.nio files style.
+ * The path aware transfer manager can be used to extend a backend storage
+ * with the ability to add subfolders to the folders with many files (e.g. multichunks
+ * or temporary files). This is especially critical if the backend storage has a limit
+ * on how many files can be stored in a single folder (e.g. the Dropbox plugin). 
+ * 
+ * <p>To enable subfoldering in {@link TransferPlugin}s, the plugin's {@link TransferManager}
+ * has to be annotated with the {@link PathAware} annotation, and a {@link PathAwareFeatureExtension}
+ * has to be provided.
+ * 
+ * <p>The sub-path for a {@link RemoteFile} can then be accessed via the
+ * {@link PathAwareRemoteFileAttributes} using the {@link RemoteFile#getAttributes(Class)} method.
+ * 
+ * @see PathAware
+ * @see PathAwareFeatureExtension
+ * @see PathAwareRemoteFileAttributes
  * @author Christian Roth <christian.roth@port17.de>
  */
-public class PathAwareTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(PathAwareTransferManager.class.getSimpleName());
+public class PathAwareFeatureTransferManager implements FeatureTransferManager {
+	private static final Logger logger = Logger.getLogger(PathAwareFeatureTransferManager.class.getSimpleName());
 
 	private final TransferManager underlyingTransferManager;
 	
@@ -59,7 +72,7 @@ public class PathAwareTransferManager implements TransferManager {
 	private final List<Class<? extends RemoteFile>> affectedFiles;
 	private final PathAwareFeatureExtension pathAwareFeatureExtension;
 
-	public PathAwareTransferManager(TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation, TransferManager originalTransferManager) {
+	public PathAwareFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, PathAware pathAwareAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 
 		this.subfolderDepth = pathAwareAnnotation.subfolderDepth();

@@ -85,8 +85,8 @@ public class CleanupInterruptedTest {
 			cleanupFailed = true;
 		}
 
-		assertTrue(cleanupFailed);
-		TransferManager transferManager = TransferManagerFactory.build(new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null).withFeature(TransactionAware.class).asDefault();
+		assertTrue(cleanupFailed); 
+		TransferManager transferManager = TransferManagerFactory.build(clientA.getConfig()).withFeature(TransactionAware.class).asDefault();
 		assertEquals(2, transferManager.list(MultichunkRemoteFile.class).size());
 		assertEquals(1, new File(testConnection.getPath(), "multichunks").list().length);
 		assertEquals(2, transferManager.list(DatabaseRemoteFile.class).size());

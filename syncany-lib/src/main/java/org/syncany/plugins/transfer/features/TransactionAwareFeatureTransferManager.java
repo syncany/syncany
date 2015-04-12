@@ -50,13 +50,13 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  *
  * @author Pim Otte
  */
-public class TransactionAwareTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(TransactionAwareTransferManager.class.getSimpleName());
+public class TransactionAwareFeatureTransferManager implements FeatureTransferManager {
+	private static final Logger logger = Logger.getLogger(TransactionAwareFeatureTransferManager.class.getSimpleName());
 
 	private final TransferManager underlyingTransferManager;
 	private final Config config;
 
-	public TransactionAwareTransferManager(TransferManager underlyingTransferManager, Config config, TransactionAware transactionAwareAnnotation) {
+	public TransactionAwareFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, TransactionAware transactionAwareAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 	}

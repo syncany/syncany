@@ -22,8 +22,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
+
+/**
+ * Annotation identify and configure {@link TransferManager} extensions.
+ * 
+ * <p>Features are extensions for transfer managers, such as path awareness,
+ * transaction awareness or retriability. This annotation is used to mark
+ * a feature annotation, which in turn corresponds to a {@link FeatureTransferManager}.
+ * 
+ * <p><b>Note</b>: This annotation must only be used to annotate feature
+ * annotations, i.e. it is an annotation annotation. It must not be used to
+ * mark feature transfer managers directly.
+ * 
+ * @see TransferManager
+ * @see TransferManagerFactory
+ * @see FeatureTransferManager
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Feature {
+	/**
+	 * Specifies whether or not a feature is required. 
+	 * 
+	 * <p>If a feature is required, but the concrete feature annotation
+	 * is not present at the original transfer manager, the {@link TransferManagerFactory}
+	 * will throw an exception.
+	 */
 	boolean required();
 }

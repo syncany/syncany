@@ -17,20 +17,11 @@
  */
 package org.syncany.plugins.transfer.features;
 
-import java.util.Map;
-
-import org.syncany.plugins.transfer.FileType;
-import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public interface PathAwareFeatureExtension extends FeatureExtension {
-
-	public boolean createPath(String path) throws StorageException;
-
-	public boolean removeFolder(String path) throws StorageException;
-
-	public Map<String, FileType> listFolder(String path) throws StorageException;
-
+public interface FeatureTransferManager extends TransferManager {
+	// Marker interface
 }

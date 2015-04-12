@@ -30,7 +30,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
-import org.syncany.plugins.transfer.features.TransactionAwareTransferManager;
+import org.syncany.plugins.transfer.features.TransactionAwareFeatureTransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
@@ -58,7 +58,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	 */
 	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
 
-	protected TransactionAwareTransferManager transferManager;
+	protected TransactionAwareFeatureTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
 	protected LocalEventBus eventBus;
@@ -76,7 +76,7 @@ public abstract class AbstractTransferOperation extends Operation {
 					.withFeature(Retriable.class)
 					.asDefault();
 			
-			TransactionAwareTransferManager regularFileTransferManager = TransferManagerFactory
+			TransactionAwareFeatureTransferManager regularFileTransferManager = TransferManagerFactory
 					.build(config)
 					.withFeature(Retriable.class)
 					.withFeature(PathAware.class)

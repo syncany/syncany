@@ -29,16 +29,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
-import org.syncany.plugins.local.LocalTransferManager.LocalPathAwareFeatureExtension;
 import org.syncany.plugins.transfer.AbstractTransferManager;
-import org.syncany.plugins.transfer.FileType;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageFileNotFoundException;
 import org.syncany.plugins.transfer.StorageMoveException;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.features.PathAware;
-import org.syncany.plugins.transfer.features.PathAwareFeatureExtension;
-import org.syncany.plugins.transfer.features.PathAwareTransferManager.PathAwareRemoteFileAttributes;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -70,7 +65,6 @@ import com.google.common.collect.Maps;
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@PathAware(extension = LocalPathAwareFeatureExtension.class)
 public class LocalTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(LocalTransferManager.class.getSimpleName());
 
@@ -270,21 +264,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 
 	private File getRemoteFile(RemoteFile remoteFile) {
 		String rootPath = getRemoteFilePath(remoteFile.getClass());
-		String subfolder = "";
-
-		try {
-			PathAwareRemoteFileAttributes attributes = remoteFile
-					.getAttributes(PathAwareRemoteFileAttributes.class);
-
-			if (attributes.hasPath()) {
-				subfolder = attributes.getPath();
-			}
-		}
-		catch (NoSuchFieldException e) {
-			logger.log(Level.WARNING, "TransferManager is annotated with @PathAware but files do not possess path aware attributes");
-		}
-
-		return Paths.get(rootPath, subfolder, remoteFile.getName()).toFile();
+		return Paths.get(rootPath, remoteFile.getName()).toFile();
 	}
 
 	public String getAbsoluteParentDirectory(File file) {
@@ -354,50 +334,5 @@ public class LocalTransferManager extends AbstractTransferManager {
 			logger.log(Level.INFO, "testTargetCanCreate: Can NOT create target.");
 			return false;
 		}
-	}
-	
-	public static class LocalPathAwareFeatureExtension implements PathAwareFeatureExtension {
-		@Override
-		public boolean createPath(String path) throws StorageException {
-			try {
-				Files.createDirectories(Paths.get(path));
-				return true;
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Cannot create path at " + path, e);
-				return false;
-			}
-		}
-
-		@Override
-		public boolean removeFolder(String path) throws StorageException {
-			try {
-				Files.delete(Paths.get(path));
-				return true;
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Cannot remove path at " + path, e);
-				return false;
-			}
-		}
-
-		@Override
-		public Map<String, FileType> listFolder(String path) throws StorageException {
-			Map<String, FileType> folderList = Maps.newTreeMap();
-			
-			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(path))) {
-				for (Path subPath : directoryStream) {
-					FileType fileType = (Files.isDirectory(subPath)) ? FileType.FOLDER : FileType.FILE;
-					folderList.put(subPath.getFileName().toString(), fileType);
-				}
-				
-				return folderList;
-			}
-			catch (IOException e) {
-				logger.log(Level.SEVERE, "Unable to list directory", e);
-				throw new StorageException(e);
-			}
-		}
-		
 	}
 }

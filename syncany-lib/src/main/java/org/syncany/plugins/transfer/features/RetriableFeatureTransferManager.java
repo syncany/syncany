@@ -31,15 +31,17 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * The retriable transfer manager implements a simple try-sleep-retry mechanism
- * for regular {@link org.syncany.plugins.transfer.TransferManager}s. It encapsules a single transfer manager and
- * proxies all of its methods. If a method fails with a {@link org.syncany.plugins.transfer.StorageException}, the
+ * for regular {@link org.syncany.plugins.transfer.TransferManager}s. 
+ * 
+ * <p>It encapsules a single transfer manager and proxies all of its methods. If a
+ * method fails with a {@link org.syncany.plugins.transfer.StorageException}, the
  * method is retried N times before the exception is actually thrown to the caller.
  * Between retries, the method waits M seconds.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class RetriableTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(RetriableTransferManager.class.getSimpleName());
+public class RetriableFeatureTransferManager implements FeatureTransferManager {
+	private static final Logger logger = Logger.getLogger(RetriableFeatureTransferManager.class.getSimpleName());
 
 	private interface RetriableMethod {
 		public Object execute() throws StorageException;
@@ -51,7 +53,7 @@ public class RetriableTransferManager implements TransferManager {
 
 	private int tryCount;
 
-	public RetriableTransferManager(TransferManager underlyingTransferManager, Config config, Retriable retriableAnnotation) {
+	public RetriableFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, Retriable retriableAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.retryMaxCount = retriableAnnotation.numberRetries();
 		this.retrySleepMillis = retriableAnnotation.sleepInterval();
@@ -240,5 +242,4 @@ public class RetriableTransferManager implements TransferManager {
 			}
 		}
 	}
-
 }

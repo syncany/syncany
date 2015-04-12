@@ -20,7 +20,6 @@ package org.syncany.plugins.transfer.features;
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
-
-public interface TransferManagerFeatureExtension {
-	// nothing
+public interface FeatureExtension {
+	// Marker interface
 }

@@ -34,8 +34,12 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PathAware {
 	int bytesPerFolder() default 2;
+
 	int subfolderDepth() default 2;
+
 	char folderSeparator() default '/';
-	Class<? extends RemoteFile>[] affected() default {MultichunkRemoteFile.class, TempRemoteFile.class};
+
+	Class<? extends RemoteFile>[] affected() default { MultichunkRemoteFile.class, TempRemoteFile.class };
+
 	Class<? extends PathAwareFeatureExtension> extension();
 }

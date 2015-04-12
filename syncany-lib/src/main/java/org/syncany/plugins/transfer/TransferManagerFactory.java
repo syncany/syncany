@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.features.Feature;
+import org.syncany.plugins.transfer.features.FeatureTransferManager;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
@@ -46,7 +47,7 @@ import com.google.common.collect.Sets;
  * <p>The class uses the builder pattern. It can be used like this:
  * 
  * <pre>
- *   TransactionAwareTransferManager txAwareTM = TransferManagerFactory
+ *   TransactionAwareFeatureTransferManager txAwareTM = TransferManagerFactory
  *     .build(config)
  *     .withFeature(Retriable.class)
  *     .withFeature(PathAware.class)
@@ -55,6 +56,7 @@ import com.google.common.collect.Sets;
  * </pre>
  * 
  * @see Feature
+ * @see FeatureTransferManager 
  * @see TransferManager
  * @author Christian Roth <christian.roth@port17.de>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
@@ -62,7 +64,7 @@ import com.google.common.collect.Sets;
 public class TransferManagerFactory {
 	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getSimpleName());
 
-	private static final String FEATURE_TRANSFER_MANAGER_FORMAT = Feature.class.getPackage().getName() + ".%s" + TransferManager.class.getSimpleName();
+	private static final String FEATURE_TRANSFER_MANAGER_FORMAT = Feature.class.getPackage().getName() + ".%s" + FeatureTransferManager.class.getSimpleName();
 	private static final List<Class<? extends Annotation>> FEATURE_LIST = ImmutableList.<Class<? extends Annotation>> builder()
 			.add(TransactionAware.class)
 			.add(Retriable.class)
@@ -141,8 +143,8 @@ public class TransferManagerFactory {
 		 */
 		@SuppressWarnings("unchecked")
 		public <T extends TransferManager> T as(Class<? extends Annotation> featureAnnotation) {
-			Class<T> implementingTransferManager = (Class<T>) getFeatureTransferManagerClass(featureAnnotation);
-			return wrap(implementingTransferManager);
+			Class<T> implementingTransferManagerClass = (Class<T>) getFeatureTransferManagerClass(featureAnnotation);
+			return wrap(implementingTransferManagerClass);
 		}
 		
 		/**
@@ -192,91 +194,23 @@ public class TransferManagerFactory {
 			}
 		}
 
-		private TransferManager apply(TransferManager transferManager, Class<? extends TransferManager> featureTransferManagerClass,
+		private TransferManager apply(TransferManager underlyingTransferManager, Class<? extends TransferManager> featureTransferManagerClass,
 				Class<? extends Annotation> featureAnnotationClass) throws IllegalAccessException, InvocationTargetException, InstantiationException {
 			
-			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationInHierarchy(originalTransferManager.getClass(), featureAnnotationClass);
-			TransferManager wrappedTransferManager;
-			
-			// Try the default constructor, e.g. TransferManager(TransferManager, Config, PathAware)
-			wrappedTransferManager = createDefaultTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
-			
-			if (wrappedTransferManager != null) {
-				return wrappedTransferManager;
-			}
-			
-			// Try feature constructor, e.g. TransferManager(TransferManager, Config, PathAware, TransferManager); 2nd TM is the original TM
-			wrappedTransferManager = createFeatureTransferManager(transferManager, featureTransferManagerClass, featureAnnotationClass, concreteFeatureAnnotation);
-			
-			if (wrappedTransferManager != null) {
-				return wrappedTransferManager;
-			}
-			
-			// Try legacy/classic constructor
-			wrappedTransferManager = createClassicTransferManager(transferManager, featureTransferManagerClass);
-			
-			if (wrappedTransferManager != null) {
-				return wrappedTransferManager;
-			}						
+			logger.log(Level.FINE,
+					"- Wrapping TransferManager " + underlyingTransferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName());
 
-			throw new RuntimeException("Invalid TransferManager class detected: Unable to find constructor.");
+			Annotation concreteFeatureAnnotation = ReflectionUtil.getAnnotationInHierarchy(originalTransferManager.getClass(), featureAnnotationClass);	
+			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, TransferManager.class, Config.class, featureAnnotationClass);
+
+			if (transferManagerConstructor == null) {
+				throw new RuntimeException("Invalid TransferManager class detected: Unable to find constructor.");
+			}
+			
+			Annotation featureAnnotation = featureAnnotationClass.cast(concreteFeatureAnnotation);
+			return (TransferManager) transferManagerConstructor.newInstance(originalTransferManager, underlyingTransferManager, config, featureAnnotation);
 		}
-
-		// Try the default constructor		
-		private TransferManager createDefaultTransferManager(TransferManager transferManager,
-				Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass,
-				Annotation concreteFeatureAnnotation) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-			
-			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass);
-
-			if (transferManagerConstructor != null) {
-				logger.log(Level.FINE,
-						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using DEFAULT contructor");
-
-				return (TransferManager) transferManagerConstructor.newInstance(transferManager, config, featureAnnotationClass.cast(concreteFeatureAnnotation));
-			}
-			else {
-				return null;
-			}
-		}
-
-		private TransferManager createFeatureTransferManager(TransferManager transferManager,
-				Class<? extends TransferManager> featureTransferManagerClass, Class<? extends Annotation> featureAnnotationClass,
-				Annotation concreteFeatureAnnotation) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		
-			// Some features require the original TM instance because they use a feature extension
-			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class, Config.class, featureAnnotationClass, TransferManager.class);
-
-			if (transferManagerConstructor != null) {
-				logger.log(Level.FINE,
-						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using FEATURE contructor");
-
-				Annotation featureAnnotation = featureAnnotationClass.cast(concreteFeatureAnnotation);
-				return (TransferManager) transferManagerConstructor.newInstance(transferManager, config, featureAnnotation, originalTransferManager);
-			}
-			else {
-				return null;
-			}
-		}
-		
-		private TransferManager createClassicTransferManager(TransferManager transferManager,
-				Class<? extends TransferManager> featureTransferManagerClass) throws InstantiationException, IllegalAccessException,
-				IllegalArgumentException, InvocationTargetException {
-
-			// legacy support for old TransferManagers
-			Constructor<?> transferManagerConstructor = ReflectionUtil.getMatchingConstructorForClass(featureTransferManagerClass, TransferManager.class);
-
-			if (transferManagerConstructor != null) {
-				logger.log(Level.FINE,
-						"- Wrapping TransferManager " + transferManager.getClass().getSimpleName() + " in " + featureTransferManagerClass.getSimpleName() + ", using CLASSIC contructor");
-
-				return (TransferManager) transferManagerConstructor.newInstance(transferManager);
-			}
-			else {
-				return null;
-			}
-		}
-
+	
 		private static Class<? extends TransferManager> getFeatureTransferManagerClass(Class<? extends Annotation> featureAnnotation) {
 			String featureTransferManagerClassName = String.format(FEATURE_TRANSFER_MANAGER_FORMAT, featureAnnotation.getSimpleName());
 
