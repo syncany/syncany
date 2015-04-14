@@ -33,6 +33,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFileAttributes;
 import org.syncany.util.ReflectionUtil;
@@ -230,22 +231,44 @@ public class PathAwareFeatureTransferManager implements FeatureTransferManager {
 		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes = new PathAwareRemoteFileAttributes();
 		remoteFile.addAttributes(pathAwareRemoteFileAttributes);
 
-		if (!isFolderizable(remoteFile.getClass())) {
-			return remoteFile;
+		if (isFolderizable(remoteFile.getClass())) {
+			// If remote file is folderizable, i.e. an 'affected file', 
+			// get the sub-path for it
+			
+			String subPathId = getSubPathId(remoteFile);	
+			String subPath = getSubPath(subPathId);
+			
+			pathAwareRemoteFileAttributes.setPath(subPath);
 		}
+		
+		return remoteFile;
+	}
 
-		// we need to use the hash value of a file's name because some files aren't folderizable by default
-		String fileId = StringUtil.toHex(Hashing.murmur3_128().hashString(remoteFile.getName(), Charsets.UTF_8).asBytes());
+	/**
+	 * Returns the subpath identifier for this file. For {@link MultichunkRemoteFile}s, this is the
+	 * hex string of the multichunk identifier. For all other files, this is the 128-bit murmur3 hash
+	 * of the full filename (fast algorithm!).
+	 */
+	private String getSubPathId(RemoteFile remoteFile) {
+		if (remoteFile.getClass() == MultichunkRemoteFile.class) {
+			return StringUtil.toHex(((MultichunkRemoteFile) remoteFile).getMultiChunkId());
+		}
+		else {
+			return StringUtil.toHex(Hashing.murmur3_128().hashString(remoteFile.getName(), Charsets.UTF_8).asBytes());
+		}
+	}
+
+	private String getSubPath(String fileId) {
 		StringBuilder path = new StringBuilder();
 
 		for (int i = 0; i < subfolderDepth; i++) {
-			path.append(fileId.substring(i * bytesPerFolder, (i + 1) * bytesPerFolder));
+			String subPathPart = fileId.substring(i * bytesPerFolder * 2, (i + 1) * bytesPerFolder * 2); 
+			
+			path.append(subPathPart);
 			path.append(folderSeparator);
 		}
-
-		pathAwareRemoteFileAttributes.setPath(path.toString());
-
-		return remoteFile;
+		
+		return path.toString();
 	}
 
 	private String pathToString(Path path) {

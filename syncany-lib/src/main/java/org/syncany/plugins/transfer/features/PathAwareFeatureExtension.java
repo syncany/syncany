@@ -21,16 +21,41 @@ import java.util.Map;
 
 import org.syncany.plugins.transfer.FileType;
 import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
+ * The path aware feature extension must be defined in the {@link PathAware}
+ * feature in order to extend a {@link TransferManager} that was marked as 'path aware'
+ * with the required methods to manage the subfolders. 
+ * 
+ * <p>This extension creates, removes and lists contents in these subfolders.
+ * 
+ * @see PathAware
+ * @see PathAwareFeatureTransferManager
  * @author Christian Roth <christian.roth@port17.de>
  */
 public interface PathAwareFeatureExtension extends FeatureExtension {
-
+	/**
+	 * Creates the given sub path / folder on the remote storage.
+	 *  
+	 * @param path Path/folder to be created
+	 * @return True if successful, false otherwise 
+	 */
 	public boolean createPath(String path) throws StorageException;
 
+	/**
+	 * Deleted the given sub path / folder on the remote storage.
+	 *  
+	 * @param path Path/folder to be deleted
+	 * @return True if successful, false otherwise 
+	 */
 	public boolean removeFolder(String path) throws StorageException;
-
+	
+	/**
+	 * Lists the contents of the given sub path / folder on the remote storage.
+	 *  
+	 * @param path Path/folder to be listed
+	 * @return Filename/type list for the given subfolder 
+	 */
 	public Map<String, FileType> listFolder(String path) throws StorageException;
-
 }
