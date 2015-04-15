@@ -45,6 +45,17 @@ import com.google.common.primitives.Ints;
 public class DaemonConfigHelper {
 	private static final Logger logger = Logger.getLogger(DaemonConfigHelper.class.getSimpleName());
 
+	public static UserTO getFirstDaemonUser(DaemonConfigTO daemonConfig) {
+		List<UserTO> users = readWebSocketServerUsers(daemonConfig);
+
+		if (users.size() > 0) {
+			return users.get(0);
+		}
+		else {
+			return null;
+		}
+	}
+
 	/**
 	 * Adds the given folder to the user-specific daemon configuration (<tt>daemon.xml</tt>).
 	 *
@@ -184,5 +195,20 @@ public class DaemonConfigHelper {
 		defaultDaemonConfigTO.save(configFile);
 
 		return defaultDaemonConfigTO;
+	}
+
+	private static List<UserTO> readWebSocketServerUsers(DaemonConfigTO daemonConfigTO) {
+		List<UserTO> users = daemonConfigTO.getUsers();
+
+		if (users == null) {
+			users = new ArrayList<UserTO>();
+		}
+
+		// Add CLI credentials
+		if (daemonConfigTO.getPortTO() != null) {
+			users.add(daemonConfigTO.getPortTO().getUser());
+		}
+
+		return users;
 	}
 }
