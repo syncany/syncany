@@ -62,19 +62,17 @@ public class Deduper {
 	 * <p>A brief description of the algorithm (and further links to a detailed description)
 	 * are given in the {@link Deduper}.
 	 *  	
-	 * @param files List of files to be deduplicated
+	 * @param files List of files to be deduplicated (will be modified!)
 	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
 	 * @throws IOException If a file cannot be read or an unexpected exception occurs
-	 * 
-	 * @return index of the next file to be deduplicated.
 	 */
-	public int deduplicate(List<File> files, int firstFile, DeduperListener listener) throws IOException {
+	public void deduplicate(List<File> files, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		long totalMultiChunkSize = 0L;
 		
-		for (int i=firstFile; i<files.size(); i++) {
-			File file = files.get(i);
+		while (!files.isEmpty()) {
+			File file = files.remove(0);
 			
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
@@ -84,7 +82,7 @@ public class Deduper {
 			}
 			
 			// Decide whether to index the contents
-			boolean dedupContents = listener.onFileStart(file, i);
+			boolean dedupContents = listener.onFileStart(file);
 
 			if (dedupContents) {
 				// Create chunks from file
@@ -149,11 +147,11 @@ public class Deduper {
 				if (totalMultiChunkSize + multiChunk.getSize() >= maxTotalSize) {
 					multiChunk.close();
 					listener.onMultiChunkClose(multiChunk);
-					return i + 1;
+					return;
 				}
 			}
 			else if (totalMultiChunkSize >= maxTotalSize) {
-				return i + 1;
+				return;
 			}
 		}
 
@@ -168,6 +166,6 @@ public class Deduper {
 		
 		listener.onFinish();
 
-		return -1;
+		return;
 	}	
 }

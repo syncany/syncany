@@ -127,27 +127,29 @@ public class Indexer {
 		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 
-		int nextFileToProcess = 0;
-		while (nextFileToProcess != -1) {
+		boolean firstFile = true;
+		int fullFileCount = files.size();
+		while (!files.isEmpty()) {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
 			// Create the DeduperListener that will receive MultiChunks and store them in the DatabaseVersion object
 			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache);
 
 			// Signal the start of indexing if we are about to deduplicate the first file
-			if (nextFileToProcess == 0) {
+			if (firstFile) {
 				deduperListener.onStart(files.size());
+				firstFile = false;
 			}
 
 			// Find and index new files
-			nextFileToProcess = deduper.deduplicate(files, nextFileToProcess, deduperListener);
+			deduper.deduplicate(files, deduperListener);
 
 			// Find and remove deleted files
 			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 
 			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
 			databaseVersionListener.offer(newDatabaseVersion);
-			eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), files.size(), nextFileToProcess + 1));
+			eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
 		}
 	}
 
@@ -288,7 +290,7 @@ public class Indexer {
 		}
 
 		@Override
-		public boolean onFileStart(File file, int fileIndex) {
+		public boolean onFileStart(File file) {
 			boolean processFile = startFileProperties.getType() == FileType.FILE; // Ignore directories and symlinks!
 
 			// We could fire an event here, but firing for every file
