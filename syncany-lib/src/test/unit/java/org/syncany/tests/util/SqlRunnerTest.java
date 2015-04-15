@@ -49,6 +49,7 @@ public class SqlRunnerTest {
 		SqlRunner.runScript(connection, inputStream);
 
 		connection.createStatement().execute("INSERT INTO DATABASEVERSION VALUES(1337,'MASTER',TIMESTAMP_WITH_ZONE(1388589969),'A','(A1)')");
+		connection.commit();
 
 		// Test a few selects
 		assertEquals("1337", TestSqlUtil.runSqlSelect("select id from databaseversion", connection));

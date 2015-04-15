@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.to.DaemonConfigTO;
@@ -64,6 +65,11 @@ public class BasicWatchServerTest {
 
 	private GetFileFolderResponseInternal internalResponse;
 	private LocalEventBus eventBus;
+
+	@BeforeClass
+	public static void setUp() throws Exception {
+		TestDaemonUtil.cleanUserConfig();
+	}
 
 	/**
 	 * The WatchServerTest tests all things WatchServer.
@@ -129,6 +135,10 @@ public class BasicWatchServerTest {
 
 			Response response = waitForResponse(i);
 
+			if (response instanceof AlreadySyncingResponse) {
+				Thread.sleep(1000);
+				continue;
+			}
 			assertTrue(response instanceof LsFolderResponse);
 			LsFolderResponse treeResponse = (LsFolderResponse) response;
 
@@ -201,12 +211,12 @@ public class BasicWatchServerTest {
 		statusRequest.setOptions(statusOperationOption);
 
 		// Create big file to trigger sync
-		clientA.createNewFile("bigfileforlongsync", 5000);
+		clientA.createNewFile("bigfileforlongsync", 10 * 1024 * 1024);
 
 		// ^^ Now sync should start and we send 'status' requests
 		boolean syncRunningMessageReceived = false;
 
-		for (i = 30; i < 50; i++) {
+		for (i = 30; i < 59; i++) {
 			statusRequest.setId(i);
 			eventBus.post(statusRequest);
 
@@ -225,7 +235,7 @@ public class BasicWatchServerTest {
 		// Allow daemon to sync
 
 		Thread.sleep(10000);
-		for (i = 50; i < 60; i++) {
+		for (i = 59; i < 69; i++) {
 			statusRequest.setId(i);
 			eventBus.post(statusRequest);
 
@@ -288,7 +298,7 @@ public class BasicWatchServerTest {
 	private Response waitForResponse(int id) throws Exception {
 		int i = 0;
 		while (!responses.containsKey(id) && i < 1000) {
-			Thread.sleep(100);
+			Thread.sleep(50);
 			i++;
 		}
 
