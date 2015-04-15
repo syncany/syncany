@@ -156,7 +156,7 @@ public class UpOperation extends AbstractTransferOperation {
 					resuming = true;
 				}
 				// Add stopping marker
-				databaseVersionQueue.add(new DatabaseVersion());
+				databaseVersionQueue.add(AsyncIndexer.FINAL_DATABASE_VERSION);
 
 				try {
 					transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();
@@ -259,7 +259,7 @@ public class UpOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
-		while (!databaseVersion.getFileHistories().isEmpty()) {
+		while (databaseVersion != AsyncIndexer.FINAL_DATABASE_VERSION) {
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
