@@ -162,10 +162,16 @@ public class Indexer {
 				removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 			}
 
-
-			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
-			databaseVersionListener.offer(newDatabaseVersion);
-			eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
+			if (!newDatabaseVersion.getFileHistories().isEmpty()) {
+				logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
+				databaseVersionListener.offer(newDatabaseVersion);
+				eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
+			}
+			//else { (comment-only else case)
+			// Just chunks and multichunks, no filehistory. Since this means the file was being
+			// written/vanished during operations, it makes no sense to upload it. If the user
+			// wants it indexed, Up can be run again.
+			//}
 		}
 
 	}
