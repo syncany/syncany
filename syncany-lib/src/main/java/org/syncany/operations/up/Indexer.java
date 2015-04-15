@@ -155,6 +155,12 @@ public class Indexer {
 
 			// Find and index new files
 			deduper.deduplicate(files, deduperListener);
+			if (files.isEmpty()) {
+				// Add deleted files in with last database version.
+				// This is important such that files marked as RENAMED are not marked
+				// again as DELETED.
+				removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+			}
 
 
 			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
