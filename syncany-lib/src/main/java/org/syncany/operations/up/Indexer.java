@@ -129,6 +129,16 @@ public class Indexer {
 
 		boolean firstFile = true;
 		int fullFileCount = files.size();
+
+		// If there are no files to index, we still need to check for deletions.
+		if (files.isEmpty()) {
+			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+			// Find and remove deleted files
+			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+			logger.log(Level.FINE, "Added database version with only deletions: " + newDatabaseVersion);
+			databaseVersionListener.offer(newDatabaseVersion);
+		}
+
 		while (!files.isEmpty()) {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
@@ -138,19 +148,20 @@ public class Indexer {
 			// Signal the start of indexing if we are about to deduplicate the first file
 			if (firstFile) {
 				deduperListener.onStart(files.size());
+				// Add deletions in first databaseversion.
+				removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 				firstFile = false;
 			}
 
 			// Find and index new files
 			deduper.deduplicate(files, deduperListener);
 
-			// Find and remove deleted files
-			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
 
 			logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
 			databaseVersionListener.offer(newDatabaseVersion);
 			eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
 		}
+
 	}
 
 	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
