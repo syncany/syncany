@@ -591,6 +591,10 @@ public class UpOperation extends AbstractTransferOperation {
 			locallyUpdatedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
 		}
 
+		for (String relativeFilePath : localChanges.getDeletedFiles()) {
+			locallyUpdatedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
+		}
+
 		return locallyUpdatedFiles;
 	}
 
