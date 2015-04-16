@@ -176,7 +176,8 @@ public class UpOperation extends AbstractTransferOperation {
 			ChangeSet localChanges = result.getStatusResult().getChangeSet();
 			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
 			// Iterate over the changes, deduplicate, and feed DatabaseVersions into an iterator
-			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit());
+			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit(),
+					options.getTransactionFileLimit());
 			
 			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, databaseVersionQueue);
 			new Thread(asyncIndexer).start();

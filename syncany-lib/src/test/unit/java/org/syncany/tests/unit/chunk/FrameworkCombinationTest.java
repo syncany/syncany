@@ -186,7 +186,7 @@ public class FrameworkCombinationTest {
 
 		final ChunkIndex chunkIndex = new ChunkIndex();
 
-		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer, Long.MAX_VALUE);
+		Deduper deduper = new Deduper(combination.chunker, combination.multiChunker, combination.transformer, Long.MAX_VALUE, Long.MAX_VALUE);
 		deduper.deduplicate(inputFiles, new DeduperListener() {
 			@Override
 			public void onMultiChunkWrite(MultiChunk multiChunk, Chunk chunk) {
