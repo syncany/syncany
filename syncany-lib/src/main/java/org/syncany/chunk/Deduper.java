@@ -48,12 +48,14 @@ public class Deduper {
 	private MultiChunker multiChunker;
 	private Transformer transformer;
 	private long maxTotalSize;
+	private long maxNumberOfFiles;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long maxTotalSize) {
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long maxTotalSize, long maxNumberOfFiles) {
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
 		this.maxTotalSize = maxTotalSize;
+		this.maxNumberOfFiles = maxNumberOfFiles;
 	}
 	
 	/**
@@ -70,9 +72,11 @@ public class Deduper {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
 		long totalMultiChunkSize = 0L;
+		long totalNumFiles = 0L;
 		
 		while (!files.isEmpty()) {
 			File file = files.remove(0);
+			totalNumFiles++;
 			
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
@@ -144,13 +148,13 @@ public class Deduper {
 
 			// Check if we have reached the transaction limit
 			if (multiChunk != null) {
-				if (totalMultiChunkSize + multiChunk.getSize() >= maxTotalSize) {
+				if (totalMultiChunkSize + multiChunk.getSize() >= maxTotalSize || totalNumFiles >= maxNumberOfFiles) {
 					multiChunk.close();
 					listener.onMultiChunkClose(multiChunk);
 					return;
 				}
 			}
-			else if (totalMultiChunkSize >= maxTotalSize) {
+			else if (totalMultiChunkSize >= maxTotalSize || totalNumFiles >= maxNumberOfFiles) {
 				return;
 			}
 		}
