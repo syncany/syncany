@@ -555,15 +555,8 @@ public class Indexer {
 					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileProperties.getChecksum());
 
 					if (fileHistoriesWithSameChecksum != null && fileHistoriesWithSameChecksum.size() > 0) {
+						fileHistoriesWithSameChecksum.removeAll(newDatabaseVersion.getFileHistories());
 						lastFileHistory = guessLastFileHistoryForFileWithMatchingChecksum(fileProperties, fileHistoriesWithSameChecksum);
-
-						// Remove the lastFileHistory we are basing this one on from the
-						// cache, so no other history will be
-						fileHistoriesWithSameChecksum.remove(lastFileHistory);
-
-						if (fileHistoriesWithSameChecksum.isEmpty()) {
-							fileChecksumCache.remove(fileProperties.getChecksum());
-						}
 					}
 				}
 
