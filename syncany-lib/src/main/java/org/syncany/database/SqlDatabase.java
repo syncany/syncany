@@ -218,6 +218,10 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
 
+	public Collection<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(String checksum) {
+		return fileHistoryDao.getFileHistoriesByChecksum(checksum);
+	}
+
 	public PartialFileHistory getFileHistoriesWithLastVersionByPath(String path) {
 		return fileHistoryDao.getFileHistoryWithLastVersionByPath(path);
 	}

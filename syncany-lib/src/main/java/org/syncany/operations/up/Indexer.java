@@ -265,8 +265,6 @@ public class Indexer {
 		private SecureRandom secureRandom;
 		private DatabaseVersion newDatabaseVersion;
 
-		private Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache;
-
 		private ChunkEntry chunkEntry;
 		private MultiChunkEntry multiChunkEntry;
 		private FileContent fileContent;
@@ -279,8 +277,6 @@ public class Indexer {
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
-
-			this.fileChecksumCache = fileChecksumCache;
 		}
 
 		@Override
@@ -552,7 +548,8 @@ public class Indexer {
 			// b) If that fails, try finding files with a matching checksum
 			if (lastFileHistory == null) {
 				if (fileProperties.getChecksum() != null) {
-					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileProperties.getChecksum());
+					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = localDatabase
+							.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum().toString());
 
 					if (fileHistoriesWithSameChecksum != null && fileHistoriesWithSameChecksum.size() > 0) {
 						fileHistoriesWithSameChecksum.removeAll(newDatabaseVersion.getFileHistories());

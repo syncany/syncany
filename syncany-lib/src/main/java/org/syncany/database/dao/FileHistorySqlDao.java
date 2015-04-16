@@ -166,6 +166,19 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	public Collection<PartialFileHistory> getFileHistoriesByChecksum(String filecontentChecksum) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
+			preparedStatement.setString(1, filecontentChecksum);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return createFileHistoriesFromResult(resultSet).values();
+			}
+
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public PartialFileHistory getFileHistoryWithLastVersionByPath(String path) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
 			preparedStatement.setString(1, path);
