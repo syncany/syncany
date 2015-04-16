@@ -218,6 +218,10 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
 
+	public PartialFileHistory getFileHistoriesWithLastVersionByPath(String path) {
+		return fileHistoryDao.getFileHistoryWithLastVersionByPath(path);
+	}
+
 	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
 	}

@@ -125,7 +125,6 @@ public class Indexer {
 
 		// TODO [high] This should be in FileHistoryDao. Very memory intensive 
 		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
-		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 
 		boolean firstFile = true;
 		int fullFileCount = files.size();
@@ -143,7 +142,7 @@ public class Indexer {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
 			// Create the DeduperListener that will receive MultiChunks and store them in the DatabaseVersion object
-			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache, filePathCache);
+			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache);
 
 			// Signal the start of indexing if we are about to deduplicate the first file
 			if (firstFile) {
@@ -267,7 +266,6 @@ public class Indexer {
 		private DatabaseVersion newDatabaseVersion;
 
 		private Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache;
-		private Map<String, PartialFileHistory> filePathCache;
 
 		private ChunkEntry chunkEntry;
 		private MultiChunkEntry multiChunkEntry;
@@ -276,15 +274,13 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;
 
-		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache,
-				Map<String, PartialFileHistory> filePathCache) {
+		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache) {
 
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
 			this.newDatabaseVersion = newDatabaseVersion;
 
 			this.fileChecksumCache = fileChecksumCache;
-			this.filePathCache = filePathCache;
 		}
 
 		@Override
@@ -513,7 +509,7 @@ public class Indexer {
 		}
 
 		private PartialFileHistory guessLastFileHistoryForFolderOrSymlink(FileProperties fileProperties) {
-			PartialFileHistory lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
+			PartialFileHistory lastFileHistory = localDatabase.getFileHistoriesWithLastVersionByPath(fileProperties.getRelativePath());
 
 			if (lastFileHistory == null) {
 				logger.log(Level.FINER, "   * No old file history found, starting new history (path: " + fileProperties.getRelativePath() + ", "
@@ -551,7 +547,7 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = null;
 
 			// a) Try finding a file history for which the last version has the same path
-			lastFileHistory = filePathCache.get(fileProperties.getRelativePath());
+			lastFileHistory = localDatabase.getFileHistoriesWithLastVersionByPath(fileProperties.getRelativePath());
 
 			// b) If that fails, try finding files with a matching checksum
 			if (lastFileHistory == null) {
