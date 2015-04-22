@@ -123,9 +123,6 @@ public class Indexer {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
 
-		// TODO [high] This should be in FileHistoryDao. Very memory intensive 
-		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
-
 		boolean firstFile = true;
 		int fullFileCount = files.size();
 
@@ -142,7 +139,7 @@ public class Indexer {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 
 			// Create the DeduperListener that will receive MultiChunks and store them in the DatabaseVersion object
-			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion, fileChecksumCache);
+			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion);
 
 			// Signal the start of indexing if we are about to deduplicate the first file
 			if (firstFile) {
@@ -272,7 +269,7 @@ public class Indexer {
 		private FileProperties startFileProperties;
 		private FileProperties endFileProperties;
 
-		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion, Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache) {
+		public IndexerDeduperListener(DatabaseVersion newDatabaseVersion) {
 
 			this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 			this.secureRandom = new SecureRandom();
