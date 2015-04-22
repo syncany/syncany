@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
@@ -90,6 +91,16 @@ public class SqlDatabase {
 
 	public void commit() throws SQLException {
 		connection.commit();
+	}
+
+	@Override
+	public void finalize() {
+		try {
+			connection.close();
+		}
+		catch (SQLException e) {
+			logger.log(Level.WARNING, "Failed to close database connection. Possible resource leak.", e);
+		}
 	}
 
 	public void rollback() throws SQLException {
