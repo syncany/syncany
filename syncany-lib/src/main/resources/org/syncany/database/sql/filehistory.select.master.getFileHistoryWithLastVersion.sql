@@ -1,3 +1,4 @@
 select *
-from fileversion_master_last
+from fileversion
 where path=? 
+order by updated desc
