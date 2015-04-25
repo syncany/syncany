@@ -20,12 +20,10 @@ package org.syncany.operations.up;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -84,6 +82,7 @@ public class Indexer {
 	private static final String DEFAULT_POSIX_PERMISSIONS_FILE = "rw-r--r--";
 	private static final String DEFAULT_POSIX_PERMISSIONS_FOLDER = "rwxr-xr-x";
 	private static final String DEFAULT_DOS_ATTRIBUTES = "--a-";
+	private static final long CONNECTION_REFRESH_TIME = 60_000L;
 
 	private Config config;
 	private Deduper deduper;
@@ -91,10 +90,19 @@ public class Indexer {
 
 	private LocalEventBus eventBus;
 
+	private long lastReconnectTime;
+
 	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
 		this.localDatabase = new SqlDatabase(config);
+		try {
+			localDatabase.getConnection().setReadOnly(true);
+		}
+		catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		this.eventBus = LocalEventBus.getInstance();
 	}
@@ -125,6 +133,9 @@ public class Indexer {
 
 		boolean firstFile = true;
 		int fullFileCount = files.size();
+
+		lastReconnectTime = System.currentTimeMillis();
+
 
 		// If there are no files to index, we still need to check for deletions.
 		if (files.isEmpty()) {
@@ -172,35 +183,18 @@ public class Indexer {
 
 	}
 
-	private Map<String, PartialFileHistory> fillFilePathCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
-		Map<String, PartialFileHistory> filePathCache = new HashMap<String, PartialFileHistory>();
-
-		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
-			filePathCache.put(fileHistory.getLastVersion().getPath(), fileHistory);
+	private void reconnectDatabase() {
+		logger.log(Level.INFO, "Refreshing database connection indexer.");
+		try {
+			localDatabase.commit();
+			localDatabase.finalize();
+			localDatabase = new SqlDatabase(config);
+			localDatabase.getConnection().setReadOnly(true);
 		}
+		catch (SQLException e) {
+			logger.log(Level.WARNING, "Error reconnecting with database");
 
-		return filePathCache;
-	}
-
-	private Map<FileChecksum, List<PartialFileHistory>> fillFileChecksumCache(List<PartialFileHistory> fileHistoriesWithLastVersion) {
-		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = new HashMap<FileChecksum, List<PartialFileHistory>>();
-
-		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
-			FileChecksum fileChecksum = fileHistory.getLastVersion().getChecksum();
-
-			if (fileChecksum != null) {
-				List<PartialFileHistory> fileHistoriesWithSameChecksum = fileChecksumCache.get(fileChecksum);
-
-				if (fileHistoriesWithSameChecksum == null) {
-					fileHistoriesWithSameChecksum = new ArrayList<PartialFileHistory>();
-				}
-
-				fileHistoriesWithSameChecksum.add(fileHistory);
-				fileChecksumCache.put(fileChecksum, fileHistoriesWithSameChecksum);
-			}
 		}
-
-		return fileChecksumCache;
 	}
 
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<PartialFileHistory> fileHistoriesWithLastVersion) {
@@ -341,6 +335,13 @@ public class Indexer {
 
 			// Reset
 			resetFileEnd();
+
+			// Reconnect to the database if the connection has been used for over a minute.
+			boolean needReconnect = (lastReconnectTime + CONNECTION_REFRESH_TIME) < System.currentTimeMillis();
+			if (needReconnect) {
+				reconnectDatabase();
+				lastReconnectTime = System.currentTimeMillis();
+			}
 		}
 
 		private void addFileVersion(FileProperties fileProperties) {

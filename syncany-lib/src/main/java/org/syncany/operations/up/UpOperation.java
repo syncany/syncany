@@ -336,6 +336,11 @@ public class UpOperation extends AbstractTransferOperation {
 						addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
 
 						result.incrementTransactionsCompleted();
+
+
+						logger.log(Level.INFO, "Committing local database.");
+						localDatabase.commit();
+						reconnectDatabase();
 					}
 				}
 			}
@@ -354,7 +359,21 @@ public class UpOperation extends AbstractTransferOperation {
 			serializeRemoteTransactionsAndMetadata(remainingRemoteTransactions, remainingDatabaseVersions);
 			throw caughtFailure;
 		}
-		return numberOfCompletedTransactions;
+
+		return (int) result.getTransactionsCompleted();
+	}
+
+	private void reconnectDatabase() {
+		logger.log(Level.INFO, "Refreshing database connection indexer.");
+		try {
+			localDatabase.commit();
+			localDatabase.finalize();
+			localDatabase = new SqlDatabase(config);
+		}
+		catch (SQLException e) {
+			logger.log(Level.WARNING, "Error reconnecting with database");
+
+		}
 	}
 
 	private TransactionRemoteFile attemptResumeTransactionRemoteFile() throws StorageException, BlockingTransfersException {
