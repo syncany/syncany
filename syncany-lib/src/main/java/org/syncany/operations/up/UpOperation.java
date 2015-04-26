@@ -179,7 +179,7 @@ public class UpOperation extends AbstractTransferOperation {
 			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit(),
 					options.getTransactionFileLimit());
 			
-			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, databaseVersionQueue);
+			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, localChanges.getDeletedFiles(), databaseVersionQueue);
 			new Thread(asyncIndexer).start();
 		}
 

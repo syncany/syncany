@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
+import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,7 @@ public class AsyncIndexer implements Runnable {
 
 	private final Indexer indexer;
 	private final List<File> files;
+	private final SortedSet<String> deletedFiles;
 	private final Queue<DatabaseVersion> databaseVersionQueue;
 
 	/** 
@@ -34,17 +36,18 @@ public class AsyncIndexer implements Runnable {
 	 * @param files List of Files to be indexed.
 	 * @param queue a threadsafe Queue to communicate DatabaseVersions.
 	 */
-	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
+	public AsyncIndexer(Config config, Deduper deduper, List<File> files, SortedSet<String> deletedFiles, Queue<DatabaseVersion> queue) {
 		this.files = files;
 		this.databaseVersionQueue = queue;
 		this.indexer = new Indexer(config, deduper);
+		this.deletedFiles = deletedFiles;
 	}
 
 	@Override
 	public void run() {
 		try {
 			logger.log(Level.INFO, "Starting Indexing.");
-			indexer.index(files, databaseVersionQueue);
+			indexer.index(files, deletedFiles, databaseVersionQueue);
 		}
 		catch (IOException e) {
 			// TODO: Store this exception as a "result"?

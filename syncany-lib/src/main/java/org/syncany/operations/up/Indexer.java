@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,20 +117,13 @@ public class Indexer {
 	 * {@link MultiChunkEntry}.
 	 * 
 	 * @param files List of files to be deduplicated
-	 * @return New database version containing new/changed/deleted entities
+	 * @param deletedFiles List of files that have been deleted
+	 * @param databaseVersionQueue Queue to which created databaseVersions are offered
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
-	public DatabaseVersion index(List<File> files) throws IOException {
-		final Queue<DatabaseVersion> databaseVersionQueue = new LinkedBlockingQueue<>();
-		index(files, databaseVersionQueue);
-		return databaseVersionQueue.poll();
-	}
 
-	public void index(List<File> files, Queue<DatabaseVersion> databaseVersionListener)
+	public void index(List<File> files, SortedSet<String> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue)
 			throws IOException {
-		// Load file history cache
-		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
-
 		boolean firstFile = true;
 		int fullFileCount = files.size();
 
@@ -141,9 +134,9 @@ public class Indexer {
 		if (files.isEmpty()) {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
 			// Find and remove deleted files
-			removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+			removeDeletedFiles(newDatabaseVersion, deletedFiles);
 			logger.log(Level.FINE, "Added database version with only deletions: " + newDatabaseVersion);
-			databaseVersionListener.offer(newDatabaseVersion);
+			databaseVersionQueue.offer(newDatabaseVersion);
 		}
 
 		while (!files.isEmpty()) {
@@ -156,7 +149,7 @@ public class Indexer {
 			if (firstFile) {
 				deduperListener.onStart(files.size());
 				// Add deletions in first databaseversion.
-				removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+				removeDeletedFiles(newDatabaseVersion, deletedFiles);
 				firstFile = false;
 			}
 
@@ -166,12 +159,12 @@ public class Indexer {
 				// Add deleted files in with last database version.
 				// This is important such that files marked as RENAMED are not marked
 				// again as DELETED.
-				removeDeletedFiles(newDatabaseVersion, fileHistoriesWithLastVersion);
+				removeDeletedFiles(newDatabaseVersion, deletedFiles);
 			}
 
 			if (!newDatabaseVersion.getFileHistories().isEmpty()) {
 				logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
-				databaseVersionListener.offer(newDatabaseVersion);
+				databaseVersionQueue.offer(newDatabaseVersion);
 				eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
 			}
 			//else { (comment-only else case)
@@ -197,10 +190,12 @@ public class Indexer {
 		}
 	}
 
-	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<PartialFileHistory> fileHistoriesWithLastVersion) {
+	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, SortedSet<String> deletedFiles) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");
 
-		for (PartialFileHistory fileHistory : fileHistoriesWithLastVersion) {
+		for (String path : deletedFiles) {
+			PartialFileHistory fileHistory = localDatabase.getFileHistoriesWithLastVersionByPath(path);
+
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
 			if (newDatabaseVersion.getFileHistory(fileHistory.getFileHistoryId()) != null) {
 				continue;
