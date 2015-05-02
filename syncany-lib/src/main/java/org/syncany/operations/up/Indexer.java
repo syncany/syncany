@@ -174,6 +174,8 @@ public class Indexer {
 			//}
 		}
 
+		// Close database connection.
+		localDatabase.finalize();
 	}
 
 	private void reconnectDatabase() {

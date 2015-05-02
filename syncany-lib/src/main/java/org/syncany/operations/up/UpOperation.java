@@ -210,6 +210,10 @@ public class UpOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Sync up done.");
 			result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 		}
+
+		// Close database connection
+		localDatabase.finalize();
+
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
 		fireEndEvent();
