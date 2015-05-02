@@ -49,7 +49,7 @@ public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
 
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
+	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false";
 	public static final String DATABASE_RESOURCE_PATTERN = "/org/syncany/database/sql/%s";
 	public static final String DATABASE_RESOURCE_CREATE_ALL = "script.create.all.sql";
 

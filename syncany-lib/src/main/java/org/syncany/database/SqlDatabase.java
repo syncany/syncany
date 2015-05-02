@@ -96,7 +96,10 @@ public class SqlDatabase {
 	@Override
 	public void finalize() {
 		try {
-			connection.close();
+			if (!connection.isClosed()) {
+				connection.commit();
+				connection.close();
+			}
 		}
 		catch (SQLException e) {
 			logger.log(Level.WARNING, "Failed to close database connection. Possible resource leak.", e);
