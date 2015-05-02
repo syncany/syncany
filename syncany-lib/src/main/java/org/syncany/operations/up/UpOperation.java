@@ -175,11 +175,12 @@ public class UpOperation extends AbstractTransferOperation {
 			// Get a list of files that have been updated
 			ChangeSet localChanges = result.getStatusResult().getChangeSet();
 			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
+			List<File> locallyDeletedFiles = extractLocallyDeletedFiles(localChanges);
 			// Iterate over the changes, deduplicate, and feed DatabaseVersions into an iterator
 			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit(),
 					options.getTransactionFileLimit());
 			
-			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, localChanges.getDeletedFiles(), databaseVersionQueue);
+			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, locallyDeletedFiles, databaseVersionQueue);
 			new Thread(asyncIndexer).start();
 		}
 
@@ -264,7 +265,14 @@ public class UpOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
-		while (databaseVersion != AsyncIndexer.FINAL_DATABASE_VERSION) {
+		boolean firstRun = true;
+		while (databaseVersion != AsyncIndexer.FINAL_DATABASE_VERSION || firstRun) {
+			if (databaseVersion == AsyncIndexer.FINAL_DATABASE_VERSION) {
+				databaseVersionQueue.offer(databaseVersion);
+				databaseVersion = new DatabaseVersion();
+			}
+			// Do at least one iteration to reupload possible dirty data.
+			firstRun = false;
 			RemoteTransaction remoteTransaction = null;
 
 			if (!resuming) {
@@ -308,10 +316,21 @@ public class UpOperation extends AbstractTransferOperation {
 						transactionRemoteFileToResume = null;
 					}
 
+					logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
+					long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
+
+					logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+					localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+					logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion);
+					addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
+
+					result.incrementTransactionsCompleted();
 
 
 					logger.log(Level.INFO, "Committing local database.");
 					localDatabase.commit();
+					reconnectDatabase();
 
 					committingFailed = false;
 					numberOfCompletedTransactions++;
@@ -328,23 +347,6 @@ public class UpOperation extends AbstractTransferOperation {
 					if (committingFailed) {
 						remainingRemoteTransactions.add(remoteTransaction);
 						remainingDatabaseVersions.add(databaseVersion);
-					}
-					else {
-						logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
-						long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
-
-						logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
-						localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
-
-						logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion);
-						addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
-
-						result.incrementTransactionsCompleted();
-
-
-						logger.log(Level.INFO, "Committing local database.");
-						localDatabase.commit();
-						reconnectDatabase();
 					}
 				}
 			}
@@ -616,6 +618,16 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		return locallyUpdatedFiles;
+	}
+
+	private List<File> extractLocallyDeletedFiles(ChangeSet localChanges) {
+		List<File> locallyDeletedFiles = new ArrayList<File>();
+
+		for (String relativeFilePath : localChanges.getDeletedFiles()) {
+			locallyDeletedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
+		}
+
+		return locallyDeletedFiles;
 	}
 
 	/**

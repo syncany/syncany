@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
-import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -122,7 +121,7 @@ public class Indexer {
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
 
-	public void index(List<File> files, SortedSet<String> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue)
+	public void index(List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue)
 			throws IOException {
 		boolean firstFile = true;
 		int fullFileCount = files.size();
@@ -155,12 +154,6 @@ public class Indexer {
 
 			// Find and index new files
 			deduper.deduplicate(files, deduperListener);
-			if (files.isEmpty()) {
-				// Add deleted files in with last database version.
-				// This is important such that files marked as RENAMED are not marked
-				// again as DELETED.
-				removeDeletedFiles(newDatabaseVersion, deletedFiles);
-			}
 
 			if (!newDatabaseVersion.getFileHistories().isEmpty()) {
 				logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
@@ -192,10 +185,11 @@ public class Indexer {
 		}
 	}
 
-	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, SortedSet<String> deletedFiles) {
+	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<File> deletedFiles) {
 		logger.log(Level.FINER, "- Looking for deleted files ...");
 
-		for (String path : deletedFiles) {
+		for (File deletedFile : deletedFiles) {
+			String path = FileUtil.getRelativeDatabasePath(config.getLocalDir(), deletedFile);
 			PartialFileHistory fileHistory = localDatabase.getFileHistoriesWithLastVersionByPath(path);
 
 			// Ignore this file history if it has been updated in this database version before (file probably renamed!)
