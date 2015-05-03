@@ -156,7 +156,7 @@ public class UpOperation extends AbstractTransferOperation {
 					resuming = true;
 				}
 				// Add stopping marker
-				databaseVersionQueue.add(AsyncIndexer.FINAL_DATABASE_VERSION);
+				databaseVersionQueue.add(new DatabaseVersion());
 
 				try {
 					transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();
@@ -265,16 +265,13 @@ public class UpOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
-		boolean firstRun = true;
-		while (databaseVersion != AsyncIndexer.FINAL_DATABASE_VERSION || firstRun) {
-			if (databaseVersion == AsyncIndexer.FINAL_DATABASE_VERSION) {
-				databaseVersionQueue.offer(databaseVersion);
-				databaseVersion = new DatabaseVersion();
-			}
-			// Do at least one iteration to reupload possible dirty data.
-			firstRun = false;
-			RemoteTransaction remoteTransaction = null;
+		boolean noDatabaseVersions = databaseVersion.isEmpty();
+		// Add dirty data to first database
+		addDirtyData(databaseVersion);
 
+		//
+		while (!databaseVersion.isEmpty()) {
+			RemoteTransaction remoteTransaction = null;
 			if (!resuming) {
 				VectorClock newVectorClock = findNewVectorClock();
 				databaseVersion.setVectorClock(newVectorClock);
@@ -355,9 +352,16 @@ public class UpOperation extends AbstractTransferOperation {
 				remainingDatabaseVersions.add(databaseVersion);
 			}
 			
-			logger.log(Level.FINE, "Waiting for new database version.");
-			databaseVersion = databaseVersionQueue.take();
-			logger.log(Level.FINE, "Took new database version: " + databaseVersion);
+			if (!noDatabaseVersions) {
+				logger.log(Level.FINE, "Waiting for new database version.");
+				databaseVersion = databaseVersionQueue.take();
+				logger.log(Level.FINE, "Took new database version: " + databaseVersion);
+			}
+			else {
+				logger.log(Level.FINE, "Not waiting for new database version, last one has been taken.");
+				break;
+			}
+
 		}
 
 		if (detectedFailure) {
@@ -524,9 +528,6 @@ public class UpOperation extends AbstractTransferOperation {
 			SQLException {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
-
-		// Add dirty data (if existent)
-		addDirtyData(deltaDatabaseVersion);
 
 		// New delta database
 		MemoryDatabase deltaDatabase = new MemoryDatabase();

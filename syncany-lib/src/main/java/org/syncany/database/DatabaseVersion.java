@@ -112,6 +112,10 @@ public class DatabaseVersion {
 		this.status = status;
 	}
 
+	public boolean isEmpty() {
+		return chunks.isEmpty() && multiChunks.isEmpty() && fileContents.isEmpty() && fileHistories.isEmpty();
+	}
+
 	// Chunk
 
 	public ChunkEntry getChunk(ChunkChecksum checksum) {

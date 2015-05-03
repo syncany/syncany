@@ -22,8 +22,6 @@ import org.syncany.database.DatabaseVersion;
 public class AsyncIndexer implements Runnable {
 	private static final Logger logger = Logger.getLogger(AsyncIndexer.class.getSimpleName());
 
-	public static final DatabaseVersion FINAL_DATABASE_VERSION = new DatabaseVersion();
-
 	private final Indexer indexer;
 	private final List<File> files;
 	private final List<File> deletedFiles;
@@ -54,7 +52,7 @@ public class AsyncIndexer implements Runnable {
 		}
 		// Signal end-of-stream.
 		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
-		databaseVersionQueue.offer(FINAL_DATABASE_VERSION);
+		databaseVersionQueue.offer(new DatabaseVersion());
 	}
 
 }
