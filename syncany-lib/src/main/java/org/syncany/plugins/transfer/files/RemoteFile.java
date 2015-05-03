@@ -17,14 +17,15 @@
  */
 package org.syncany.plugins.transfer.files;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
-import com.google.common.collect.Sets;
+
+import com.google.common.collect.Maps;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -36,7 +37,7 @@ import com.google.common.collect.Sets;
  * 
  * <p>Remote files can be extended with {@link RemoteFileAttributes} in certain situations, 
  * e.g. to add additional information about the sub-path. The attributes can be added set
- * and read via {@link #addAttributes(RemoteFileAttributes)} and {@link #getAttributes(Class)}.
+ * and read via {@link #setAttributes(RemoteFileAttributes)} and {@link #getAttributes(Class)}.
  *
  * <p><b>Important:</b> Sub-classes must offer a
  * {@link RemoteFile#RemoteFile(String) one-parameter constructor} that takes a
@@ -51,8 +52,8 @@ public abstract class RemoteFile {
 	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
 
 	private String name;
-	private Set<RemoteFileAttributes> attributes = Sets.newHashSet();
-
+	private Map<Class<? extends RemoteFileAttributes>, RemoteFileAttributes> attributes;
+	
 	/**
 	 * Creates a new remote file by its name. The name is used by {@link TransferManager}s
 	 * to identify a file on the remote storage.
@@ -70,6 +71,7 @@ public abstract class RemoteFile {
 	 */
 	public RemoteFile(String name) throws StorageException {
 		this.name = validateName(name);
+		this.attributes = Maps.newHashMap();
 	}
 
 	/**
@@ -80,24 +82,20 @@ public abstract class RemoteFile {
 	}
 	
 	/**
-	 * Adds remote file attributes to this remote file class. Attributes 
-	 * can extend the parameters of this class without having to extend it.
+	 * Sets remote file attributes to this remote file class. Attributes 
+	 * can extend the parameters of this class without actually having to extend it.
 	 */
-	public final void addAttributes(RemoteFileAttributes remoteFileAttributes) {
-		attributes.add(remoteFileAttributes);
+	public final <T extends RemoteFileAttributes> void setAttributes(T remoteFileAttributes) {
+		attributes.put(remoteFileAttributes.getClass(), remoteFileAttributes);
 	}
 	
 	/**
-	 * Returns a list of attributes for a given file.
+	 * Returns a list of attributes for a given file, 
+	 * or null if there is no attribute with the given class.
 	 */
-	public final <T extends RemoteFileAttributes> T getAttributes(Class<T> remoteFileAttributesClass) throws NoSuchFieldException {
-		for (RemoteFileAttributes remoteFileAttribute : attributes) {
-			if (remoteFileAttribute.getClass().isAssignableFrom(remoteFileAttributesClass)) {
-				return remoteFileAttributesClass.cast(remoteFileAttribute);
-			}
-		}
-
-		throw new NoSuchFieldException("Unable to find attributes for class " + remoteFileAttributesClass);
+	@SuppressWarnings("unchecked")
+	public final <T extends RemoteFileAttributes> T getAttributes(Class<T> remoteFileAttributesClass) {
+		return (T) attributes.get(remoteFileAttributesClass);
 	}
 
 	/**

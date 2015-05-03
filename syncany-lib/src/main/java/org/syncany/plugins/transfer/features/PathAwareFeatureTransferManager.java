@@ -229,7 +229,7 @@ public class PathAwareFeatureTransferManager implements FeatureTransferManager {
 
 	private RemoteFile createPathAwareRemoteFile(RemoteFile remoteFile) throws StorageException {		
 		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes = new PathAwareRemoteFileAttributes();
-		remoteFile.addAttributes(pathAwareRemoteFileAttributes);
+		remoteFile.setAttributes(pathAwareRemoteFileAttributes);
 
 		if (isFolderizable(remoteFile.getClass())) {
 			// If remote file is folderizable, i.e. an 'affected file', 
@@ -276,53 +276,37 @@ public class PathAwareFeatureTransferManager implements FeatureTransferManager {
 	}
 
 	private boolean createFolder(RemoteFile remoteFile) throws StorageException {
-		boolean success = true;
-		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes;
-
-		try {
-			pathAwareRemoteFileAttributes = remoteFile.getAttributes(PathAwareRemoteFileAttributes.class);
-		}
-		catch (NoSuchFieldException e) {
+		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes = remoteFile.getAttributes(PathAwareRemoteFileAttributes.class);		
+		boolean notAPathAwareRemoteFile = pathAwareRemoteFileAttributes == null || !pathAwareRemoteFileAttributes.hasPath();
+		
+		if (notAPathAwareRemoteFile) {
 			return true;
-		}
-
-		if (!pathAwareRemoteFileAttributes.hasPath()) {
-			return true;
-		}
-
-		String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
-
-		if (remoteFilePath != null) {
+		} 
+		else {
+			String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
+	
 			logger.log(Level.INFO, "Remote file is path aware, creating folder " + remoteFilePath);
-			success = pathAwareFeatureExtension.createPath(remoteFilePath);
+			boolean success = pathAwareFeatureExtension.createPath(remoteFilePath);
+			
+			return success;
 		}
-
-		return success;
 	}
 
 	private boolean removeFolder(RemoteFile remoteFile) throws StorageException {
-		boolean success = true;
-		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes;
-
-		try {
-			pathAwareRemoteFileAttributes = remoteFile.getAttributes(PathAwareRemoteFileAttributes.class);
-		}
-		catch (NoSuchFieldException e) {
+		PathAwareRemoteFileAttributes pathAwareRemoteFileAttributes = remoteFile.getAttributes(PathAwareRemoteFileAttributes.class);
+		boolean notAPathAwareRemoteFile = pathAwareRemoteFileAttributes == null || !pathAwareRemoteFileAttributes.hasPath();
+		
+		if (notAPathAwareRemoteFile) {
 			return true;
 		}
+		else {
+			String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
 
-		if (!pathAwareRemoteFileAttributes.hasPath()) {
-			return true;
-		}
-
-		String remoteFilePath = pathToString(Paths.get(underlyingTransferManager.getRemoteFilePath(remoteFile.getClass()), pathAwareRemoteFileAttributes.getPath()));
-
-		if (remoteFilePath != null) {
 			logger.log(Level.INFO, "Remote file is path aware, cleaning empty folders at " + remoteFilePath);
-			success = removeFolder(remoteFilePath);
+			boolean success = removeFolder(remoteFilePath);
+		
+			return success;
 		}
-
-		return success;
 	}
 
 	private boolean removeFolder(String folder) throws StorageException {
