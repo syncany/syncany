@@ -335,7 +335,7 @@ public class UpOperation extends AbstractTransferOperation {
 					committingFailed = false;
 					numberOfCompletedTransactions++;
 				}
-				catch (SQLException e) {
+				catch (StorageException | SQLException e) {
 					detectedFailure = true;
 					caughtFailure = new StorageException(e);
 				}
