@@ -180,19 +180,57 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	public PartialFileHistory getFileHistoryWithLastVersionByPath(String path) {
-		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoryWithLastVersion.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.findLatestFileVersionsForPath.sql")) {
 			preparedStatement.setString(1, path);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				PartialFileHistory fileHistory = null;
+				// Fetch the latest versions of all files that once existed with the given path and find the most recent by comparing vector clocks
+				String latestFileHistoryId = null;
+				Long latestFileVersion = null;
+				VectorClock latestVectorClock = null;
+				while (resultSet.next()) {
+					VectorClock clock = VectorClock.parseVectorClock(resultSet.getString("vectorclock_serialized"));
+					if (latestVectorClock == null || VectorClock.compare(clock, latestVectorClock) == VectorClock.VectorClockComparison.GREATER) {
+						latestVectorClock = clock;
+						latestFileHistoryId = resultSet.getString("filehistory_id");
+						latestFileVersion = resultSet.getLong("version");
+					}
+				}
+
+				// If no active file history exists for this path, return
+				if (latestFileHistoryId == null) {
+					return null;
+				}
+
+				// Find for the latest file history the last file version to check if the file has moved
+				PartialFileHistory fileHistory = getLastVersionByFileHistoryId(latestFileHistoryId);
+				if (fileHistory.getLastVersion().getVersion() == latestFileVersion) {
+					return fileHistory;
+				} else {
+					return null;
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public PartialFileHistory getLastVersionByFileHistoryId(String fileHistoryId) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getLastVersionByFileHistoryId.sql")) {
+			preparedStatement.setString(1, fileHistoryId);
+			preparedStatement.setString(2, fileHistoryId);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
 					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
-					FileHistoryId fileHistoryId = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+					FileHistoryId fileHistoryIdData = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
 
-					// Create a new one
-					fileHistory = new PartialFileHistory(fileHistoryId);
+					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryIdData);
 					fileHistory.addFileVersion(lastFileVersion);
+					return fileHistory;
+				} else {
+					return null;
 				}
-				return fileHistory;
 			}
 		}
 		catch (SQLException e) {
