@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -35,9 +36,9 @@ import org.junit.Test;
 import org.syncany.config.Config;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
-import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
@@ -329,10 +330,71 @@ public class UpOperationTest {
 		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
 
 		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
-		assertEquals(2, remoteFileHistories.size());
+		assertEquals(1, remoteFileHistories.size());
 		assertEquals(FileStatus.NEW, new ArrayList<PartialFileHistory>(remoteFileHistories).get(0).getLastVersion().getStatus());
-		assertEquals(FileStatus.NEW, new ArrayList<PartialFileHistory>(remoteFileHistories).get(1).getLastVersion().getStatus());
+	}
 
+	@Test
+	public void testDeleteMatchingFileWithMultipleFiles() throws Exception {
+
+		File deletedFile = new File(testConfig.getLocalDir() + "/deleted");
+		deletedFile.createNewFile();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig);
+		op.execute();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\D+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		deletedFile.delete();
+		File newfile = new File(testConfig.getLocalDir() + "/a");
+		newfile.createNewFile();
+
+		assertFalse(deletedFile.exists());
+
+		op = new UpOperation(testConfig, options);
+		op.execute();
+
+		localDatabaseDir = testConfig.getDatabaseDir();
+		remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000002");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// - Memory database
+		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
+
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL);
+
+		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
+
+		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
+		assertEquals(2, remoteFileHistories.size());
+		Collection<FileStatus> expectedStatusList = new HashSet<>();
+		expectedStatusList.add(FileStatus.NEW);
+		expectedStatusList.add(FileStatus.DELETED);
+
+		Collection<FileStatus> actualStatusList = new HashSet<>();
+		actualStatusList.add(new ArrayList<PartialFileHistory>(remoteFileHistories).get(0).getLastVersion().getStatus());
+		actualStatusList.add(new ArrayList<PartialFileHistory>(remoteFileHistories).get(1).getLastVersion().getStatus());
+
+		assertEquals(expectedStatusList, actualStatusList);
 	}
 
 	@Test
