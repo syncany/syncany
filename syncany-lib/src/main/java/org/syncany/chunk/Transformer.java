@@ -69,7 +69,7 @@ public abstract class Transformer {
 	 * @param settings Implementation-specific setting map
 	 * @throws Exception If the given settings are invalid or insufficient for instantiation
 	 */
-	public abstract void init(Map<String, String> settings) throws Exception;
+	public abstract void init(Map<String, String> settings) throws InvalidSettingsException;
 
 	/**
 	 * Create a stream-transforming {@link OutputStream}. Depending on the implementation, the
