@@ -67,7 +67,7 @@ public abstract class Transformer {
 	 * on the implementation of the transformer.
 	 *
 	 * @param settings Implementation-specific setting map
-	 * @throws Exception If the given settings are invalid or insufficient for instantiation
+	 * @throws InvalidSettingsException If the given settings are invalid or insufficient for instantiation
 	 */
 	public abstract void init(Map<String, String> settings) throws InvalidSettingsException;
 
@@ -107,10 +107,9 @@ public abstract class Transformer {
 	 * attribute.  
 	 * 
 	 * @param type Type/name of the transformer (corresponds to its camel case class name)
-	 * @return Returns a new transformer
-	 * @throws Exception If the FQCN cannot be found or the class cannot be instantiated
+	 * @return Returns a new transformer if the FQCN cannot be found or the class cannot be instantiated
 	 */
-	public static Transformer getInstance(String type) throws Exception {
+	public static Transformer getInstance(String type) {
 		String thisPackage = Transformer.class.getPackage().getName();
 		String camelCaseName = StringUtil.toCamelCase(type);
 		String fqClassName = thisPackage + "." + camelCaseName + Transformer.class.getSimpleName();
