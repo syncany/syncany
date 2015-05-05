@@ -21,6 +21,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Robot;
 import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -45,7 +46,7 @@ import org.syncany.plugins.transfer.files.ActionRemoteFile;
  * @see CleanupOperation
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class ActionFileHandler {	
+public class ActionFileHandler {
 	private static final Logger logger = Logger.getLogger(ActionFileHandler.class.getSimpleName());
 
 	/**
@@ -54,37 +55,37 @@ public class ActionFileHandler {
 	 * This time period must be (significantly) smaller than the ignore time defined in 
 	 * {@link CleanupOperation#ACTION_FILE_DELETE_TIME}.
 	 */
-	public static final int ACTION_RENEWAL_INTERVAL = 2*60*1000; // Minutes
+	public static final int ACTION_RENEWAL_INTERVAL = 2 * 60 * 1000; // Minutes
 
 	private TransferManager transferManager;
 	private ActionRemoteFile actionFile;
 	private Timer actionRenewalTimer;
 
-	public ActionFileHandler(TransferManager transferManager, String operationName, String machineName) {		
+	public ActionFileHandler(TransferManager transferManager, String operationName, String machineName) {
 		try {
 			this.transferManager = transferManager;
 			this.actionFile = new ActionRemoteFile(operationName, machineName, System.currentTimeMillis());
-			this.actionRenewalTimer = createNewActionRenewalTimer();			
+			this.actionRenewalTimer = createNewActionRenewalTimer();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
 
 	private Timer createNewActionRenewalTimer() {
 		return new Timer("ActRenewTim");
 	}
 
-	public void start() throws Exception {
+	public void start() throws StorageException, IOException {
 		logger.log(Level.INFO, "Starting action for " + actionFile + " ...");
-		
+
 		uploadActionFile(actionFile);
 		scheduleActionRenewalTask();
 	}
 
 	public void finish() throws StorageException {
 		logger.log(Level.INFO, "Finishing action for " + actionFile + " ...");
-		
+
 		cancelActionRenewalTask();
 		deleteActionFile(actionFile);
 	}
@@ -94,25 +95,27 @@ public class ActionFileHandler {
 		transferManager.delete(actionFile);
 	}
 
-	private void uploadActionFile(ActionRemoteFile actionFile) throws Exception {
+	private void uploadActionFile(ActionRemoteFile actionFile) throws StorageException, IOException {
 		logger.log(Level.INFO, "Uploading action file: " + actionFile);
 
-		File tempActionFile = File.createTempFile("syncany-action-", ".tmp");
+		File tempActionFile = null;
+		tempActionFile = File.createTempFile("syncany-action-", ".tmp");
 		tempActionFile.deleteOnExit();
-		
+
 		transferManager.upload(tempActionFile, actionFile);
-		
+
 		tempActionFile.delete();
 	}
-	
+
 	private void scheduleActionRenewalTask() {
-		logger.log(Level.INFO, "Scheduling action renewal task for every " + (ACTION_RENEWAL_INTERVAL/60/1000) + " minutes, for " + actionFile + " ...");
-		
-		actionRenewalTimer.schedule(new TimerTask() {			
+		logger.log(Level.INFO, "Scheduling action renewal task for every " + (ACTION_RENEWAL_INTERVAL / 60 / 1000) + " minutes, for " + actionFile
+				+ " ...");
+
+		actionRenewalTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				renewActionFile();	
-				
+				renewActionFile();
+
 				if (UserConfig.isPreventStandby()) {
 					preventStandby();
 				}
@@ -124,24 +127,26 @@ public class ActionFileHandler {
 		actionRenewalTimer.cancel();
 		actionRenewalTimer = createNewActionRenewalTimer();
 	}
-	
+
 	private synchronized void renewActionFile() {
 		try {
-			logger.log(Level.INFO, "Scheduling action renewal task for every " + (ACTION_RENEWAL_INTERVAL/60/1000) + " minutes, for " + actionFile + " ...");
+			logger.log(Level.INFO, "Scheduling action renewal task for every " + (ACTION_RENEWAL_INTERVAL / 60 / 1000) + " minutes, for "
+					+ actionFile + " ...");
 
-			ActionRemoteFile oldActionFile = actionFile;			
-			ActionRemoteFile newActionFile = new ActionRemoteFile(oldActionFile.getOperationName(), oldActionFile.getClientName(), System.currentTimeMillis());
-			
+			ActionRemoteFile oldActionFile = actionFile;
+			ActionRemoteFile newActionFile = new ActionRemoteFile(oldActionFile.getOperationName(), oldActionFile.getClientName(),
+					System.currentTimeMillis());
+
 			uploadActionFile(newActionFile);
 			deleteActionFile(oldActionFile);
-			
+
 			actionFile = newActionFile;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "ERROR: Cannot renew action file!", e);
 		}
 	}
-	
+
 	private void preventStandby() {
 		try {
 			Robot robot = new Robot();
@@ -154,14 +159,14 @@ public class ActionFileHandler {
 
 			robot.mouseMove(tempMousePosition.x, tempMousePosition.y);
 			robot.mouseMove(currentMousePosition.x, currentMousePosition.y);
-		}		
+		}
 		catch (Exception e) {
 			if (e.getMessage() != null && e.getMessage().contains("headless")) {
 				logger.log(Level.INFO, "Cannot prevent standby, because headless mode is enabled (no GUI environment)");
 			}
 			else {
-				logger.log(Level.WARNING, "Standby prevention failed (headless mode?).", e);	
-			}			
+				logger.log(Level.WARNING, "Standby prevention failed (headless mode?).", e);
+			}
 		}
 	}
 }

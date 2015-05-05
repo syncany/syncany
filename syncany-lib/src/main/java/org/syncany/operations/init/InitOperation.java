@@ -24,12 +24,15 @@ import java.nio.file.Files;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
+import org.syncany.config.ConfigException;
 import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
@@ -75,78 +78,86 @@ public class InitOperation extends AbstractInitOperation {
 	}
 
 	@Override
-	public InitOperationResult execute() throws Exception {
+	public InitOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
+		try {
+			// Init plugin and transfer manager
+			plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
+			TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
+			transferSettings.setUserInteractionListener(listener);
 
-		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-		transferSettings.setUserInteractionListener(listener);
+			transferManager = plugin.createTransferManager(transferSettings, config);
 
-		transferManager = plugin.createTransferManager(transferSettings, config);
+			// Test the repo
+			if (!performRepoTest()) {
+				logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());
+				return result;
+			}
 
-		// Test the repo
-		if (!performRepoTest()) {
-			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());
-			return result;
+			logger.log(Level.INFO, "- Connecting to the repo was successful");
+
+			// Ask password (if needed)
+			String masterKeyPassword = null;
+
+			if (options.isEncryptionEnabled()) {
+				masterKeyPassword = getOrAskPassword();
+			}
+
+			// Create local .syncany directory
+			File appDir = createAppDirs(options.getLocalDir()); // TODO [medium] create temp dir first, ask password cannot be done after
+			File configFile = new File(appDir, Config.FILE_CONFIG);
+			File repoFile = new File(appDir, Config.FILE_REPO);
+			File masterFile = new File(appDir, Config.FILE_MASTER);
+
+			// Save config.xml and repo file
+			try {
+				saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);
+			}
+			catch (CipherException e) {
+				throw new StorageException(e);
+			}
+
+			// Make remote changes
+			logger.log(Level.INFO, "Uploading local repository ...");
+			makeRemoteChanges(configFile, masterFile, repoFile);
+
+			// Shutdown plugin
+			transferManager.disconnect();
+
+			// Add to daemon (if requested)
+			addToDaemonIfEnabled();
+			createDefaultIgnoreFile();
+
+			// Make link
+			GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
+
+			result.setResultCode(InitResultCode.OK);
+			result.setGenLinkResult(genlinkOperationResult);
 		}
-
-		logger.log(Level.INFO, "- Connecting to the repo was successful");
-
-		// Ask password (if needed)
-		String masterKeyPassword = null;
-
-		if (options.isEncryptionEnabled()) {
-			masterKeyPassword = getOrAskPassword();
+		catch (IOException | StorageException | ConfigException e) {
+			throw new OperationException(e);
 		}
-
-		// Create local .syncany directory
-		File appDir = createAppDirs(options.getLocalDir()); // TODO [medium] create temp dir first, ask password cannot be done after
-		File configFile = new File(appDir, Config.FILE_CONFIG);
-		File repoFile = new File(appDir, Config.FILE_REPO);
-		File masterFile = new File(appDir, Config.FILE_MASTER);		
-
-		// Save config.xml and repo file
-		saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);		
-
-		// Make remote changes
-		logger.log(Level.INFO, "Uploading local repository ...");
-		makeRemoteChanges(configFile, masterFile, repoFile);
-		
-		// Shutdown plugin
-		transferManager.disconnect();
-
-		// Add to daemon (if requested)
-		addToDaemonIfEnabled();		
-		createDefaultIgnoreFile();
-
-		// Make link
-		GenlinkOperationResult genlinkOperationResult = generateLink(options.getConfigTO());
-
-		result.setResultCode(InitResultCode.OK);
-		result.setGenLinkResult(genlinkOperationResult);
-
 		return result;
 	}
 
 	private void createDefaultIgnoreFile() throws IOException {
 		try {
 			File ignoreFile = new File(options.getLocalDir(), Config.FILE_IGNORE);
-			
+
 			logger.log(Level.INFO, "Creating default .syignore file at " + ignoreFile + " ...");
-			
+
 			InputStream defaultConfigFileinputStream = InitOperation.class.getResourceAsStream(DEFAULT_IGNORE_FILE);
 			Files.copy(defaultConfigFileinputStream, ignoreFile.toPath());
 		}
 		catch (IOException e) {
 			logger.log(Level.WARNING, "Error creating default .syignore file. IGNORING.", e);
-		}		
+		}
 	}
 
-	private void saveLocalConfig(File configFile, File repoFile, File masterFile, String masterKeyPassword) throws Exception {
+	private void saveLocalConfig(File configFile, File repoFile, File masterFile, String masterKeyPassword) throws ConfigException, CipherException {
 		if (options.isEncryptionEnabled()) {
 			SaltedSecretKey masterKey = createMasterKeyFromPassword(masterKeyPassword); // This takes looong!
 			options.getConfigTO().setMasterKey(masterKey);
@@ -161,7 +172,7 @@ public class InitOperation extends AbstractInitOperation {
 		options.getConfigTO().save(configFile);
 	}
 
-	private void makeRemoteChanges(File configFile, File masterFile, File repoFile) throws Exception {
+	private void makeRemoteChanges(File configFile, File masterFile, File repoFile) throws StorageException, ConfigException {
 		initRemoteRepository(configFile);
 
 		try {
@@ -171,7 +182,7 @@ public class InitOperation extends AbstractInitOperation {
 
 			uploadRepoFile(repoFile, transferManager);
 		}
-		catch (StorageException | IOException e) {
+		catch (StorageException e) {
 			cleanLocalRepository(e);
 		}
 	}
@@ -213,11 +224,11 @@ public class InitOperation extends AbstractInitOperation {
 		}
 	}
 
-	private void initRemoteRepository(File configFile) throws Exception {
+	private void initRemoteRepository(File configFile) throws StorageException, ConfigException {
 		try {
 			// Create 'syncany' and 'master' file, and all the remote folders
 			transferManager.init(options.isCreateTarget());
-			
+
 			// Some plugins change the transfer settings, re-save
 			options.getConfigTO().save(configFile);
 		}
@@ -227,7 +238,7 @@ public class InitOperation extends AbstractInitOperation {
 		}
 	}
 
-	private void cleanLocalRepository(Exception e) throws Exception {
+	private void cleanLocalRepository(Exception e) throws StorageException {
 		try {
 			deleteAppDirs(options.getLocalDir());
 		}
@@ -238,11 +249,11 @@ public class InitOperation extends AbstractInitOperation {
 		throw new StorageException("Couldn't upload to remote repo. Cleaned local repository.", e);
 	}
 
-	private GenlinkOperationResult generateLink(ConfigTO configTO) throws Exception {
+	private GenlinkOperationResult generateLink(ConfigTO configTO) throws ConfigException, IOException, StorageException, OperationException {
 		return new GenlinkOperation(options.getConfigTO(), options.getGenlinkOptions()).execute();
 	}
 
-	private String getOrAskPassword() throws Exception {
+	private String getOrAskPassword() {
 		if (options.getPassword() == null) {
 			if (listener == null) {
 				throw new RuntimeException("Cannot get password from user interface. No listener.");
@@ -255,18 +266,18 @@ public class InitOperation extends AbstractInitOperation {
 		}
 	}
 
-	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws Exception {
+	private SaltedSecretKey createMasterKeyFromPassword(String masterPassword) throws CipherException {
 		fireNotifyCreateMaster();
 
 		SaltedSecretKey masterKey = CipherUtil.createMasterKey(masterPassword);
 		return masterKey;
 	}
 
-	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws Exception {
+	private void uploadMasterFile(File masterFile, TransferManager transferManager) throws StorageException {
 		transferManager.upload(masterFile, new MasterRemoteFile());
 	}
 
-	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws Exception {
+	private void uploadRepoFile(File repoFile, TransferManager transferManager) throws StorageException {
 		transferManager.upload(repoFile, new SyncanyRemoteFile());
 	}
 }

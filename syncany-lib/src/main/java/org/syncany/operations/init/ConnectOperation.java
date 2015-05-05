@@ -19,6 +19,7 @@ package org.syncany.operations.init;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.Config;
+import org.syncany.config.ConfigException;
 import org.syncany.config.DaemonConfigHelper;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.MasterTO;
@@ -33,6 +35,7 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
@@ -83,119 +86,123 @@ public class ConnectOperation extends AbstractInitOperation {
 	}
 
 	@Override
-	public ConnectOperationResult execute() throws Exception {
+	public ConnectOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Connect'");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		// Decrypt and init configTO
-		ConfigTO configTO = null;
-
 		try {
-			configTO = createConfigTO();
-		}
-		catch (CipherException e) {
-			logger.log(Level.FINE, "Could not create config", e);
-			return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
-		}
+			// Decrypt and init configTO
+			ConfigTO configTO = null;
 
-		// Init plugin and transfer manager
-		String pluginId = options.getConfigTO().getTransferSettings().getType();
-		plugin = Plugins.get(pluginId, TransferPlugin.class);
+			try {
+				configTO = createConfigTO();
+			}
+			catch (CipherException e) {
+				logger.log(Level.FINE, "Could not create config", e);
+				return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+			}
 
-		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-		transferSettings.setUserInteractionListener(listener);
+			// Init plugin and transfer manager
+			String pluginId = options.getConfigTO().getTransferSettings().getType();
+			plugin = Plugins.get(pluginId, TransferPlugin.class);
 
-		transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
+			TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
+			transferSettings.setUserInteractionListener(listener);
 
-		// Test the repo
-		if (!performRepoTest(transferManager)) {
-			logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());
-			return result;
-		}
+			transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
 
-		logger.log(Level.INFO, "- Connecting to the repo was successful; now downloading repo file ...");
+			// Test the repo
+			if (!performRepoTest(transferManager)) {
+				logger.log(Level.INFO, "- Connecting to the repo failed, repo already exists or cannot be created: " + result.getResultCode());
+				return result;
+			}
 
-		// Create local .syncany directory
-		File tmpRepoFile = downloadFile(transferManager, new SyncanyRemoteFile());
+			logger.log(Level.INFO, "- Connecting to the repo was successful; now downloading repo file ...");
 
-		if (CipherUtil.isEncrypted(tmpRepoFile)) {
-			logger.log(Level.INFO, "- Repo is ENCRYPTED. Decryption necessary.");
+			// Create local .syncany directory
+			File tmpRepoFile = downloadFile(transferManager, new SyncanyRemoteFile());
 
-			if (configTO.getMasterKey() == null) {
-				logger.log(Level.INFO, "- No master key present; Asking for password ...");
+			if (CipherUtil.isEncrypted(tmpRepoFile)) {
+				logger.log(Level.INFO, "- Repo is ENCRYPTED. Decryption necessary.");
 
-				boolean retryPassword = true;
+				if (configTO.getMasterKey() == null) {
+					logger.log(Level.INFO, "- No master key present; Asking for password ...");
 
-				while (retryPassword) {
-					SaltedSecretKey possibleMasterKey = askPasswordAndCreateMasterKey();
-					logger.log(Level.INFO, "- Master key created. Now verifying by decrypting repo file...");
+					boolean retryPassword = true;
 
-					if (decryptAndVerifyRepoFile(tmpRepoFile, possibleMasterKey)) {
-						logger.log(Level.INFO, "- SUCCESS: Repo file decrypted successfully.");
+					while (retryPassword) {
+						SaltedSecretKey possibleMasterKey = askPasswordAndCreateMasterKey();
+						logger.log(Level.INFO, "- Master key created. Now verifying by decrypting repo file...");
 
-						configTO.setMasterKey(possibleMasterKey);
-						retryPassword = false;
-					}
-					else {
-						logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Asking for retry.");
-						retryPassword = askRetryPassword();
+						if (decryptAndVerifyRepoFile(tmpRepoFile, possibleMasterKey)) {
+							logger.log(Level.INFO, "- SUCCESS: Repo file decrypted successfully.");
 
-						if (!retryPassword) {
-							logger.log(Level.INFO, "- No retry possible/desired. Returning NOK_DECRYPT_ERROR.");
-							return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+							configTO.setMasterKey(possibleMasterKey);
+							retryPassword = false;
 						}
+						else {
+							logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Asking for retry.");
+							retryPassword = askRetryPassword();
+
+							if (!retryPassword) {
+								logger.log(Level.INFO, "- No retry possible/desired. Returning NOK_DECRYPT_ERROR.");
+								return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+							}
+						}
+					}
+				}
+				else {
+					logger.log(Level.INFO, "- Master key present; Now verifying by decrypting repo file...");
+
+					if (!decryptAndVerifyRepoFile(tmpRepoFile, configTO.getMasterKey())) {
+						logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Returning NOK_DECRYPT_ERROR.");
+						return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
 					}
 				}
 			}
 			else {
-				logger.log(Level.INFO, "- Master key present; Now verifying by decrypting repo file...");
+				String repoFileStr = FileUtils.readFileToString(tmpRepoFile);
+				verifyRepoFile(repoFileStr);
+			}
 
-				if (!decryptAndVerifyRepoFile(tmpRepoFile, configTO.getMasterKey())) {
-					logger.log(Level.INFO, "- FAILURE: Repo file decryption failed. Returning NOK_DECRYPT_ERROR.");
-					return new ConnectOperationResult(ConnectResultCode.NOK_DECRYPT_ERROR);
+			// Success, now do the work!
+			File appDir = createAppDirs(options.getLocalDir());
+
+			// Write file 'config.xml'
+			File configFile = new File(appDir, Config.FILE_CONFIG);
+			configTO.save(configFile);
+
+			// Write file 'syncany'
+			File repoFile = new File(appDir, Config.FILE_REPO);
+			FileUtils.copyFile(tmpRepoFile, repoFile);
+			tmpRepoFile.delete();
+
+			// Write file 'master'
+			if (configTO.getMasterKey() != null) {
+				File masterFile = new File(appDir, Config.FILE_MASTER);
+				new MasterTO(configTO.getMasterKey().getSalt()).save(masterFile);
+			}
+
+			// Shutdown plugin
+			transferManager.disconnect();
+
+			// Add to daemon (if requested)
+			if (options.isDaemon()) {
+				try {
+					boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(options.getLocalDir());
+					result.setAddedToDaemon(addedToDaemonConfig);
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
+					result.setAddedToDaemon(false);
 				}
 			}
+
+			result.setResultCode(ConnectResultCode.OK);
 		}
-		else {
-			String repoFileStr = FileUtils.readFileToString(tmpRepoFile);
-			verifyRepoFile(repoFileStr);
+		catch (StorageException | IOException | ConfigException e) {
+			throw new OperationException(e);
 		}
-
-		// Success, now do the work!
-		File appDir = createAppDirs(options.getLocalDir());
-
-		// Write file 'config.xml'
-		File configFile = new File(appDir, Config.FILE_CONFIG);
-		configTO.save(configFile);
-
-		// Write file 'syncany'
-		File repoFile = new File(appDir, Config.FILE_REPO);
-		FileUtils.copyFile(tmpRepoFile, repoFile);
-		tmpRepoFile.delete();
-
-		// Write file 'master'
-		if (configTO.getMasterKey() != null) {
-			File masterFile = new File(appDir, Config.FILE_MASTER);
-			new MasterTO(configTO.getMasterKey().getSalt()).save(masterFile);
-		}
-
-		// Shutdown plugin
-		transferManager.disconnect();
-
-		// Add to daemon (if requested)
-		if (options.isDaemon()) {
-			try {
-				boolean addedToDaemonConfig = DaemonConfigHelper.addFolder(options.getLocalDir());
-				result.setAddedToDaemon(addedToDaemonConfig);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Cannot add folder to daemon config.", e);
-				result.setAddedToDaemon(false);
-			}
-		}
-
-		result.setResultCode(ConnectResultCode.OK);
 		return result;
 	}
 
@@ -212,7 +219,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 	}
 
-	private SaltedSecretKey askPasswordAndCreateMasterKey() throws CipherException, StorageException {
+	private SaltedSecretKey askPasswordAndCreateMasterKey() throws StorageException {
 		File tmpMasterFile = downloadFile(transferManager, new MasterRemoteFile());
 		MasterTO masterTO = readMasterFile(tmpMasterFile);
 
@@ -221,7 +228,12 @@ public class ConnectOperation extends AbstractInitOperation {
 		String masterKeyPassword = getOrAskPassword();
 		byte[] masterKeySalt = masterTO.getSalt();
 
-		return createMasterKeyFromPassword(masterKeyPassword, masterKeySalt); // This takes looong!
+		try {
+			return createMasterKeyFromPassword(masterKeyPassword, masterKeySalt); // This takes looong!
+		}
+		catch (CipherException e) {
+			throw new StorageException(e);
+		}
 	}
 
 	private ConfigTO createConfigTO() throws StorageException, CipherException {

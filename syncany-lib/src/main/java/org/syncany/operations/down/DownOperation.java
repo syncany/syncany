@@ -43,6 +43,7 @@ import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.daemon.messages.DownChangesDetectedSyncExternalEvent;
 import org.syncany.operations.daemon.messages.DownDownloadFileSyncExternalEvent;
@@ -127,83 +128,98 @@ public class DownOperation extends AbstractTransferOperation {
 	 * </ul>
 	 */
 	@Override
-	public DownOperationResult execute() throws Exception {
+	public DownOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync down' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		fireStartEvent();
-
-		if (!checkPreconditions()) {
-			fireEndEvent();
-			return result;
-		}
-
-		fireChangesDetectedEvent();
-		startOperation();
-
-		// If we do down, we are no longer allowed to resume a transaction
-		transferManager.clearResumableTransactions();
-		transferManager.clearPendingTransactions();
-
-		DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
-		List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
-
-		SortedMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
-		SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
-		Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders, unknownRemoteDatabasesInCache);
-
-		Map<String, CleanupRemoteFile> remoteCleanupFiles = getRemoteCleanupFiles();
-		boolean cleanupOccurred = cleanupOccurred(remoteCleanupFiles);
-
-		List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion = null;
-
-		if (cleanupOccurred) {
-			logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
-
-			// Capture file histories
-			preDeleteFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
-
-			// Get rid of local database
-			localDatabase.deleteAll();
-
-			// Normally, we wouldn't want to commit in the middle of an operation, but unfortunately
-			// we have to, since not committing causes hanging in database operations, since UNCOMMITTED_READ
-			// does not do enough magic to proceed. The commit in itself is not a problem, since we need
-			// to redownload all remote data anyway.
-			localDatabase.commit();
-
-			// Set last cleanup values
-			long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
-
-			localDatabase.writeCleanupNumber(lastRemoteCleanupNumber);
-			localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
-
-			localBranch = new DatabaseBranch();
-		}
-
 		try {
-			DatabaseBranches allBranches = populateDatabaseBranches(localBranch, remoteDatabaseHeaders);
-			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allBranches);
+			if (!checkPreconditions()) {
+				fireEndEvent();
+				return result;
+			}
 
-			purgeConflictingLocalBranch(localBranch, winnersBranch);
-			applyWinnersBranch(localBranch, winnersBranch, databaseVersionLocations, cleanupOccurred,
-					preDeleteFileHistoriesWithLastVersion);
+			fireChangesDetectedEvent();
+			startOperation();
 
-			persistMuddyMultiChunks(winnersBranch, allBranches, databaseVersionLocations);
-			removeNonMuddyMultiChunks();
+			// If we do down, we are no longer allowed to resume a transaction
+			transferManager.clearResumableTransactions();
+			transferManager.clearPendingTransactions();
 
-			localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
-			localDatabase.commit();
+			DatabaseBranch localBranch = localDatabase.getLocalDatabaseBranch();
+			List<DatabaseRemoteFile> newRemoteDatabases = result.getLsRemoteResult().getUnknownRemoteDatabases();
+
+			SortedMap<File, DatabaseRemoteFile> unknownRemoteDatabasesInCache = downloadUnknownRemoteDatabases(newRemoteDatabases);
+			SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders = readUnknownDatabaseVersionHeaders(unknownRemoteDatabasesInCache);
+			Map<DatabaseVersionHeader, File> databaseVersionLocations = findDatabaseVersionLocations(remoteDatabaseHeaders,
+					unknownRemoteDatabasesInCache);
+
+			Map<String, CleanupRemoteFile> remoteCleanupFiles = getRemoteCleanupFiles();
+			boolean cleanupOccurred = cleanupOccurred(remoteCleanupFiles);
+
+			List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion = null;
+
+			if (cleanupOccurred) {
+				logger.log(Level.INFO, "Cleanup occurred. Capturing local file histories, then deleting entire database ...");
+
+				// Capture file histories
+				preDeleteFileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
+
+				// Get rid of local database
+				localDatabase.deleteAll();
+
+				// Normally, we wouldn't want to commit in the middle of an operation, but unfortunately
+				// we have to, since not committing causes hanging in database operations, since UNCOMMITTED_READ
+				// does not do enough magic to proceed. The commit in itself is not a problem, since we need
+				// to redownload all remote data anyway.
+				try {
+					localDatabase.commit();
+				}
+				catch (SQLException e) {
+					throw new StorageException("Commit failed", e);
+				}
+
+				// Set last cleanup values
+				long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
+
+				localDatabase.writeCleanupNumber(lastRemoteCleanupNumber);
+				localDatabase.writeCleanupTime(System.currentTimeMillis() / 1000);
+
+				localBranch = new DatabaseBranch();
+			}
+
+			try {
+				DatabaseBranches allBranches = populateDatabaseBranches(localBranch, remoteDatabaseHeaders);
+				Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allBranches);
+
+				purgeConflictingLocalBranch(localBranch, winnersBranch);
+				applyWinnersBranch(localBranch, winnersBranch, databaseVersionLocations, cleanupOccurred,
+						preDeleteFileHistoriesWithLastVersion);
+
+				persistMuddyMultiChunks(winnersBranch, allBranches, databaseVersionLocations);
+				removeNonMuddyMultiChunks();
+
+				localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
+				localDatabase.commit();
+			}
+			catch (StorageException | SQLException e) {
+				try {
+					localDatabase.rollback();
+				}
+				catch (SQLException ex) {
+					throw new StorageException(ex);
+				}
+				throw new StorageException(e);
+			}
+
+			finishOperation();
+			fireEndEvent();
+
 		}
-		catch (Exception e) {
-			localDatabase.rollback();
-			throw e;
+		catch (StorageException | IOException e) {
+			throw new OperationException(e);
 		}
-
-		finishOperation();
-		fireEndEvent();
-
 		logger.log(Level.INFO, "Sync down done.");
 		return result;
 	}
@@ -228,7 +244,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * checking result and returns <tt>true</tt> if the rest of the operation can
 	 * continue, <tt>false</tt> otherwise.
 	 */
-	private boolean checkPreconditions() throws Exception {
+	private boolean checkPreconditions() throws OperationException, StorageException {
 		// Check strategies
 		if (options.getConflictStrategy() != DownConflictStrategy.RENAME) {
 			logger.log(Level.INFO, "Conflict strategy " + options.getConflictStrategy() + " not yet implemented.");
@@ -260,15 +276,15 @@ public class DownOperation extends AbstractTransferOperation {
 			return false;
 		}
 
-
-
 		return true;
 	}
 
 	/**
 	 * Lists unknown/new remote databases using the {@link LsRemoteOperation}.
+	 * @throws StorageException 
+	 * @throws OperationException 
 	 */
-	private LsRemoteOperationResult listUnknownRemoteDatabases() throws Exception {
+	private LsRemoteOperationResult listUnknownRemoteDatabases() throws StorageException, OperationException {
 		return new LsRemoteOperation(config, transferManager).execute();
 	}
 
@@ -381,7 +397,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @throws Exception If any kind of error occurs (...)
 	 */
 	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
-			throws Exception {
+	{
 
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
 		Entry<String, DatabaseBranch> winnersBranch = databaseReconciliator.findWinnerBranch(allStitchedBranches);
@@ -398,8 +414,9 @@ public class DownOperation extends AbstractTransferOperation {
 	 * Marks locally conflicting database versions as <tt>DIRTY</tt> and removes remote databases that
 	 * correspond to those database versions. This method uses the {@link DatabaseReconciliator}
 	 * to determine whether there is a local purge branch.
+	 * @throws StorageException 
 	 */
-	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch) throws Exception {
+	private void purgeConflictingLocalBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch) throws StorageException {
 		DatabaseBranch localPurgeBranch = databaseReconciliator.findLosersPruneBranch(localBranch, winnersBranch.getValue());
 		logger.log(Level.INFO, "- Database versions to REMOVE locally: " + localPurgeBranch);
 
@@ -439,10 +456,11 @@ public class DownOperation extends AbstractTransferOperation {
 	 * and applies these actions locally.
 	 * @param cleanupOccurred
 	 * @param preDeleteFileHistoriesWithLastVersion
+	 * @throws OperationException 
 	 */
 	private void applyWinnersBranch(DatabaseBranch localBranch, Entry<String, DatabaseBranch> winnersBranch,
 			Map<DatabaseVersionHeader, File> databaseVersionLocations, boolean cleanupOccurred,
-			List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws Exception {
+			List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws StorageException, IOException, OperationException {
 
 		DatabaseBranch winnersApplyBranch = databaseReconciliator.findWinnersApplyBranch(localBranch, winnersBranch.getValue());
 
@@ -580,7 +598,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * <p>This method applies both regular database versions as well as purge database versions.
 	 */
 	private void persistDatabaseVersions(DatabaseBranch winnersApplyBranch, MemoryDatabase winnersDatabase)
-			throws SQLException {
+	{
 
 		// Add winners database to local database
 		// Note: This must happen AFTER the file system stuff, because we compare the winners database with the local database!
@@ -699,7 +717,7 @@ public class DownOperation extends AbstractTransferOperation {
 	 * This method queries the local database and compares the result to existing remoteCleanupFiles to determine
 	 * if cleanup has occurred since the last time it was locally handled. The cleanupNumber is a simple count.
 	 */
-	private boolean cleanupOccurred(Map<String, CleanupRemoteFile> remoteCleanupFiles) throws Exception {
+	private boolean cleanupOccurred(Map<String, CleanupRemoteFile> remoteCleanupFiles) {
 		Long lastRemoteCleanupNumber = getLastRemoteCleanupNumber(remoteCleanupFiles);
 		Long lastLocalCleanupNumber = localDatabase.getCleanupNumber();
 

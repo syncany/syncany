@@ -91,7 +91,7 @@ public abstract class FileSystemAction {
 		}
 	}
 
-	protected void createSymlink(FileVersion reconstructedFileVersion) throws Exception {
+	protected void createSymlink(FileVersion reconstructedFileVersion) throws IOException {
 		File reconstructedFileAtFinalLocation = getAbsolutePathFile(reconstructedFileVersion.getPath());
 
 		if (EnvironmentUtil.symlinksSupported()) {
@@ -106,7 +106,7 @@ public abstract class FileSystemAction {
 			// Make link
 			logger.log(Level.INFO,
 					"     - Creating symlink at " + reconstructedFileAtFinalLocation + " (target: " + reconstructedFileVersion.getLinkTarget()
-					+ ") ...");
+							+ ") ...");
 			FileUtil.createSymlink(reconstructedFileVersion.getLinkTarget(), reconstructedFileAtFinalLocation);
 		}
 		else {
@@ -123,14 +123,15 @@ public abstract class FileSystemAction {
 	protected void setLastModified(FileVersion reconstructedFileVersion, File reconstructedFilesAtFinalLocation) {
 		// Using Files.setLastModifiedTime() instead of File.setLastModified()  
 		// due to pre-1970 issue. See #374 for details.
-		
+
 		try {
 			FileTime newLastModifiedTime = FileTime.fromMillis(reconstructedFileVersion.getLastModified().getTime());
 			Files.setLastModifiedTime(reconstructedFilesAtFinalLocation.toPath(), newLastModifiedTime);
 		}
 		catch (IOException e) {
-			logger.log(Level.WARNING, "Warning: Could not set last modified date for file " + reconstructedFilesAtFinalLocation + "; Ignoring error.", e);
-		}		
+			logger.log(Level.WARNING,
+					"Warning: Could not set last modified date for file " + reconstructedFilesAtFinalLocation + "; Ignoring error.", e);
+		}
 	}
 
 	protected void moveToConflictFile(FileVersion targetFileVersion) throws IOException {
@@ -300,7 +301,7 @@ public abstract class FileSystemAction {
 	}
 
 	protected FileVersionComparison fileChanges(FileVersion expectedLocalFileVersion) {
-		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath()); 						
+		File actualLocalFile = getAbsolutePathFile(expectedLocalFileVersion.getPath());
 		FileVersionComparison fileVersionComparison = fileVersionHelper.compare(expectedLocalFileVersion, actualLocalFile, true);
 
 		return fileVersionComparison;
@@ -318,7 +319,7 @@ public abstract class FileSystemAction {
 
 	protected File getAbsolutePathFile(String relativePath) {
 		return new File(config.getLocalDir(), relativePath); // TODO [medium] This does not work for 'some\file' on windows!
-	}	
-	
-	public abstract FileSystemActionResult execute() throws Exception;
+	}
+
+	public abstract FileSystemActionResult execute() throws IOException;
 }
