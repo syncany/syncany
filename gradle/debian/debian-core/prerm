@@ -1,9 +1,11 @@
 #!/bin/sh
 
-rm /usr/bin/syncany
-rm /usr/bin/sy
-rm /usr/bin/syncanyd
-rm /usr/bin/syd
+set -e
+
+rm /usr/bin/syncany || true
+rm /usr/bin/sy || true
+rm /usr/bin/syncanyd || true
+rm /usr/bin/syd || true
 
 #DEBHELPER#
 exit 0
