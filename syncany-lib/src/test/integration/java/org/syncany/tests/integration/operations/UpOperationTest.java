@@ -18,6 +18,7 @@
 package org.syncany.tests.integration.operations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,12 +37,15 @@ import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperation;
+import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.local.LocalTransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
@@ -57,6 +62,119 @@ public class UpOperationTest {
 	@After
 	public void tearDown() throws Exception {
 		TestConfigUtil.deleteTestLocalConfigAndData(testConfig);
+	}
+
+	@Test
+	public void testPatternAcceptWordsFiles() throws Exception {
+
+		String alphabet = "abcdefghijklmnopqrstuvwxyz";
+		final int numfiles = 26;
+		StringBuilder builder = new StringBuilder();
+		List<File> originalFiles = new ArrayList<>();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(testConfig.getLocalDir());
+			builder.append("/");
+			builder.append(alphabet.charAt(i % alphabet.length()));
+			File file = new File(builder.toString());
+			originalFiles.add(file);
+			file.createNewFile();
+			builder.setLength(0);
+		}
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\w+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig, options);
+		op.execute();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// - Memory database
+		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
+
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL);
+
+		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
+
+		// - Sql Database
+		SqlDatabase localDatabase = new SqlDatabase(testConfig);
+		Map<FileHistoryId, PartialFileHistory> localFileHistories = localDatabase.getFileHistoriesWithFileVersions();
+
+		// Compare!
+		assertEquals(localDatabase.getLastDatabaseVersionHeader(), remoteDatabaseVersion.getHeader());
+
+		assertEquals(localFileHistories.size(), numfiles);
+		assertEquals(localDatabase.getFileHistoriesWithFileVersions().size(), remoteDatabaseVersion.getFileHistories().size());
+
+		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
+
+		List<FileVersion> remoteFileVersions = new ArrayList<FileVersion>();
+		List<FileVersion> localFileVersions = new ArrayList<FileVersion>();
+
+		for (PartialFileHistory partialFileHistory : remoteFileHistories) {
+			remoteFileVersions.add(partialFileHistory.getLastVersion());
+			assertNotNull(localFileHistories.get(partialFileHistory.getFileHistoryId()));
+		}
+
+		for (PartialFileHistory partialFileHistory : localFileHistories.values()) {
+			localFileVersions.add(partialFileHistory.getLastVersion());
+		}
+
+		assertTrue(CollectionUtil.containsExactly(localFileVersions, remoteFileVersions));
+
+		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
+		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
+	}
+
+	@Test
+	public void testPatternRejectWordsFiles() throws Exception {
+
+		String alphabet = "abcdefghijklmnopqrstuvwxyz";
+		final int numfiles = 26;
+		StringBuilder builder = new StringBuilder();
+		List<File> originalFiles = new ArrayList<>();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(testConfig.getLocalDir());
+			builder.append("/");
+			builder.append(alphabet.charAt(i % alphabet.length()));
+			File file = new File(builder.toString());
+			originalFiles.add(file);
+			file.createNewFile();
+			builder.setLength(0);
+		}
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\W+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig, options);
+		op.execute();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertFalse(remoteDatabaseFile.exists());
 	}
 
 	@Test
@@ -117,6 +235,158 @@ public class UpOperationTest {
 
 		compareFileVersionsAgainstOriginalFiles(originalFiles, localFileVersions);
 		compareFileVersionsAgainstOriginalFiles(originalFiles, remoteFileVersions);
+	}
+
+	@Test
+	public void testIgnoreDeletedFile() throws Exception {
+
+		File deletedFile = new File(testConfig.getLocalDir() + "/deleted");
+		deletedFile.createNewFile();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig);
+		op.execute();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\d+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		deletedFile.delete();
+
+		assertFalse(deletedFile.exists());
+
+		op = new UpOperation(testConfig, options);
+		op.execute();
+
+		localDatabaseDir = testConfig.getDatabaseDir();
+		remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000002");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertFalse(remoteDatabaseFile.exists());
+	}
+
+	@Test
+	public void testIgnoreDeletedFileWithNewCreatedFile() throws Exception {
+
+		File deletedFile = new File(testConfig.getLocalDir() + "/deleted");
+		deletedFile.createNewFile();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig);
+		op.execute();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\d+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		deletedFile.delete();
+		File newfile = new File(testConfig.getLocalDir() + "/0");
+		newfile.createNewFile();
+
+		assertFalse(deletedFile.exists());
+
+		op = new UpOperation(testConfig, options);
+		op.execute();
+
+		localDatabaseDir = testConfig.getDatabaseDir();
+		remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000002");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// - Memory database
+		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
+
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL);
+
+		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
+
+		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
+		assertEquals(2, remoteFileHistories.size());
+		assertEquals(FileStatus.NEW, new ArrayList<PartialFileHistory>(remoteFileHistories).get(0).getLastVersion().getStatus());
+		assertEquals(FileStatus.NEW, new ArrayList<PartialFileHistory>(remoteFileHistories).get(1).getLastVersion().getStatus());
+
+	}
+
+	@Test
+	public void testRemoveMatchedFile() throws Exception {
+
+		File deletedFile = new File(testConfig.getLocalDir() + "/deleted");
+		deletedFile.createNewFile();
+
+		// Get databases (for comparison)
+		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
+
+		// Run!
+		AbstractTransferOperation op = new UpOperation(testConfig);
+		op.execute();
+
+		File localDatabaseDir = testConfig.getDatabaseDir();
+		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// Create options. Set file pattern.
+		StatusOperationOptions statusOptions = new StatusOperationOptions();
+		statusOptions.setFilePattern(Pattern.compile("\\D+"));
+		UpOperationOptions options = new UpOperationOptions();
+		options.setStatusOptions(statusOptions);
+
+		deletedFile.delete();
+
+		assertFalse(deletedFile.exists());
+
+		op = new UpOperation(testConfig, options);
+		op.execute();
+
+		localDatabaseDir = testConfig.getDatabaseDir();
+		remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000002");
+
+		assertNotNull(localDatabaseDir.listFiles());
+		assertTrue(localDatabaseDir.listFiles().length > 0);
+		assertTrue(remoteDatabaseFile.exists());
+
+		// - Memory database
+		DatabaseXmlSerializer dDAO = new DatabaseXmlSerializer(testConfig.getTransformer());
+
+		MemoryDatabase remoteDatabase = new MemoryDatabase();
+		dDAO.load(remoteDatabase, remoteDatabaseFile, null, null, DatabaseReadType.FULL);
+
+		DatabaseVersion remoteDatabaseVersion = remoteDatabase.getLastDatabaseVersion();
+
+		Collection<PartialFileHistory> remoteFileHistories = remoteDatabaseVersion.getFileHistories();
+		assertEquals(1, remoteFileHistories.size());
+		assertEquals(FileStatus.DELETED, new ArrayList<PartialFileHistory>(remoteFileHistories).get(0).getLastVersion().getStatus());
+
 	}
 
 	private void compareFileVersionsAgainstOriginalFiles(List<File> originalFiles, List<FileVersion> localFileVersions) throws Exception {
