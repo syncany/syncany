@@ -203,7 +203,7 @@ public class DownOperation extends AbstractTransferOperation {
 				localDatabase.writeKnownRemoteDatabases(newRemoteDatabases);
 				localDatabase.commit();
 			}
-			catch (StorageException | SQLException e) {
+			catch (StorageException | SQLException | OperationException e) {
 				try {
 					localDatabase.rollback();
 				}

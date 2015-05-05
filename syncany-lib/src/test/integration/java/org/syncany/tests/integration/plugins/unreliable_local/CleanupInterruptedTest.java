@@ -27,6 +27,7 @@ import java.util.TreeMap;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult;
@@ -34,7 +35,6 @@ import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.operations.up.UpOperationResult.UpResultCode;
 import org.syncany.plugins.transfer.RetriableTransferManager;
-import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
@@ -81,7 +81,7 @@ public class CleanupInterruptedTest {
 		try {
 			clientA.cleanup(cleanupOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			cleanupFailed = true;
 		}
 
@@ -141,7 +141,7 @@ public class CleanupInterruptedTest {
 		try {
 			clientA.cleanup(cleanupOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			cleanupFailed = true;
 		}
 
@@ -286,7 +286,7 @@ public class CleanupInterruptedTest {
 		try {
 			clientA.cleanup(cleanupOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			cleanupFailed = true;
 		}
 
