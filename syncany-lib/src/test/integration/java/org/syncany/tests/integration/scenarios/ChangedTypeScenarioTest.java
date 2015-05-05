@@ -32,6 +32,32 @@ import org.syncany.tests.util.TestConfigUtil;
 
 public class ChangedTypeScenarioTest {
 	@Test
+	public void testSingleFileChangeTypeToFolder() throws Exception {
+		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
+		final TestClient clientA = new TestClient("A", testConnection);
+		final TestClient clientB = new TestClient("B", testConnection);
+
+		// 1. Client A creates a new file
+		clientA.createNewFile("test-file");
+		clientA.up();
+
+		// 2. Client A removes file and creates directory with the same name
+		clientA.deleteFile("test-file");
+		clientA.createNewFolder("test-file");
+		clientA.up();
+
+		// 3. Client B downloads repository state
+		clientB.down();
+
+		// Verify that client A and client B have identical repositories
+		assertFileListEquals(clientA.getLocalFilesExcludeLockedAndNoRead(), clientB.getLocalFilesExcludeLockedAndNoRead());
+		assertSqlDatabaseEquals(clientA.getDatabaseFile(), clientB.getDatabaseFile());
+
+		clientA.deleteTestData();
+		clientB.deleteTestData();
+	}
+
+	@Test
 	public void testChangeTypeToFolder() throws Exception {		
 		final TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		final TestClient clientA = new TestClient("A", testConnection);

@@ -212,21 +212,28 @@ public class Indexer {
 
 			// If file has VANISHED, mark as DELETED
 			if (!FileUtil.exists(lastLocalVersionOnDisk) || newFileWithSameName != null) {
-				PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileHistoryId());
-				FileVersion deletedVersion = lastLocalVersion.clone();
+				PartialFileHistory fileHistoryForDeletion = createFileHistoryForDeletion(fileHistory, lastLocalVersion);
+				newDatabaseVersion.addFileHistory(fileHistoryForDeletion);
 
-				deletedVersion.setStatus(FileStatus.DELETED);
-				deletedVersion.setVersion(fileHistory.getLastVersion().getVersion() + 1);
-				deletedVersion.setUpdated(new Date());
-
-				logger.log(Level.FINER, "  + Deleted: Adding DELETED version: {0}", deletedVersion);
+				logger.log(Level.FINER, "  + Deleted: Adding DELETED version: {0}", fileHistoryForDeletion.getLastVersion());
 				logger.log(Level.FINER, "                           based on: {0}", lastLocalVersion);
-
-				deletedFileHistory.addFileVersion(deletedVersion);
-				newDatabaseVersion.addFileHistory(deletedFileHistory);
 			}
 		}
 	}
+
+	private PartialFileHistory createFileHistoryForDeletion(PartialFileHistory fileHistory, FileVersion lastLocalVersion) {
+		PartialFileHistory deletedFileHistory = new PartialFileHistory(fileHistory.getFileHistoryId());
+		FileVersion deletedVersion = lastLocalVersion.clone();
+
+		deletedVersion.setStatus(FileStatus.DELETED);
+		deletedVersion.setVersion(fileHistory.getLastVersion().getVersion() + 1);
+		deletedVersion.setUpdated(new Date());
+
+		deletedFileHistory.addFileVersion(deletedVersion);
+
+		return deletedFileHistory;
+	}
+
 
 	private PartialFileHistory getFileHistoryByPathFromDatabaseVersion(DatabaseVersion databaseVersion, String path) {
 		// TODO [medium] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
@@ -348,11 +355,21 @@ public class Indexer {
 			PartialFileHistory lastFileHistory = guessLastFileHistory(fileProperties);
 			FileVersion lastFileVersion = (lastFileHistory != null) ? lastFileHistory.getLastVersion() : null;
 
-			// 2. Create new file history/version
+			// 2. If file type changed, "close" the old file history by adding a file version that deletes the old file/directory
+			PartialFileHistory deletedFileHistory = null;
+			if (lastFileVersion != null && (lastFileVersion.getType() != fileProperties.getType())) {
+				logger.log(Level.FINER, "   * Detected change in file type. Deleting old file and starting a new file history.");
+
+				deletedFileHistory = createFileHistoryForDeletion(lastFileHistory, lastFileVersion);
+				lastFileHistory = null;
+				lastFileVersion = null;
+			}
+
+			// 3. Create new file history/version
 			PartialFileHistory fileHistory = createNewFileHistory(lastFileHistory);
 			FileVersion fileVersion = createNewFileVersion(lastFileVersion, fileProperties);
 
-			// 3. Compare new and last version
+			// 4. Compare new and last version
 			FileProperties lastFileVersionProperties = fileVersionComparator.captureFileProperties(lastFileVersion);
 			FileVersionComparison lastToNewFileVersionComparison = fileVersionComparator.compare(fileProperties, lastFileVersionProperties, true);
 
@@ -361,6 +378,9 @@ public class Indexer {
 			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
+				if (deletedFileHistory != null) {
+					newDatabaseVersion.addFileHistory(deletedFileHistory);
+				}
 
 				logger.log(Level.INFO, "   * Added file version:    " + fileVersion);
 				logger.log(Level.INFO, "     based on file version: " + lastFileVersion);
@@ -504,17 +524,10 @@ public class Indexer {
 			else {
 				FileVersion lastFileVersion = lastFileHistory.getLastVersion();
 
-				if (lastFileVersion.getStatus() != FileStatus.DELETED && lastFileVersion.getType() == fileProperties.getType()) {
-					logger.log(Level.FINER,
-							"   * Found old file history " + lastFileHistory.getFileHistoryId() + " (by path: " + fileProperties.getRelativePath()
-									+ "), " + fileProperties.getType() + ", appending new version.");
-					return lastFileHistory;
-				}
-				else {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: " + fileProperties.getRelativePath() + ", "
-							+ fileProperties.getType() + ")");
-					return null;
-				}
+				logger.log(Level.FINER,
+						"   * Found old file history " + lastFileHistory.getFileHistoryId() + " (by path: " + fileProperties.getRelativePath()
+								+ "), " + fileProperties.getType() + ", appending new version.");
+				return lastFileHistory;
 			}
 		}
 
@@ -559,17 +572,10 @@ public class Indexer {
 				}
 			}
 			else {
-				if (fileProperties.getType() != lastFileHistory.getLastVersion().getType()) {
-					logger.log(Level.FINER, "   * No old file history found, starting new history (path: " + fileProperties.getRelativePath()
-							+ ", checksum: " + fileProperties.getChecksum() + ")");
-					return null;
-				}
-				else {
-					logger.log(Level.FINER,
-							"   * Found old file history " + lastFileHistory.getFileHistoryId() + " (by path: " + fileProperties.getRelativePath()
-									+ "), appending new version.");
-					return lastFileHistory;
-				}
+				logger.log(Level.FINER,
+						"   * Found old file history " + lastFileHistory.getFileHistoryId() + " (by path: " + fileProperties.getRelativePath()
+								+ "), appending new version.");
+				return lastFileHistory;
 			}
 		}
 
