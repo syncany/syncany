@@ -136,7 +136,7 @@ public class ApplicationLink {
 		return masterKeySalt;
 	}
 
-	public TransferSettings createTransferSettings(SaltedSecretKey masterKey) throws Exception {
+	public TransferSettings createTransferSettings(SaltedSecretKey masterKey) throws CipherException, StorageException, IOException {
 		if (!encrypted || encryptedSettingsBytes == null) {
 			throw new IllegalArgumentException("Link is not encrypted. Cannot call this method.");
 		}
@@ -145,7 +145,7 @@ public class ApplicationLink {
 		return createTransferSettings(plaintextPluginSettingsBytes);
 	}
 
-	public TransferSettings createTransferSettings() throws Exception {
+	public TransferSettings createTransferSettings() throws StorageException, IOException {
 		if (encrypted || plaintextSettingsBytes == null) {
 			throw new IllegalArgumentException("Link is encrypted. Cannot call this method.");
 		}
