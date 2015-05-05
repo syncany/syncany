@@ -17,6 +17,9 @@
  */
 package org.syncany.operations.daemon.handlers;
 
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,9 +37,6 @@ import org.syncany.operations.daemon.messages.api.Request;
 import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
 
 import com.google.common.base.Joiner;
-
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
 
 /**
  * InteralRestHandler handles the REST requests sent to the daemon.
@@ -57,7 +57,7 @@ public class InternalRestHandler implements HttpHandler {
 	}
 
 	@Override
-	public void handleRequest(final HttpServerExchange exchange) throws Exception {
+	public void handleRequest(final HttpServerExchange exchange) throws IOException {
 		handleRestRequest(exchange);
 	}
 
@@ -80,23 +80,23 @@ public class InternalRestHandler implements HttpHandler {
 
 		try {
 			Request request;
-			
+
 			switch (requestFormatType) {
-				case JSON:
-					request = JsonMessageFactory.toRequest(message);
-					break;
+			case JSON:
+				request = JsonMessageFactory.toRequest(message);
+				break;
 
-				case XML:
-					request = XmlMessageFactory.toRequest(message);
-					break;
+			case XML:
+				request = XmlMessageFactory.toRequest(message);
+				break;
 
-				default:
-					throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(RequestFormatType.values()));
+			default:
+				throw new Exception("Unknown request format. Valid formats are " + Joiner.on(", ").join(RequestFormatType.values()));
 			}
 
 			daemonWebServer.putRequestFormatType(request.getId(), requestFormatType);
 			daemonWebServer.putCacheRestRequest(request.getId(), exchange);
-			
+
 			eventBus.post(request);
 		}
 		catch (Exception e) {

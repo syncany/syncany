@@ -38,24 +38,24 @@ import org.syncany.util.StringUtil.StringJoinListener;
  */
 public class InternalWebInterfaceHandler implements HttpHandler {
 	private static final Logger logger = Logger.getLogger(InternalWebInterfaceHandler.class.getSimpleName());
-	
+
 	private List<WebInterfacePlugin> webInterfacePlugins;
 	private WebInterfacePlugin webInterfacePlugin;
 	private HttpHandler requestHandler;
-	
+
 	public InternalWebInterfaceHandler() {
 		webInterfacePlugins = Plugins.list(WebInterfacePlugin.class);
-		
+
 		if (webInterfacePlugins.size() == 1) {
 			initWebInterfacePlugin();
 		}
 	}
 
 	private void initWebInterfacePlugin() {
-		try {				
+		try {
 			webInterfacePlugin = webInterfacePlugins.iterator().next();
 			requestHandler = webInterfacePlugin.createRequestHandler();
-			
+
 			logger.log(Level.INFO, "Starting webInterfacePlugin: " + webInterfacePlugin.getId());
 			webInterfacePlugin.start();
 		}
@@ -65,7 +65,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 	}
 
 	@Override
-	public void handleRequest(HttpServerExchange exchange) throws Exception {
+	public void handleRequest(HttpServerExchange exchange) throws HTTPExchangeException {
 		if (requestHandler != null) {
 			handleRequestWithResourceHandler(exchange);
 		}
@@ -74,27 +74,32 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 		}
 	}
 
-	private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws Exception {
+	private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws HTTPExchangeException {
 		logger.log(Level.FINE, "Sending request to webInterfacePlugin handler: " + exchange.toString());
-		requestHandler.handleRequest(exchange);
+		try {
+			requestHandler.handleRequest(exchange);
+		}
+		catch (Exception e) {
+			throw new HTTPExchangeException(e);
+		}
 	}
 
 	private void handleRequestNoHandler(HttpServerExchange exchange) {
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
-		
+
 		if (webInterfacePlugins.size() == 0) {
 			String responseMessage = "No web interface installed.<br />Use <tt>sy plugin install simpleweb --snapshot</tt> "
 					+ "to install a web interface, then restart the daemon.";
-			
+
 			exchange.getResponseSender().send(responseMessage);
 		}
 		else {
 			String webInterfacePluginsList = StringUtil.join(webInterfacePlugins, ", ", new StringJoinListener<WebInterfacePlugin>() {
 				public String getString(WebInterfacePlugin webInterfacePlugin) {
 					return webInterfacePlugin.getId();
-				}				
+				}
 			});
-			
+
 			String responseMessage = "Only one web interface can be installed, but " + webInterfacePlugins.size() + " plugins found: "
 					+ webInterfacePluginsList + "<br />Use <tt>sy plugin remove &lt;pluginId&gt;</tt> to remove plugins, then restart the daemon.";
 
