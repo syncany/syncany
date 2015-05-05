@@ -41,6 +41,15 @@ public abstract class AbstractClientAction implements Executable {
 			}
 		});
 	}
+
+	protected File pickReadableAndWritableFile(int prndNum) throws Exception {
+		return pickFileOrFolder(prndNum, new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.isFile() && !FileUtil.isSymlink(file) && file.canRead() && file.canWrite();
+			}
+		});
+	}
 	
 	protected File pickFolder(int prndNum) throws Exception {
 		return pickFileOrFolder(prndNum, new FileFilter() {				
