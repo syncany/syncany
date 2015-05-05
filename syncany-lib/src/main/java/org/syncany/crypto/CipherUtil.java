@@ -48,7 +48,6 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Date;
@@ -210,7 +209,7 @@ public class CipherUtil {
 	 * @return Returns a derived key (including the given input salt)
 	 */
 	public static SaltedSecretKey createDerivedKey(SecretKey inputKey, byte[] inputSalt, CipherSpec outputCipherSpec)
-			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	{
 
 		return createDerivedKey(inputKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
 	}
@@ -232,7 +231,7 @@ public class CipherUtil {
 	 * @see <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>
 	 */
 	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
-			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	{
 
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
 		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
