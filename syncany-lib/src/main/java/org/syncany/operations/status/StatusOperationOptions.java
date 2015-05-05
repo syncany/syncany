@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.status;
 
+import java.util.regex.Pattern;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;
@@ -28,6 +30,9 @@ public class StatusOperationOptions implements OperationOptions {
 
 	@Element(required = false)
 	private boolean delete = true;
+	
+	@Element(required = false)
+	private Pattern filePattern = null;
 
 	public boolean isForceChecksum() {
 		return forceChecksum;
@@ -43,5 +48,13 @@ public class StatusOperationOptions implements OperationOptions {
 
 	public void setDelete(boolean delete) {
 		this.delete = delete;
+	}
+
+	public Pattern getFilePattern() {
+		return filePattern;
+	}
+
+	public void setFilePattern(Pattern filePattern) {
+		this.filePattern = filePattern;
 	}
 }

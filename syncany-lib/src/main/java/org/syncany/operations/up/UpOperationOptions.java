@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.up;
 
+import java.util.regex.Pattern;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.syncany.operations.OperationOptions;

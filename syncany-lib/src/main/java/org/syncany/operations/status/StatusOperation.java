@@ -29,6 +29,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
@@ -51,107 +52,116 @@ import org.syncany.util.FileUtil;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class StatusOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());	
-	
-	private FileVersionComparator fileVersionComparator; 
+	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());
+
+	private FileVersionComparator fileVersionComparator;
 	private SqlDatabase localDatabase;
 	private StatusOperationOptions options;
-	
+
 	private LocalEventBus eventBus;
-	
+
 	public StatusOperation(Config config) {
 		this(config, new StatusOperationOptions());
-	}	
-	
+	}
+
 	public StatusOperation(Config config, StatusOperationOptions options) {
-		super(config);		
-		
+		super(config);
+
 		this.fileVersionComparator = new FileVersionComparator(config.getLocalDir(), config.getChunker().getChecksumAlgorithm());
 		this.localDatabase = new SqlDatabase(config);
-		this.options = options;		
-		
+		this.options = options;
+
 		this.eventBus = LocalEventBus.getInstance();
-	}	
-	
+	}
+
 	@Override
 	public StatusOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Status' at client "+config.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Status' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-		
+
 		if (options != null && options.isForceChecksum()) {
 			logger.log(Level.INFO, "Force checksum ENABLED.");
 		}
-		
+
 		if (options != null && !options.isDelete()) {
 			logger.log(Level.INFO, "Delete missing files DISABLED.");
 		}
-		
+
 		// Get local database
-		logger.log(Level.INFO, "Querying current file tree from database ...");				
-		eventBus.post(new StatusStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));		
-		
+		logger.log(Level.INFO, "Querying current file tree from database ...");
+		eventBus.post(new StatusStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+
 		// Path to actual file version
 		final Map<String, FileVersion> filesInDatabase = localDatabase.getCurrentFileTree();
 
 		// Find local changes
-		logger.log(Level.INFO, "Analyzing local folder "+config.getLocalDir()+" ...");								
+		logger.log(Level.INFO, "Analyzing local folder " + config.getLocalDir() + " ...");
 		ChangeSet localChanges = findLocalChanges(filesInDatabase);
-		
+
 		if (!localChanges.hasChanges()) {
 			logger.log(Level.INFO, "- No changes to local database");
 		}
-		
+
 		// Return result
 		StatusOperationResult statusResult = new StatusOperationResult();
 		statusResult.setChangeSet(localChanges);
-		
-		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), localChanges.hasChanges()));		
-		
+
+		eventBus.post(new StatusEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), localChanges.hasChanges()));
+
 		return statusResult;
 	}
 
 	private ChangeSet findLocalChanges(final Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
 		ChangeSet localChanges = findLocalChangedAndNewFiles(config.getLocalDir(), filesInDatabase);
-		
+
 		if (options == null || options.isDelete()) {
 			findAndAppendDeletedFiles(localChanges, filesInDatabase);
 		}
-		
+
 		return localChanges;
-	}		
-	
-	private ChangeSet findLocalChangedAndNewFiles(final File root, Map<String, FileVersion> filesInDatabase) throws FileNotFoundException, IOException {
+	}
+
+	private ChangeSet findLocalChangedAndNewFiles(final File root, Map<String, FileVersion> filesInDatabase) throws FileNotFoundException,
+			IOException {
 		Path rootPath = Paths.get(root.getAbsolutePath());
-		
-		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, filesInDatabase);		
+
+		StatusFileVisitor fileVisitor = new StatusFileVisitor(rootPath, filesInDatabase);
+		fileVisitor.setFilePattern(options.getFilePattern());
 		Files.walkFileTree(rootPath, fileVisitor);
-		
-		return fileVisitor.getChangeSet();		
+
+		return fileVisitor.getChangeSet();
 	}
-	
-	private void findAndAppendDeletedFiles(ChangeSet localChanges, Map<String,FileVersion> filesInDatabase) {
+
+	private void findAndAppendDeletedFiles(ChangeSet localChanges, Map<String, FileVersion> filesInDatabase) {
 		for (FileVersion lastLocalVersion : filesInDatabase.values()) {
-			// Check if file exists, remove if it doesn't
-			File lastLocalVersionOnDisk = new File(config.getLocalDir()+File.separator+lastLocalVersion.getPath());
-			
-			// Ignore this file history if the last version is marked "DELETED"
-			if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
-				continue;
+			if (options.getFilePattern() == null || options.getFilePattern().matcher(lastLocalVersion.getPath()).matches()) {
+				// Check if file exists, remove if it doesn't
+				File lastLocalVersionOnDisk = new File(config.getLocalDir() + File.separator + lastLocalVersion.getPath());
+
+				// Ignore this file history if the last version is marked "DELETED"
+				if (lastLocalVersion.getStatus() == FileStatus.DELETED) {
+					continue;
+				}
+
+				// If file has VANISHED, mark as DELETED 
+				if (!FileUtil.exists(lastLocalVersionOnDisk)) {
+					localChanges.getDeletedFiles().add(lastLocalVersion.getPath());
+				}
 			}
-			
-			// If file has VANISHED, mark as DELETED 
-			if (!FileUtil.exists(lastLocalVersionOnDisk)) {
-				localChanges.getDeletedFiles().add(lastLocalVersion.getPath());
-			}
-		}		
+		}
 	}
-	
+
 	private class StatusFileVisitor implements FileVisitor<Path> {
 		private Path root;
-		private ChangeSet changeSet;		
+		private ChangeSet changeSet;
 		private Map<String, FileVersion> currentFileTree;
-		
+
+		/**
+		 * File pattern used to match files. If <code>null</code>, match defaults to <code>true</code>.
+		 */
+		private Pattern filePattern;
+
 		public StatusFileVisitor(Path root, Map<String, FileVersion> currentFileTree) {
 			this.root = root;
 			this.changeSet = new ChangeSet();
@@ -161,65 +171,74 @@ public class StatusOperation extends Operation {
 		public ChangeSet getChangeSet() {
 			return changeSet;
 		}
-		 
+
+		public Pattern getFilePattern() {
+			return filePattern;
+		}
+
+		public void setFilePattern(Pattern pattern) {
+			this.filePattern = pattern;
+		}
+
 		@Override
 		public FileVisitResult visitFile(Path actualLocalFile, BasicFileAttributes attrs) throws IOException {
 			String relativeFilePath = FileUtil.getRelativeDatabasePath(root.toFile(), actualLocalFile.toFile()); //root.relativize(actualLocalFile).toString();
-			
+
 			// Skip Syncany root folder
 			if (actualLocalFile.toFile().equals(config.getLocalDir())) {
 				return FileVisitResult.CONTINUE;
 			}
-			
+
 			// Skip .syncany (or app related acc. to config) 		
 			boolean isAppRelatedDir =
-				   actualLocalFile.toFile().equals(config.getAppDir())
-				|| actualLocalFile.toFile().equals(config.getCache())
-				|| actualLocalFile.toFile().equals(config.getDatabaseDir())
-				|| actualLocalFile.toFile().equals(config.getLogDir());
-			
+					actualLocalFile.toFile().equals(config.getAppDir())
+							|| actualLocalFile.toFile().equals(config.getCache())
+							|| actualLocalFile.toFile().equals(config.getDatabaseDir())
+							|| actualLocalFile.toFile().equals(config.getLogDir());
+
 			if (isAppRelatedDir) {
 				logger.log(Level.FINEST, "- Ignoring file (syncany app-related): {0}", relativeFilePath);
 				return FileVisitResult.SKIP_SUBTREE;
 			}
-				
+
 			// Check if file is locked
 			boolean fileLocked = FileUtil.isFileLocked(actualLocalFile.toFile());
-			
+
 			if (fileLocked) {
-				logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);						
+				logger.log(Level.FINEST, "- Ignoring file (locked): {0}", relativeFilePath);
 				return FileVisitResult.CONTINUE;
-			}				
-			
+			}
+
 			// Check database by file path
 			FileVersion expectedLastFileVersion = currentFileTree.get(relativeFilePath);
-			
-			if (expectedLastFileVersion != null) {				
+
+			if (expectedLastFileVersion != null) {
 				// Compare
 				boolean forceChecksum = options != null && options.isForceChecksum();
-				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(), forceChecksum); 
-				
+				FileVersionComparison fileVersionComparison = fileVersionComparator.compare(expectedLastFileVersion, actualLocalFile.toFile(),
+						forceChecksum);
+
 				if (fileVersionComparison.areEqual()) {
 					changeSet.getUnchangedFiles().add(relativeFilePath);
 				}
 				else {
 					changeSet.getChangedFiles().add(relativeFilePath);
-				}					
+				}
 			}
 			else {
-				if (!config.getIgnoredFiles().isFileIgnored(relativeFilePath)) {
+				if (!config.getIgnoredFiles().isFileIgnored(relativeFilePath) && filePatternAbsentOrMatches(relativeFilePath)) {
 					changeSet.getNewFiles().add(relativeFilePath);
-					logger.log(Level.FINEST, "- New file: "+relativeFilePath);
+					logger.log(Level.FINEST, "- New file: " + relativeFilePath);
 				}
 				else {
 					logger.log(Level.FINEST, "- Ignoring file; " + relativeFilePath);
 					return FileVisitResult.SKIP_SUBTREE;
 				}
-			}			
-			
+			}
+
 			// Check if file is symlink directory
 			boolean isSymlinkDir = attrs.isDirectory() && attrs.isSymbolicLink();
-			
+
 			if (isSymlinkDir) {
 				logger.log(Level.FINEST, "   + File is sym. directory. Skipping subtree.");
 				return FileVisitResult.SKIP_SUBTREE;
@@ -228,8 +247,13 @@ public class StatusOperation extends Operation {
 				return FileVisitResult.CONTINUE;
 			}
 		}
-		
-		@Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException { 
+
+		private boolean filePatternAbsentOrMatches(String relativeFilePath) {
+			return this.filePattern == null || filePattern.matcher(relativeFilePath).matches();
+		}
+
+		@Override
+		public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 			return visitFile(dir, attrs);
 		}
 

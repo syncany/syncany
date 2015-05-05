@@ -18,6 +18,9 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
+
+import java.util.regex.Pattern;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -32,7 +35,7 @@ import com.google.common.eventbus.Subscribe;
 
 public class StatusCommand extends Command {
 	@Override
-	public CommandScope getRequiredCommandScope() {	
+	public CommandScope getRequiredCommandScope() {
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 
@@ -40,14 +43,14 @@ public class StatusCommand extends Command {
 	public boolean canExecuteInDaemonScope() {
 		return true;
 	}
-	
+
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = parseOptions(operationArgs);
 		StatusOperationResult operationResult = new StatusOperation(config, operationOptions).execute();
-		
+
 		printResults(operationResult);
-		
+
 		return 0;
 	}
 
@@ -55,45 +58,49 @@ public class StatusCommand extends Command {
 	public StatusOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = new StatusOperationOptions();
 
-		OptionParser parser = new OptionParser();	
+		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
-		
+
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
 		OptionSpec<Void> optionNoDeleteUpload = parser.acceptsAll(asList("D", "no-delete"));
-		
-		OptionSet options = parser.parse(operationArgs);	
-		
+		OptionSpec<String> optionFilePattern = parser.accepts("filter").withOptionalArg().ofType(String.class);
+
+		OptionSet options = parser.parse(operationArgs);
+
 		// --force-checksum
 		operationOptions.setForceChecksum(options.has(optionForceChecksum));
-		
+
 		// -D, --no-delete
 		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
-		
+
+		// --filter
+		operationOptions.setFilePattern(Pattern.compile(options.valueOf(optionFilePattern)));
+
 		return operationOptions;
-	}	
+	}
 
 	@Override
 	public void printResults(OperationResult operationResult) {
 		StatusOperationResult concreteOperationResult = (StatusOperationResult) operationResult;
-		
+
 		if (concreteOperationResult.getChangeSet().hasChanges()) {
 			for (String newFile : concreteOperationResult.getChangeSet().getNewFiles()) {
-				out.println("? "+newFile);
+				out.println("? " + newFile);
 			}
 
 			for (String changedFile : concreteOperationResult.getChangeSet().getChangedFiles()) {
-				out.println("M "+changedFile);
+				out.println("M " + changedFile);
 			}
-			
+
 			for (String deletedFile : concreteOperationResult.getChangeSet().getDeletedFiles()) {
-				out.println("D "+deletedFile);
-			}						
+				out.println("D " + deletedFile);
+			}
 		}
 		else {
 			out.println("No local changes.");
 		}
 	}
-	
+
 	@Subscribe
 	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
 		out.printr("Checking for new or altered files ...");
