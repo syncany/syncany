@@ -25,7 +25,7 @@ package org.syncany.plugins.transfer.to;
 public class DeserializableException extends Exception {
 
 	private static final long serialVersionUID = -8419362053442130951L;
-	
+
 	/**
 	 * @param e Exception that caused this exception.
 	 */
@@ -33,5 +33,11 @@ public class DeserializableException extends Exception {
 		super(e);
 	}
 
-	
+	/**
+	 * @param string
+	 */
+	public DeserializableException(String string) {
+		super(string);
+	}
+
 }

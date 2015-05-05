@@ -32,10 +32,15 @@ public abstract class FolderRequestHandler extends RequestHandler {
 	public abstract Response handleRequest(FolderRequest request);
 
 	// TODO [low] Fix "throws Exception"
-	public static FolderRequestHandler createFolderRequestHandler(FolderRequest request, Config config) throws Exception {
+	public static FolderRequestHandler createFolderRequestHandler(FolderRequest request, Config config) throws ClassNotFoundException {
 		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
 		Class<?> clazz = Class.forName(fqClassName);
 
-		return (FolderRequestHandler) clazz.getConstructor(Config.class).newInstance(config);
+		try {
+			return (FolderRequestHandler) clazz.getConstructor(Config.class).newInstance(config);
+		}
+		catch (ReflectiveOperationException e) {
+			throw new ClassNotFoundException("Could not find this class or instantiate it", e);
+		}
 	}
 }

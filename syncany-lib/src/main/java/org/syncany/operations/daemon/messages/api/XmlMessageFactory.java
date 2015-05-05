@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import java.io.InvalidClassException;
 import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -32,6 +33,8 @@ import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.database.FileContent;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.plugins.transfer.InvalidXMLNodeException;
+import org.syncany.plugins.transfer.to.DeserializableException;
 import org.syncany.plugins.transfer.to.SerializableException;
 
 /**
@@ -62,31 +65,37 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		}
 	}
 
-	public static Response toResponse(String responseMessageXml) throws Exception {
+	public static Response toResponse(String responseMessageXml) throws InvalidClassException, ClassNotFoundException, DeserializableException {
 		Message responseMessage = toMessage(responseMessageXml);
 
 		if (!(responseMessage instanceof Response)) {
-			throw new Exception("Invalid class: Message is not a response type: " + responseMessage.getClass());
+			throw new InvalidClassException("Invalid class: Message is not a response type: " + responseMessage.getClass());
 		}
 
 		return (Response) responseMessage;
 	}
 
-	public static Request toRequest(String requestMessageXml) throws Exception {
+	public static Request toRequest(String requestMessageXml) throws InvalidClassException, ClassNotFoundException, DeserializableException {
 		Message requestMessage = toMessage(requestMessageXml);
 
 		if (!(requestMessage instanceof Request)) {
-			throw new Exception("Invalid class: Message is not a request type: " + requestMessage.getClass());
+			throw new InvalidClassException("Invalid class: Message is not a request type: " + requestMessage.getClass());
 		}
 
 		return (Request) requestMessage;
 	}
 
-	public static Message toMessage(String messageStr) throws Exception {
+	public static Message toMessage(String messageStr) throws DeserializableException, ClassNotFoundException {
 		String messageType = getMessageType(messageStr);
 		Class<? extends Message> messageClass = getMessageClass(messageType);
 
-		Message message = serializer.read(messageClass, messageStr);
+		Message message;
+		try {
+			message = serializer.read(messageClass, messageStr);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
 		logger.log(Level.INFO, "Message created: " + message);
 
 		return message;
@@ -104,49 +113,64 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		return messageWriter.toString();
 	}
 
-	private static String getMessageType(String message) throws Exception {
+	private static String getMessageType(String message) throws DeserializableException {
 		Matcher messageTypeMatcher = MESSAGE_TYPE_PATTERN.matcher(message);
 
 		if (messageTypeMatcher.find()) {
 			return messageTypeMatcher.group(MESSAGE_TYPE_PATTERN_GROUP);
 		}
 		else {
-			throw new Exception("Cannot find type of message. Invalid XML: " + message);
+			throw new DeserializableException("Cannot find type of message. Invalid XML: " + message);
 		}
 	}
 
 	private static class FileHistoryIdConverter implements Converter<PartialFileHistory.FileHistoryId> {
 		@Override
-		public PartialFileHistory.FileHistoryId read(InputNode node) throws Exception {
-			return PartialFileHistory.FileHistoryId.parseFileId(node.getValue());
+		public PartialFileHistory.FileHistoryId read(InputNode node) throws InvalidXMLNodeException {
+			try {
+				return PartialFileHistory.FileHistoryId.parseFileId(node.getValue());
+			}
+			catch (Exception e) {
+				throw new InvalidXMLNodeException(e);
+			}
 		}
 
 		@Override
-		public void write(OutputNode node, PartialFileHistory.FileHistoryId value) throws Exception {
+		public void write(OutputNode node, PartialFileHistory.FileHistoryId value) {
 			node.setValue(value.toString());
 		}
 	}
 
 	private static class FileChecksumConverter implements Converter<FileContent.FileChecksum> {
 		@Override
-		public FileContent.FileChecksum read(InputNode node) throws Exception {
-			return FileContent.FileChecksum.parseFileChecksum(node.getValue());
+		public FileContent.FileChecksum read(InputNode node) throws InvalidXMLNodeException {
+			try {
+				return FileContent.FileChecksum.parseFileChecksum(node.getValue());
+			}
+			catch (Exception e) {
+				throw new InvalidXMLNodeException(e);
+			}
 		}
 
 		@Override
-		public void write(OutputNode node, FileContent.FileChecksum value) throws Exception {
+		public void write(OutputNode node, FileContent.FileChecksum value) {
 			node.setValue(value.toString());
 		}
 	}
 
 	private static class VectorClockConverter implements Converter<VectorClock> {
 		@Override
-		public VectorClock read(InputNode node) throws Exception {
-			return VectorClock.parseVectorClock(node.getValue());
+		public VectorClock read(InputNode node) throws InvalidXMLNodeException {
+			try {
+				return VectorClock.parseVectorClock(node.getValue());
+			}
+			catch (Exception e) {
+				throw new InvalidXMLNodeException(e);
+			}
 		}
 
 		@Override
-		public void write(OutputNode node, VectorClock value) throws Exception {
+		public void write(OutputNode node, VectorClock value) {
 			node.setValue(value.toString());
 		}
 	}
