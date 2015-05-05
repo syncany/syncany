@@ -551,7 +551,8 @@ public class Indexer {
 			if (lastFileHistory == null) {
 				if (fileProperties.getChecksum() != null) {
 					Collection<PartialFileHistory> fileHistoriesWithSameChecksum = localDatabase
-							.getFileHistoriesWithLastVersionByChecksum(fileProperties.getChecksum().toString());
+							.getFileHistoriesWithLastVersionByChecksumSizeAndModifiedDate(fileProperties.getChecksum().toString(),
+									fileProperties.getSize(), new Date(fileProperties.getLastModified()));
 
 					if (fileHistoriesWithSameChecksum != null && fileHistoriesWithSameChecksum.size() > 0) {
 						fileHistoriesWithSameChecksum.removeAll(newDatabaseVersion.getFileHistories());
