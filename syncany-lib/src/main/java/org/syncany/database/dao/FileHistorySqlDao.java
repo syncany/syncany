@@ -17,15 +17,9 @@
  */
 package org.syncany.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileVersion;
@@ -171,6 +165,31 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 			preparedStatement.setString(1, filecontentChecksum);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet).values();
+			}
+
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Collection<PartialFileHistory> getFileHistoriesByChecksumSizeAndModifiedDate(String filecontentChecksum, long size, Date modifiedDate) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByChecksumSizeAndModifiedDate.sql")) {
+			preparedStatement.setString(1, filecontentChecksum);
+			preparedStatement.setLong(2, size);
+			preparedStatement.setTimestamp(3, new Timestamp(modifiedDate.getTime()));
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				Collection<PartialFileHistory> fileHistories = new ArrayList<>();
+				while (resultSet.next()) {
+					String fileHistoryId = resultSet.getString("filehistory_id");
+					PartialFileHistory fileHistory = getLastVersionByFileHistoryId(fileHistoryId);
+					boolean resultIsLatestVersion = fileHistory.getLastVersion().getVersion() == resultSet.getLong("version");
+					boolean resultIsNotDelete = fileHistory.getLastVersion().getStatus() != FileVersion.FileStatus.DELETED;
+					if (resultIsLatestVersion && resultIsNotDelete) {
+						fileHistories.add(fileHistory);
+					}
+				}
+				return fileHistories;
 			}
 
 		}
