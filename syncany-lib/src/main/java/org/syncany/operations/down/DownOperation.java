@@ -394,7 +394,6 @@ public class DownOperation extends AbstractTransferOperation {
 	 * @param localBranch Local database branch (extracted from the local database)
 	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
 	 * @return Returns the branch of the winner
-	 * @throws Exception If any kind of error occurs (...)
 	 */
 	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
 	{
