@@ -20,6 +20,7 @@ package org.syncany.plugins.transfer.to;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -73,7 +74,7 @@ public class TransactionTO {
 		actionTOs.add(transactionAction);
 	}
 
-	public static TransactionTO load(Transformer transformer, File transactionFile) throws Exception {
+	public static TransactionTO load(Transformer transformer, File transactionFile) throws DeserializableException, IOException {
 		InputStream is;
 
 		if (transformer == null) {
@@ -83,10 +84,16 @@ public class TransactionTO {
 			is = transformer.createInputStream(new FileInputStream(transactionFile));
 		}
 
-		return new Persister().read(TransactionTO.class, is);
+		try {
+			return new Persister().read(TransactionTO.class, is);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
 	}
 
-	public void save(Transformer transformer, File transactionFile) throws Exception {
+	public void save(Transformer transformer, File transactionFile) throws SerializableException, IOException
+	{
 		PrintWriter out;
 
 		if (transformer == null) {
@@ -99,7 +106,12 @@ public class TransactionTO {
 		}
 
 		Serializer serializer = new Persister();
-		serializer.write(this, out);
+		try {
+			serializer.write(this, out);
+		}
+		catch (Exception e) {
+			throw new SerializableException(e);
+		}
 		out.flush();
 		out.close();
 	}
