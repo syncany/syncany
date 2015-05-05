@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,14 @@ import org.syncany.plugins.transfer.StorageException;
 
 /**
  * Action remote files represent a running transfer operation on the remote storage. Transfer
- * operations are operations that modify the repository and/or are relevant for the 
+ * operations are operations that modify the repository and/or are relevant for the
  * consistency of the local directory or the remote repository. Action files have no content,
  * they are just markers and exist only while an operation is running.
- * 
+ *
  * <p><b>Name pattern:</b> The name pattern of an action file is
- * <b>action-&lt;operationname&gt;-&lt;machinename&gt;-&lt;timestamp&gt;</b>. Initializing an 
+ * <b>action-&lt;operationname&gt;-&lt;machinename&gt;-&lt;timestamp&gt;</b>. Initializing an
  * instance with a non-matching name will throw an exception.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class ActionRemoteFile extends RemoteFile {
@@ -46,8 +46,16 @@ public class ActionRemoteFile extends RemoteFile {
 		super(name);
 	}
 
+	public ActionRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
+	}
+
 	public ActionRemoteFile(String operationName, String clientName, long timestamp) throws StorageException {
 		super(String.format(NAME_FORMAT, operationName, clientName, timestamp));
+	}
+
+	public ActionRemoteFile(String operationName, String clientName, long timestamp, String path) throws StorageException {
+		super(String.format(NAME_FORMAT, operationName, clientName, timestamp), path);
 	}
 
 	public String getOperationName() {
@@ -61,7 +69,7 @@ public class ActionRemoteFile extends RemoteFile {
 	public long getTimestamp() {
 		return timestamp;
 	}
-	
+
 	@Override
 	protected String validateName(String name) throws StorageException {
 		Matcher matcher = NAME_PATTERN.matcher(name);

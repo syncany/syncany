@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ import org.syncany.plugins.transfer.StorageException;
  * The repo file represents the repository-defining file. It is used to
  * describe the chunking and encryption parameters of an an initialized
  * repository.
- * 
+ *
  * <p><b>Name pattern:</b> The file must always be called <b>syncany</b>
  * Initializing an instance with a different name will throw an
  * exception.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SyncanyRemoteFile extends RemoteFile {
@@ -42,15 +42,19 @@ public class SyncanyRemoteFile extends RemoteFile {
 	}
 
 	/**
-	 * Initializes a new repo file, given a name. This constructor might 
+	 * Initializes a new repo file, given a name. This constructor might
 	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}. 
-	 *  
-	 * @param name Repo file name; <b>must</b> always be <b>syncany</b> 
+	 * method of the {@link RemoteFileFactory}.
+	 *
+	 * @param name Repo file name; <b>must</b> always be <b>syncany</b>
 	 * @throws StorageException If the name is not <b>syncany</b>
 	 */
 	public SyncanyRemoteFile(String name) throws StorageException {
 		super(name);
+	}
+
+	public SyncanyRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
 	}
 
 	@Override

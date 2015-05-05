@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The master file represents the file that stores the salt for the master
- * key. The file is only mandatory if the repository is encrypted. 
- * 
+ * key. The file is only mandatory if the repository is encrypted.
+ *
  * <p><b>Name pattern:</b> The file must always be called <b>master</b>
  * Initializing an instance with a different name will throw an
  * exception.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class MasterRemoteFile extends RemoteFile {
@@ -38,18 +38,22 @@ public class MasterRemoteFile extends RemoteFile {
 	 */
 	public MasterRemoteFile() throws StorageException {
 		super(NAME_FORMAT);
-	}	
-	
+	}
+
 	/**
-	 * Initializes a new master file, given a name. This constructor might 
+	 * Initializes a new master file, given a name. This constructor might
 	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}. 
-	 *  
-	 * @param name Master file name; <b>must</b> always be <b>master</b> 
+	 * method of the {@link RemoteFileFactory}.
+	 *
+	 * @param name Master file name; <b>must</b> always be <b>master</b>
 	 * @throws StorageException If the name is not <b>master</b>
 	 */
 	public MasterRemoteFile(String name) throws StorageException {
 		super(name);
+	}
+
+	public MasterRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
 	}
 
 	@Override
@@ -57,7 +61,7 @@ public class MasterRemoteFile extends RemoteFile {
 		if (!NAME_FORMAT.equals(name)) {
 			throw new StorageException(name + ": remote filename pattern does not match: " + NAME_FORMAT + " expected.");
 		}
-		
+
 		return name;
 	}
 }

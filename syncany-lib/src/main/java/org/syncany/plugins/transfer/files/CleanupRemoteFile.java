@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,10 @@ import org.syncany.plugins.transfer.StorageException;
 
 /**
  * The transaction file only exists as an indicator to other clients a cleanup has occurred.
- * 
+ *
  * <p><b>Name pattern:</b> The name pattern of a cleanup file is
  * <b>cleanup-&lt;cleanupnumber&gt;</b>.
- * 
+ *
  * @author Pim Otte
  */
 public class CleanupRemoteFile extends RemoteFile {
@@ -37,23 +37,31 @@ public class CleanupRemoteFile extends RemoteFile {
 	private long cleanupNumber;
 
 	/**
-	 * Initializes a new cleanup file, given a name. 
-	 * 
-	 * @param name cleanup file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * Initializes a new cleanup file, given a name.
+	 *
+	 * @param name cleanup file name; <b>must</b> always match the {@link #NAME_PATTERN}
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public CleanupRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
+	public CleanupRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
+	}
+
 	/**
-	 * Initializes a new transaction file, given which cleanup has occurred 
-	 * 
+	 * Initializes a new transaction file, given which cleanup has occurred
+	 *
 	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public CleanupRemoteFile(long cleanupNumber) throws StorageException {
 		super(String.format(NAME_FORMAT, Long.toString(cleanupNumber)));
+	}
+
+	public CleanupRemoteFile(long cleanupNumber, String path) throws StorageException {
+		super(String.format(NAME_FORMAT, Long.toString(cleanupNumber)), path);
 	}
 
 	@Override

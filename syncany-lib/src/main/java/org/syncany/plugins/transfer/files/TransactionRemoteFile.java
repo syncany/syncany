@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,11 @@ import org.syncany.plugins.transfer.RemoteTransaction;
 import org.syncany.plugins.transfer.StorageException;
 
 /**
- * The transaction file represents a manifest of a transaction on the remote storage. 
- * 
+ * The transaction file represents a manifest of a transaction on the remote storage.
+ *
  * <p><b>Name pattern:</b> The name pattern of a transaction file is
  * <b>transaction-&lt;filehexhashcode&gt;</b>.
- * 
+ *
  * @author Pim Otte
  */
 public class TransactionRemoteFile extends RemoteFile {
@@ -36,23 +36,31 @@ public class TransactionRemoteFile extends RemoteFile {
 	private static final String NAME_FORMAT = "transaction-%s";
 
 	/**
-	 * Initializes a new transaction file, given a name. 
-	 * 
-	 * @param name transaction file name; <b>must</b> always match the {@link #NAME_PATTERN} 
+	 * Initializes a new transaction file, given a name.
+	 *
+	 * @param name transaction file name; <b>must</b> always match the {@link #NAME_PATTERN}
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public TransactionRemoteFile(String name) throws StorageException {
 		super(name);
 	}
 
+	public TransactionRemoteFile(String name, String path) throws StorageException {
+		super(name, path);
+	}
+
 	/**
 	 * Initializes a new transaction file, given the transaction itself.
-	 * 
+	 *
 	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public TransactionRemoteFile(RemoteTransaction remoteTransaction) throws StorageException {
 		super(String.format(NAME_FORMAT, Integer.toHexString(remoteTransaction.hashCode())));
+	}
+
+	public TransactionRemoteFile(RemoteTransaction remoteTransaction, String path) throws StorageException {
+		super(String.format(NAME_FORMAT, Integer.toHexString(remoteTransaction.hashCode())), path);
 	}
 
 	@Override

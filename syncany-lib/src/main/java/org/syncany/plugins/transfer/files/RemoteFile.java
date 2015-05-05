@@ -17,12 +17,14 @@
  */
 package org.syncany.plugins.transfer.files;
 
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.util.StringUtil;
+import com.google.common.base.Objects;
 
 /**
  * A remote file represents a file object on a remote storage. Its purpose is to
@@ -40,11 +42,13 @@ import org.syncany.util.StringUtil;
  */
 public abstract class RemoteFile {
 	private static final Logger logger = Logger.getLogger(RemoteFile.class.getSimpleName());
+	private static final String EMPTY_PATH = "";
 
 	private static final String REMOTE_FILE_PACKAGE = RemoteFile.class.getPackage().getName();
 	private static final String REMOTE_FILE_SUFFIX = RemoteFile.class.getSimpleName();
 
 	private String name;
+	private String path;
 
 	/**
 	 * Creates a new remote file by its name. The name is used by {@link TransferManager}s
@@ -62,13 +66,31 @@ public abstract class RemoteFile {
 	 *         <b>Note:</b> <tt>RemoteFile</tt> does never throw this exceptions, however, subclasses might.
 	 */
 	public RemoteFile(String name) throws StorageException {
+		this(name, EMPTY_PATH);
+	}
+
+	public RemoteFile(String name, String path) throws StorageException {
+		if (path == null) {
+			logger.log(Level.WARNING, "Tried to iniitalized a remotefile with nulled path, use new RemoteFile(String name) instead");
+			path = EMPTY_PATH;
+		}
+
 		this.name = validateName(name);
+		this.path = path;
 	}
 
 	/**
-	 * Returns the name of the file (as it is identified by Syncany)
+	 * Returns the name of the file including its path (as it is identified by Syncany)
+	 * If the file does not have a path, this method is identical to getSimpleName()
 	 */
 	public String getName() {
+		return Paths.get(path, name).normalize().toString();
+	}
+
+	/**
+	 * Returns the name of the file
+	 */
+	public String getSimpleName() {
 		return name;
 	}
 
@@ -99,6 +121,26 @@ public abstract class RemoteFile {
 	public static <T extends RemoteFile> T createRemoteFile(String name, Class<T> remoteFileClass) throws StorageException {
 		try {
 			return remoteFileClass.getConstructor(String.class).newInstance(name);
+		}
+		catch (Exception e) {
+			throw new StorageException(e);
+		}
+	}
+
+	/**
+	 * Creates a remote file based on a path, a name and a class name.
+	 *
+	 * <p>The name must match the corresponding name pattern, and the class name
+	 * can either be <tt>RemoteFile</tt>, or a sub-class thereof.
+	 *
+	 * @param name The name of the remote file
+	 * @param path The path of the remote file
+	 * @param remoteFileClass Class name of the object to instantiate, <tt>RemoteFile</tt> or a sub-class thereof
+	 * @return Returns a new object of the given class
+	 */
+	public static <T extends RemoteFile> T createRemoteFileWithPath(String name, String path, Class<T> remoteFileClass) throws StorageException {
+		try {
+			return remoteFileClass.getConstructor(String.class, String.class).newInstance(name, path);
 		}
 		catch (Exception e) {
 			throw new StorageException(e);
@@ -164,6 +206,6 @@ public abstract class RemoteFile {
 
 	@Override
 	public String toString() {
-		return RemoteFile.class.getSimpleName() + "[name=" + name + "]";
+		return Objects.toStringHelper(this).add("name", name).add("path", path).toString();
 	}
 }
