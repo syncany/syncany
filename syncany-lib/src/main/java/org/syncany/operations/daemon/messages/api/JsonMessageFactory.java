@@ -66,7 +66,7 @@ public abstract class JsonMessageFactory extends MessageFactory {
 		return message;
 	}
 
-	public static String toJson(Message response) throws Exception {
+	public static String toJson(Message response) {
 		JsonElement je = SERIALIZER.toJsonTree(response);
 		JsonObject jo = new JsonObject();
 		jo.add(response.getClass().getSimpleName(), je);

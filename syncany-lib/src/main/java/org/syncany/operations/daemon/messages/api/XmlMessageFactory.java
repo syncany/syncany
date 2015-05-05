@@ -32,6 +32,7 @@ import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.database.FileContent;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
+import org.syncany.plugins.transfer.to.SerializableException;
 
 /**
  * Factory class to serialize and deserialize {@link Message}s from/to 
@@ -91,9 +92,14 @@ public abstract class XmlMessageFactory extends MessageFactory {
 		return message;
 	}
 
-	public static String toXml(Message response) throws Exception {
+	public static String toXml(Message response) throws SerializableException {
 		StringWriter messageWriter = new StringWriter();
-		serializer.write(response, messageWriter);
+		try {
+			serializer.write(response, messageWriter);
+		}
+		catch (Exception e) {
+			throw new SerializableException(e);
+		}
 
 		return messageWriter.toString();
 	}

@@ -71,6 +71,7 @@ import org.syncany.operations.daemon.messages.api.JsonMessageFactory;
 import org.syncany.operations.daemon.messages.api.Message;
 import org.syncany.operations.daemon.messages.api.Response;
 import org.syncany.operations.daemon.messages.api.XmlMessageFactory;
+import org.syncany.plugins.transfer.to.SerializableException;
 import org.syncany.plugins.web.WebInterfacePlugin;
 
 import com.google.common.cache.Cache;
@@ -318,7 +319,7 @@ public class WebServer {
 		}
 	}
 
-	private void sendBroadcast(Message message) throws Exception {
+	private void sendBroadcast(Message message) throws SerializableException {
 		logger.log(Level.INFO, "Sending broadcast message to " + webSocketChannelRequestFormatMap.size() + " websocket client(s)");
 
 		synchronized (webSocketChannelRequestFormatMap) {
@@ -328,14 +329,14 @@ public class WebServer {
 		}
 	}
 
-	private void sendTo(WebSocketChannel clientChannel, Message message) throws Exception {
+	private void sendTo(WebSocketChannel clientChannel, Message message) throws SerializableException {
 		String messageStr = createMessageStr(clientChannel, message);
 
 		logger.log(Level.INFO, "Sending message to " + clientChannel + ": " + messageStr);
 		WebSockets.sendText(messageStr, clientChannel, null);
 	}
 
-	private void sendTo(HttpServerExchange serverExchange, Response response) throws Exception {
+	private void sendTo(HttpServerExchange serverExchange, Response response) throws SerializableException {
 		String responseStr = createMessageStr(response);
 
 		logger.log(Level.INFO, "Sending message to " + serverExchange.getHostAndPort() + ": " + responseStr);
@@ -344,17 +345,17 @@ public class WebServer {
 		serverExchange.endExchange();
 	}
 
-	private String createMessageStr(WebSocketChannel channel, Message message) throws Exception {
+	private String createMessageStr(WebSocketChannel channel, Message message) throws SerializableException {
 		RequestFormatType requestFormatType = webSocketChannelRequestFormatMap.get(channel);
 		return createMessageStr(message, requestFormatType);
 	}
 
-	private String createMessageStr(Response response) throws Exception {
+	private String createMessageStr(Response response) throws SerializableException {
 		RequestFormatType requestFormatType = requestIdRestFormatCache.getIfPresent(response.getRequestId());
 		return createMessageStr(response, requestFormatType);
 	}
 
-	private String createMessageStr(Message message, RequestFormatType outputFormat) throws Exception {
+	private String createMessageStr(Message message, RequestFormatType outputFormat) throws SerializableException {
 		if (outputFormat == null) {
 			outputFormat = DEFAULT_RESPONSE_FORMAT;
 		}
