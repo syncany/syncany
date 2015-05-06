@@ -19,6 +19,7 @@ Change Log
   + Several stability bugfixes #433
   + Don't use web sockets for IPC between daemon and GUI if in same JVM #373
   + Fix daemon PID empty error #439
+  + Handle big repositories on dropbox backend better #353
 
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
