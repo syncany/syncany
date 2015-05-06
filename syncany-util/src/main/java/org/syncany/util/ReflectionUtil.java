@@ -115,6 +115,30 @@ public abstract class ReflectionUtil {
 		return null;
 	}
 
+	public static boolean isAnnotationPresentInHierarchy(Class<?> clazz, Class<? extends Annotation> annotation) {
+		while (clazz != null) {
+			if (clazz.isAnnotationPresent(annotation)) {
+				return true;
+			}
+			
+			clazz = clazz.getSuperclass();
+		}
+
+		return false;
+	}
+
+	public static <T extends Annotation> T getAnnotationInHierarchy(Class<?> clazz, Class<T> annotation) {
+		while (clazz != null) {
+			if (clazz.isAnnotationPresent(annotation)) {
+				return clazz.getAnnotation(annotation);
+			}
+			
+			clazz = clazz.getSuperclass();
+		}
+
+		return null;
+	}
+
 	/**
 	 * Returns whether or not the value is a valid value
 	 * for the enum given.

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,16 +31,18 @@ import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
+import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
- * The list remote operation queries the transfer manager for any unknown 
- * {@link DatabaseRemoteFile}s. 
- * 
+ * The list remote operation queries the transfer manager for any unknown
+ * {@link DatabaseRemoteFile}s.
+ *
  * <p>It first uses a {@link TransferManager} to list all remote databases and then
  * uses the local list of known databases to filter already processed files. The local
  * list of known databases is loaded.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LsRemoteOperation extends Operation {
@@ -70,9 +72,7 @@ public class LsRemoteOperation extends Operation {
 
 		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 
-		TransferManager transferManager = (loadedTransferManager != null)
-				? loadedTransferManager
-				: config.getTransferPlugin().createTransferManager(config.getConnection(), config);
+		TransferManager transferManager = createTransferManager(loadedTransferManager);
 
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
 		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);
@@ -83,6 +83,18 @@ public class LsRemoteOperation extends Operation {
 		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));
 
 		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
+	}
+
+	private TransferManager createTransferManager(TransferManager loadedTransferManager) throws StorageException {
+		if (loadedTransferManager != null) {
+			return loadedTransferManager;
+		}
+		else {
+			return TransferManagerFactory
+					.build(config)
+					.withFeature(PathAware.class)
+					.asDefault();
+		}
 	}
 
 	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases)

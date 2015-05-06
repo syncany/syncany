@@ -10,6 +10,7 @@ Change Log
   + Add update check to GUI in general settings panel, and daily update check #415
   + Add support for enums as transfer setting values #280
   + Add automatic OAuth token handling #426
+  + Add support for feature aware transfer managers #452
 - Bugfixes and other things:
   + Make sure that plugin update on Windows is able to install snapshots #418
   + Working single repos for dropbox plugin #417
@@ -18,6 +19,8 @@ Change Log
   + Several stability bugfixes #433
   + Don't use web sockets for IPC between daemon and GUI if in same JVM #373
   + Fix daemon PID empty error #439
+  + Handle big repositories on dropbox backend better #353
+  + Fix homebrew formula to use java >= 1.7 #449
 
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
