@@ -77,7 +77,7 @@ public class Cache {
     /**
      * Returns a file path of a database remote file.
      */
-	public File getDatabaseFile(String name) { // TODO [low] This shoule be a database file or another key
+	public File getDatabaseFile(String name) { // TODO [low] This should be a database file or another key
 		return getFileInCache(FILE_FORMAT_DATABASE_FILE_ENCRYPTED, name);		
 	}    
 
