@@ -1,9 +1,9 @@
 #!/bin/sh
 
-ln -s /usr/share/syncany/bin/syncany /usr/bin/syncany
-ln -s /usr/share/syncany/bin/sy /usr/bin/sy
-ln -s /usr/share/syncany/bin/syncanyd /usr/bin/syncanyd
-ln -s /usr/share/syncany/bin/syd /usr/bin/syd
+set -e
+
+ln -sf /usr/share/syncany/bin/syncany /usr/bin/syncany
+ln -sf /usr/share/syncany/bin/sy /usr/bin/sy
 
 #DEBHELPER#
 exit 0

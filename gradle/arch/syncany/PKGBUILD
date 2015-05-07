@@ -2,19 +2,18 @@
 pkgname=syncany
 pkgver=0.4.4_alpha
 _realver=0.4.4-alpha
-pkgrel=1
+pkgrel=2
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
 url="http://www.syncany.org/"
 license=('GPL3')
 depends=('java-runtime>=7' 'bash-completion')
 source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
-        syncany)
+        )
 sha256sums=('6cbcbffa30b6c307b9f2acac412c066b6cb99462912c32184a378b67fa129e4e'
-            'f1da57e49ac5c4a21e16fcba2514485e7590d3804f3072e832f5874c3f4928f6')
+            )    
 
 package() {
-    install -Dm755 "syncany" "${pkgdir}/usr/bin/syncany"
     install -Dm644 "$srcdir/$pkgname-${_realver}/bash/syncany.bash-completion" "${pkgdir}/etc/bash_completion.d/syncany"
 
 	cd "$srcdir/$pkgname-${_realver}/man/man"
@@ -25,14 +24,18 @@ package() {
     done
 
 
-
-	cd "$srcdir/$pkgname-${_realver}/lib"
+    install -Dm755 "$srcdir/$pkgname-${_realver}/bin/syncany" "${pkgdir}/usr/share/java/${pkgname}/bin/syncany"
+    cd "$srcdir/$pkgname-${_realver}/lib"
 
     for jar in *
     do
-        install -Dm644 "$jar" "${pkgdir}/usr/share/java/${pkgname}/$jar"
+        install -Dm644 "$jar" "${pkgdir}/usr/share/java/${pkgname}/lib/$jar"
     done
 
+    mkdir -p "${pkgdir}/usr/bin"
+    ln -s "/usr/share/java/${pkgname}/bin/syncany" "${pkgdir}/usr/bin/syncany"
+
+
     #Optional: symlink sy
-    #ln -s /usr/bin/syncany ${pkgdir}/usr/bin/sy
+    #ln -s  "/usr/share/java/${pkgname}/bin/syncany" "${pkgdir}/usr/bin/sy"
 }
