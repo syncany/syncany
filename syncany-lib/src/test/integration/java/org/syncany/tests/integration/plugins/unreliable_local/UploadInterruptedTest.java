@@ -32,13 +32,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.operations.up.UpOperationOptions;
-import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
+import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.to.TransactionTO;
-import org.syncany.plugins.unreliable_local.UnreliableLocalTransferPlugin;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
@@ -48,7 +47,7 @@ public class UploadInterruptedTest {
 
 	@BeforeClass
 	public static void setUp() {
-		RetriableTransferManager.RETRY_SLEEP_MILLIS = 50;
+		// RetriableTransferManager.RETRY_SLEEP_MILLIS = 50;
 	}
 
 	@Test
@@ -345,8 +344,7 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
+		TransferManager transferManager = TransferManagerFactory.build(clientA.getConfig()).withFeature(TransactionAware.class).asDefault();
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 
@@ -455,8 +453,7 @@ public class UploadInterruptedTest {
 		assertTrue(transactionTO.getActions().get(2).getRemoteFile().getName().contains("database-"));
 
 		// 2. Double check if list() does not return the multichunk
-		TransferManager transferManager = new TransactionAwareTransferManager(
-				new UnreliableLocalTransferPlugin().createTransferManager(testConnection, null), null);
+		TransferManager transferManager = TransferManagerFactory.build(clientA.getConfig()).withFeature(TransactionAware.class).asDefault();
 		Map<String, MultichunkRemoteFile> multiChunkList = transferManager.list(MultichunkRemoteFile.class);
 		assertEquals(0, multiChunkList.size());
 

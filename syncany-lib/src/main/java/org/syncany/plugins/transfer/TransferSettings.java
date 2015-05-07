@@ -45,8 +45,8 @@ import com.google.common.base.Objects;
 /**
  * A connection represents the configuration settings of a storage/connection
  * plugin. It is created through the concrete implementation of a {@link Plugin}.
- * <p/>
- * Options for a plugin specific {@link TransferSettings} can be defined using the
+ * 
+ * <p>Options for a plugin specific {@link TransferSettings} can be defined using the
  * {@link Element} annotation. Furthermore some Syncany-specific annotations are available.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>

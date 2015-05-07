@@ -7,7 +7,7 @@ class Syncany < Formula
   version "0.4.4-alpha"
   head "https://github.com/syncany/syncany.git", :branch => "develop"
 
-  depends_on :java => "1.7"
+  depends_on :java => "1.7+"
   depends_on "gradle" => "2.2"
 
   def install

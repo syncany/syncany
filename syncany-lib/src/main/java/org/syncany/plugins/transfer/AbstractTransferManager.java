@@ -23,16 +23,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.util.StringUtil;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
  * can be implemented sub-classes.
+ * 
+ * <p>This transfer manager is enhanced with the {@link TransactionAware}
+ * and {@link Retriable} annotations, thereby making it reliable.
  *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  * @author Christian Roth <christian.roth@port17.de>
  */
-public abstract class AbstractTransferManager implements TransferManager {
+@TransactionAware
+@Retriable(numberRetries = 3, sleepInterval = 3000)
+public abstract class AbstractTransferManager implements TransferManager { // TODO [medium] Rename this to AbstractReliableTransferManager
 	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 
 	protected TransferSettings settings;
@@ -90,7 +97,7 @@ public abstract class AbstractTransferManager implements TransferManager {
 
 			result.setTargetCanConnect(true);
 		}
-		catch (StorageException e) {			
+		catch (StorageException e) {
 			result.setTargetCanConnect(false);
 			result.setErrorMessage(StringUtil.getStackTrace(e));
 

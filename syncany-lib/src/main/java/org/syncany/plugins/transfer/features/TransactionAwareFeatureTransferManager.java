@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.plugins.transfer;
+package org.syncany.plugins.transfer.features;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +36,11 @@ import java.util.logging.Logger;
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
 import org.syncany.operations.up.BlockingTransfersException;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.StorageFileNotFoundException;
+import org.syncany.plugins.transfer.StorageMoveException;
+import org.syncany.plugins.transfer.StorageTestResult;
+import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
 import org.syncany.plugins.transfer.files.TransactionRemoteFile;
@@ -49,13 +54,13 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  *
  * @author Pim Otte
  */
-public class TransactionAwareTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(TransactionAwareTransferManager.class.getSimpleName());
+public class TransactionAwareFeatureTransferManager implements FeatureTransferManager {
+	private static final Logger logger = Logger.getLogger(TransactionAwareFeatureTransferManager.class.getSimpleName());
 
-	private TransferManager underlyingTransferManager;
-	private Config config;
+	private final TransferManager underlyingTransferManager;
+	private final Config config;
 
-	public TransactionAwareTransferManager(TransferManager underlyingTransferManager, Config config) {
+	public TransactionAwareFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, TransactionAware transactionAwareAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 	}
@@ -143,6 +148,11 @@ public class TransactionAwareTransferManager implements TransferManager {
 		return addAndFilterFilesInTransaction(remoteFileClass, underlyingTransferManager.list(remoteFileClass));
 	}
 
+	@Override
+	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFileClass) {
+		return underlyingTransferManager.getRemoteFilePath(remoteFileClass);
+	}
+
 	/**
 	 * Checks if any transactions of the local machine were not completed and performs
 	 * a rollback if any transactions were found. The rollback itself is performed in
@@ -194,8 +204,10 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 */
 	public List<TransactionRemoteFile> getTransactionsByClient(String client) throws StorageException {
 		Objects.requireNonNull(config, "Cannot get transactions if config is null.");
+		
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		List<TransactionRemoteFile> transactionsByClient = new ArrayList<TransactionRemoteFile>();
+		
 		for (TransactionTO potentiallyResumableTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyResumableTransaction.getMachineName().equals(config.getMachineName());
 
@@ -210,7 +222,6 @@ public class TransactionAwareTransferManager implements TransferManager {
 					}
 				}
 			}
-
 		}
 
 		return transactionsByClient;
@@ -223,12 +234,15 @@ public class TransactionAwareTransferManager implements TransferManager {
 	 */
 	public void clearResumableTransactions() {
 		Objects.requireNonNull(config, "Cannot delete resumable transactions if config is null.");
+		
 		File transactionFile = config.getTransactionFile();
+		
 		if (transactionFile.exists()) {
 			transactionFile.delete();
 		}
 
 		File transactionDatabaseFile = config.getTransactionDatabaseFile();
+		
 		if (transactionDatabaseFile.exists()) {
 			transactionFile.delete();
 		}
@@ -334,6 +348,7 @@ public class TransactionAwareTransferManager implements TransferManager {
 	private void rollbackActions(List<ActionTO> unfinishedActions) throws StorageException {
 		for (ActionTO action : unfinishedActions) {
 			logger.log(Level.INFO, "- Needs to be rolled back: " + action);
+			
 			switch (action.getType()) {
 			case UPLOAD:
 				delete(action.getRemoteFile());

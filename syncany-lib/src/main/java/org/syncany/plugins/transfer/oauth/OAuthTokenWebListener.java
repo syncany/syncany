@@ -215,9 +215,21 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 		return tokenResponse;
 	}
 
+	/**
+	 * Stop the listener server so the port becomes available again.
+	 */
+	public void stop() {
+		if (server != null) {
+			logger.log(Level.INFO, "Stopping server");
+			server.stop();
+			server = null;
+		}
+	}
+
 	@Override
 	public void finalize() throws Throwable {
 		super.finalize();
+		stop();
 	}
 
 	private void createServer() {
@@ -247,14 +259,6 @@ public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {
 
 	private String createPath(String prefix) {
 		return URI.create(String.format("/%s/%s", id, prefix)).normalize().toString();
-	}
-
-	private void stop() {
-		if (server != null) {
-			logger.log(Level.INFO, "Stopping server");
-			server.stop();
-			server = null;
-		}
 	}
 
 	/**
