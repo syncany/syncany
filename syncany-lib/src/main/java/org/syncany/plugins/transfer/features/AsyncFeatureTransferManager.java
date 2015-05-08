@@ -38,8 +38,6 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 
 public class AsyncFeatureTransferManager implements FeatureTransferManager {
 	private static final Logger logger = Logger.getLogger(AsyncFeatureTransferManager.class.getSimpleName());
-	private static final int MAX_WAIT_TIME = 30;
-	private static final int MAX_RETRIES = 5;
 
 	private final TransferManager underlyingTransferManager;
 	private final Config config;
@@ -48,7 +46,7 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 	public AsyncFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, Async asyncAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
-		this.throttler = new Throttler(MAX_RETRIES, MAX_WAIT_TIME);
+		this.throttler = new Throttler(asyncAnnotation.maxRetries(), asyncAnnotation.maxWaitTime());
 	}
 
 	@Override
@@ -127,12 +125,15 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 			try {
 				Path tempFilePath = Files.createTempFile("syncany-async-feature-tm", null);
 				underlyingTransferManager.download(remoteFile, tempFilePath.toFile());
+
+				logger.log(Level.FINER, "File found " + remoteFile);
+				throttler.reset();
 				Files.delete(tempFilePath);
 			}
 			catch (StorageFileNotFoundException e) {
 				try {
 					long waitForMs = throttler.next();
-					logger.log(Level.INFO, "File not found on the remote side, perhaps its in transit, waiting " + waitForMs + "ms ...", e);
+					logger.log(Level.FINER, "File not found on the remote side, perhaps its in transit, waiting " + waitForMs + "ms ...", e);
 					Thread.sleep(waitForMs);
 					continue;
 				}
@@ -160,7 +161,7 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 		}
 
 		public long next() throws InterruptedException {
-			long waitFor = (long) Math.pow(2, currentIteration++) * 100;
+			long waitFor = (long) Math.pow(3, currentIteration++) * 100;
 
 			if (waitFor > maxWait || currentIteration > maxRetries) {
 				throw new InterruptedException("Unable to retry again, because ending criteria reached");

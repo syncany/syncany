@@ -30,5 +30,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Async {
-	// nothing
+	int maxRetries() default 5;
+	int maxWaitTime() default 10000;
+
 }
