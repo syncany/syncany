@@ -1,7 +1,12 @@
 Change Log
 ==========
 
-### Syncany 0.4.5-alpha (Date: tba)
+### Syncany 0.4.6-alpha (Date: TBA)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + Use smaller transactions in Up #364
+
+### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
@@ -21,6 +26,7 @@ Change Log
   + Fix daemon PID empty error #439
   + Handle big repositories on dropbox backend better #353
   + Fix homebrew formula to use java >= 1.7 #449
+  + Fix GUI not working with OAuth plugins #441
 
 ### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
