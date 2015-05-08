@@ -89,7 +89,6 @@ public class Indexer {
 
 	private LocalEventBus eventBus;
 
-	private long lastReconnectTime;
 
 	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
@@ -125,9 +124,6 @@ public class Indexer {
 			throws IOException {
 		boolean firstFile = true;
 		int fullFileCount = files.size();
-
-		lastReconnectTime = System.currentTimeMillis();
-
 
 		// If there are no files to index, we still need to check for deletions.
 		if (files.isEmpty()) {
@@ -169,20 +165,6 @@ public class Indexer {
 
 		// Close database connection.
 		localDatabase.finalize();
-	}
-
-	private void reconnectDatabase() {
-		logger.log(Level.INFO, "Refreshing database connection indexer.");
-		try {
-			localDatabase.commit();
-			localDatabase.finalize();
-			localDatabase = new SqlDatabase(config);
-			localDatabase.getConnection().setReadOnly(true);
-		}
-		catch (SQLException e) {
-			logger.log(Level.WARNING, "Error reconnecting with database");
-
-		}
 	}
 
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<File> deletedFiles) {
@@ -333,13 +315,6 @@ public class Indexer {
 
 			// Reset
 			resetFileEnd();
-
-			// Reconnect to the database if the connection has been used for over a minute.
-			boolean needReconnect = (lastReconnectTime + CONNECTION_REFRESH_TIME) < System.currentTimeMillis();
-			if (needReconnect) {
-				reconnectDatabase();
-				lastReconnectTime = System.currentTimeMillis();
-			}
 		}
 
 		private void addFileVersion(FileProperties fileProperties) {
