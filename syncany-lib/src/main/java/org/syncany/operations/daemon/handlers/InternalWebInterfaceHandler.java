@@ -65,7 +65,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 	}
 
 	@Override
-	public void handleRequest(HttpServerExchange exchange) throws HTTPExchangeException {
+	public void handleRequest(HttpServerExchange exchange) throws HttpExchangeException {
 		if (requestHandler != null) {
 			handleRequestWithResourceHandler(exchange);
 		}
@@ -74,13 +74,13 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 		}
 	}
 
-	private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws HTTPExchangeException {
+	private void handleRequestWithResourceHandler(HttpServerExchange exchange) throws HttpExchangeException {
 		logger.log(Level.FINE, "Sending request to webInterfacePlugin handler: " + exchange.toString());
 		try {
 			requestHandler.handleRequest(exchange);
 		}
 		catch (Exception e) {
-			throw new HTTPExchangeException(e);
+			throw new HttpExchangeException(e);
 		}
 	}
 

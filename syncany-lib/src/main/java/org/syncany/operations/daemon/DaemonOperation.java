@@ -105,29 +105,12 @@ public class DaemonOperation extends Operation {
 		switch (options.getAction()) {
 		case LIST:
 			return executeList();
-
 		case ADD:
-			try {
-				return executeAdd();
-			}
-			catch (ConfigException | IOException e) {
-				throw new OperationException(e);
-			}
+			return executeAdd();
 		case REMOVE:
-			try {
-				return executeRemove();
-			}
-			catch (ConfigException e) {
-				throw new OperationException(e);
-			}
-
+			return executeRemove();
 		case RUN:
-			try {
-				return executeRun();
-			}
-			catch (ServiceAlreadyStartedException | IOException | ConfigException e) {
-				throw new OperationException(e);
-			}
+			return executeRun();
 
 		default:
 			throw new IllegalArgumentException("Unknown action: " + options.getAction());
@@ -141,20 +124,25 @@ public class DaemonOperation extends Operation {
 		return new DaemonOperationResult(DaemonResultCode.OK, daemonConfig.getFolders());
 	}
 
-	private DaemonOperationResult executeAdd() throws IOException, ConfigException {
+	private DaemonOperationResult executeAdd() throws OperationException {
 		// Check all folders
 		for (String watchRoot : options.getWatchRoots()) {
 			File watchRootFolder = new File(watchRoot);
 			File watchRootAppFolder = new File(watchRootFolder, Config.DIR_APPLICATION);
 
 			if (!watchRootFolder.isDirectory() || !watchRootAppFolder.isDirectory()) {
-				throw new IOException("Given argument is not an existing folder, or a valid Syncany folder: " + watchRoot);
+				throw new OperationException(new IOException("Given argument is not an existing folder, or a valid Syncany folder: " + watchRoot));
 			}
 		}
 
 		// Add them
 		for (String watchRoot : options.getWatchRoots()) {
-			DaemonConfigHelper.addFolder(new File(watchRoot));
+			try {
+				DaemonConfigHelper.addFolder(new File(watchRoot));
+			}
+			catch (ConfigException e) {
+				throw new OperationException(e);
+			}
 		}
 
 		// Determine return code
@@ -172,14 +160,19 @@ public class DaemonOperation extends Operation {
 		}
 	}
 
-	private DaemonOperationResult executeRemove() throws ConfigException {
+	private DaemonOperationResult executeRemove() throws OperationException {
 		// Sort 
 		Collections.sort(options.getWatchRoots(), Ordering.natural().reverse());
 
 		// Remove all folders
 		for (String watchRoot : options.getWatchRoots()) {
 			logger.log(Level.INFO, "- Removing folder from daemon config: " + watchRoot + " ...");
-			DaemonConfigHelper.removeFolder(watchRoot);
+			try {
+				DaemonConfigHelper.removeFolder(watchRoot);
+			}
+			catch (ConfigException e) {
+				throw new OperationException(e);
+			}
 		}
 
 		// Check if folders were removed
@@ -209,20 +202,30 @@ public class DaemonOperation extends Operation {
 		return watchedMatchingFoldersCount;
 	}
 
-	private DaemonOperationResult executeRun() throws ServiceAlreadyStartedException, IOException, ConfigException {
+	private DaemonOperationResult executeRun() throws OperationException {
 		if (PidFileUtil.isProcessRunning(pidFile)) {
-			throw new ServiceAlreadyStartedException("Syncany daemon already running.");
+			throw new OperationException(new ServiceAlreadyStartedException("Syncany daemon already running."));
 		}
 
-		PidFileUtil.createPidFile(pidFile);
+		try {
+			PidFileUtil.createPidFile(pidFile);
+		}
+		catch (IOException e) {
+			throw new OperationException(e);
+		}
 
 		initEventBus();
 		loadOrCreateConfig();
 
-		startWebServer();
-		startWatchServer();
+		try {
+			startWebServer();
+			startWatchServer();
 
-		enterControlLoop(); // This blocks until SHUTDOWN is received!
+			enterControlLoop(); // This blocks until SHUTDOWN is received!
+		}
+		catch (IOException | ConfigException | ServiceAlreadyStartedException e) {
+			throw new OperationException(e);
+		}
 
 		return new DaemonOperationResult(DaemonResultCode.OK);
 	}

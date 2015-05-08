@@ -17,14 +17,12 @@
  */
 package org.syncany.operations;
 
-
 /**
  * Wrapper for exceptions that can be thrown when executing operations.
  * 
  * @author Stefan Hugtenburg
  */
 public class OperationException extends Exception {
-
 	private static final long serialVersionUID = -4277673078529131874L;
 
 	/**
@@ -33,5 +31,4 @@ public class OperationException extends Exception {
 	public OperationException(Exception e) {
 		super(e);
 	}
-
 }

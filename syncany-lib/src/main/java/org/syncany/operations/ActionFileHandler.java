@@ -98,8 +98,7 @@ public class ActionFileHandler {
 	private void uploadActionFile(ActionRemoteFile actionFile) throws StorageException, IOException {
 		logger.log(Level.INFO, "Uploading action file: " + actionFile);
 
-		File tempActionFile = null;
-		tempActionFile = File.createTempFile("syncany-action-", ".tmp");
+		File tempActionFile = File.createTempFile("syncany-action-", ".tmp");
 		tempActionFile.deleteOnExit();
 
 		transferManager.upload(tempActionFile, actionFile);

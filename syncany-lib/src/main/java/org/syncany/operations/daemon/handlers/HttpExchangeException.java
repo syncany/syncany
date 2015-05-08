@@ -23,12 +23,12 @@ package org.syncany.operations.daemon.handlers;
  * @author Stefan Hugtenburg
  *
  */
-public class HTTPExchangeException extends Exception {
+public class HttpExchangeException extends Exception {
 
 	/**
 	 * @param e Exception that caused it.
 	 */
-	public HTTPExchangeException(Exception e) {
+	public HttpExchangeException(Exception e) {
 		super(e);
 	}
 
