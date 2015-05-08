@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
-import org.syncany.plugins.transfer.InvalidXMLNodeException;
+import org.syncany.plugins.transfer.InvalidXmlNodeException;
 import org.syncany.util.StringUtil;
 
 /**
@@ -32,7 +32,7 @@ import org.syncany.util.StringUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
-	public SaltedSecretKey read(InputNode node) throws InvalidXMLNodeException {
+	public SaltedSecretKey read(InputNode node) throws InvalidXmlNodeException {
 		byte[] saltBytes;
 		byte[] keyBytes;
 		try {
@@ -40,7 +40,7 @@ public class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
 			keyBytes = StringUtil.fromHex(node.getAttribute("key").getValue());
 		}
 		catch (Exception e) {
-			throw new InvalidXMLNodeException(e);
+			throw new InvalidXmlNodeException(e);
 		}
 
 		return new SaltedSecretKey(new SecretKeySpec(keyBytes, CipherParams.MASTER_KEY_DERIVATION_FUNCTION), saltBytes);

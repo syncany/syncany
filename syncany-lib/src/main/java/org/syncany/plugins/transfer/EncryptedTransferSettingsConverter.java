@@ -31,7 +31,7 @@ public class EncryptedTransferSettingsConverter implements Converter<String> {
 	}
 
 	@Override
-	public String read(InputNode node) throws InvalidXMLNodeException, CipherException {
+	public String read(InputNode node) throws InvalidXmlNodeException, CipherException {
 		InputNode encryptedAttribute = node.getAttribute("encrypted");
 
 		try {
@@ -44,7 +44,7 @@ public class EncryptedTransferSettingsConverter implements Converter<String> {
 			throw e;
 		}
 		catch (Exception e) {
-			throw new InvalidXMLNodeException(e);
+			throw new InvalidXmlNodeException(e);
 		}
 
 	}

@@ -23,14 +23,14 @@ package org.syncany.plugins.transfer;
  * @author Stefan Hugtenburg
  *
  */
-public class InvalidXMLNodeException extends Exception {
+public class InvalidXmlNodeException extends Exception {
 
 	private static final long serialVersionUID = -1558271087474264455L;
 
 	/**
 	 * @param e Exception that caused this exception.
 	 */
-	public InvalidXMLNodeException(Exception e) {
+	public InvalidXmlNodeException(Exception e) {
 		super(e);
 	}
 

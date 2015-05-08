@@ -24,6 +24,7 @@ package org.syncany.operations.daemon.handlers;
  *
  */
 public class HttpExchangeException extends Exception {
+	private static final long serialVersionUID = 435046193187597016L;
 
 	/**
 	 * @param e Exception that caused it.
@@ -31,7 +32,4 @@ public class HttpExchangeException extends Exception {
 	public HttpExchangeException(Exception e) {
 		super(e);
 	}
-
-	private static final long serialVersionUID = 435046193187597016L;
-
 }

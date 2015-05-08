@@ -33,7 +33,7 @@ import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.database.FileContent;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.plugins.transfer.InvalidXMLNodeException;
+import org.syncany.plugins.transfer.InvalidXmlNodeException;
 import org.syncany.plugins.transfer.to.DeserializableException;
 import org.syncany.plugins.transfer.to.SerializableException;
 
@@ -126,12 +126,12 @@ public abstract class XmlMessageFactory extends MessageFactory {
 
 	private static class FileHistoryIdConverter implements Converter<PartialFileHistory.FileHistoryId> {
 		@Override
-		public PartialFileHistory.FileHistoryId read(InputNode node) throws InvalidXMLNodeException {
+		public PartialFileHistory.FileHistoryId read(InputNode node) throws InvalidXmlNodeException {
 			try {
 				return PartialFileHistory.FileHistoryId.parseFileId(node.getValue());
 			}
 			catch (Exception e) {
-				throw new InvalidXMLNodeException(e);
+				throw new InvalidXmlNodeException(e);
 			}
 		}
 
@@ -143,12 +143,12 @@ public abstract class XmlMessageFactory extends MessageFactory {
 
 	private static class FileChecksumConverter implements Converter<FileContent.FileChecksum> {
 		@Override
-		public FileContent.FileChecksum read(InputNode node) throws InvalidXMLNodeException {
+		public FileContent.FileChecksum read(InputNode node) throws InvalidXmlNodeException {
 			try {
 				return FileContent.FileChecksum.parseFileChecksum(node.getValue());
 			}
 			catch (Exception e) {
-				throw new InvalidXMLNodeException(e);
+				throw new InvalidXmlNodeException(e);
 			}
 		}
 
@@ -160,12 +160,12 @@ public abstract class XmlMessageFactory extends MessageFactory {
 
 	private static class VectorClockConverter implements Converter<VectorClock> {
 		@Override
-		public VectorClock read(InputNode node) throws InvalidXMLNodeException {
+		public VectorClock read(InputNode node) throws InvalidXmlNodeException {
 			try {
 				return VectorClock.parseVectorClock(node.getValue());
 			}
 			catch (Exception e) {
-				throw new InvalidXMLNodeException(e);
+				throw new InvalidXmlNodeException(e);
 			}
 		}
 
