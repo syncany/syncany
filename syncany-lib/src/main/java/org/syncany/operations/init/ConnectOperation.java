@@ -203,6 +203,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		catch (StorageException | IOException | ConfigException e) {
 			throw new OperationException(e);
 		}
+
 		return result;
 	}
 

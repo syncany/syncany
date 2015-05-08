@@ -102,16 +102,11 @@ public class ApplyChangesOperation extends Operation {
 
 		try {
 			downloader.downloadAndDecryptMultiChunks(unknownMultiChunks);
-		}
-		catch (StorageException | IOException e) {
-			throw new OperationException(e);
-		}
-		result.getDownloadedMultiChunks().addAll(unknownMultiChunks);
+			result.getDownloadedMultiChunks().addAll(unknownMultiChunks);
 
-		try {
 			applyFileSystemActions(actions);
 		}
-		catch (IOException e) {
+		catch (StorageException | IOException e) {
 			throw new OperationException(e);
 		}
 

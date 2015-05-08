@@ -128,6 +128,7 @@ public class UpOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		fireStartEvent();
+
 		try {
 			if (!checkPreconditions()) {
 				fireEndEvent();
@@ -145,6 +146,7 @@ public class UpOperation extends AbstractTransferOperation {
 
 			if (options.isResume()) {
 				Collection<Long> versionsToResume = transferManager.loadPendingTransactionList();
+
 				if (versionsToResume != null && versionsToResume.size() != 0) {
 					logger.log(Level.INFO, "Found local transaction to resume.");
 					logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
@@ -155,6 +157,7 @@ public class UpOperation extends AbstractTransferOperation {
 					catch (DeserializableException e1) {
 						throw new StorageException(e1);
 					}
+
 					Collection<DatabaseVersion> remoteDatabaseVersionsToResume = attemptResumeDatabaseVersions(versionsToResume);
 
 					if (remoteDatabaseVersionsToResume != null && remoteTransactionsToResume != null &&
@@ -235,8 +238,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 *	Each {@link DatabaseVersion} will be transferred in its own {@link RemoteTransaction} object.
 	 *
 	 *	@param databaseVersions The {@link DatabaseVersion} objects to send to the remote.
-	 * @throws StorageException 
-	 * @throws IOException 
+	 *	@throws StorageException 
+	 *	@throws IOException 
 	 */
 	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue) throws IOException, StorageException {
 		return executeTransactions(databaseVersionQueue, null, null);
@@ -256,13 +259,11 @@ public class UpOperation extends AbstractTransferOperation {
 	 *	@param databaseVersionQueue The {@link DatabaseVersion} objects to send to the remote.
 	 *	@param remoteTransactionsToResume {@link RemoteTransaction} objects that correspond to the given {@link DatabaseVersion} objects.
 	 *	@param transactionRemoteFileToResume The file on the remote that was used for the specific transaction that was interrupted.
-	 * @throws IOException 
-	 * @throws StorageException 
-	 * @throws  
+	 * 	@throws IOException 
+	 * 	@throws StorageException 
 	 */
 	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue, Iterator<RemoteTransaction> remoteTransactionsToResume,
-			TransactionRemoteFile transactionRemoteFileToResume) throws IOException, StorageException
-	{
+			TransactionRemoteFile transactionRemoteFileToResume) throws IOException, StorageException {
 		int numberOfCompletedTransactions = 0;
 		boolean resuming = true;
 		if (remoteTransactionsToResume == null) {
@@ -819,9 +820,11 @@ public class UpOperation extends AbstractTransferOperation {
 			File transactionListFile = config.getTransactionListFile();
 			PrintWriter transactionListWriter = new PrintWriter(new OutputStreamWriter(
 					new FileOutputStream(transactionListFile), "UTF-8"));
+
 			for (Long databaseVersion : databaseVersionClocks) {
 				transactionListWriter.println(databaseVersion);
 			}
+
 			transactionListWriter.close();
 
 			// For each database version write the transaction and database files

@@ -21,9 +21,9 @@ package org.syncany.operations.plugin;
  * Exception that can be used when a plugin is not installed yet needs/wants to be used.
  * 
  * @author Stefan Hugtenburg
- *
  */
 public class PluginNotInstalledException extends PluginException {
+	private static final long serialVersionUID = -5474064178037413316L;
 
 	/**
 	 * @param string Message to pass on
@@ -31,7 +31,4 @@ public class PluginNotInstalledException extends PluginException {
 	public PluginNotInstalledException(String string) {
 		super(string);
 	}
-
-	private static final long serialVersionUID = -5474064178037413316L;
-
 }

@@ -17,14 +17,13 @@
  */
 package org.syncany.operations.plugin;
 
-
 /**
  * Base class for exceptions related to installed/uninstallable plugins.
  * 
  * @author Stefan Hugtenburg
- *
  */
 public class PluginException extends Exception {
+	private static final long serialVersionUID = -6416898105831663385L;
 
 	/**
 	 * @param string Message to pass on
@@ -39,10 +38,4 @@ public class PluginException extends Exception {
 	public PluginException(Exception e) {
 		super(e);
 	}
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6416898105831663385L;
-
 }

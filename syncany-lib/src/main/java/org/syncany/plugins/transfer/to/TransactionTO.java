@@ -92,8 +92,7 @@ public class TransactionTO {
 		}
 	}
 
-	public void save(Transformer transformer, File transactionFile) throws SerializableException, IOException
-	{
+	public void save(Transformer transformer, File transactionFile) throws SerializableException, IOException {
 		PrintWriter out;
 
 		if (transformer == null) {

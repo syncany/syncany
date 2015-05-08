@@ -17,15 +17,12 @@
  */
 package org.syncany.operations.plugin;
 
-
 /**
  * Class that holds information about plugins that can not be installed.
  * 
  * @author Stefan Hugtenburg
- *
  */
 public class UninstallablePluginException extends PluginException {
-
 	private static final long serialVersionUID = 6903801177273375172L;
 
 	/**
@@ -41,5 +38,4 @@ public class UninstallablePluginException extends PluginException {
 	public UninstallablePluginException(Exception e) {
 		super(e);
 	}
-
 }

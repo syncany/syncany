@@ -24,10 +24,10 @@ import org.syncany.operations.status.StatusOperationOptions;
 
 @Root(name = "up")
 public class UpOperationOptions implements OperationOptions {
-	// The transaction size limit determines how much data (in bytes) is combined into a single transaction during an
-	// up operation. Note that this is a lower bound; the Indexer and Deduper iterate through all changed files, and
-	// create and commit a new DatabaseVersion whenever MultiChunks with a total size of at least this limit have been
-	// processed, or when all files have been processed.
+	/* The transaction size limit determines how much data (in bytes) is combined into a single transaction during an
+	 up operation. Note that this is a lower bound; the Indexer and Deduper iterate through all changed files, and
+	 create and commit a new DatabaseVersion whenever MultiChunks with a total size of at least this limit have been
+	 processed, or when all files have been processed. */
 	public static final long DEFAULT_TRANSACTION_SIZE_LIMIT = 50 * 1024 * 1024;
 
 	@Element(name = "status", required = false)

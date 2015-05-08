@@ -73,14 +73,14 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 
 	protected void createFile(FileVersion reconstructedFileVersion) throws IOException {
-		File reconstructedFileInCache;
 		try {
-			reconstructedFileInCache = assembleFileToCache(reconstructedFileVersion);
+			File reconstructedFileInCache = assembleFileToCache(reconstructedFileVersion);
+			moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);
 		}
 		catch (NoSuchAlgorithmException | ChecksumMismatchException e) {
 			throw new IOException(e);
 		}
-		moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);
+
 	}
 
 	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws IOException, NoSuchAlgorithmException, ChecksumMismatchException {

@@ -21,7 +21,6 @@ package org.syncany.operations.down.actions;
  * Used when checksums of two files do not match.
  * 
  * @author Stefan Hugtenburg
- *
  */
 public class ChecksumMismatchException extends Exception {
 	private static final long serialVersionUID = -1267840379811129659L;
@@ -32,5 +31,4 @@ public class ChecksumMismatchException extends Exception {
 	public ChecksumMismatchException(String string) {
 		super(string);
 	}
-
 }

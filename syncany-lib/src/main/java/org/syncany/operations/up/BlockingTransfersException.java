@@ -19,13 +19,7 @@ package org.syncany.operations.up;
 
 /**
  * @author Jesse Donkervliet
- *
  */
 public class BlockingTransfersException extends Exception {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -7635231951027588892L;
-
 }

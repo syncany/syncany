@@ -123,45 +123,22 @@ public class PluginOperation extends Operation {
 
 		switch (options.getAction()) {
 		case LIST:
-			try {
-				return executeList();
-			}
-			catch (DeserializableException | IOException e) {
-				throw new OperationException(e);
-			}
-
+			return executeList();
 		case INSTALL:
-			try {
-				return executeInstall();
-			}
-			catch (ChecksumMismatchException | UninstallablePluginException | IOException | CryptoException e) {
-				throw new OperationException(e);
-			}
+			return executeInstall();
 
 		case REMOVE:
-			try {
-				return executeRemove();
-			}
-			catch (PluginNotInstalledException | IOException e) {
-				throw new OperationException(e);
-			}
+			return executeRemove();
 
 		case UPDATE:
-			try {
-				return executeUpdate();
-			}
-			catch (DeserializableException | PluginException | IOException | CryptoException
-					| ChecksumMismatchException e) {
-				throw new OperationException(e);
-			}
+			return executeUpdate();
 
 		default:
 			throw new IllegalArgumentException("Unknown action: " + options.getAction());
 		}
 	}
 
-	private PluginOperationResult executeUpdate() throws IOException, DeserializableException, PluginNotInstalledException,
-			UninstallablePluginException, CryptoException, ChecksumMismatchException {
+	private PluginOperationResult executeUpdate() throws OperationException {
 		List<String> updateablePlugins = findUpdateCandidates();
 		List<String> erroneousPlugins = Lists.newArrayList();
 		List<String> delayedPlugins = Lists.newArrayList();
@@ -207,7 +184,13 @@ public class PluginOperation extends Operation {
 				}
 			}
 			else {
-				PluginOperationResult installResult = executeInstallFromApiHost(pluginId);
+				PluginOperationResult installResult;
+				try {
+					installResult = executeInstallFromApiHost(pluginId);
+				}
+				catch (UninstallablePluginException | IOException | CryptoException | ChecksumMismatchException e) {
+					throw new OperationException(e);
+				}
 
 				if (installResult.getResultCode() == PluginResultCode.NOK) {
 					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
@@ -230,7 +213,7 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
-	private List<String> findUpdateCandidates() throws IOException, DeserializableException {
+	private List<String> findUpdateCandidates() throws OperationException {
 		List<ExtendedPluginInfo> updateCandidates = executeList().getPluginList();
 
 		Iterables.removeIf(updateCandidates, new Predicate<ExtendedPluginInfo>() {
@@ -248,22 +231,28 @@ public class PluginOperation extends Operation {
 		});
 	}
 
-	private PluginOperationResult executeRemove() throws PluginNotInstalledException, IOException {
+	private PluginOperationResult executeRemove() throws OperationException {
 		return executeRemove(options.getPluginId());
 	}
 
-	private PluginOperationResult executeRemove(String pluginId) throws PluginNotInstalledException, IOException {
+	private PluginOperationResult executeRemove(String pluginId) throws OperationException {
 		Plugin plugin = Plugins.get(pluginId);
 
 		if (plugin == null) {
-			throw new PluginNotInstalledException("Plugin not installed.");
+			throw new OperationException(new PluginNotInstalledException("Plugin not installed."));
 		}
 
 		File pluginJarFile = getJarFile(plugin);
 		boolean canUninstall = canUninstall(pluginJarFile);
 
 		if (canUninstall) {
-			PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
+			PluginInfo pluginInfo;
+			try {
+				pluginInfo = readPluginInfoFromJar(pluginJarFile);
+			}
+			catch (IOException e1) {
+				throw new OperationException(e1);
+			}
 
 			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);
 			boolean deleted = pluginJarFile.delete();
@@ -322,18 +311,23 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private PluginOperationResult executeInstall() throws IOException, UninstallablePluginException, CryptoException, ChecksumMismatchException {
+	private PluginOperationResult executeInstall() throws OperationException {
 		String pluginId = options.getPluginId();
 		File potentialLocalPluginJarFile = new File(pluginId);
 
-		if (pluginId.matches("^https?://.+")) {
-			return executeInstallFromUrl(pluginId);
+		try {
+			if (pluginId.matches("^https?://.+")) {
+				return executeInstallFromUrl(pluginId);
+			}
+			else if (potentialLocalPluginJarFile.exists()) {
+				return executeInstallFromLocalFile(potentialLocalPluginJarFile);
+			}
+			else {
+				return executeInstallFromApiHost(pluginId);
+			}
 		}
-		else if (potentialLocalPluginJarFile.exists()) {
-			return executeInstallFromLocalFile(potentialLocalPluginJarFile);
-		}
-		else {
-			return executeInstallFromApiHost(pluginId);
+		catch (IOException | ChecksumMismatchException | CryptoException | UninstallablePluginException e) {
+			throw new OperationException(e);
 		}
 	}
 
@@ -548,7 +542,7 @@ public class PluginOperation extends Operation {
 		return tempPluginFile;
 	}
 
-	private PluginOperationResult executeList() throws IOException, DeserializableException {
+	private PluginOperationResult executeList() throws OperationException {
 		final Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Map<String, ExtendedPluginInfo> pluginInfos = new TreeMap<String, ExtendedPluginInfo>();
 
@@ -579,36 +573,41 @@ public class PluginOperation extends Operation {
 
 		// Then, list remote plugins
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.REMOTE) {
-			for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
-				if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
-					continue;
+			try {
+				for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
+					if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
+						continue;
+					}
+
+					ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
+					boolean localPluginInstalled = extendedPluginInfo != null;
+
+					if (!localPluginInstalled) { // Locally not installed
+						extendedPluginInfo = new ExtendedPluginInfo();
+
+						extendedPluginInfo.setInstalled(false);
+						extendedPluginInfo.setRemoteAvailable(true);
+					}
+					else { // Locally also installed
+						extendedPluginInfo.setRemoteAvailable(true);
+
+						Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
+						Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
+						Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
+
+						boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
+						boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
+						boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
+
+						extendedPluginInfo.setOutdated(pluginIsOutdated);
+					}
+
+					extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
+					pluginInfos.put(remotePluginInfo.getPluginId(), extendedPluginInfo);
 				}
-
-				ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
-				boolean localPluginInstalled = extendedPluginInfo != null;
-
-				if (!localPluginInstalled) { // Locally not installed
-					extendedPluginInfo = new ExtendedPluginInfo();
-
-					extendedPluginInfo.setInstalled(false);
-					extendedPluginInfo.setRemoteAvailable(true);
-				}
-				else { // Locally also installed
-					extendedPluginInfo.setRemoteAvailable(true);
-
-					Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
-					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
-					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
-
-					boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
-					boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
-					boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
-
-					extendedPluginInfo.setOutdated(pluginIsOutdated);
-				}
-
-				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
-				pluginInfos.put(remotePluginInfo.getPluginId(), extendedPluginInfo);
+			}
+			catch (IOException | DeserializableException e) {
+				throw new OperationException(e);
 			}
 		}
 

@@ -371,12 +371,14 @@ public class ApplicationLink {
 		plaintextOutputStream.write(transferSettings.getType().getBytes());
 
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
+
 		try {
 			new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
 		}
 		catch (Exception e) {
 			throw new SerializableException(e);
 		}
+
 		plaintextGzipOutputStream.close();
 
 		return plaintextByteArrayOutputStream.toByteArray();
