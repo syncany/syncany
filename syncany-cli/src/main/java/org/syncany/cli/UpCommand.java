@@ -143,6 +143,6 @@ public class UpCommand extends Command {
 
 	@Subscribe
 	public void onIndexMidEventReceived(UpIndexMidSyncExternalEvent syncEvent) {
-		out.printr("Indexed and uploaded " + syncEvent.getCurrentIndex() + "/" + syncEvent.getFileCount() + " file(s)...");
+		out.printr("Indexed " + syncEvent.getCurrentIndex() + "/" + syncEvent.getFileCount() + " file(s)...");
 	}
 }
