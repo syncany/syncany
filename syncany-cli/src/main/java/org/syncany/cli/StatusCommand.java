@@ -63,7 +63,7 @@ public class StatusCommand extends Command {
 
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
 		OptionSpec<Void> optionNoDeleteUpload = parser.acceptsAll(asList("D", "no-delete"));
-		OptionSpec<String> optionFilePattern = parser.accepts("filter").withOptionalArg().ofType(String.class);
+		OptionSpec<String> optionFilePattern = parser.accepts("filter").withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
 
