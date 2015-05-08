@@ -1,0 +1,22 @@
+Source: syncany
+Section: utils
+Priority: extra
+Maintainer: Philipp Heckel <philipp.heckel@gmail.com>
+Build-Depends: bash-completion, debhelper (>= 8.0.0) | debhelper (>= 9.0.0)
+Standards-Version: 3.9.4
+Homepage: https://www.syncany.org
+
+Package: syncany
+Architecture: all
+Depends: ${misc:Depends}, openjdk-7-jre-headless | default-jre (>= 1.7) | openjdk-8-jre-headless
+Homepage: https://www.syncany.org/
+Description: Secure file sync software for arbitrary storage backends
+ Syncany allows users to backup and share certain folders of their workstations
+ using any kind of storage. Syncany is open-source and provides data encryption
+ and incredible flexibility in terms of storage type and provider:
+ .
+  - Data encryption: Syncany encrypts the files locally, so that any online 
+    storage can be used even for sensitive data.
+ .
+  - Arbitrary storage: Syncany uses a plug-in based storage system. It can be
+    used with any type of remote storage.

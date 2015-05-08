@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.syncany.plugins.transfer.files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 /**
  * Action remote files represent a running transfer operation on the remote storage. Transfer

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,55 +22,63 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.init.GenlinkOperation;
+import org.syncany.operations.init.GenlinkOperationOptions;
 import org.syncany.operations.init.GenlinkOperationResult;
 
 public class GenlinkCommand extends AbstractInitCommand {
+	private boolean machineReadableOutput;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
-		GenlinkCommandOptions commandOptions = parseGenlinkOptions(operationArgs);
-		GenlinkOperationResult operationResult = client.genlink();		
-		printResults(operationResult, commandOptions);
+		GenlinkOperationOptions operationOptions = parseOptions(operationArgs);		
+		GenlinkOperationResult operationResult = new GenlinkOperation(config, operationOptions).execute();		
+		
+		printResults(operationResult);
 		
 		return 0;		
 	}
 	
-	private GenlinkCommandOptions parseGenlinkOptions(String[] operationArgs) {
-		GenlinkCommandOptions commandOptions = new GenlinkCommandOptions();
-
-		OptionParser parser = new OptionParser();			
-		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));
+	@Override
+	public GenlinkOperationOptions parseOptions(String[] operationArgs) {
+		GenlinkOperationOptions operationOptions = new GenlinkOperationOptions();
 		
+		OptionParser parser = new OptionParser();
+		OptionSpec<Void> optionMachineReadable = parser.acceptsAll(asList("m", "machine-readable"));		
+		OptionSpec<Void> optionShort = parser.acceptsAll(asList("s", "short"));		
+
+		parser.allowsUnrecognizedOptions();		
 		OptionSet options = parser.parse(operationArgs);
 
-		// --short
-		commandOptions.setShortOutput(options.has(optionShort));
+		// --machine-readable, -m
+		machineReadableOutput = options.has(optionMachineReadable);
 		
-		return commandOptions;
+		// --short, -s
+		operationOptions.setShortUrl(options.has(optionShort));
+
+		return operationOptions;
 	}
 	
-	private void printResults(GenlinkOperationResult operationResult, GenlinkCommandOptions commandOptions) {
-		if (!commandOptions.isShortOutput()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		GenlinkOperationResult concreteOperationResult = (GenlinkOperationResult) operationResult;
+		
+		if (!machineReadableOutput) {
 			out.println();
 			out.println("To share the same repository with others, you can share this link:");
 		}
 		
-		printLink(operationResult, commandOptions.isShortOutput());			
-	}
-	
-	private class GenlinkCommandOptions {
-		private boolean shortOutput = false;
-
-		public boolean isShortOutput() {
-			return shortOutput;
-		}
-
-		public void setShortOutput(boolean shortOutput) {
-			this.shortOutput = shortOutput;
-		}				
-	}
+		printLink(concreteOperationResult, machineReadableOutput);			
+	}	
 }

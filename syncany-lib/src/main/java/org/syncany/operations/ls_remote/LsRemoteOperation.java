@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,116 +24,99 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.database.DatabaseVersionHeader;
+import org.syncany.config.LocalEventBus;
 import org.syncany.database.SqlDatabase;
-import org.syncany.database.VectorClock;
 import org.syncany.operations.Operation;
-import org.syncany.operations.OperationResult;
-import org.syncany.plugins.StorageException;
+import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
+import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
+import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
 /**
- * The list remote operation queries the transfer manager for any unknown 
- * {@link DatabaseRemoteFile}s. 
- * 
+ * The list remote operation queries the transfer manager for any unknown
+ * {@link DatabaseRemoteFile}s.
+ *
  * <p>It first uses a {@link TransferManager} to list all remote databases and then
  * uses the local list of known databases to filter already processed files. The local
  * list of known databases is loaded.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LsRemoteOperation extends Operation {
-	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());	
+	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());
+
 	private TransferManager loadedTransferManager;
 	private SqlDatabase localDatabase;
-	
+	private LocalEventBus eventBus;
+
 	public LsRemoteOperation(Config config) {
 		this(config, null);
-	}	
-	
+	}
+
 	public LsRemoteOperation(Config config, TransferManager transferManager) {
-		super(config);		
-		
+		super(config);
+
 		this.loadedTransferManager = transferManager;
 		this.localDatabase = new SqlDatabase(config);
-	}	
-	
+		this.eventBus = LocalEventBus.getInstance();
+	}
+
 	@Override
 	public LsRemoteOperationResult execute() throws Exception {
 		logger.log(Level.INFO, "");
-		logger.log(Level.INFO, "Running 'Remote Status' at client "+config.getMachineName()+" ...");
+		logger.log(Level.INFO, "Running 'Remote Status' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-		
-		TransferManager transferManager = (loadedTransferManager != null)
-				? loadedTransferManager
-				: config.getTransferPlugin().createTransferManager(config.getConnection());
-		
+
+		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+
+		TransferManager transferManager = createTransferManager(loadedTransferManager);
+
 		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);		
-		
+		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);
+
 		transferManager.disconnect();
 
-		return new LsRemoteOperationResult(unknownRemoteDatabases);
-	}		
+		boolean hasChanges = unknownRemoteDatabases.size() > 0;
+		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));
 
-	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases) throws StorageException {
+		return new LsRemoteOperationResult(new ArrayList<>(unknownRemoteDatabases));
+	}
+
+	private TransferManager createTransferManager(TransferManager loadedTransferManager) throws StorageException {
+		if (loadedTransferManager != null) {
+			return loadedTransferManager;
+		}
+		else {
+			return TransferManagerFactory
+					.build(config)
+					.withFeature(PathAware.class)
+					.asDefault();
+		}
+	}
+
+	private List<DatabaseRemoteFile> listUnknownRemoteDatabases(TransferManager transferManager, List<DatabaseRemoteFile> knownDatabases)
+			throws StorageException {
 		logger.log(Level.INFO, "Retrieving remote database list.");
-		
+
 		List<DatabaseRemoteFile> unknownRemoteDatabases = new ArrayList<DatabaseRemoteFile>();
 
 		// List all remote database files
 		Map<String, DatabaseRemoteFile> remoteDatabaseFiles = transferManager.list(DatabaseRemoteFile.class);
-		
-		DatabaseVersionHeader lastLocalDatabaseVersionHeader = localDatabase.getLastDatabaseVersionHeader();
-		
-		// No local database yet
-		if (lastLocalDatabaseVersionHeader == null) {
-			logger.log(Level.INFO, "- Not local database versions yet. Assuming all {0} remote database files are unknown. ", remoteDatabaseFiles.size());
-			return new ArrayList<DatabaseRemoteFile>(remoteDatabaseFiles.values());
-		}
-		
-		// At least one local database version exists
-		else {
-			VectorClock knownDatabaseVersions = lastLocalDatabaseVersionHeader.getVectorClock();
-			
-			for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
-				String clientName = remoteDatabaseFile.getClientName();
-				Long knownClientVersion = knownDatabaseVersions.getClock(clientName);
-					
-				// This does NOT filter 'lock' files!
-				
-				if (knownClientVersion != null) {
-					if (remoteDatabaseFile.getClientVersion() <= knownClientVersion) {
-						logger.log(Level.INFO, "- Remote database {0} is already known. Ignoring.", remoteDatabaseFile.getName());
-					}
-					else if (knownDatabases.contains(remoteDatabaseFile)) {
-						logger.log(Level.INFO, "- Remote database {0} is already known (in knowndbs.list). Ignoring.", remoteDatabaseFile.getName());
-					}
-					else {
-						logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-						unknownRemoteDatabases.add(remoteDatabaseFile);
-					}
-				} 
-				else {
-					logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
-					unknownRemoteDatabases.add(remoteDatabaseFile);
-				}				
+
+		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseFiles.values()) {
+			// This does NOT filter 'lock' files!
+			if (knownDatabases.contains(remoteDatabaseFile)) {
+				logger.log(Level.INFO, "- Remote database {0} is already known (in local database). Ignoring.", remoteDatabaseFile.getName());
 			}
-			
-			return unknownRemoteDatabases;			
-		}
-	}
-	
-	public class LsRemoteOperationResult implements OperationResult {
-		private List<DatabaseRemoteFile> unknownRemoteDatabases;
-		
-		public LsRemoteOperationResult(List<DatabaseRemoteFile> unknownRemoteDatabases) {
-			this.unknownRemoteDatabases = unknownRemoteDatabases;
+			else {
+				logger.log(Level.INFO, "- Remote database {0} is new.", remoteDatabaseFile.getName());
+				unknownRemoteDatabases.add(remoteDatabaseFile);
+			}
 		}
 
-		public List<DatabaseRemoteFile> getUnknownRemoteDatabases() {
-			return unknownRemoteDatabases;
-		}
+		return unknownRemoteDatabases;
 	}
 }

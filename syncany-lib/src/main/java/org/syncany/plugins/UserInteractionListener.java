@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,14 @@
  */
 package org.syncany.plugins;
 
+/**
+ * User interaction listeners can interrupt certain operations
+ * to request feedback from the user -- either in form of a confirmation
+ * or a password. The methods implemented by this interface must block. 
+ * 
+ * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ */
 public interface UserInteractionListener {
-	public void onShowMessage(String message);
 	public boolean onUserConfirm(String header, String message, String question);
 	public String onUserPassword(String header, String message);
 	public String onUserNewPassword();

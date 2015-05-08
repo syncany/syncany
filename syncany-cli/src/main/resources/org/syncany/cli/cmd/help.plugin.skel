@@ -1,16 +1,19 @@
 NAME
-  sy-plugin - list, install and remove Syncany plugins
+  sy-plugin - list, install, update and remove Syncany plugins
     
 SYNOPSIS
   sy plugin list [-R | --remote-only] [-L | --local-only] [-s | --snapshots]
-                 [<plugin-id>]
+                 [-a | --api-endpoint=<url>] [<plugin-id>]
                  
-  sy plugin install [-s | --snapshot] (<URL> | <file> | <plugin-id>)
+  sy plugin install [-s | --snapshot] [-m | --minimal-output] 
+                    (<URL> | <file> | <plugin-id>)
+
+  sy plugin update [<plugin-id>]
   
   sy plugin remove <plugin-id>
             
 DESCRIPTION 
-  This command performs three different actions:
+  This command performs four different actions:
   
   - It lists the locally installed and remotely available plugins, including
   version information and whether plugins can be upgraded. The 'list' action
@@ -28,6 +31,10 @@ DESCRIPTION
   user directory. On Unix-based systems, this directory is located at
   ~/.config/syncany/plugins, and on Windows at %AppData%\Syncany\plugins. 
     
+  - It updates plugins by removing and re-installing them from the Syncany
+  host (if they are updatable). Plugins are updatable if they are out-of-date
+  and are not 'Global' plugins.
+
   - It removes locally installed plugins from the user's local plugin
   directory. Only plugins installed by the 'install' action can be removed.
   The plugins shipped with Syncany (e.g. the 'local' plugin) cannot be 
@@ -56,18 +63,35 @@ ACIONS
     -s, --snapshots               
       Instead of listing only plugin release versions (default), the result 
       list will also include daily snapshots (if newer snapshots exist).
+      
+    -a, --api-endpoint=<url>
+      Selects the API endpoint to query for remote plugins. If not given,
+      the default endpoint URL will be used (https://api.syncany.org/v3).
     
   install [<args>] (<URL> | <file> | <plugin-id>) 
     Installs a plugin from an arbitrary URL, local file or from the 
-    available plugins on api.syncany.org (with a plugin identifier)
+    available plugins on api.syncany.org (with a plugin identifier).
     
     -s, --snapshot
       Installs the daily snapshot instead of the release version. Only if
       <plugin-id> is given. Not for <URL> or <file>.
+            
+    -m, --minimal-output
+      Reduces the output of the command to "OK" or "NOK" instead of reporting
+      detailed progress and download URLs.   
+
+  update [<plugin-id>]
+    Updates the plugin with the plugin identifier <plugin-id> or updates all
+    updatable plugins if no identifier is given. Plugins can only be updated
+    if they are newer than the installed version and if they are 'User'
+    plugins (and not 'Global' plugins). Plugins will be downloaded from
+    api.syncany.org.
 
   remove <plugin-id>
     Uninstalls a plugin entirely (removes the JAR file). This action can
     only be used for plugins that were installed by the user, and not for
     system-wide plugins.    
 
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

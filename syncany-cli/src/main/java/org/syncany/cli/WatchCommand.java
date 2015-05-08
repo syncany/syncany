@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.watch.WatchOperation;
 import org.syncany.operations.watch.WatchOperationOptions;
 
 public class WatchCommand extends Command {
@@ -39,7 +41,20 @@ public class WatchCommand extends Command {
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
+		WatchOperationOptions operationOptions = parseOptions(operationArgs);
+		new WatchOperation(config, operationOptions).execute();
+
+		return 0;
+	}
+
+	@Override
+	public WatchOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		WatchOperationOptions operationOptions = new WatchOperationOptions();
 
 		OptionParser parser = new OptionParser();	
@@ -94,9 +109,11 @@ public class WatchCommand extends Command {
 			operationOptions.setWatcher(false);
 		}
 		
-		// Run!
-		client.watch(operationOptions);
-
-		return 0;
+		return operationOptions;
 	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// Nothing.
+	}	
 }

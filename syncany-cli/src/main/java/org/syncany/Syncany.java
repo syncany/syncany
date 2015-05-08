@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,11 +43,8 @@ import org.syncany.cli.CommandLineClient;
  * <p>Many thanks to all the people who have supported the project over the years and who have
  * continued to listen to my constant never-ending Syncany talk! Thank you all!
  * 
- * @see <a href="https://www.syncany.org/">Syncany website</a> at syncany.org
- * @see <a href="https://github.com/syncany/syncany">GitHub code repository</a> at github.com
- * @see <a href="http://www.philippheckel.com/files/syncany-heckel-thesis.pdf">Master thesis describing core concepts</a> at philippheckel.com
- * @see <a href="http://blog.philippheckel.com/tag/syncany/">Blog posts about Syncany</a> at blog.philippheckel.com
- * 
+ * @see <a href="https://www.syncany.org/">Syncany website</a>
+ * @see <a href="https://github.com/syncany/syncany">GitHub code repository</a> 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class Syncany {

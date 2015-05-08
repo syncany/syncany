@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@ import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
-import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.PartialFileHistory;
+import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.operations.down.DatabaseBranch;
 
@@ -68,9 +68,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	private FileHistorySqlDao fileHistoryDao;
 	private MultiChunkSqlDao multiChunkDao;
 
-	public DatabaseVersionSqlDao(Connection connection, ChunkSqlDao chunkDao, FileContentSqlDao fileContentDao, FileVersionSqlDao fileVersionDao, FileHistorySqlDao fileHistoryDao,
+	public DatabaseVersionSqlDao(Connection connection, ChunkSqlDao chunkDao, FileContentSqlDao fileContentDao, FileVersionSqlDao fileVersionDao,
+			FileHistorySqlDao fileHistoryDao,
 			MultiChunkSqlDao multiChunkDao) {
-		
+
 		super(connection);
 
 		this.chunkDao = chunkDao;
@@ -89,7 +90,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	 * @param vectorClock Identifies the database version to mark dirty
 	 */
 	public void markDatabaseVersionDirty(VectorClock vectorClock) {
-		try (PreparedStatement preparedStatement = getStatement("databaseversion.update.master.markDatabaseVersionDirty.sql")){
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.update.master.markDatabaseVersionDirty.sql")) {
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 			preparedStatement.setString(2, vectorClock.toString());
 
@@ -101,23 +102,23 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
+	public long writeDatabaseVersion(DatabaseVersion databaseVersion) {
 		try {
 			// Insert & commit database version
 			long databaseVersionId = writeDatabaseVersion(connection, databaseVersion);
 			
 			// Commit & clear local caches
-			connection.commit();			
-			clearCaches();	
-			
+			clearCaches();
+
 			return databaseVersionId;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "SQL Error: ", e);
+
 			throw new RuntimeException("Cannot persist database.", e);
 		}
 	}
-	
+
 	/**
 	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
 	 * contained {@link VectorClock}. Be aware that the method writes the header independent
@@ -134,38 +135,38 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public long writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersionHeader);
 		writeVectorClock(connection, databaseVersionId, databaseVersionHeader.getVectorClock());
-		
+
 		return databaseVersionId;
 	}
-	
+
 	private long writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
-		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader());
+		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader()); // TODO [low] Use writeDatabaseVersion()?
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
-		
+
 		chunkDao.writeChunks(connection, databaseVersionId, databaseVersion.getChunks());
 		multiChunkDao.writeMultiChunks(connection, databaseVersionId, databaseVersion.getMultiChunks());
 		fileContentDao.writeFileContents(connection, databaseVersionId, databaseVersion.getFileContents());
 		fileHistoryDao.writeFileHistories(connection, databaseVersionId, databaseVersion.getFileHistories());
-		
+
 		return databaseVersionId;
-	}	
-	
+	}
+
 	private long writeDatabaseVersionHeaderInternal(Connection connection, DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				DatabaseConnectionFactory.getStatement("databaseversion.insert.all.writeDatabaseVersion.sql"), Statement.RETURN_GENERATED_KEYS)) {
-	
+
 			preparedStatement.setString(1, DatabaseVersionStatus.MASTER.toString());
 			preparedStatement.setTimestamp(2, new Timestamp(databaseVersionHeader.getDate().getTime()));
 			preparedStatement.setString(3, databaseVersionHeader.getClient());
 			preparedStatement.setString(4, databaseVersionHeader.getVectorClock().toString());
-			
+
 			int affectedRows = preparedStatement.executeUpdate();
-			
+
 			if (affectedRows == 0) {
 				throw new SQLException("Cannot add database version header. Affected rows is zero.");
 			}
-			
-			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {				
+
+			try (ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
 				if (resultSet.next()) {
 					return resultSet.getLong(1);
 				}
@@ -182,10 +183,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 				preparedStatement.setLong(1, databaseVersionId);
 				preparedStatement.setString(2, vectorClockEntry.getKey());
 				preparedStatement.setLong(3, vectorClockEntry.getValue());
-	
+
 				preparedStatement.addBatch();
 			}
-			
+
 			preparedStatement.executeBatch();
 		}
 	}
@@ -199,36 +200,56 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		try {
 			// IMPORTANT: The order is important, because of 
 			//            the database foreign key consistencies!
-			
+
 			// First, remove dirty file histories, then file versions
 			fileVersionDao.removeDirtyFileVersions();
 			fileHistoryDao.removeDirtyFileHistories();
 
 			// Now, remove all unreferenced file contents
 			fileContentDao.removeUnreferencedFileContents();
-			
+
 			// Change foreign key of multichunks
 			multiChunkDao.updateDirtyMultiChunksNewDatabaseId(newDatabaseVersionId);
 			fileContentDao.updateDirtyFileContentsNewDatabaseId(newDatabaseVersionId);
 			chunkDao.updateDirtyChunksNewDatabaseId(newDatabaseVersionId);
-			
+
 			// And the database versions
 			removeDirtyVectorClocks();
-			removeDirtyDatabaseVersionsInt(); 
-	
+			removeDirtyDatabaseVersionsInt();
+
 			// Commit & clear local caches
-			connection.commit();			
-			clearCaches();			
+			connection.commit();
+			clearCaches();
 		}
 		catch (SQLException e) {
 			throw new RuntimeException("Unable to remove dirty database versions.", e);
 		}
 	}
 
+	public void removeEmptyDatabaseVersionHeaders() {		
+		// Delete vector clocks
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.delete.all.removeEmptyDatabaseVersionHeadersVectorClocks.sql")) {
+			preparedStatement.executeUpdate();		
+			preparedStatement.close();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		// Delete database version headers
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.delete.all.removeEmptyDatabaseVersionHeaders.sql")) {
+			preparedStatement.executeUpdate();		
+			preparedStatement.close();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public void clearCaches() {
 		chunkDao.clearCache();
 	}
-	
+
 	public Long getMaxDirtyVectorClock(String machineName) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.dirty.getMaxDirtyVectorClock.sql")) {
 			preparedStatement.setMaxRows(1);
@@ -246,10 +267,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
 		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<>();
-		
+
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getNonEmptyDatabaseVersionHeaders.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
@@ -279,8 +300,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
-			preparedStatement.setString(2, machineName);
-			preparedStatement.setLong(3, maxLocalClientVersion);
+			preparedStatement.setLong(2, maxLocalClientVersion);
 
 			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
@@ -288,14 +308,42 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersions.sql")) {
+			maxDatabaseVersionCount = (maxDatabaseVersionCount > 0) ? maxDatabaseVersionCount : Integer.MAX_VALUE;
+			startDatabaseVersionIndex = (startDatabaseVersionIndex > 0) ? startDatabaseVersionIndex : 0;
+			
+			preparedStatement.setInt(1, maxDatabaseVersionCount);
+			preparedStatement.setInt(2, startDatabaseVersionIndex);
+			
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return new DatabaseVersionIterator(preparedStatement.executeQuery(), true, maxFileHistoryCount);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 	private class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
 		private ResultSet resultSet;
+		private boolean excludeChunkData;
+		private int fileHistoryMaxCount;
+
 		private boolean hasNext;
 
 		public DatabaseVersionIterator(ResultSet resultSet) throws SQLException {
+			this(resultSet, false, -1);
+		}
+
+		public DatabaseVersionIterator(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
 			this.resultSet = resultSet;
-			this.hasNext = resultSet.next();
+			this.excludeChunkData = excludeChunkData;
+			this.fileHistoryMaxCount = fileHistoryMaxCount;
+					
+			this.hasNext = resultSet.next();					
 		}
 
 		@Override
@@ -307,7 +355,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		public DatabaseVersion next() {
 			if (hasNext) {
 				try {
-					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet);
+					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, excludeChunkData, fileHistoryMaxCount);
 					hasNext = resultSet.next();
 
 					return databaseVersion;
@@ -328,28 +376,34 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 
 	}
 
-	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet) throws SQLException {
-		DatabaseVersion databaseVersion = new DatabaseVersion();
-
+	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
+
+		DatabaseVersion databaseVersion = new DatabaseVersion();
 		databaseVersion.setHeader(databaseVersionHeader);
 
-		Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
-		Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
-		Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
-		Map<FileHistoryId, PartialFileHistory> fileHistories = fileHistoryDao.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock());
+		// Add chunk/multichunk/filecontent data
+		if (!excludeChunkData) {
+			Map<ChunkChecksum, ChunkEntry> chunks = chunkDao.getChunks(databaseVersionHeader.getVectorClock());
+			Map<MultiChunkId, MultiChunkEntry> multiChunks = multiChunkDao.getMultiChunks(databaseVersionHeader.getVectorClock());
+			Map<FileChecksum, FileContent> fileContents = fileContentDao.getFileContents(databaseVersionHeader.getVectorClock());
+			
+			for (ChunkEntry chunk : chunks.values()) {
+				databaseVersion.addChunk(chunk);
+			}
 
-		for (ChunkEntry chunk : chunks.values()) {
-			databaseVersion.addChunk(chunk);
-		}
+			for (MultiChunkEntry multiChunk : multiChunks.values()) {
+				databaseVersion.addMultiChunk(multiChunk);
+			}
 
-		for (MultiChunkEntry multiChunk : multiChunks.values()) {
-			databaseVersion.addMultiChunk(multiChunk);
+			for (FileContent fileContent : fileContents.values()) {
+				databaseVersion.addFileContent(fileContent);
+			}
 		}
-
-		for (FileContent fileContent : fileContents.values()) {
-			databaseVersion.addFileContent(fileContent);
-		}
+		
+		// Add file histories
+		Map<FileHistoryId, PartialFileHistory> fileHistories = fileHistoryDao
+				.getFileHistoriesWithFileVersions(databaseVersionHeader.getVectorClock(), fileHistoryMaxCount);
 
 		for (PartialFileHistory fileHistory : fileHistories.values()) {
 			databaseVersion.addFileHistory(fileHistory);
@@ -375,7 +429,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	private DatabaseVersionHeader createDatabaseVersionHeaderFromRow(ResultSet resultSet) throws SQLException {
 		DatabaseVersionHeader databaseVersionHeader = new DatabaseVersionHeader();
 
@@ -393,33 +447,33 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				DatabaseVersionHeader currentDatabaseVersionHeader = null;
 				int currentDatabaseVersionHeaderId = -1;
-	
+
 				while (resultSet.next()) {
 					int databaseVersionHeaderId = resultSet.getInt("id");
-	
+
 					// Row does NOT belong to the current database version
 					if (currentDatabaseVersionHeader == null || currentDatabaseVersionHeaderId != databaseVersionHeaderId) {
 						// Add to database branch
 						if (currentDatabaseVersionHeader != null) {
 							databaseBranch.add(currentDatabaseVersionHeader);
 						}
-	
+
 						// Make a new database version header
 						currentDatabaseVersionHeader = new DatabaseVersionHeader();
 						currentDatabaseVersionHeader.setClient(resultSet.getString("client"));
 						currentDatabaseVersionHeader.setDate(new Date(resultSet.getTimestamp("localtime").getTime()));
-	
+
 						currentDatabaseVersionHeaderId = databaseVersionHeaderId;
 					}
-	
+
 					currentDatabaseVersionHeader.getVectorClock().setClock(resultSet.getString("vc_client"), resultSet.getLong("vc_logicaltime"));
 				}
-	
+
 				// Add to database branch
 				if (currentDatabaseVersionHeader != null) {
 					databaseBranch.add(currentDatabaseVersionHeader);
 				}
-	
+
 				return databaseBranch;
 			}
 		}
@@ -439,10 +493,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		while (resultSet.next()) {
 			vectorClock.setClock(resultSet.getString("client"), resultSet.getLong("logicaltime"));
 		}
-		
+
 		resultSet.close();
 		preparedStatement.close();
-		
+
 		return vectorClock;
 	}
 
@@ -451,10 +505,10 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 	}
-	
+
 	private void removeDirtyDatabaseVersionsInt() throws SQLException {
 		PreparedStatement preparedStatement = getStatement("databaseversion.delete.dirty.removeDirtyDatabaseVersionsInt.sql");
-		preparedStatement.executeUpdate();		
+		preparedStatement.executeUpdate();
 		preparedStatement.close();
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,41 +22,63 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.StorageTestResult;
+import org.syncany.config.Config;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
+import org.syncany.util.StringUtil;
 
 /**
  * Implements basic functionality of a {@link TransferManager} which
  * can be implemented sub-classes.
  * 
+ * <p>This transfer manager is enhanced with the {@link TransactionAware}
+ * and {@link Retriable} annotations, thereby making it reliable.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth <christian.roth@port17.de>
  */
-public abstract class AbstractTransferManager implements TransferManager {
-	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());	
-	private TransferSettings settings;
+@TransactionAware
+@Retriable(numberRetries = 3, sleepInterval = 3000)
+public abstract class AbstractTransferManager implements TransferManager { // TODO [medium] Rename this to AbstractReliableTransferManager
+	private static final Logger logger = Logger.getLogger(AbstractTransferManager.class.getSimpleName());
 
-	public AbstractTransferManager(TransferSettings settings) {
+	protected TransferSettings settings;
+	protected Config config;
+
+	public AbstractTransferManager(TransferSettings settings, Config config) {
 		this.settings = settings;
+		this.config = config;
 	}
 
-	public TransferSettings getConnection() {
-		return settings;
-	}
-
-	// TODO [low] This should be in AbstractTransferManager (or any other central place), this should use the Syncany cache folder
+	/**
+	 * Creates a temporary file, either using the config (if initialized) or
+	 * using the global temporary directory.
+	 */
 	protected File createTempFile(String name) throws IOException {
-		return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		if (config == null) {
+			return File.createTempFile(String.format("temp-%s-", name), ".tmp");
+		}
+		else {
+			return config.getCache().createTempFile(name);
+		}
 	}
 
+	/**
+	 * Checks whether the settings given to this transfer manager can be
+	 * used to create or connect to a remote repository.
+	 *
+	 * <p>Tests if the target exists, if it can be written to and if a
+	 * repository can be created.
+	 */
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
-		logger.log(Level.INFO, "Performing storage test TM.test() ...");							
+		logger.log(Level.INFO, "Performing storage test TM.test() ...");
 		StorageTestResult result = new StorageTestResult();
-		
+
 		try {
 			logger.log(Level.INFO, "- Running connect() ...");
 			connect();
-	
+
 			result.setTargetExists(testTargetExists());
 			result.setTargetCanWrite(testTargetCanWrite());
 			result.setRepoFileExists(testRepoFileExists());
@@ -72,13 +94,13 @@ public abstract class AbstractTransferManager implements TransferManager {
 					result.setTargetCanCreate(false);
 				}
 			}
-			
+
 			result.setTargetCanConnect(true);
 		}
 		catch (StorageException e) {
 			result.setTargetCanConnect(false);
-			result.setException(e);
-			
+			result.setErrorMessage(StringUtil.getStackTrace(e));
+
 			logger.log(Level.INFO, "-> Testing storage failed. Returning " + result, e);
 		}
 		finally {
@@ -86,10 +108,10 @@ public abstract class AbstractTransferManager implements TransferManager {
 				disconnect();
 			}
 			catch (StorageException e) {
-				// Don't care
+				logger.log(Level.FINE, "Could not disconnect", e);
 			}
 		}
-		
+
 		return result;
 	}
 }

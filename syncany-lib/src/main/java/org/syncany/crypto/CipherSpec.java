@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,41 +22,41 @@ import java.io.OutputStream;
 import java.util.regex.Pattern;
 
 /**
- * A cipher spec represents the definition of a cipher/encryption algorithm and the  
+ * A cipher spec represents the definition of a cipher/encryption algorithm and the
  * corresponding settings required to instantiate a new cipher object.
- * 
+ *
  * <p>Cipher specs are identified by an identifier (<i>id</i>), which will (when the
  * cipher spec is used by the {@link MultiCipherOutputStream}) be written to the output
  * file format. When the file is read by {@link MultiCipherInputStream}, the identifier
  * is looked up using the {@link CipherSpecs} class.
- * 
+ *
  * <p>While it would be technically possible to define any kind of cipher using this class,
  * this class restricts the allowed algorithms to a few ones that are considered secure.
- * 
- * <p>Instantiating a cipher spec that does pass the sanity checks will result in a 
- * RuntimeException.  
- *  
+ *
+ * <p>Instantiating a cipher spec that does pass the sanity checks will result in a
+ * RuntimeException.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public abstract class CipherSpec {
 	public static final Pattern ALLOWED_CIPHER_ALGORITHMS = Pattern.compile("^HmacSHA256$|(^(AES|Twofish)/(GCM|EAX)/.+)");
-	
+
 	private int id;
 	private String algorithm;
 	private int keySize; // in bits
 	private int ivSize; // in bits
 	private boolean needsUnlimitedStrength;
-	
+
 	public CipherSpec(int id, String algorithm, int keySize, int ivSize, boolean needsUnlimitedStrength) {
 		this.id = id;
 		this.algorithm = algorithm;
 		this.keySize = keySize;
 		this.ivSize = ivSize;
 		this.needsUnlimitedStrength = needsUnlimitedStrength;
-		
+
 		doSanityChecks();
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -67,7 +67,7 @@ public abstract class CipherSpec {
 
 	public String getAlgorithm() {
 		return algorithm;
-	}	
+	}
 
 	public int getKeySize() {
 		return keySize;
@@ -75,19 +75,20 @@ public abstract class CipherSpec {
 
 	public int getIvSize() {
 		return ivSize;
-	}		
-	
+	}
+
 	public abstract OutputStream newCipherOutputStream(OutputStream underlyingOutputStream, byte[] secretKey, byte[] iv) throws CipherException;
+
 	public abstract InputStream newCipherInputStream(InputStream underlyingInputStream, byte[] secretKey, byte[] iv) throws CipherException;
-	
+
 	@Override
 	public String toString() {
-		return algorithm+", "+keySize+" bit";
+		return algorithm + ", " + keySize + " bit";
 	}
 
 	private void doSanityChecks() {
 		if (!ALLOWED_CIPHER_ALGORITHMS.matcher(algorithm).matches()) {
-			throw new RuntimeException("Cipher algorithm or mode not allowed: "+algorithm+". This mode is not considered secure.");
+			throw new RuntimeException("Cipher algorithm or mode not allowed: " + algorithm + ". This mode is not considered secure.");
 		}
 	}
 
@@ -105,26 +106,36 @@ public abstract class CipherSpec {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof CipherSpec)) {
 			return false;
+		}
 		CipherSpec other = (CipherSpec) obj;
 		if (algorithm == null) {
-			if (other.algorithm != null)
+			if (other.algorithm != null) {
 				return false;
-		} else if (!algorithm.equals(other.algorithm))
+			}
+		}
+		else if (!algorithm.equals(other.algorithm)) {
 			return false;
-		if (id != other.id)
+		}
+		if (id != other.id) {
 			return false;
-		if (ivSize != other.ivSize)
+		}
+		if (ivSize != other.ivSize) {
 			return false;
-		if (keySize != other.keySize)
+		}
+		if (keySize != other.keySize) {
 			return false;
-		if (needsUnlimitedStrength != other.needsUnlimitedStrength)
+		}
+		if (needsUnlimitedStrength != other.needsUnlimitedStrength) {
 			return false;
+		}
 		return true;
 	}
 }

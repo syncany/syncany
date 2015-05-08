@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,15 +30,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Helper class to execute SQL scripts on a given connection. The script honors SQL comments and 
+ * Helper class to execute SQL scripts on a given connection. The script honors SQL comments and
  * separately executes commands one after another.
- * 
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SqlRunner {
 	private static final Logger logger = Logger.getLogger(SqlRunner.class.getSimpleName());
 
-	private static final String DEFAULT_DELIMITER = ";";	
+	private static final String DEFAULT_DELIMITER = ";";
 	private static final Pattern NEW_DELIMITER_PATTERN = Pattern.compile("(?:--|\\/\\/|\\#)?!DELIMITER=(.+)");
 	private static final Pattern COMMENT_PATTERN = Pattern.compile("^(?:--|\\/\\/|\\#).+");
 
@@ -47,42 +47,42 @@ public class SqlRunner {
 			StringBuffer command = null;
 			String delimiter = DEFAULT_DELIMITER;
 			String line = null;
-			
+
 			while ((line = scriptReader.readLine()) != null) {
 				if (command == null) {
 					command = new StringBuffer();
 				}
-				
+
 				String trimmedLine = line.trim();
-	
+
 				Matcher delimiterMatcher = NEW_DELIMITER_PATTERN.matcher(trimmedLine);
 				Matcher commentMatcher = COMMENT_PATTERN.matcher(trimmedLine);
-				
+
 				// a) Delimiter change
 				if (delimiterMatcher.find()) {
-					delimiter = delimiterMatcher.group(1);					
+					delimiter = delimiterMatcher.group(1);
 					logger.log(Level.INFO, "SQL (new delimiter): " + delimiter);
 				}
-				
+
 				// b) Comment
 				else if (commentMatcher.find()) {
 					logger.log(Level.INFO, "SQL (comment): " + trimmedLine);
 				}
-				
+
 				// c) Statement
 				else {
 					command.append(trimmedLine);
-					command.append(" ");
-	
+					command.append(' ');
+
 					// End of statement
 					if (trimmedLine.endsWith(delimiter)) {
 						logger.log(Level.INFO, "SQL: " + command);
-	
+
 						Statement statement = connection.createStatement();
-						
+
 						statement.execute(command.toString());
 						statement.close();
-						
+
 						command = null;
 					}
 				}

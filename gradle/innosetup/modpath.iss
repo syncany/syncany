@@ -7,6 +7,12 @@
 // License:			GNU Lesser General Public License (LGPL), version 3
 //						http://www.gnu.org/licenses/lgpl.html
 //
+//    NOTE: 
+//           The original script allowed triggering the path modification
+//           depending on whether a tasks from [Tasks] was checked. Since this
+//           was not desired for Syncany, it was disabled. Whenever 'ModPathRun'
+//           is 'True', the path will be modified (comment by P. Heckel).
+//
 // Script Function:
 //	Allow modification of environmental path directly from Inno Setup installers
 //
@@ -16,19 +22,14 @@
 //	Add this statement to your [Setup] section
 //		ChangesEnvironment=true
 //
-//	Add this statement to your [Tasks] section
-//	You can change the Description or Flags
-//	You can change the Name, but it must match the ModPathName setting below
-//		Name: modifypath; Description: &Add application directory to your environmental path; Flags: unchecked
-//
 //	Add the following to the end of your [Code] section
-//	ModPathName defines the name of the task defined above
+//	ModPathRun defines whether the ModPath() method will be called during setup
 //	ModPathType defines whether the 'user' or 'system' path will be modified;
 //		this will default to user if anything other than system is set
 //	setArrayLength must specify the total number of dirs to be added
 //	Result[0] contains first directory, Result[1] contains second, etc.
 //		const
-//			ModPathName = 'modifypath';
+//			ModPathRun = True;
 //			ModPathType = 'user';
 //
 //		function ModPathDir(): TArrayOfString;
@@ -163,44 +164,9 @@ begin
 	until Length(Text)=0;
 end;
 
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
-var
-	aSelectedTasks:	TArrayOfString;
-	i:				Integer;
-	taskname:		String;
-	regpath:		String;
-	regstring:		String;
-	appid:			String;
-begin
-	// only run during actual uninstall
-	if CurUninstallStep = usUninstall then begin
-		// get list of selected tasks saved in registry at install time
-		appid := '{#emit SetupSetting("AppId")}';
-		if appid = '' then appid := '{#emit SetupSetting("AppName")}';
-		regpath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\'+appid+'_is1');
-		RegQueryStringValue(HKLM, regpath, 'Inno Setup: Selected Tasks', regstring);
-		if regstring = '' then RegQueryStringValue(HKCU, regpath, 'Inno Setup: Selected Tasks', regstring);
-
-		// check each task; if matches modpath taskname, trigger patch removal
-		if regstring <> '' then begin
-			taskname := ModPathName;
-			MPExplode(aSelectedTasks, regstring, ',');
-			if GetArrayLength(aSelectedTasks) > 0 then begin
-				for i := 0 to GetArrayLength(aSelectedTasks)-1 do begin
-					if comparetext(aSelectedTasks[i], taskname) = 0 then
-						ModPath();
-				end;
-			end;
-		end;
-	end;
-end;
-
 function NeedRestart(): Boolean;
-var
-	taskname:	String;
 begin
-	taskname := ModPathName;
-	if IsTaskSelected(taskname) and not UsingWinNT() then begin
+	if ModPathRun and not UsingWinNT() then begin
 		Result := True;
 	end else begin
 		Result := False;

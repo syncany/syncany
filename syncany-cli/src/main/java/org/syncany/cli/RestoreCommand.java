@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,35 +20,48 @@ package org.syncany.cli;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import org.syncany.database.PartialFileHistory.FileHistoryId;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.restore.RestoreOperation;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.operations.restore.RestoreOperationResult;
 
-public class RestoreCommand extends AbstractHistoryCommand {
+public class RestoreCommand extends Command {
+	protected static final Logger logger = Logger.getLogger(RestoreCommand.class.getSimpleName());
+
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
 	
 	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
+	
+	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = parseOptions(operationArgs);
-		RestoreOperationResult operationResult = client.restore(operationOptions);
+		RestoreOperationResult operationResult = new RestoreOperation(config, operationOptions).execute();
 		
 		printResults(operationResult);
 		
 		return 0;		
 	}
 	
+	@Override
 	public RestoreOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
 
 		OptionParser parser = new OptionParser();	
+		parser.allowsUnrecognizedOptions();
+		
 		OptionSpec<Integer> optionRevision = parser.acceptsAll(asList("r", "revision")).withRequiredArg().ofType(Integer.class);
 		OptionSpec<String> optionTarget = parser.acceptsAll(asList("t", "target")).withRequiredArg().ofType(String.class);
 		
@@ -77,10 +90,13 @@ public class RestoreCommand extends AbstractHistoryCommand {
 		return operationOptions;
 	}
 	
-	private void printResults(RestoreOperationResult operationResult) {
-		switch (operationResult.getResultCode()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		RestoreOperationResult concreteOperationResult = (RestoreOperationResult) operationResult;
+		
+		switch (concreteOperationResult.getResultCode()) {
 		case ACK:
-			out.println("File restored to " + operationResult.getTargetFile());
+			out.println("File restored to " + concreteOperationResult.getTargetFile());
 			break;
 			
 		case NACK_INVALID_FILE:
@@ -92,7 +108,7 @@ public class RestoreCommand extends AbstractHistoryCommand {
 			break;
 			
 		default:
-			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode());	
+			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode());	
 		}
-	}	
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 package org.syncany.chunk;
 
 /**
- * A chunk represent a certain part of a file. It is created during the
+ * A chunk represents a certain part of a file. It is created during the
  * deduplication process by a {@link Chunker}. 
  * 
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>

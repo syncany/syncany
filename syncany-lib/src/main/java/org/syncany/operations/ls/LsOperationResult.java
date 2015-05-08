@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,36 @@
  */
 package org.syncany.operations.ls;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 import org.syncany.database.FileVersion;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationResult;
 
 public class LsOperationResult implements OperationResult {
-	private Map<String, FileVersion> fileTree;
-	private Map<FileHistoryId, PartialFileHistory> fileVersions;
+	@ElementList(name = "fileList", required = false, entry = "fileVersion")
+	private ArrayList<FileVersion> fileList;
 	
-	public LsOperationResult(Map<String, FileVersion> fileTree, Map<FileHistoryId, PartialFileHistory> fileVersions) {
-		this.fileTree = fileTree;
-		this.fileVersions = fileVersions;
+	@ElementMap(name = "fileVersions", required = false, key = "fileHistoryId", value = "partialFileHistory")
+	private HashMap<FileHistoryId, PartialFileHistory> fileVersions;
+	
+	public LsOperationResult() {
+		// Nothing
+	}
+	
+	public LsOperationResult(List<FileVersion> fileList, Map<FileHistoryId, PartialFileHistory> fileVersions) {
+		this.fileList = (fileList != null) ? new ArrayList<>(fileList) : null;
+		this.fileVersions = (fileVersions != null) ? new HashMap<>(fileVersions) : null;
 	}
 
-	public Map<String, FileVersion> getFileTree() {
-		return fileTree;
+	public List<FileVersion> getFileList() {
+		return fileList;
 	}
 
 	public Map<FileHistoryId, PartialFileHistory> getFileVersions() {

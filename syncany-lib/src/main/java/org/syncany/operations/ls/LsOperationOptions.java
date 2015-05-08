@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,20 +17,49 @@
  */
 package org.syncany.operations.ls;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.operations.OperationOptions;
 
+import com.google.common.collect.Sets;
+
 public class LsOperationOptions implements OperationOptions {
-	private Date date = null;
-	private String pathExpression = null;	
-	private boolean recursive = false;
-	private List<FileType> fileTypes = Arrays.asList(new FileType[] { FileType.FILE, FileType.FOLDER, FileType.SYMLINK });
-	private boolean fetchHistories;
+	@Element(required = false)
+	private Date date;
+
+	@Element(required = false)
+	private String pathExpression;
 	
+	@Element(required = false)
+	private boolean fileHistoryId;
+
+	@Element(required = false)
+	private boolean recursive;
+
+	@ElementList(required = false, entry = "fileType")
+	private HashSet<FileType> fileTypes;
+
+	@Element(required = false)
+	private boolean fetchHistories;
+
+	@Element(required = false)
+	private boolean deleted;
+	
+	public LsOperationOptions() {
+		this.date = null;
+		this.pathExpression = null;
+		this.fileHistoryId = false;
+		this.recursive = false;
+		this.fileTypes = Sets.newHashSet(FileType.FILE, FileType.FOLDER, FileType.SYMLINK);
+		this.fetchHistories = false;
+		this.deleted = false;
+	}
+
 	public Date getDate() {
 		return date;
 	}
@@ -45,6 +74,14 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setPathExpression(String pathExpression) {
 		this.pathExpression = pathExpression;
+	}		
+
+	public boolean isFileHistoryId() {
+		return fileHistoryId;
+	}
+
+	public void setFileHistoryId(boolean fileHistoryId) {
+		this.fileHistoryId = fileHistoryId;
 	}
 
 	public boolean isRecursive() {
@@ -55,11 +92,11 @@ public class LsOperationOptions implements OperationOptions {
 		this.recursive = recursive;
 	}
 
-	public List<FileType> getFileTypes() {
+	public Set<FileType> getFileTypes() {
 		return fileTypes;
 	}
 
-	public void setFileTypes(List<FileType> fileTypes) {
+	public void setFileTypes(HashSet<FileType> fileTypes) {
 		this.fileTypes = fileTypes;
 	}
 
@@ -69,5 +106,13 @@ public class LsOperationOptions implements OperationOptions {
 
 	public void setFetchHistories(boolean fetchHistories) {
 		this.fetchHistories = fetchHistories;
-	}	
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}		
 }

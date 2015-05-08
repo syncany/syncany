@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,11 +26,22 @@ public class StatusOperationOptions implements OperationOptions {
 	@Element(required = false)
 	private boolean forceChecksum = false;
 
+	@Element(required = false)
+	private boolean delete = true;
+
 	public boolean isForceChecksum() {
 		return forceChecksum;
 	}
 
 	public void setForceChecksum(boolean forceChecksum) {
 		this.forceChecksum = forceChecksum;
-	}				
+	}
+	
+	public boolean isDelete() {
+		return delete;
+	}
+
+	public void setDelete(boolean delete) {
+		this.delete = delete;
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ package org.syncany.config;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
@@ -34,33 +35,44 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.VectorClock;
 import org.syncany.plugins.Plugins;
-import org.syncany.plugins.StorageException;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
 
 /**
  * The config class is the central point to configure a Syncany instance. It is mainly
- * used in the operations, but parts of it are also used in other parts of the 
+ * used in the operations, but parts of it are also used in other parts of the
  * application -- especially file locations and names.
- * 
- * <p>An instance of the <tt>Config</tt> class must be created through the transfer 
- * objects {@link ConfigTO} and {@link RepoTO}. 
- * 
+ *
+ * <p>An instance of the <tt>Config</tt> class must be created through the transfer
+ * objects {@link ConfigTO} and {@link RepoTO}.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-public class Config {	
+public class Config {
 	public static final String DIR_APPLICATION = ".syncany";
 	public static final String DIR_CACHE = "cache";
 	public static final String DIR_DATABASE = "db";
 	public static final String DIR_LOG = "logs";
+	public static final String DIR_STATE = "state";
+
+	// File in managed folder root
+	public static final String FILE_IGNORE = ".syignore";
+
+	// Files in .syncany
 	public static final String FILE_CONFIG = "config.xml";
 	public static final String FILE_REPO = "syncany";
 	public static final String FILE_MASTER = "master";
-	public static final String FILE_IGNORE = ".syignore";
+
+	// File in .syncany/db
 	public static final String FILE_DATABASE = "local.db";
-		
+
+	// Files in .syncany/state
+	public static final String FILE_PORT = "port.xml";
+	public static final String FILE_TRANSACTION = "transaction-actions.xml";
+	public static final String FILE_TRANSACTION_DATABASE = "transaction-database.xml";
+
 	private byte[] repoId;
 	private String machineName;
 	private String displayName;
@@ -69,57 +81,63 @@ public class Config {
 	private File cacheDir;
 	private File databaseDir;
 	private File logDir;
-	
+	private File stateDir;
+
 	private SaltedSecretKey masterKey;
 
-	private Cache cache;	
+	private Cache cache;
 	private TransferPlugin plugin;
-	private TransferSettings connection;
-    private Chunker chunker;
-    private MultiChunker multiChunker;
-    private Transformer transformer;
-    private IgnoredFiles ignoredFiles;
-      
-    static {    	    
-    	UserConfig.init();
-    	Logging.init();
-    }
-    
+	private TransferSettings transferSettings;
+	private Chunker chunker;
+	private MultiChunker multiChunker;
+	private Transformer transformer;
+	private IgnoredFiles ignoredFiles;
+
+	static {
+		UserConfig.init();
+		Logging.init();
+	}
+
 	public Config(File aLocalDir, ConfigTO configTO, RepoTO repoTO) throws ConfigException {
 		if (aLocalDir == null || configTO == null || repoTO == null) {
 			throw new ConfigException("Arguments aLocalDir, configTO and repoTO cannot be null.");
 		}
-		
+
 		initNames(configTO);
 		initMasterKey(configTO);
 		initDirectories(aLocalDir);
-		initCache();
+		initCache(configTO);
 		initIgnoredFile();
 		initRepo(repoTO);
-    	initConnection(configTO);  	
-	}		
+		initConnection(configTO);
+	}
 
-	private void initNames(ConfigTO configTO) throws ConfigException {		
+	private void initNames(ConfigTO configTO) throws ConfigException {
 		setMachineName(configTO.getMachineName());
 		setDisplayName(configTO.getDisplayName());
 	}
-	
+
 	private void initMasterKey(ConfigTO configTO) {
-		masterKey = configTO.getMasterKey(); // can be null			
+		masterKey = configTO.getMasterKey(); // can be null
 	}
 
 	private void initDirectories(File aLocalDir) throws ConfigException {
-		localDir = FileUtil.getCanonicalFile(aLocalDir);		
+		localDir = FileUtil.getCanonicalFile(aLocalDir);
 		appDir = FileUtil.getCanonicalFile(new File(localDir, DIR_APPLICATION));
 		cacheDir = FileUtil.getCanonicalFile(new File(appDir, DIR_CACHE));
 		databaseDir = FileUtil.getCanonicalFile(new File(appDir, DIR_DATABASE));
 		logDir = FileUtil.getCanonicalFile(new File(appDir, DIR_LOG));
+		stateDir = FileUtil.getCanonicalFile(new File(appDir, DIR_STATE));
 	}
-	
-	private void initCache() {
+
+	private void initCache(ConfigTO configTO) {
 		cache = new Cache(cacheDir);
-	}	
-	
+
+		if (configTO.getCacheKeepBytes() != null && configTO.getCacheKeepBytes() >= 0) {
+			cache.setKeepBytes(configTO.getCacheKeepBytes());
+		}
+	}
+
 	private void initIgnoredFile() throws ConfigException {
 		File ignoreFile = new File(localDir, FILE_IGNORE);
 		ignoredFiles = new IgnoredFiles(ignoreFile);
@@ -136,7 +154,7 @@ public class Config {
 			throw new ConfigException("Unable to initialize repository information from config.", e);
 		}
 	}
-	
+
 	private void initRepoId(RepoTO repoTO) {
 		repoId = repoTO.getRepoId();
 	}
@@ -144,23 +162,23 @@ public class Config {
 	private void initChunker(RepoTO repoTO) throws Exception {
 		// TODO [feature request] make chunking options configurable, something like described in #29
 		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
-		
-		chunker = new FixedChunker(512*1024, "SHA1");
+
+		chunker = new FixedChunker(512 * 1024, "SHA1");
 	}
 
 	private void initMultiChunker(RepoTO repoTO) throws ConfigException {
 		MultiChunkerTO multiChunkerTO = repoTO.getMultiChunker();
 
 		if (multiChunkerTO == null) {
-			throw new ConfigException("No multichunker in repository config.");			
+			throw new ConfigException("No multichunker in repository config.");
 		}
-		
+
 		multiChunker = MultiChunker.getInstance(multiChunkerTO.getType());
-		
+
 		if (multiChunker == null) {
 			throw new ConfigException("Invalid multichunk type or settings: " + multiChunkerTO.getType());
 		}
-		
+
 		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
@@ -168,62 +186,61 @@ public class Config {
 		if (repoTO.getTransformers() == null || repoTO.getTransformers().size() == 0) {
 			transformer = new NoTransformer();
 		}
-		else {			
-			ArrayList<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
+		else {
+			List<TransformerTO> transformerTOs = new ArrayList<TransformerTO>(repoTO.getTransformers());
 			Transformer lastTransformer = null;
-			
-			for (int i=transformerTOs.size()-1; i>=0; i--) {
+
+			for (int i = transformerTOs.size() - 1; i >= 0; i--) {
 				TransformerTO transformerTO = transformerTOs.get(i);
 				Transformer transformer = Transformer.getInstance(transformerTO.getType());
-				
+
 				if (transformer == null) {
-					throw new ConfigException("Cannot find transformer '"+transformerTO.getType()+"'");
+					throw new ConfigException("Cannot find transformer '" + transformerTO.getType() + "'");
 				}
-				
+
 				if (transformer instanceof CipherTransformer) { // Dirty workaround
 					transformerTO.getSettings().put(CipherTransformer.PROPERTY_MASTER_KEY, StringUtil.toHex(getMasterKey().getEncoded()));
 					transformerTO.getSettings().put(CipherTransformer.PROPERTY_MASTER_KEY_SALT, StringUtil.toHex(getMasterKey().getSalt()));
 				}
-				
+
 				transformer.init(transformerTO.getSettings());
-				
+
 				if (lastTransformer != null) {
 					transformer.setNextTransformer(lastTransformer);
 				}
-				
+
 				lastTransformer = transformer;
 			}
-			
+
 			transformer = lastTransformer;
 		}
 	}
 
 	private void initConnection(ConfigTO configTO) throws ConfigException {
-		if (configTO.getConnectionTO() != null) {
-			plugin = Plugins.get(configTO.getConnectionTO().getType(), TransferPlugin.class);
-	    	
-	    	if (plugin == null) {
-	    		throw new ConfigException("Plugin not supported: " + configTO.getConnectionTO().getType());
-	    	}
-	    	
-	    	try {
-		    	connection = plugin.createSettings();
-		    	connection.init(configTO.getConnectionTO().getSettings());
-	    	}
-	    	catch (StorageException e) {
-	    		throw new ConfigException("Cannot initialize storage: "+e.getMessage(), e);
-	    	}
+		if (configTO.getTransferSettings() != null) {
+			plugin = Plugins.get(configTO.getTransferSettings().getType(), TransferPlugin.class);
+
+			if (plugin == null) {
+				throw new ConfigException("Plugin not supported: " + configTO.getTransferSettings().getType());
+			}
+
+			try {
+				transferSettings = configTO.getTransferSettings();
+			}
+			catch (Exception e) {
+				throw new ConfigException("Cannot initialize storage: " + e.getMessage(), e);
+			}
 		}
 	}
-	
+
 	public java.sql.Connection createDatabaseConnection() {
 		return DatabaseConnectionFactory.createConnection(getDatabaseFile());
 	}
 
 	public File getCacheDir() {
 		return cacheDir;
-	}	
-	
+	}
+
 	public File getAppDir() {
 		return appDir;
 	}
@@ -236,42 +253,42 @@ public class Config {
 		if (machineName == null || !VectorClock.MACHINE_PATTERN.matcher(machineName).matches()) {
 			throw new ConfigException("Machine name cannot be empty and must be only characters (A-Z).");
 		}
-		
-		this.machineName = machineName;
-	}			
 
-    public String getDisplayName() {
+		this.machineName = machineName;
+	}
+
+	public String getDisplayName() {
 		return displayName;
 	}
 
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-		
+
 	public TransferPlugin getTransferPlugin() {
 		return plugin;
 	}
-	
+
 	public TransferSettings getConnection() {
-        return connection;
-    }
+		return transferSettings;
+	}
 
-    public void setConnection(TransferSettings connection) {
-        this.connection = connection;
-    }
+	public void setConnection(TransferSettings connection) {
+		transferSettings = connection;
+	}
 
-    public byte[] getRepoId() {
+	public byte[] getRepoId() {
 		return repoId;
 	}
-    
-    public Chunker getChunker() {
-        return chunker;
-    }
-    
+
+	public Chunker getChunker() {
+		return chunker;
+	}
+
 	public Cache getCache() {
 		return cache;
 	}
-	
+
 	public IgnoredFiles getIgnoredFiles() {
 		return ignoredFiles;
 	}
@@ -294,17 +311,33 @@ public class Config {
 
 	public File getDatabaseDir() {
 		return databaseDir;
-	}	
+	}
+
+	public File getLogDir() {
+		return logDir;
+	}
+
+	public File getStateDir() {
+		return stateDir;
+	}
 
 	public SaltedSecretKey getMasterKey() {
 		return masterKey;
 	}
 
 	public File getDatabaseFile() {
-		return new File(databaseDir, FILE_DATABASE);	
-	}	
+		return new File(databaseDir, FILE_DATABASE);
+	}
 
-	public File getLogDir() {
-		return logDir;
+	public File getPortFile() {
+		return new File(stateDir, FILE_PORT);
+	}
+
+	public File getTransactionFile() {
+		return new File(stateDir, FILE_TRANSACTION);
+	}
+
+	public File getTransactionDatabaseFile() {
+		return new File(stateDir, FILE_TRANSACTION_DATABASE);
 	}
 }

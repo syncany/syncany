@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,18 @@
  */
 package org.syncany.operations;
 
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.Robot;
 import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.syncany.config.UserConfig;
 import org.syncany.operations.cleanup.CleanupOperation;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 
@@ -107,7 +111,11 @@ public class ActionFileHandler {
 		actionRenewalTimer.schedule(new TimerTask() {			
 			@Override
 			public void run() {
-				renewActionFile();				
+				renewActionFile();	
+				
+				if (UserConfig.isPreventStandby()) {
+					preventStandby();
+				}
 			}
 		}, ACTION_RENEWAL_INTERVAL, ACTION_RENEWAL_INTERVAL);
 	}
@@ -131,6 +139,29 @@ public class ActionFileHandler {
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "ERROR: Cannot renew action file!", e);
+		}
+	}
+	
+	private void preventStandby() {
+		try {
+			Robot robot = new Robot();
+
+			Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
+			Point tempMousePosition = (currentMousePosition.x > 0) ? new Point(currentMousePosition.x - 10, currentMousePosition.y) : new Point(
+					currentMousePosition.x + 10, currentMousePosition.y);
+
+			logger.log(Level.INFO, "Standby prevention: Moving mouse 1px (and back): " + currentMousePosition);
+
+			robot.mouseMove(tempMousePosition.x, tempMousePosition.y);
+			robot.mouseMove(currentMousePosition.x, currentMousePosition.y);
+		}		
+		catch (Exception e) {
+			if (e.getMessage() != null && e.getMessage().contains("headless")) {
+				logger.log(Level.INFO, "Cannot prevent standby, because headless mode is enabled (no GUI environment)");
+			}
+			else {
+				logger.log(Level.WARNING, "Standby prevention failed (headless mode?).", e);	
+			}			
 		}
 	}
 }

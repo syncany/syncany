@@ -1,25 +1,41 @@
 # Maintainer: Pim Otte <otte dot pim at gmail dot com>
 pkgname=syncany
-pkgver=0.1.6_alpha
-_realver=0.1.6-alpha
-pkgrel=1
+pkgver=0.4.4_alpha
+_realver=0.4.4-alpha
+pkgrel=2
 pkgdesc="Cloud storage and filesharing application with a focus on security and abstraction of storage."
 arch=(any)
 url="http://www.syncany.org/"
 license=('GPL3')
-depends=('java-runtime>=7' 'sh')
+depends=('java-runtime>=7' 'bash-completion')
 source=("http://syncany.org/dist/$pkgname-${_realver}.tar.gz"
-        syncany)
-sha256sums=('fcf564df6c38b84ff767371922c06911aca499b7dea921dccf29694477202311'
-            'ef07ec9a971243b45ec216c3fa4c4acfdd3ef7e165ae2773c4124123fd2463d0')
+        )
+sha256sums=('6cbcbffa30b6c307b9f2acac412c066b6cb99462912c32184a378b67fa129e4e'
+            )    
 
 package() {
-    install -Dm755 syncany "${pkgdir}/usr/bin/syncany"
-    #Daemon support temporarily disabled until daemon start-up script is improved
-    install -Dm755 "$srcdir/$pkgname-${_realver}/bin/syncanyd" "${pkgdir}/usr/bin/syncanyd"
-	cd "$srcdir/$pkgname-${_realver}/lib"
+    install -Dm644 "$srcdir/$pkgname-${_realver}/bash/syncany.bash-completion" "${pkgdir}/etc/bash_completion.d/syncany"
+
+	cd "$srcdir/$pkgname-${_realver}/man/man"
+    for man in *
+    do
+        install -Dm644 "$man" "${pkgdir}/usr/share/man/man1/$man"
+        install -Dm644 "$man" "${pkgdir}/usr/share/man/man1/${man/sy/syncany}"
+    done
+
+
+    install -Dm755 "$srcdir/$pkgname-${_realver}/bin/syncany" "${pkgdir}/usr/share/java/${pkgname}/bin/syncany"
+    cd "$srcdir/$pkgname-${_realver}/lib"
+
     for jar in *
     do
-        install -Dm644 "$jar" "${pkgdir}/usr/share/java/${pkgname}/$jar"
+        install -Dm644 "$jar" "${pkgdir}/usr/share/java/${pkgname}/lib/$jar"
     done
+
+    mkdir -p "${pkgdir}/usr/bin"
+    ln -s "/usr/share/java/${pkgname}/bin/syncany" "${pkgdir}/usr/bin/syncany"
+
+
+    #Optional: symlink sy
+    #ln -s  "/usr/share/java/${pkgname}/bin/syncany" "${pkgdir}/usr/bin/sy"
 }

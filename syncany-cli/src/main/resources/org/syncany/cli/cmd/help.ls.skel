@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
   sy ls [-V | --versions] [-t | --types=<types>] [-D | --date=<date>]
         [-r | --recursive] [-f | --full-checksums] [-g | --group]
-        [<path-expression>]
+        [-H | --file-history] [-q | --deleted] [<path-expression>]
   
 DESCRIPTION 
   This command lists and filters the file tree based on the local database. 
@@ -19,7 +19,10 @@ DESCRIPTION
   and 's' for symlinks). Types can be combined, e.g. `sy ls -tfs` selects
   files and symlinks. (4) The -D option selects the date/time at which to
   select the file tree, e.g. `sy ls -D20m` to select the file tree 20 minutes
-  ago or `sy ls -D2014-05-02` to select the file tree at May 2.
+  ago or `sy ls -D2014-05-02` to select the file tree at May 2. (5) The -H
+  option can be used to select a specific file only. If the option is given,
+  the <path-expression> is interpreted as a file history identifier. (6) The
+  -q flag will display files that have been deleted from the file system.
   
   Using the --versions flag, the command also displays the entire version 
   history for the selected files. Using --group, the result can be grouped by
@@ -46,10 +49,20 @@ OPTIONS
     floating point number and <unit> may be any of the following: s(econds),
     m(inutes), h(ours), d(ays), w(eeks), mo(nths), y(ears). Units may be
     shortened if they are unique. Examples: 5h30m or 1y1mo2d
-    
+        
+  -H, --file-history
+    If the option is given, the <path-expression> is interpreted as a file
+    history identifier. This option can be used to select one specific
+    file history. If -H is given, -V is automatically switched on.
+ 
   -r, --recursive
     Not only selects the folder relative to the <path-expression>, but to all
     sub trees of it.
+    
+  -q, --deleted
+    Also selects files that have been deleted from the file system, but are
+    still kept in the database. These files can be restored using the
+    `sy restore` command. By default, deleted files are not displayed.
     
   -g, --group
     Only works with --versions. Displays the file versions grouped by file
@@ -83,4 +96,6 @@ EXAMPLES
     Selects and displays all file versions and their file histories. 
     This selects the entire database. Use with caution.
     
-%RESOURCE:incl/footer.skel%
+COPYRIGHT
+  Syncany %applicationVersionFull%, Distributed under GPLv3,
+  Copyright (c) 2011-2015 Philipp C. Heckel

@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.syncany.database.FileContent;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry.MultiChunkId;
+import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.Operation;
@@ -63,14 +64,21 @@ public class ApplyChangesOperation extends Operation {
 
 	private MemoryDatabase winnersDatabase;
 	private DownOperationResult result;
+	
+	private boolean cleanupOccurred;
+	private List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion;
 
-	public ApplyChangesOperation(Config config, SqlDatabase localDatabase, TransferManager transferManager, MemoryDatabase winnersDatabase, DownOperationResult result) {
+	public ApplyChangesOperation(Config config, SqlDatabase localDatabase, TransferManager transferManager, MemoryDatabase winnersDatabase,
+			DownOperationResult result, boolean cleanupOccurred, List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) {
+		
 		super(config);
 		
 		this.localDatabase = localDatabase;
 		this.downloader = new Downloader(config, transferManager);
 		this.winnersDatabase = winnersDatabase;
 		this.result = result;
+		this.cleanupOccurred = cleanupOccurred;
+		this.preDeleteFileHistoriesWithLastVersion = preDeleteFileHistoriesWithLastVersion;
 	}
 
 	@Override
@@ -78,7 +86,14 @@ public class ApplyChangesOperation extends Operation {
 		logger.log(Level.INFO, "Determine file system actions ...");		
 		
 		FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result.getChangeSet());
-		List<FileSystemAction> actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
+		List<FileSystemAction> actions;
+		
+		if (cleanupOccurred) {
+			actions = actionReconciliator.determineFileSystemActions(winnersDatabase, true, preDeleteFileHistoriesWithLastVersion);
+		}
+		else {
+			actions = actionReconciliator.determineFileSystemActions(winnersDatabase);
+		}
 
 		Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
 		
@@ -171,12 +186,12 @@ public class ApplyChangesOperation extends Operation {
 				logger.log(Level.FINER, "   +  {0}", action);
 			}
 
-			try {
-				action.execute();
-			}
-			catch (Exception e) {
-				logger.log(Level.FINER, "     --> Inconsistent file system exception thrown. Ignoring for this file.", e);
-			}
+			// Execute the file system action
+			
+			// Note that exceptions are not caught here, to prevent 
+			// apply-failed-delete-on-up situations.
+			
+			action.execute(); 
 		}
 	}
 }

@@ -19,17 +19,33 @@ subprojects {
 		}
 		
 		test {
-			java      { srcDir 'src/test/java'}
+			java      { srcDir 'src/test/unit/java'}
 			resources { srcDir 'src/test/resources'}
 		}
+
+    integration {
+			java      { srcDir 'src/test/integration/java' }
+			resources { srcDir 'src/test/resources'}
+			compileClasspath += sourceSets.test.compileClasspath
+			runtimeClasspath += sourceSets.test.runtimeClasspath
+			output.classesDir = sourceSets.test.output.classesDir
+    }
+
+	}
+
+	dependencies {
+		integrationCompile sourceSets.test.output
 	}
 	
 	processResources {	
-		filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
-		filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
-		filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
-		filter{ String line -> line.replaceAll('%applicationDate%', "${asUTC(applicationDate, 'EEE, dd MMM yyyy HH:mm:ss Z')}") }          	            
+		from(source) {
+			include "**/*.properties", "**/*.xml", "**/*.skel"
+			filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
+			filter{ String line -> line.replaceAll('%applicationVersion%', "${applicationVersion}") }        	            
+			filter{ String line -> line.replaceAll('%applicationVersionFull%', "${applicationVersionFull}") }        	            
+			filter{ String line -> line.replaceAll('%applicationRevision%', "${applicationRevision}") }
+			filter{ String line -> line.replaceAll('%applicationDate%', "${asUTC(applicationDate, 'EEE, dd MMM yyyy HH:mm:ss Z')}") }          	            
+		}
 	}		
 	
 	// JAR /////////////////////////////////////////////////////////////////////

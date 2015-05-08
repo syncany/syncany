@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -185,7 +185,7 @@ public class NormalizedPath {
 				if (!exists) {
 					return creatableNormalizedPath;
 				}
-			} while (attempt++ < 10);
+			} while (attempt++ < 200);
 			
 			throw new Exception("Cannot create path with suffix; "+attempt+" attempts: "+creatableNormalizedPath);
 		}

@@ -1,0 +1,157 @@
+SYNCANY_API_ENDPOINT="https://api.syncany.org/v3"
+
+if [ "$SYNCANY_API_KEY" == "" ]; then
+	echo "ERROR: SYNCANY_API_KEY environment variable not set."
+	exit 1
+fi
+
+urlencode() {
+    # urlencode <string>
+
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9._-]) printf "$c" ;;
+            " ") printf "+" ;;
+            *) printf '%%%02X' "'$c"
+        esac
+    done
+}
+
+upload_file() {
+	# upload_file <filename> <request> <method_args>
+
+	filename="$1"
+	request="$2"
+	method_args="$3"
+
+	if [ -z "$filename" -o -z "$request" -o -z "$method_args" ]; then
+		echo "ERROR: Invalid arguments for upload_file. None of the arguments can be zero."
+		exit 2
+	fi
+
+	if [ ! -f "$filename" ]; then
+		echo "ERROR: Type '$type': File $filename does not exist. Skipping."
+		exit 3
+	fi
+	
+	basename=$(basename "$filename")
+	basename_encoded=$(urlencode $basename)
+	checksum=$(shasum -a 256 "$filename" | awk '{ print $1 }')
+		
+	time=$(date +%s)
+	rand=$(openssl rand -base64 100 | tr -d '=/+' | fold -w 16 | head -n 1)
+	method_args="$method_args&filename=$basename_encoded&checksum=$checksum&time=$time&rand=$rand"
+
+	protected="PUT:$request:$method_args"
+	signature=$(echo -n "$protected" | openssl dgst -sha256 -hmac "$SYNCANY_API_KEY" | awk '{ print $2 }')
+	full_url="$SYNCANY_API_ENDPOINT/$request?$method_args&signature=$signature"
+
+	rm /tmp/curlerr.tmp 2> /dev/null || true
+
+	http_response_code=$(curl \
+		--verbose \
+		--silent \
+		--output /dev/null \
+		--write-out "%{http_code}" \
+		--stderr /tmp/curlerr.tmp \
+		--upload-file "$filename" \
+		"$full_url")
+
+	exit_code=$?
+
+	if [ "$exit_code" != "0" -o "$http_response_code" != "200" ]; then
+		echo ""
+		echo "ERROR: Upload failed. curl exit code was $exit_code, HTTP response code was $http_response_code."
+
+		if [ -f /tmp/curlerr.tmp ]; then 
+			echo ""
+			echo "Details:"
+			echo ""
+			cat /tmp/curlerr.tmp | sed -E 's/signature=\w+/signature=[REMOVED]/'
+			echo ""
+		fi
+
+		exit 6
+	fi
+}
+
+upload_plugin() {
+	# upload_plugin <filename> <type> <plugin_id> <snapshot> <os> <arch>
+
+	file="$1"
+	type="$2"
+	plugin_id="$3"
+	snapshot="$4"
+
+	if [ -z "$file" -o -z "$type" -o -z "$plugin_id" -o -z "$snapshot" ]; then
+		echo "ERROR: Invalid arguments for upload_plugin. None of the arguments can be zero."
+		exit 2
+	fi
+
+	os=$(get_os_from_filename "$(basename "$file")")
+	arch=$(get_arch_from_filename "$(basename "$file")")
+
+	upload_file "$file" "plugins/$plugin_id" "type=$type&snapshot=$snapshot&os=$os&arch=$arch"
+}
+
+upload_app() {
+	# upload_app <filename> <dist> <type> <appVersion> <date> <snapshot>
+
+	file="$1"
+	dist="$2"
+	type="$3"
+	appVersion="$4"
+	date="$5"
+	snapshot="$6"
+
+	if [ -z "$file" -o -z "$dist" -o -z "$type" -o -z "$appVersion" -o -z "$date" -o -z "$snapshot" ]; then
+		echo "ERROR: Invalid arguments for upload_app. None of the arguments can be zero."
+		exit 2
+	fi
+
+	os=$(get_os_from_filename "$(basename "$file")")
+	arch=$(get_arch_from_filename "$(basename "$file")")
+
+	upload_file "$file" "app" "dist=$dist&type=$type&appVersion=$appVersion&date=$date&snapshot=$snapshot&os=$os&arch=$arch"
+}
+
+get_property() {
+	# get_property <properties-file> <property-name>
+
+	properties_file="$1"
+	property_name="$2"
+
+	cat "$properties_file" | grep "$property_name=" | sed -r 's/.+=//'
+}
+
+get_os_from_filename() {
+	# get_os_from_filename <filename>
+
+	filename="$1"
+
+	if [ -n "$(echo "$filename" | grep linux)" -o -n "$(echo "$filename" | grep -E "\.deb$")" ]; then
+		echo "linux"
+	elif [ -n "$(echo "$filename" | grep windows)" -o -n "$(echo "$filename" | grep -E "\.exe$")" ]; then
+		echo "windows"
+	elif [ -n "$(echo "$filename" | grep macosx)" -o -n "$(echo "$filename" | grep -E "\.app\.zip$")" ]; then
+		echo "macosx"
+	else
+		echo "all"
+	fi
+}
+
+get_arch_from_filename() {
+	# get_arch_from_filename <filename>
+
+	filename="$1"
+
+	if [ -n "$(echo $filename | grep x86_64)" -o -n "$(echo $filename | grep amd64)" ]; then
+		echo "x86_64"
+	elif [ -n "$(echo $filename | grep x86)" -o -n "$(echo $filename | grep i386)" ]; then
+		echo "x86"
+	else
+		echo "all"
+	fi
+}

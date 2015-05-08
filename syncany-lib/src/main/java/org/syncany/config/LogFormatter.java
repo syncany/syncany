@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import java.util.logging.LogRecord;
 /**
  * The log formatter implements a {@link Formatter}. It is used by the application's
  * logging functionality to pretty-print the log output.
- * 
+ *
  * <p>Log format:
  * <ul>
  *   <li>Date/time</li>
@@ -39,11 +39,11 @@ import java.util.logging.LogRecord;
  *   <li>Log level</li>
  *   <li>Log message</li>
  * </ul>
- * 
+ *
  * <p><b>Note</b>: This class might not be directly referenced through code
- * Instead, it can be referenced (and instantiated) using a logging.properties 
+ * Instead, it can be referenced (and instantiated) using a logging.properties
  * file.
- *  
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class LogFormatter extends Formatter {
@@ -62,7 +62,7 @@ public class LogFormatter extends Formatter {
 		sb.append(" | ").append(formatThreadName(Thread.currentThread().getName()));
 		sb.append(" | ").append(formatShortLogLevel(record.getLevel()));
 		sb.append(" : ").append(formatMessage(record));
-		sb.append("\n");
+		sb.append('\n');
 
 		if (record.getThrown() != null) {
 			sb.append(formatStackTrace(record.getThrown()));

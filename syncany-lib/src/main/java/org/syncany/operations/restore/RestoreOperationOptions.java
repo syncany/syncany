@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,18 @@
  */
 package org.syncany.operations.restore;
 
+import org.simpleframework.xml.Element;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.operations.OperationOptions;
 
 public class RestoreOperationOptions implements OperationOptions {
+	@Element(required = true)	
 	private FileHistoryId fileHistoryId;
+	
+	@Element(required = false)
 	private Integer fileVersion;
+	
+	@Element(required = false)
 	private String relativeTargetPath;
 
 	public FileHistoryId getFileHistoryId() {

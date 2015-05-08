@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
@@ -39,6 +40,7 @@ import org.syncany.database.dao.FileContentSqlDao;
 import org.syncany.database.dao.FileHistorySqlDao;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.database.dao.MultiChunkSqlDao;
+import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.down.DatabaseBranch;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
 
@@ -48,13 +50,13 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * <p>This class combines all specific SQL database data access objects (DAOs) into
  * a single class, and forwards all method calls to the responsible DAO.  
  * 
- * @see {@link ApplicationSqlDao}
- * @see {@link ChunkSqlDao}
- * @see {@link FileContentSqlDao}
- * @see {@link FileVersionSqlDao}
- * @see {@link FileHistorySqlDao}
- * @see {@link MultiChunkSqlDao}
- * @see {@link DatabaseVersionSqlDao}
+ * @see ApplicationSqlDao
+ * @see ChunkSqlDao
+ * @see FileContentSqlDao
+ * @see FileVersionSqlDao
+ * @see FileHistorySqlDao
+ * @see MultiChunkSqlDao
+ * @see DatabaseVersionSqlDao
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SqlDatabase {
@@ -81,9 +83,17 @@ public class SqlDatabase {
 	}
 
 	// General
-	
+
+	public Connection getConnection() {
+		return connection; // TODO [low] Exposes internal state!
+	}
+
 	public void commit() throws SQLException {
 		connection.commit();
+	}
+
+	public void rollback() throws SQLException {
+		connection.rollback();
 	}
 
 	public void removeUnreferencedDatabaseEntities() {
@@ -92,12 +102,14 @@ public class SqlDatabase {
 			removeUnreferencedFileContents();
 			removeUnreferencedMultiChunks();
 			removeUnreferencedChunks();
+
+			removeEmptyDatabaseVersionHeaders();
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	// Application
 
 	public void writeKnownRemoteDatabases(List<DatabaseRemoteFile> remoteDatabases) throws SQLException {
@@ -106,6 +118,34 @@ public class SqlDatabase {
 
 	public List<DatabaseRemoteFile> getKnownDatabases() {
 		return applicationDao.getKnownDatabases();
+	}
+	
+	public VectorClock getHighestKnownDatabaseFilenameNumbers() {
+		return applicationDao.getHighestKnownDatabaseFilenameNumbers();
+	}
+	
+	public void removeKnownDatabases() {
+		applicationDao.removeKnownDatabases();
+	}
+
+	public Long getCleanupNumber() {
+		return applicationDao.getCleanupNumber();
+	}
+	
+	public Long getCleanupTime() {
+		return applicationDao.getCleanupTime();
+	}
+	
+	public void writeCleanupNumber(long cleanupNumber) {
+		applicationDao.writeCleanupNumber(cleanupNumber);		
+	}
+	
+	public void writeCleanupTime(long cleanupTime) {
+		applicationDao.writeCleanupTime(cleanupTime);		
+	}
+
+	public void deleteAll() {
+		applicationDao.deleteAll();
 	}
 
 	public void shutdown() {
@@ -122,6 +162,10 @@ public class SqlDatabase {
 		return databaseVersionDao.getDatabaseVersionsTo(machineName, maxLocalClientVersion);
 	}
 
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
+		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, startDatabaseVersionIndex, maxFileHistoryCount);
+	}
+
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {
 		return databaseVersionDao.getLastDatabaseVersionHeader();
 	}
@@ -129,15 +173,15 @@ public class SqlDatabase {
 	public DatabaseBranch getLocalDatabaseBranch() {
 		return databaseVersionDao.getLocalDatabaseBranch();
 	}
-	
+
 	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
 		return databaseVersionDao.getNonEmptyDatabaseVersionHeaders();
 	}
 
-	public long persistDatabaseVersion(DatabaseVersion databaseVersion) {
-		return databaseVersionDao.persistDatabaseVersion(databaseVersion);
+	public long writeDatabaseVersion(DatabaseVersion databaseVersion) {
+		return databaseVersionDao.writeDatabaseVersion(databaseVersion);
 	}
-	
+
 	public void writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
 		databaseVersionDao.writeDatabaseVersionHeader(databaseVersionHeader);
 	}
@@ -150,13 +194,17 @@ public class SqlDatabase {
 		databaseVersionDao.removeDirtyDatabaseVersions(newDatabaseVersionId);
 	}
 
+	public void removeEmptyDatabaseVersionHeaders() {
+		databaseVersionDao.removeEmptyDatabaseVersionHeaders();
+	}
+
 	public Long getMaxDirtyVectorClock(String machineName) {
 		return databaseVersionDao.getMaxDirtyVectorClock(machineName);
 	}
 
 	// File History
 
-	@Deprecated	
+	@Deprecated
 	public Map<FileHistoryId, PartialFileHistory> getFileHistoriesWithFileVersions() {
 		// TODO [medium] Note: This returns the full database. Don't use this!
 		return fileHistoryDao.getFileHistoriesWithFileVersions();
@@ -169,7 +217,7 @@ public class SqlDatabase {
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
-	
+
 	private void removeUnreferencedFileHistories() throws SQLException {
 		fileHistoryDao.removeUnreferencedFileHistories();
 	}
@@ -183,37 +231,45 @@ public class SqlDatabase {
 	public Map<String, FileVersion> getCurrentFileTree() {
 		return fileVersionDao.getCurrentFileTree();
 	}
-	
+
 	public void removeSmallerOrEqualFileVersions(Map<FileHistoryId, FileVersion> purgeFileVersions) throws SQLException {
 		fileVersionDao.removeFileVersions(purgeFileVersions);
 	}
-	
-	@Deprecated
-	public FileVersion getFileVersionByPath(String path) {
-		return fileVersionDao.getFileVersionByPath(path);
-	}
 
-	@Deprecated
-	public Map<String, FileVersion> getFileTreeAtDate(Date date) {
-		return fileVersionDao.getFileTreeAtDate(date);
-	}
-
-	public Map<String, FileVersion> getFileTree(String filter, Date date, boolean recursive, FileType... fileTypes) {
-		return fileVersionDao.getFileTree(filter, date, recursive, fileTypes);
+	public void removeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) throws SQLException {
+		fileVersionDao.removeSpecificFileVersions(purgeFileVersions);
 	}
 	
+	public List<FileVersion> getFileList(String pathExpression, Date date, boolean fileHistoryId, boolean recursive, boolean deleted,
+			Set<FileType> fileTypes) {
+		
+		return fileVersionDao.getFileList(pathExpression, date, fileHistoryId, recursive, deleted, fileTypes);
+	}
+
 	public List<FileVersion> getFileHistory(FileHistoryId fileHistoryId) {
 		return fileVersionDao.getFileHistory(fileHistoryId);
 	}
-	
-	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMostRecentPurgeVersion(int keepVersionsCount) {
-		return fileVersionDao.getFileHistoriesWithMostRecentPurgeVersion(keepVersionsCount);
-	}	
+
+	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMaxPurgeVersion(int keepVersionsCount) {
+		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
+	}
+
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
+		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, timeUnit);
+	}
+
+	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
+		return fileVersionDao.getFileHistoriesToPurgeBefore(timestamp);
+	}
 
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
 		return fileVersionDao.getDeletedFileVersions();
 	}
-	
+
+	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
+		return fileVersionDao.getDeletedFileVersionsBefore(timestamp);
+	}
+
 	public FileVersion getFileVersion(FileHistoryId fileHistoryId, long version) {
 		return fileVersionDao.getFileVersion(fileHistoryId, version);
 	}
@@ -227,19 +283,19 @@ public class SqlDatabase {
 	public MultiChunkId getMultiChunkId(ChunkChecksum chunkChecksum) {
 		return multiChunkDao.getMultiChunkId(chunkChecksum);
 	}
-	
+
 	public Map<ChunkChecksum, MultiChunkId> getMultiChunkIdsByChecksums(List<ChunkChecksum> chunkChecksums) {
 		return multiChunkDao.getMultiChunkIdsByChecksums(chunkChecksums);
 	}
 
 	public List<MultiChunkId> getDirtyMultiChunkIds() {
 		return multiChunkDao.getDirtyMultiChunkIds();
-	}	
+	}
 
 	public Map<MultiChunkId, MultiChunkEntry> getUnusedMultiChunks() {
 		return multiChunkDao.getUnusedMultiChunks();
 	}
-	
+
 	private void removeUnreferencedMultiChunks() throws SQLException {
 		multiChunkDao.removeUnreferencedMultiChunks();
 	}
@@ -247,7 +303,7 @@ public class SqlDatabase {
 	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
 		return multiChunkDao.getMultiChunks();
 	}
-	
+
 	public void writeMuddyMultiChunks(Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunks) throws SQLException {
 		multiChunkDao.writeMuddyMultiChunks(muddyMultiChunks);
 	}
@@ -268,7 +324,7 @@ public class SqlDatabase {
 
 	public ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		return chunkDao.getChunk(chunkChecksum);
-	}	
+	}
 
 	private void removeUnreferencedChunks() {
 		chunkDao.removeUnreferencedChunks();
@@ -283,4 +339,5 @@ public class SqlDatabase {
 	private void removeUnreferencedFileContents() throws SQLException {
 		fileContentDao.removeUnreferencedFileContents();
 	}
+
 }

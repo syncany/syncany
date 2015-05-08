@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,46 +17,54 @@
  */
 package org.syncany.config.to;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.config.ConfigException;
+import org.syncany.crypto.CipherSpec;
+import org.syncany.crypto.CipherUtil;
+import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.util.StringUtil;
 
 /**
  * The repo transfer object is used to create and load the repo file
  * from/to XML. The repo file identifies the repository with a unique
  * repo ID, and defines the chunking framework settings. It is
- * stored locally and on the remote storage. 
- * 
+ * stored locally and on the remote storage.
+ *
  * <p>It uses the Simple framework for XML serialization, and its corresponding
- * annotation-based configuration.  
- *  
- * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * annotation-based configuration.
+ *
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="repo")
-@Namespace(reference="http://syncany.org/repo/1")
+@Root(name = "repo", strict = false)
 public class RepoTO {
-	@Element(name="repoid", required=true)
+	@Element(name = "repoid", required = true)
 	private String repoIdEncoded;
 	private byte[] repoId;
-	
-	@Element(name="chunker", required=false)
+
+	@Element(name = "chunker", required = false)
 	private ChunkerTO chunker;
-	
-	@Element(name="multichunker", required=false)
+
+	@Element(name = "multichunker", required = false)
 	private MultiChunkerTO multiChunker;
-	
-	@ElementList(name="transformers", required=false, entry="transformer")
+
+	@ElementList(name = "transformers", required = false, entry = "transformer")
 	private ArrayList<TransformerTO> transformers;
-	
+
 	public byte[] getRepoId() {
 		return repoId;
 	}
@@ -64,7 +72,31 @@ public class RepoTO {
 	public void setRepoId(byte[] repoId) {
 		this.repoId = repoId;
 	}
-	
+
+	public void save(File file) throws ConfigException {
+		try {
+			new Persister().write(this, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot write repoTO to file " + file, e);
+		}
+	}
+
+	public void save(File file, List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) throws ConfigException {
+		try {
+
+			ByteArrayOutputStream plaintextRepoOutputStream = new ByteArrayOutputStream();
+
+			Serializer serializer = new Persister();
+			serializer.write(this, plaintextRepoOutputStream);
+
+			CipherUtil.encrypt(new ByteArrayInputStream(plaintextRepoOutputStream.toByteArray()), new FileOutputStream(file), cipherSpecs, masterKey);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot write repoTO (encrypted) to file " + file, e);
+		}
+	}
+
 	@Persist
 	public void prepare() {
 		repoIdEncoded = (repoId != null) ? StringUtil.toHex(repoId) : null;
@@ -74,7 +106,7 @@ public class RepoTO {
 	public void release() {
 		repoIdEncoded = null;
 	}
-	
+
 	@Commit
 	public void commit() {
 		repoId = (repoIdEncoded != null) ? StringUtil.fromHex(repoIdEncoded) : null;
@@ -104,15 +136,27 @@ public class RepoTO {
 		this.transformers = (transformers != null) ? new ArrayList<TransformerTO>(transformers) : null;
 	}
 
+	/**
+	 * Configuration object for the deduplication chunker. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class ChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
-	
+
+	/**
+	 * Configuration object for the deduplication multi-chunker. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class MultiChunkerTO extends TypedPropertyListTO {
 		// Nothing special about this
 	}
-	
+
+	/**
+	 * Configuration object for the deduplication transformer. As of
+	 * today, this is a key/value based configuration.
+	 */
 	public static class TransformerTO extends TypedPropertyListTO {
 		// Nothing special about this
-	} 
+	}
 }

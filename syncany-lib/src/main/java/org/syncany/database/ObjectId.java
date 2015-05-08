@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,10 @@ public abstract class ObjectId {
 	
 	/**
 	 * Returns the raw representation of the object identifier in the
-	 * form of a byte array. 
-	 * 
-	 * <b>Note</b>: This method is deprecated and should not be used. Try
-	 * to avoid using the raw array. 
+	 * form of a byte array.  
 	 */
-	@Deprecated
-	public byte[] getRaw() {
-		return identifier;
+	public byte[] getBytes() {
+		return Arrays.copyOf(identifier, identifier.length);
 	}
 
 	/**

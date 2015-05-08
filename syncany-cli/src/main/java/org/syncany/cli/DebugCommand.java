@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import org.apache.commons.io.IOUtils;
-import org.syncany.config.Config;
-import org.syncany.operations.ls.LsOperation;
+import org.syncany.operations.OperationOptions;
+import org.syncany.operations.OperationResult;
 
 /**
  * Intentionally undocumented command to help debugging the application. Implements various
@@ -38,11 +38,16 @@ import org.syncany.operations.ls.LsOperation;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DebugCommand extends Command {
-	private static final Logger logger = Logger.getLogger(LsOperation.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(DebugCommand.class.getSimpleName());
 
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 
 	@Override
@@ -82,7 +87,6 @@ public class DebugCommand extends Command {
 			throw new Exception("Given file does not exist: "+decryptFile);			
 		}
 		
-		Config config = client.getConfig();
 		InputStream fileInputStream = config.getTransformer().createInputStream(new FileInputStream(decryptFile));
 		
 		IOUtils.copy(fileInputStream, System.out);		
@@ -90,6 +94,16 @@ public class DebugCommand extends Command {
 	}
 	
 	private boolean isInitializedScope() {
-		return client != null && client.getConfig() != null;
+		return config != null;
 	}
+
+	@Override
+	public OperationOptions parseOptions(String[] operationArgs) throws Exception {
+		return null;
+	}
+
+	@Override
+	public void printResults(OperationResult result) {
+		// Nothing.
+	}	
 }

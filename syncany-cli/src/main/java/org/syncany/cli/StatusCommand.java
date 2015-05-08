@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,52 +22,70 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
+import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.status.StatusOperationResult;
+
+import com.google.common.eventbus.Subscribe;
 
 public class StatusCommand extends Command {
 	@Override
 	public CommandScope getRequiredCommandScope() {	
 		return CommandScope.INITIALIZED_LOCALDIR;
 	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return true;
+	}
 	
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = parseOptions(operationArgs);
-		StatusOperationResult operationResult = client.status(operationOptions);
+		StatusOperationResult operationResult = new StatusOperation(config, operationOptions).execute();
 		
 		printResults(operationResult);
 		
 		return 0;
 	}
 
-	public StatusOperationOptions parseOptions(String[] operationArgs) {
+	@Override
+	public StatusOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		StatusOperationOptions operationOptions = new StatusOperationOptions();
 
 		OptionParser parser = new OptionParser();	
 		parser.allowsUnrecognizedOptions();
 		
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
+		OptionSpec<Void> optionNoDeleteUpload = parser.acceptsAll(asList("D", "no-delete"));
 		
 		OptionSet options = parser.parse(operationArgs);	
 		
 		// --force-checksum
 		operationOptions.setForceChecksum(options.has(optionForceChecksum));
 		
+		// -D, --no-delete
+		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
+		
 		return operationOptions;
 	}	
 
-	public void printResults(StatusOperationResult operationResult) {
-		if (operationResult.getChangeSet().hasChanges()) {
-			for (String newFile : operationResult.getChangeSet().getNewFiles()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		StatusOperationResult concreteOperationResult = (StatusOperationResult) operationResult;
+		
+		if (concreteOperationResult.getChangeSet().hasChanges()) {
+			for (String newFile : concreteOperationResult.getChangeSet().getNewFiles()) {
 				out.println("? "+newFile);
 			}
 
-			for (String changedFile : operationResult.getChangeSet().getChangedFiles()) {
+			for (String changedFile : concreteOperationResult.getChangeSet().getChangedFiles()) {
 				out.println("M "+changedFile);
 			}
 			
-			for (String deletedFile : operationResult.getChangeSet().getDeletedFiles()) {
+			for (String deletedFile : concreteOperationResult.getChangeSet().getDeletedFiles()) {
 				out.println("D "+deletedFile);
 			}						
 		}
@@ -75,5 +93,9 @@ public class StatusCommand extends Command {
 			out.println("No local changes.");
 		}
 	}
-
+	
+	@Subscribe
+	public void onStatusStartEventReceived(StatusStartSyncExternalEvent syncEvent) {
+		out.printr("Checking for new or altered files ...");
+	}
 }

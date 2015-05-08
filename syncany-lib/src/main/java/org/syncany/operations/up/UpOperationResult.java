@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,26 +19,16 @@ package org.syncany.operations.up;
 
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.OperationResult;
-import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.status.StatusOperationResult;
 
 public class UpOperationResult implements OperationResult {
 	public enum UpResultCode {
-		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES
+		OK_CHANGES_UPLOADED, OK_NO_CHANGES, NOK_UNKNOWN_DATABASES, NOK_REPO_BLOCKED
 	};
 
 	private UpResultCode resultCode;
 	private StatusOperationResult statusResult = new StatusOperationResult();
-	private CleanupOperationResult cleanupResult = null;
 	private ChangeSet uploadChangeSet = new ChangeSet();
-
-	public CleanupOperationResult getCleanupResult() {
-		return cleanupResult;
-	}
-
-	public void setCleanupResult(CleanupOperationResult cleanupResult) {
-		this.cleanupResult = cleanupResult;
-	}
 
 	public UpResultCode getResultCode() {
 		return resultCode;

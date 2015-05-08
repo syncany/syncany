@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,25 +36,25 @@ import org.syncany.util.StringUtil;
 /**
  * The notification listener implements a client to the fanout, as very
  * lightweight pub/sub server originally written for SparkleShare.
- * 
- * <p>Fanout implements a simple TCP-based plaintext protocol.<br /> 
+ *
+ * <p>Fanout implements a simple TCP-based plaintext protocol.<br />
  * It implements the following <b>commands</b>:
  * <ul>
  *  <li><tt>subcribe &lt;channel&gt;</tt></li>
  *  <li><tt>unsubscribe &lt;channel&gt;</tt></li>
  *  <li><tt>announce &lt;channel&gt; &lt;message&gt;</tt></li>
  * </ul>
- * 
+ *
  * <p><b>Notifications</b> have the following format:
  * <ul>
  *  <li><tt>&lt;channel&gt;!&lt;message&gt;</tt></li>
  * </ul>
- * 
+ *
  * <p>The notification listener starts a thread and listens for incoming messages.
  * Outgoing messages (subscribe/unsubscribe/announce) are sent directly or (if that
- * fails), put in an outgoing queue. Incoming messages are handed over to a 
+ * fails), put in an outgoing queue. Incoming messages are handed over to a
  * {@link NotificationListenerListener}.
- * 
+ *
  * @see <a href="https://github.com/travisghansen/fanout/">https://github.com/travisghansen/fanout/</a> - Fanout source code by Travis G. Hansen
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
@@ -86,7 +86,7 @@ public class NotificationListener {
 		this.subscribedChannels = new HashSet<String>();
 		this.incomingMessageThread = null;
 		this.outgoingMessageQueue = new LinkedList<String>();
-		
+
 		this.connected = new AtomicBoolean(false);
 		this.running = new AtomicBoolean(false);
 	}
@@ -108,15 +108,15 @@ public class NotificationListener {
 				running.set(false);
 
 				if (socket != null) {
-					socket.close();				
+					socket.close();
 				}
-				
+
 				if (incomingMessageThread != null) {
 					incomingMessageThread.interrupt();
 				}
 			}
-			catch (Exception e) {
-				// Don't care
+			catch (IOException e) {
+				logger.log(Level.FINE, "Could not close the socket", e);
 			}
 			finally {
 				incomingMessageThread = null;
@@ -149,7 +149,8 @@ public class NotificationListener {
 				socketOut.write(StringUtil.toBytesUTF8(message));
 				logger.log(Level.INFO, "Sent message: " + message.trim());
 			}
-			catch (Exception e) {
+			catch (IOException e) {
+				logger.log(Level.FINE, "Could write to the socket", e);
 				queueOutgoingMessage(message);
 			}
 		}
@@ -180,7 +181,8 @@ public class NotificationListener {
 
 			connected.set(socket.isConnected());
 		}
-		catch (Exception e) {
+		catch (IOException e) {
+			logger.log(Level.FINE, "Could not connect the socket", e);
 			disconnect();
 		}
 	}
@@ -201,8 +203,8 @@ public class NotificationListener {
 				socketIn.close();
 			}
 		}
-		catch (Exception e) {
-			// Don't care!
+		catch (IOException e) {
+			logger.log(Level.FINE, "Could not close the socket", e);
 		}
 		finally {
 			socket = null;
@@ -238,10 +240,11 @@ public class NotificationListener {
 					processIncomingMessage(socketIn.readLine());
 				}
 				catch (SocketTimeoutException e) {
-					// Nothing!
+					// Nothing. Do not log the exception either.
+					//logger.log(Level.FINE, "Socket timed out", e);
 				}
 				catch (InterruptedException e) {
-					logger.log(Level.INFO, "Notification listener interrupted.");
+					logger.log(Level.INFO, "Notification listener interrupted.", e);
 					running.set(false);
 				}
 				catch (Exception e) {
@@ -261,7 +264,7 @@ public class NotificationListener {
 						}
 					}
 					catch (InterruptedException e2) {
-						logger.log(Level.INFO, "Notification listener interrupted.");
+						logger.log(Level.INFO, "Notification listener interrupted.", e2);
 						running.set(false);
 					}
 				}

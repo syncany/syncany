@@ -6,8 +6,11 @@
 -- + http://stackoverflow.com/a/2655567/1440785
 
 merge into filecontent_chunk as filecontent_chunk_target
-using (values(?, ?)) as filecontent_chunk_ref(filecontent_checksum, chunk_checksum)
-on (filecontent_chunk_target.filecontent_checksum = filecontent_chunk_ref.filecontent_checksum 
-	and filecontent_chunk_target.chunk_checksum = filecontent_chunk_ref.chunk_checksum)
+using (values(?, ?, ?)) as filecontent_chunk_ref(filecontent_checksum, chunk_checksum, num)
+on (
+	    filecontent_chunk_target.filecontent_checksum = filecontent_chunk_ref.filecontent_checksum 
+	and filecontent_chunk_target.chunk_checksum = filecontent_chunk_ref.chunk_checksum
+	and filecontent_chunk_target.num = filecontent_chunk_ref.num
+)
 when not matched then insert (filecontent_checksum, chunk_checksum, num) 
-	values (filecontent_chunk_ref.filecontent_checksum, filecontent_chunk_ref.chunk_checksum, ?)
+	values (filecontent_chunk_ref.filecontent_checksum, filecontent_chunk_ref.chunk_checksum, filecontent_chunk_ref.num)

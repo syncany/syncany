@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
-import org.syncany.plugins.StorageException;
+import org.syncany.plugins.transfer.StorageException;
 
 public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
@@ -63,11 +63,17 @@ public class RestoreOperation extends AbstractTransferOperation {
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 		
-		// Find file version
+		// Find file history
 		FileHistoryId restoreFileHistoryId = findFileHistoryId();
+
+		if (restoreFileHistoryId == null) {
+			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
+		}
+		
+		// Find file version
 		FileVersion restoreFileVersion = findRestoreFileVersion(restoreFileHistoryId);
 
-		if (restoreFileHistoryId == null || restoreFileVersion == null) {
+		if (restoreFileVersion == null) {
 			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
 		}
 		else if (restoreFileVersion.getType() == FileType.FOLDER) {

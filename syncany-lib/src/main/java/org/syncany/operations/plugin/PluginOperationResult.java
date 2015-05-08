@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,17 +21,29 @@ import java.util.List;
 
 import org.syncany.operations.OperationResult;
 
-public class PluginOperationResult implements OperationResult {
+public class PluginOperationResult implements OperationResult {	
 	public enum PluginResultCode {
 		OK, NOK
 	}
-	
+
 	private PluginResultCode resultCode;
+	private PluginOperationAction action;
 	private List<ExtendedPluginInfo> pluginList;
 	private String sourcePluginPath;
 	private String targetPluginPath;
 	private PluginInfo affectedPluginInfo;
 	private List<String> conflictingPluginIds;
+	private List<String> updatedPluginIds;
+	private List<String> erroneousPluginIds;
+	private List<String> delayedPluginIds;
+
+	public PluginOperationAction getAction() {
+		return action;
+	}
+
+	public void setAction(PluginOperationAction action) {
+		this.action = action;
+	}
 
 	public List<ExtendedPluginInfo> getPluginList() {
 		return pluginList;
@@ -72,12 +84,35 @@ public class PluginOperationResult implements OperationResult {
 	public void setTargetPluginPath(String targetPluginPath) {
 		this.targetPluginPath = targetPluginPath;
 	}
-	
+
 	public List<String> getConflictingPluginIds() {
 		return conflictingPluginIds;
 	}
-	
+
 	public void setConflictingPlugins(List<String> conflictingPluginIds) {
 		this.conflictingPluginIds = conflictingPluginIds;
+	}
+	public List<String> getUpdatedPluginIds() {
+		return updatedPluginIds;
+	}
+
+	public void setUpdatedPluginIds(List<String> updatedPluginIds) {
+		this.updatedPluginIds = updatedPluginIds;
+	}
+
+	public List<String> getErroneousPluginIds() {
+		return erroneousPluginIds;
+	}
+
+	public void setErroneousPluginIds(List<String> erroneousPluginIds) {
+		this.erroneousPluginIds = erroneousPluginIds;
+	}
+
+	public void setDelayedPluginIds(List<String> delayedPluginIds) {
+		this.delayedPluginIds = delayedPluginIds;
+	}
+
+	public List<String> getDelayedPluginIds() {
+		return delayedPluginIds;
 	}
 }

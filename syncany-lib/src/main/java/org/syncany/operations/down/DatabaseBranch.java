@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,78 +23,67 @@ import java.util.List;
 
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
-import org.syncany.database.VectorClock;
 
 /**
- * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a 
- * the history of a client's database. It can be compared to a sorted list of 
- * {@link DatabaseVersion} pointers. 
- * 
+ * A branch represents a list of {@link DatabaseVersionHeader}s, thereby identifying a
+ * the history of a client's database. It can be compared to a sorted list of
+ * {@link DatabaseVersion} pointers.
+ *
  * <p>Branches are used mainly in the {@link DatabaseReconciliator} to compare database
- * versions and reconcile conflicts. 
- *    
+ * versions and reconcile conflicts.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class DatabaseBranch {
 	private ArrayList<DatabaseVersionHeader> branch;
-	
+
 	public DatabaseBranch() {
 		this.branch = new ArrayList<DatabaseVersionHeader>();
 	}
 
 	public void add(DatabaseVersionHeader header) {
-		branch.add(header);		
-	}	
-	
+		branch.add(header);
+	}
+
 	public void addAll(List<DatabaseVersionHeader> headers) {
 		branch.addAll(headers);
-	}	
-	
+	}
+
 	public int size() {
 		return branch.size();
 	}
-	
+
 	public DatabaseVersionHeader get(int index) {
-		try {
+		if (index >= 0 && index < branch.size()) {
 			return branch.get(index);
 		}
-		catch (ArrayIndexOutOfBoundsException e) {
-			return null;
-		}
-	}
-	
-	// TODO [medium] Performance: Use map instead of list
-	public DatabaseVersionHeader get(VectorClock vectorClock) {
-		for (DatabaseVersionHeader databaseVersionHeader : branch) {
-			if (databaseVersionHeader.getVectorClock().equals(vectorClock)) {
-				return databaseVersionHeader;
-			}
-		}
-		
 		return null;
 	}
 
 	public List<DatabaseVersionHeader> getAll() {
 		return Collections.unmodifiableList(branch);
-	}	
-	
+	}
+
 	public DatabaseVersionHeader getLast() {
-		return branch.get(branch.size()-1);
-	}	
-	
-	public DatabaseBranchIterator iteratorLast() {
-        return new DatabaseBranchIterator(branch, branch.size()-1);
-    }
-	
-	public DatabaseBranchIterator iteratorFirst() {
-        return new DatabaseBranchIterator(branch, 0);
-    }	
-	
+		if (branch.size() == 0) {
+			return null;
+		}
+		return branch.get(branch.size() - 1);
+	}
+
 	@Override
 	public String toString() {
 		return branch.toString();
 	}
-	
+
+	@Override
+	public DatabaseBranch clone() {
+		DatabaseBranch clonedBranch = new DatabaseBranch();
+		clonedBranch.addAll(getAll());
+
+		return clonedBranch;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -105,19 +94,24 @@ public class DatabaseBranch {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof DatabaseBranch)) {
 			return false;
+		}
 		DatabaseBranch other = (DatabaseBranch) obj;
 		if (branch == null) {
-			if (other.branch != null)
+			if (other.branch != null) {
 				return false;
+			}
 		}
-		else if (!branch.equals(other.branch))
+		else if (!branch.equals(other.branch)) {
 			return false;
+		}
 		return true;
 	}
 }

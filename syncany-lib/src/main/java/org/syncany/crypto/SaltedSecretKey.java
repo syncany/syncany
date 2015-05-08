@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,16 @@ import org.syncany.util.StringUtil;
 /**
  * A salted secret key is a convenience class to bundle a {@link SecretKey} with
  * its corresponding salt. It is mainly used to represent the master key and the
- * master key salt. 
- *  
+ * master key salt.
+ *
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class SaltedSecretKey implements SecretKey {
 	private static final long serialVersionUID = 1216126055360327470L;
-	
+
 	private SecretKey secretKey;
 	private byte[] salt;
-	
+
 	public SaltedSecretKey(SecretKey secretKey, byte[] salt) {
 		this.secretKey = secretKey;
 		this.salt = salt;
@@ -59,13 +59,13 @@ public class SaltedSecretKey implements SecretKey {
 	public byte[] getEncoded() {
 		return secretKey.getEncoded();
 	}
-	
+
 	@Override
 	public String toString() {
 		return "[secretKey={algorithm=" + getAlgorithm() + ", format=" + getFormat() + ", encoded=" + StringUtil.toHex(getEncoded()) + "}, salt="
 				+ StringUtil.toHex(getSalt()) + "]";
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -77,20 +77,27 @@ public class SaltedSecretKey implements SecretKey {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof SaltedSecretKey)) {
 			return false;
+		}
 		SaltedSecretKey other = (SaltedSecretKey) obj;
-		if (!Arrays.equals(salt, other.salt))
+		if (!Arrays.equals(salt, other.salt)) {
 			return false;
+		}
 		if (secretKey == null) {
-			if (other.secretKey != null)
+			if (other.secretKey != null) {
 				return false;
-		} else if (!secretKey.equals(other.secretKey))
+			}
+		}
+		else if (!secretKey.equals(other.secretKey)) {
 			return false;
+		}
 		return true;
-	}		
+	}
 }

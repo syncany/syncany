@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,38 @@
 package org.syncany.util;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class EnvironmentUtil {
-	public enum OperatingSystem { WINDOWS, UNIX_LIKE };
+	public enum OperatingSystem {
+		WINDOWS(false), 
+		OSX(true), 
+		UNIX_LIKE(true);
+		
+		private boolean unixLike;
+		
+		OperatingSystem(boolean unixLike) {
+			this.unixLike = unixLike;
+		}
+		
+		public boolean isUnixLike() {
+			return unixLike;
+		}
+	};
 
 	private static OperatingSystem operatingSystem;
 	
 	static {
-		operatingSystem = (File.separatorChar == '\\') ? OperatingSystem.WINDOWS : OperatingSystem.UNIX_LIKE;
+		if (File.separatorChar == '\\') {
+			operatingSystem = OperatingSystem.WINDOWS;
+		}
+		else if (System.getProperty("os.name").toUpperCase().contains("OS X")) {
+			operatingSystem = OperatingSystem.OSX;
+		}
+		else {
+			operatingSystem = OperatingSystem.UNIX_LIKE;
+		}
 	}		
 
 	public static void setOperatingSystem(OperatingSystem aOperatingSystem) {
@@ -37,14 +61,67 @@ public class EnvironmentUtil {
 	}
 	
 	public static boolean isUnixLikeOperatingSystem() {
-		return operatingSystem == OperatingSystem.UNIX_LIKE;
+		return operatingSystem.isUnixLike();
 	}
 
 	public static boolean isWindows() {
 		return operatingSystem == OperatingSystem.WINDOWS;
 	}	
+	
+	public static boolean isMacOSX() {
+		return operatingSystem == OperatingSystem.OSX;
+	}
 
 	public static boolean symlinksSupported() {
 		return isUnixLikeOperatingSystem();
+	}
+	
+	public static boolean isDebianBased() {
+		return isUnixLikeOperatingSystem() && Files.exists(Paths.get("/usr/bin/dpkg"));
+	}
+
+	/**
+	 * @see <a href="http://lopica.sourceforge.net/os.html">Possible return values</a>
+	 * @return x86, x86_64, sparc, ppc, armv41, i686, ppc64, powerpc, par-risc, ia64n, pa_risk2.0, pa_risk, power, power_rs, mips, alpha
+	 */
+	public static String getArchDescription() {
+		String realArchDescription = System.getProperty("os.arch").toLowerCase();
+		
+		switch (realArchDescription) {
+		case "i386":
+			return "x86";
+		case "amd64":
+			return "x86_64";
+		default:
+			return realArchDescription;
+		}
+	}
+	
+	/**
+	 * Returns the operating system short descripton.
+	 * 
+	 * @see <a href="http://www.prepareitonline.com/forums/prepare/24-developer-discussions/question/1615-what-are-the-possible-values-system-getproperty-os-name-can-return-on-different-systems">Possible output values</a> 
+	 * @return aix, digital, freebsd, hp, irix, linux, mac, mpe/ix, netware, os/2, solaris, windows
+	 */
+	public static String getOperatingSystemDescription() {
+		String realOperatingSystemDescription = System.getProperty("os.name").toLowerCase().split(" ")[0];
+		
+		switch (realOperatingSystemDescription) {
+		case "linux":
+		case "solaris":
+		case "freebsd":
+		case "aix":
+			return "linux";
+			
+		case "mac":
+		case "macosx":
+			return "macosx";
+			
+		case "windows":
+			return "windows";
+			
+		default:
+			return realOperatingSystemDescription;
+		}
 	}
 }

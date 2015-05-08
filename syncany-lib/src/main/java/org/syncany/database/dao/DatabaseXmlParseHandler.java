@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@ package org.syncany.database.dao;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,7 +26,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
 import org.syncany.database.DatabaseVersion;
-import org.syncany.database.DatabaseVersionHeader.DatabaseVersionType;
 import org.syncany.database.FileContent;
 import org.syncany.database.FileContent.FileChecksum;
 import org.syncany.database.FileVersion;
@@ -64,8 +62,6 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private VectorClock versionFrom;
 	private VectorClock versionTo;
 	private DatabaseReadType readType;
-	private DatabaseVersionType filterType;
-	private Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions;
 
 	private String elementPath;
 	private DatabaseVersion databaseVersion;
@@ -75,16 +71,12 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 	private MultiChunkEntry multiChunk;
 	private PartialFileHistory fileHistory;
 
-	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType,
-			DatabaseVersionType filterType, Map<FileHistoryId, FileVersion> ignoredMostRecentFileVersions) {
-		
+	public DatabaseXmlParseHandler(MemoryDatabase database, VectorClock fromVersion, VectorClock toVersion, DatabaseReadType readType) {
 		this.elementPath = "";
 		this.database = database;
 		this.versionFrom = fromVersion;
 		this.versionTo = toVersion;
 		this.readType = readType;
-		this.filterType = filterType;
-		this.ignoredMostRecentFileVersions = ignoredMostRecentFileVersions;
 	}
 
 	@Override
@@ -93,11 +85,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 
 		if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
 			databaseVersion = new DatabaseVersion();
-		}
-		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/type")) {
-			String typeStr = attributes.getValue("value");
-			databaseVersion.getHeader().setType(DatabaseVersionType.valueOf(typeStr));
-		}
+		}		
 		else if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion/header/time")) {
 			Date timeValue = new Date(Long.parseLong(attributes.getValue("value")));
 			databaseVersion.setTimestamp(timeValue);
@@ -172,89 +160,67 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				String dosAttributes = attributes.getValue("dosattrs");
 				String posixPermissions = attributes.getValue("posixperms");
 
-				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null || lastModifiedStr == null) {
-					throw new SAXException("FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
+				if (fileVersionStr == null || (path == null && pathEncoded == null) || typeStr == null || statusStr == null || sizeStr == null
+						|| lastModifiedStr == null) {
+					throw new SAXException(
+							"FileVersion: Attributes missing: version, path/pathEncoded, type, status, size and last modified are mandatory");
 				}
 
 				// Filter it if it was purged somewhere in the future, see #58
 				Long fileVersionNum = Long.parseLong(fileVersionStr);
-				boolean addThisFileVersion = !filterFileVersion(fileHistory, fileVersionNum);
-				
-				// Go add it!
-				if (addThisFileVersion) {
-					FileVersion fileVersion = new FileVersion();
-	
-					fileVersion.setVersion(fileVersionNum);
-					
-					if (path != null) {
-						fileVersion.setPath(path);
-					}
-					else {
-						try {
-							fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
-						}
-						catch (UnsupportedEncodingException e) {
-							throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
-						}
-					}
-					
-					fileVersion.setType(FileType.valueOf(typeStr));
-					fileVersion.setStatus(FileStatus.valueOf(statusStr));
-					fileVersion.setSize(Long.parseLong(sizeStr));
-					fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
-	
-					if (updatedStr != null) {
-						fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
-					}
-	
-					if (checksumStr != null) {
-						fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
-					}
-	
-					if (linkTarget != null) {
-						fileVersion.setLinkTarget(linkTarget);
-					}
-	
-					if (dosAttributes != null) {
-						fileVersion.setDosAttributes(dosAttributes);
-					}
-	
-					if (posixPermissions != null) {
-						fileVersion.setPosixPermissions(posixPermissions);
-					}
-	
-					fileHistory.addFileVersion(fileVersion);
-				}
-			}
-		}
-	}
 
-	private boolean filterFileVersion(PartialFileHistory fileHistory, Long fileVersionNum) {
-		if (ignoredMostRecentFileVersions != null) {
-			FileVersion mostRecentPurgeVersion = ignoredMostRecentFileVersions.get(fileHistory.getFileHistoryId());
-			
-			if (mostRecentPurgeVersion != null) {
-				boolean hasBeenPurged = fileVersionNum.compareTo(mostRecentPurgeVersion.getVersion()) <= 0;
-				
-				if (hasBeenPurged) {
-					logger.log(Level.FINE, "   - File history {0}, version {1} will be ignored because it has been purged in a later version.",
-							new Object[] { fileHistory.getFileHistoryId(), fileVersionNum });
-					
-					return true;
+				// Go add it!
+				FileVersion fileVersion = new FileVersion();
+
+				fileVersion.setVersion(fileVersionNum);
+
+				if (path != null) {
+					fileVersion.setPath(path);
 				}
+				else {
+					try {
+						fileVersion.setPath(new String(Base64.decodeBase64(pathEncoded), "UTF-8"));
+					}
+					catch (UnsupportedEncodingException e) {
+						throw new RuntimeException("Invalid Base64 encoding for filename: " + pathEncoded);
+					}
+				}
+
+				fileVersion.setType(FileType.valueOf(typeStr));
+				fileVersion.setStatus(FileStatus.valueOf(statusStr));
+				fileVersion.setSize(Long.parseLong(sizeStr));
+				fileVersion.setLastModified(new Date(Long.parseLong(lastModifiedStr)));
+
+				if (updatedStr != null) {
+					fileVersion.setUpdated(new Date(Long.parseLong(updatedStr)));
+				}
+
+				if (checksumStr != null) {
+					fileVersion.setChecksum(FileChecksum.parseFileChecksum(checksumStr));
+				}
+
+				if (linkTarget != null) {
+					fileVersion.setLinkTarget(linkTarget);
+				}
+
+				if (dosAttributes != null) {
+					fileVersion.setDosAttributes(dosAttributes);
+				}
+
+				if (posixPermissions != null) {
+					fileVersion.setPosixPermissions(posixPermissions);
+				}
+
+				fileHistory.addFileVersion(fileVersion);
+
 			}
 		}
-		
-		return false;		
 	}
 
 	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (elementPath.equalsIgnoreCase("/database/databaseVersions/databaseVersion")) {
-			// Type filter is true if no filter is set (null) or the type matches
-			boolean typeFilterMatches = filterType == null || (filterType != null && filterType == databaseVersion.getHeader().getType());
-
-			if (vectorClockInLoadRange && typeFilterMatches) {
+			if (vectorClockInLoadRange) {
 				database.addDatabaseVersion(databaseVersion);
 				logger.log(Level.INFO, "   + Added database version " + databaseVersion.getHeader());
 			}
@@ -286,7 +252,7 @@ public class DatabaseXmlParseHandler extends DefaultHandler {
 				if (fileHistory.getFileVersions().size() > 0) {
 					databaseVersion.addFileHistory(fileHistory);
 				}
-				
+
 				fileHistory = null;
 			}
 			else {

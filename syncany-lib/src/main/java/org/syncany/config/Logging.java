@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-
-import org.reflections.Reflections;
 
 /**
  * The logging class offers convenience functions to initialize and update the
@@ -55,10 +53,9 @@ public class Logging {
 			return;
 		}
 
-		// Turn off INFO message of Reflections library (dirty, but the only way!) 
-		Reflections.log = null;
-		System.setProperty("hsqldb.reconfig_logging", "false");
-		
+		// Turn off unwanted loggers (evil libraries and such) 
+		disableUnwantedLoggers();		
+				
 		// Load logging.properties
     	try {
     		// Use file if exists, else use file embedded in JAR
@@ -78,6 +75,14 @@ public class Logging {
     	}		
 	}	
 	
+	private static void disableUnwantedLoggers() {
+		System.setProperty("hsqldb.reconfig_logging", "false");
+		
+		if (Logger.getLogger("sun.awt.X11.timeoutTask.XToolkit") != null) {
+			Logger.getLogger("sun.awt.X11.timeoutTask.XToolkit").setLevel(Level.OFF);
+		}
+	}
+
 	public static void setGlobalLogLevel(Level targetLogLevel) {
 		for (Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames(); loggerNames.hasMoreElements(); ) {
             String loggerName = loggerNames.nextElement();
@@ -93,6 +98,9 @@ public class Logging {
 		}
 		
 		Logger.getLogger("").setLevel(targetLogLevel);		
+		
+		// Make sure the unwanted loggers stay quiet
+		disableUnwantedLoggers();
 	}
 	
 	public static void addGlobalHandler(Handler targetHandler) {

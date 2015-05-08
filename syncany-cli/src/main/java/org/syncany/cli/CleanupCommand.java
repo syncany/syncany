@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,78 +22,102 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.database.MultiChunkEntry;
+import org.syncany.cli.util.CommandLineUtil;
+import org.syncany.operations.OperationResult;
+import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.cleanup.CleanupOperationResult;
+import org.syncany.operations.daemon.messages.CleanupStartCleaningSyncExternalEvent;
+import org.syncany.operations.daemon.messages.CleanupStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperationOptions;
+
+import com.google.common.eventbus.Subscribe;
 
 public class CleanupCommand extends Command {
 	@Override
-	public CommandScope getRequiredCommandScope() {	
+	public CommandScope getRequiredCommandScope() {
 		return CommandScope.INITIALIZED_LOCALDIR;
+	}
+
+	@Override
+	public boolean canExecuteInDaemonScope() {
+		return false;
 	}
 
 	@Override
 	public int execute(String[] operationArgs) throws Exception {
 		CleanupOperationOptions operationOptions = parseOptions(operationArgs);
-		CleanupOperationResult operationResult = client.cleanup(operationOptions);
+		CleanupOperationResult operationResult = new CleanupOperation(config, operationOptions).execute();
 
 		printResults(operationResult);
 
 		return 0;
 	}
 
+	@Override
 	public CleanupOperationOptions parseOptions(String[] operationArgs) throws Exception {
 		CleanupOperationOptions operationOptions = new CleanupOperationOptions();
 
 		OptionParser parser = new OptionParser();
 		parser.allowsUnrecognizedOptions();
-		
-		OptionSpec<Void> optionNoDatabaseMerge = parser.acceptsAll(asList("M", "no-database-merge"));
-		OptionSpec<Void> optionNoOldVersionRemoval = parser.acceptsAll(asList("V", "no-version-remove"));
-		OptionSpec<Integer> optionKeepVersions = parser.acceptsAll(asList("k", "keep-versions")).withRequiredArg().ofType(Integer.class);
+
+		OptionSpec<Void> optionForce = parser.acceptsAll(asList("f", "force"));
+		OptionSpec<Void> optionNoOlderVersionRemoval = parser.acceptsAll(asList("O", "no-delete-older-than"));
+		OptionSpec<Void> optionNoVersionRemovalByInterval = parser.acceptsAll(asList("I", "no-delete-interval"));
+		OptionSpec<Void> optionNoRemoveTempFiles = parser.acceptsAll(asList("T", "no-temp-removal"));
+		OptionSpec<String> optionKeepMinTime = parser.acceptsAll(asList("o", "delete-older-than"))
+				.withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
-		
-		// -M, --no-database-merge
-		operationOptions.setMergeRemoteFiles(!options.has(optionNoDatabaseMerge));
-		
+
+		// -F, --force
+		operationOptions.setForce(options.has(optionForce));
+
 		// -V, --no-version-removal
-		operationOptions.setRemoveOldVersions(!options.has(optionNoOldVersionRemoval));
-			
-		// -k=<count>, --keep-versions=<count>		
-		if (options.has(optionKeepVersions)) {
-			int keepVersionCount = options.valueOf(optionKeepVersions);
-			
-			if (keepVersionCount < 1) {
-				throw new Exception("Invalid value for --keep-versions="+keepVersionCount+"; must be >= 1");
+		operationOptions.setRemoveOldVersions(!options.has(optionNoOlderVersionRemoval));
+
+		// -T, --no-temp-removal
+		operationOptions.setRemoveUnreferencedTemporaryFiles(!options.has(optionNoRemoveTempFiles));
+		
+		// -I, --no-delete-interval
+		operationOptions.setRemoveVersionsByInterval(!options.has(optionNoVersionRemovalByInterval));
+
+		// -o=<time>, --delete-older-than=<time>
+		if (options.has(optionKeepMinTime)) {
+			long keepDeletedFilesForSeconds = CommandLineUtil.parseTimePeriod(options.valueOf(optionKeepMinTime));
+
+			if (keepDeletedFilesForSeconds < 0) {
+				throw new Exception("Invalid value for --delete-older-than==" + keepDeletedFilesForSeconds + "; must be >= 0");
 			}
-			
-			operationOptions.setKeepVersionsCount(options.valueOf(optionKeepVersions));			
+
+			operationOptions.setMinKeepSeconds(keepDeletedFilesForSeconds);
 		}
-		
+
 		// Parse 'status' options
-		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));	
-		
-		// Does this configuration make sense
-		boolean nothingToDo = !operationOptions.isMergeRemoteFiles() && operationOptions.isRemoveOldVersions();
-		
-		if (nothingToDo) {
-			throw new Exception("Invalid parameter configuration: -M and -V cannot be set together. Nothing to do.");
-		}
-		
+		operationOptions.setStatusOptions(parseStatusOptions(operationArgs));
+
 		return operationOptions;
 	}
-	
-	private StatusOperationOptions parseStatusOptions(String[] operationArgs) {
+
+	private StatusOperationOptions parseStatusOptions(String[] operationArgs) throws Exception {
 		StatusCommand statusCommand = new StatusCommand();
+		statusCommand.setOut(out);
+
 		return statusCommand.parseOptions(operationArgs);
 	}
 
-	private void printResults(CleanupOperationResult operationResult) {	
-		switch (operationResult.getResultCode()) {
+	@Override
+	public void printResults(OperationResult operationResult) {
+		CleanupOperationResult concreteOperationResult = (CleanupOperationResult) operationResult;
+
+		switch (concreteOperationResult.getResultCode()) {
 		case NOK_DIRTY_LOCAL:
 			out.println("Cannot cleanup database if local repository is in a dirty state; Call 'up' first.");
+			break;
+
+		case NOK_RECENTLY_CLEANED:
+			out.println("Cleanup has been done recently, so it is not necessary.");
+			out.println("If you are sure it is necessary, override with --force.");
 			break;
 
 		case NOK_LOCAL_CHANGES:
@@ -103,33 +127,28 @@ public class CleanupCommand extends Command {
 		case NOK_REMOTE_CHANGES:
 			out.println("Remote changes detected or repository is locked by another user. Please call 'down' first.");
 			break;
-			
+
 		case NOK_OTHER_OPERATIONS_RUNNING:
 			out.println("Cannot run cleanup while other clients are performing up/down/cleanup. Try again later.");
 			break;
 
 		case OK:
-			if (operationResult.getMergedDatabaseFilesCount() > 0) {
-				out.println(operationResult.getMergedDatabaseFilesCount() + " database files merged into one.");
-			}
-			
-			if (operationResult.getRemovedMultiChunks().size() > 0) {
-				long totalRemovedMultiChunkSize = 0;
-				
-				for (MultiChunkEntry removedMultiChunk : operationResult.getRemovedMultiChunks().values()) {
-					totalRemovedMultiChunkSize += removedMultiChunk.getSize();
-				}
-				
-				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n", 
-					operationResult.getRemovedMultiChunks().size(), (double) totalRemovedMultiChunkSize / 1024 / 1024);
+			if (concreteOperationResult.getMergedDatabaseFilesCount() > 0) {
+				out.println(concreteOperationResult.getMergedDatabaseFilesCount() + " database files merged.");
 			}
 
-			if (operationResult.getRemovedOldVersionsCount() > 0) {
-				out.println(operationResult.getRemovedOldVersionsCount() + " file histories shortened.");
+			if (concreteOperationResult.getRemovedMultiChunksCount() > 0) {
+				out.printf("%d multichunk(s) deleted on remote storage (freed %.2f MB)\n",
+						concreteOperationResult.getRemovedMultiChunksCount(),
+						(double) concreteOperationResult.getRemovedMultiChunksSize() / 1024 / 1024);
+			}
+
+			if (concreteOperationResult.getRemovedOldVersionsCount() > 0) {
+				out.println(concreteOperationResult.getRemovedOldVersionsCount() + " file histories shortened.");
 				// TODO [low] This counts only the file histories, not file versions; not very helpful!
 			}
 
-			out.println("Cleanup successful.");			
+			out.println("Cleanup successful.");
 			break;
 
 		case OK_NOTHING_DONE:
@@ -137,7 +156,17 @@ public class CleanupCommand extends Command {
 			break;
 
 		default:
-			throw new RuntimeException("Invalid result code: " + operationResult.getResultCode().toString());
-		}	
+			throw new RuntimeException("Invalid result code: " + concreteOperationResult.getResultCode().toString());
+		}
+	}
+
+	@Subscribe
+	public void onCleanupStartEventReceived(CleanupStartSyncExternalEvent syncEvent) {
+		out.printr("Checking if cleanup is needed ...");
+	}
+
+	@Subscribe
+	public void onCleanupStartCleaningEventReceived(CleanupStartCleaningSyncExternalEvent syncEvent) {
+		out.printr("Cleanup is needed, starting to clean ...");
 	}
 }

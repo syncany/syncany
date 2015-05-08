@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,38 +17,40 @@
  */
 package org.syncany.config.to;
 
+import java.io.File;
+
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Complete;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Persister;
+import org.syncany.config.ConfigException;
 import org.syncany.util.StringUtil;
 
 /**
  * The master transfer object is used to create and load the master file
  * from/to XML. The master file only contains the salt for the master key.
- * 
+ *
  * <p>The master file is stored locally and on the remote storage. The salt
  * is used to create the master key from a password.
- * 
+ *
  * <p>It uses the Simple framework for XML serialization, and its corresponding
- * annotation-based configuration.  
- *  
- * @see <a href="http://simple.sourceforge.net/">Simple framework</a> at simple.sourceforge.net
+ * annotation-based configuration.
+ *
+ * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
-@Root(name="master")
-@Namespace(reference="http://syncany.org/master/1")
+@Root(name = "master", strict = false)
 public class MasterTO {
 	@Element(name = "salt", required = false)
 	private String saltEncoded;
 	private byte[] salt;
-	
+
 	public MasterTO() {
 		// Required default constructor
 	}
-	
+
 	public MasterTO(byte[] salt) {
 		this.salt = salt;
 	}
@@ -61,6 +63,15 @@ public class MasterTO {
 		this.salt = salt;
 	}
 
+	public void save(File file) throws ConfigException {
+		try {
+			new Persister().write(this, file);
+		}
+		catch (Exception e) {
+			throw new ConfigException("Cannot write masterTO to file " + file, e);
+		}
+	}
+
 	@Persist
 	public void prepare() {
 		saltEncoded = (salt != null) ? StringUtil.toHex(salt) : null;
@@ -70,7 +81,7 @@ public class MasterTO {
 	public void release() {
 		saltEncoded = null;
 	}
-	
+
 	@Commit
 	public void commit() {
 		salt = (saltEncoded != null) ? StringUtil.fromHex(saltEncoded) : null;

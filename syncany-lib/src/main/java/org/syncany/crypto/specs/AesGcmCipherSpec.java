@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2014 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.syncany.crypto.BcFixedCipherInputStream;
 import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 
@@ -53,6 +52,6 @@ public abstract class AesGcmCipherSpec extends CipherSpec {
 		AEADBlockCipher cipher = new GCMBlockCipher(new AESEngine()); 
 		cipher.init(false, new AEADParameters(new KeyParameter(secretKey), MAC_SIZE, iv));
 		
-		return new BcFixedCipherInputStream(underlyingInputStream, cipher);
+		return new org.bouncycastle.crypto.io.CipherInputStream(underlyingInputStream, cipher);
 	}
 }
