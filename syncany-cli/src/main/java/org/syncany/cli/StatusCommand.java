@@ -74,7 +74,11 @@ public class StatusCommand extends Command {
 		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
 
 		// --filter
-		operationOptions.setFilePattern(Pattern.compile(options.valueOf(optionFilePattern)));
+		Pattern filePattern = null;
+		if (options.has(optionFilePattern)) {
+			filePattern = Pattern.compile(options.valueOf(optionFilePattern));
+		}
+		operationOptions.setFilePattern(filePattern);
 
 		return operationOptions;
 	}
