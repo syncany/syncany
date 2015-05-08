@@ -27,11 +27,12 @@ import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
+import org.syncany.plugins.transfer.features.Async;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
 import org.syncany.plugins.transfer.features.TransactionAwareFeatureTransferManager;
-import org.syncany.plugins.transfer.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -75,14 +76,15 @@ public abstract class AbstractTransferOperation extends Operation {
 					.build(config)
 					.withFeature(Retriable.class)
 					.asDefault();
-			
+
 			TransactionAwareFeatureTransferManager regularFileTransferManager = TransferManagerFactory
 					.build(config)
+					.withFeature(Async.class)
 					.withFeature(Retriable.class)
 					.withFeature(PathAware.class)
 					.withFeature(TransactionAware.class)
 					.as(TransactionAware.class);
-			
+
 			this.actionHandler = new ActionFileHandler(actionFileTransferManager, operationName, config.getMachineName());
 			this.transferManager = regularFileTransferManager;
 		}
