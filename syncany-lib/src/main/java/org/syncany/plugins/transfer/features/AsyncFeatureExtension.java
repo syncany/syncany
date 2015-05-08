@@ -17,20 +17,22 @@
  */
 package org.syncany.plugins.transfer.features;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-@Feature(required = false)
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Async {
-	Class<? extends AsyncFeatureExtension> extension();
-	int maxRetries() default 5;
-	int maxWaitTime() default 10000;
+public interface AsyncFeatureExtension extends FeatureExtension {
+
+	/**
+	 * Check if a file on the remote side already exists.
+	 *
+	 * @param remoteFile The file to look up
+	 * @return True if the file exists and is accessible and false otherwise
+	 * @throws StorageException Thrown if an error occured
+	 */
+	boolean exists(RemoteFile remoteFile) throws StorageException;;
+
 }

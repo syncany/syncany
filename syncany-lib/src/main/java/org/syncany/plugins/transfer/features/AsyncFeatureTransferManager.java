@@ -18,19 +18,18 @@
 package org.syncany.plugins.transfer.features;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.StorageFileNotFoundException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
+import org.syncany.util.ReflectionUtil;
 
 /**
  * @author Christian Roth <christian.roth@port17.de>
@@ -42,11 +41,33 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 	private final TransferManager underlyingTransferManager;
 	private final Config config;
 	private final Throttler throttler;
+	private final AsyncFeatureExtension asyncFeatureExtension;
 
 	public AsyncFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, Async asyncAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 		this.throttler = new Throttler(asyncAnnotation.maxRetries(), asyncAnnotation.maxWaitTime());
+
+		this.asyncFeatureExtension = getAsyncFeatureExtension(originalTransferManager, asyncAnnotation);
+	}
+
+	@SuppressWarnings("unchecked")
+	private AsyncFeatureExtension getAsyncFeatureExtension(TransferManager originalTransferManager, Async asyncAnnotation) {
+		Class<? extends TransferManager> originalTransferManagerClass = originalTransferManager.getClass();
+		Class<AsyncFeatureExtension> asyncFeatureExtensionClass = (Class<AsyncFeatureExtension>) asyncAnnotation.extension();
+
+		try {
+			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(asyncFeatureExtensionClass, originalTransferManagerClass);
+
+			if (constructor != null) {
+				return (AsyncFeatureExtension) constructor.newInstance(originalTransferManager);
+			}
+
+			return asyncFeatureExtensionClass.newInstance();
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException | NullPointerException e) {
+			throw new RuntimeException("Cannot instantiate AsyncFeatureExtension (perhaps " + asyncFeatureExtensionClass + " does not exist?)", e);
+		}
 	}
 
 	@Override
@@ -95,6 +116,7 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFileClass) {
 		return underlyingTransferManager.getRemoteFilePath(remoteFileClass);
 	}
+
 	@Override
 	public StorageTestResult test(boolean testCreateTarget) {
 		return underlyingTransferManager.test(testCreateTarget);
@@ -122,30 +144,20 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 
 	private void waitForFile(RemoteFile remoteFile) throws StorageException {
 		while (true) {
-			try {
-				Path tempFilePath = Files.createTempFile("syncany-async-feature-tm", null);
-				underlyingTransferManager.download(remoteFile, tempFilePath.toFile());
-
-				logger.log(Level.FINER, "File found " + remoteFile);
+			if (asyncFeatureExtension.exists(remoteFile)) {
+				logger.log(Level.FINER, remoteFile + " exists on the remote side");
 				throttler.reset();
-				Files.delete(tempFilePath);
-			}
-			catch (StorageFileNotFoundException e) {
-				try {
-					long waitForMs = throttler.next();
-					logger.log(Level.FINER, "File not found on the remote side, perhaps its in transit, waiting " + waitForMs + "ms ...", e);
-					Thread.sleep(waitForMs);
-					continue;
-				}
-				catch (InterruptedException ie) {
-					throw new StorageException("Unable to retry", ie);
-				}
-			}
-			catch (IOException e) {
-				throw new StorageException("Unable to retry", e);
+				break;
 			}
 
-			break;
+			try {
+				long waitForMs = throttler.next();
+				logger.log(Level.FINER, "File not found on the remote side, perhaps its in transit, waiting " + waitForMs + "ms ...");
+				Thread.sleep(waitForMs);
+			}
+			catch (InterruptedException ie) {
+				throw new StorageException("Unable to retry", ie);
+			}
 		}
 	}
 
