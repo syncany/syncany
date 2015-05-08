@@ -44,6 +44,7 @@ public class LogOperationTest {
 		
 		UpOperationOptions upOptions = new UpOperationOptions();
 		upOptions.setStatusOptions(statusOptions);
+		upOptions.setForceUploadEnabled(true);
 
 		// First, do some uploading
 		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 5*1024, 5);				

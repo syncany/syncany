@@ -32,6 +32,7 @@ import org.syncany.tests.integration.scenarios.DoSameActionAtTwoClientsTest;
 import org.syncany.tests.integration.scenarios.EmptyFileScenarioTest;
 import org.syncany.tests.integration.scenarios.EmptyFolderScenarioTest;
 import org.syncany.tests.integration.scenarios.EvilCUpWithoutDownScenarioTest;
+import org.syncany.tests.integration.scenarios.FailedSplitSyncUpScenarioTest;
 import org.syncany.tests.integration.scenarios.FileLockedScenarioTest;
 import org.syncany.tests.integration.scenarios.FileTreeMoveToSubfolderScenarioTest;
 import org.syncany.tests.integration.scenarios.FileVanishedScenarioTest;
@@ -77,6 +78,7 @@ import org.syncany.tests.integration.scenarios.SymlinkSyncScenarioTest;
 		EmptyFileScenarioTest.class,
 		EmptyFolderScenarioTest.class,
 		EvilCUpWithoutDownScenarioTest.class,
+		FailedSplitSyncUpScenarioTest.class,
 		FileLockedScenarioTest.class,
 		FilenameCapitalizationWindowsScenarioTest.class,
 		FileTreeMoveToSubfolderScenarioTest.class,
