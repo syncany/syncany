@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.5-alpha (Date: tba)
+### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
