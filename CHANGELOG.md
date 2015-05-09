@@ -7,6 +7,7 @@ Change Log
   + Use smaller transactions in Up #364
 - Bugfixes and other things:
   + Update licensing to match GPLv3+ #457
+  + Prepare fix for read-after-write issue with S3 and Swift plugin #456
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
