@@ -17,9 +17,17 @@
  */
 package org.syncany.database.dao;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.syncany.database.DatabaseVersion.DatabaseVersionStatus;
 import org.syncany.database.FileVersion;
@@ -160,19 +168,6 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Collection<PartialFileHistory> getFileHistoriesByChecksum(String filecontentChecksum) {
-		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesWithLastVersionByChecksum.sql")) {
-			preparedStatement.setString(1, filecontentChecksum);
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				return createFileHistoriesFromResult(resultSet).values();
-			}
-
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public Collection<PartialFileHistory> getFileHistoriesByChecksumSizeAndModifiedDate(String filecontentChecksum, long size, Date modifiedDate) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByChecksumSizeAndModifiedDate.sql")) {
 			preparedStatement.setString(1, filecontentChecksum);
@@ -234,7 +229,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public PartialFileHistory getLastVersionByFileHistoryId(String fileHistoryId) {
+	private PartialFileHistory getLastVersionByFileHistoryId(String fileHistoryId) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getLastVersionByFileHistoryId.sql")) {
 			preparedStatement.setString(1, fileHistoryId);
 			preparedStatement.setString(2, fileHistoryId);

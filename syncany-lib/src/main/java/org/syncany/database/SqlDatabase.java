@@ -232,10 +232,6 @@ public class SqlDatabase {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
 	}
 
-	public Collection<PartialFileHistory> getFileHistoriesWithLastVersionByChecksum(String checksum) {
-		return fileHistoryDao.getFileHistoriesByChecksum(checksum);
-	}
-
 	public Collection<PartialFileHistory> getFileHistoriesWithLastVersionByChecksumSizeAndModifiedDate(String checksum, long size, Date modifiedDate) {
 		return fileHistoryDao.getFileHistoriesByChecksumSizeAndModifiedDate(checksum, size, modifiedDate);
 	}
