@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.plugins.transfer.features.Async;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistent;
 import org.syncany.plugins.transfer.features.Feature;
 import org.syncany.plugins.transfer.features.FeatureTransferManager;
 import org.syncany.plugins.transfer.features.PathAware;
@@ -69,7 +69,7 @@ public class TransferManagerFactory {
 			.add(TransactionAware.class)
 			.add(Retriable.class)
 			.add(PathAware.class)
-			.add(Async.class)
+			.add(ReadAfterWriteConsistent.class)
 			.build();
 
 	/**

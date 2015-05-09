@@ -22,14 +22,14 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
- * The async feature extension must be defined in the {@link Async}
- * feature in order to extend a {@link TransferManager} that was marked as 'async'
+ * The read write consistent feature extension must be defined in the {@link ReadAfterWriteConsistent}
+ * feature in order to extend a {@link TransferManager} that was marked as 'read write consistent'
  * with the required methods to verify if a file exists on the remote side.
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public interface AsyncFeatureExtension extends FeatureExtension {
+public interface ReadAfterWriteConsistentFeatureExtension extends FeatureExtension {
 
 	/**
 	 * Check if a file on the remote side already exists.

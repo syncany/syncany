@@ -28,8 +28,8 @@ import java.lang.annotation.Target;
  * This feature handles such cases by relaxing the strong assumption that a file
  * is immediately available after creation due to upload or move operations.
  *
- * <p>The {@link AsyncFeatureTransferManager} throttles existence check using a simple
- *   exponential method:<br/>
+ * <p>The {@link ReadAfterWriteConsistentFeatureTransferManager} throttles existence check
+ * using a simple exponential method:<br/>
  *
  * <code>throttle(n) = 3 ^ n * 100 ms, with n being the current iteration
  *
@@ -39,12 +39,12 @@ import java.lang.annotation.Target;
 @Feature(required = false)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Async {
+public @interface ReadAfterWriteConsistent {
 
 	/**
-	 * @see AsyncFeatureExtension
+	 * @see ReadAfterWriteConsistentFeatureExtension
 	 */
-	Class<? extends AsyncFeatureExtension> extension();
+	Class<? extends ReadAfterWriteConsistentFeatureExtension> extension();
 
 	/**
 	 * Define how often a transfer manager will try to find a file on the remote side.
@@ -52,7 +52,7 @@ public @interface Async {
 	int maxRetries() default 5;
 
 	/**
-	 * Define the maximum wait time until a file has to exist on the remote side.
+	 * Define the maximum wait time until a file has to exist on the remote side (given in milliseconds).
 	 */
 	int maxWaitTime() default 10000;
 }

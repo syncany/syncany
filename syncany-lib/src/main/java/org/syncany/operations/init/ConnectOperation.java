@@ -19,7 +19,6 @@ package org.syncany.operations.init;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.lang.reflect.Constructor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,15 +36,11 @@ import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferManagerFactory.TransferManagerBuilder;
-import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.transfer.features.Async;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;

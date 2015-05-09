@@ -32,9 +32,10 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.util.ReflectionUtil;
 
 /**
- * <p>The AsyncFeatureTransferManager waits specific amount of time after {@link #upload(File, RemoteFile)}
- * and {@link #move(RemoteFile, RemoteFile)} operations because some storage backends do no guarantee that
- * a file immediately exists after creation.
+ * <p>The ReadWriteConsistentFeatureTransferManager waits specific amount of time after
+ * {@link #upload(File, RemoteFile)} and {@link #move(RemoteFile, RemoteFile)} operations
+ * because some storage backends do no guarantee that a file immediately exists after
+ * creation.
  *
  * <p>It throttles existence check using a simple exponential method:<br/>
  *
@@ -43,38 +44,38 @@ import org.syncany.util.ReflectionUtil;
  * @author Christian Roth <christian.roth@port17.de>
  */
 
-public class AsyncFeatureTransferManager implements FeatureTransferManager {
-	private static final Logger logger = Logger.getLogger(AsyncFeatureTransferManager.class.getSimpleName());
+public class ReadAfterWriteConsistentFeatureTransferManager implements FeatureTransferManager {
+	private static final Logger logger = Logger.getLogger(ReadAfterWriteConsistentFeatureTransferManager.class.getSimpleName());
 
 	private final TransferManager underlyingTransferManager;
 	private final Config config;
 	private final Throttler throttler;
-	private final AsyncFeatureExtension asyncFeatureExtension;
+	private final ReadAfterWriteConsistentFeatureExtension readAfterWriteConsistentFeatureExtension;
 
-	public AsyncFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, Async asyncAnnotation) {
+	public ReadAfterWriteConsistentFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, ReadAfterWriteConsistent readAfterWriteConsistentAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
-		this.throttler = new Throttler(asyncAnnotation.maxRetries(), asyncAnnotation.maxWaitTime());
+		this.throttler = new Throttler(readAfterWriteConsistentAnnotation.maxRetries(), readAfterWriteConsistentAnnotation.maxWaitTime());
 
-		this.asyncFeatureExtension = getAsyncFeatureExtension(originalTransferManager, asyncAnnotation);
+		this.readAfterWriteConsistentFeatureExtension = getReadAfterWriteConsistentFeatureExtension(originalTransferManager, readAfterWriteConsistentAnnotation);
 	}
 
 	@SuppressWarnings("unchecked")
-	private AsyncFeatureExtension getAsyncFeatureExtension(TransferManager originalTransferManager, Async asyncAnnotation) {
+	private ReadAfterWriteConsistentFeatureExtension getReadAfterWriteConsistentFeatureExtension(TransferManager originalTransferManager, ReadAfterWriteConsistent readAfterWriteConsistentAnnotation) {
 		Class<? extends TransferManager> originalTransferManagerClass = originalTransferManager.getClass();
-		Class<AsyncFeatureExtension> asyncFeatureExtensionClass = (Class<AsyncFeatureExtension>) asyncAnnotation.extension();
+		Class<ReadAfterWriteConsistentFeatureExtension> readAfterWriteConsistentFeatureExtensionClass = (Class<ReadAfterWriteConsistentFeatureExtension>) readAfterWriteConsistentAnnotation.extension();
 
 		try {
-			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(asyncFeatureExtensionClass, originalTransferManagerClass);
+			Constructor<?> constructor = ReflectionUtil.getMatchingConstructorForClass(readAfterWriteConsistentFeatureExtensionClass, originalTransferManagerClass);
 
 			if (constructor != null) {
-				return (AsyncFeatureExtension) constructor.newInstance(originalTransferManager);
+				return (ReadAfterWriteConsistentFeatureExtension) constructor.newInstance(originalTransferManager);
 			}
 
-			return asyncFeatureExtensionClass.newInstance();
+			return readAfterWriteConsistentFeatureExtensionClass.newInstance();
 		}
 		catch (InvocationTargetException | InstantiationException | IllegalAccessException | NullPointerException e) {
-			throw new RuntimeException("Cannot instantiate AsyncFeatureExtension (perhaps " + asyncFeatureExtensionClass + " does not exist?)", e);
+			throw new RuntimeException("Cannot instantiate ReadWriteConsistentFeatureExtension (perhaps " + readAfterWriteConsistentFeatureExtensionClass + " does not exist?)", e);
 		}
 	}
 
@@ -152,7 +153,7 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 
 	private void waitForFile(RemoteFile remoteFile) throws StorageException {
 		while (true) {
-			if (asyncFeatureExtension.exists(remoteFile)) {
+			if (readAfterWriteConsistentFeatureExtension.exists(remoteFile)) {
 				logger.log(Level.FINER, remoteFile + " exists on the remote side");
 				throttler.reset();
 				break;

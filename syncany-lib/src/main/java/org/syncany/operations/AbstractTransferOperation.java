@@ -28,7 +28,7 @@ import org.syncany.config.LocalEventBus;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory;
-import org.syncany.plugins.transfer.features.Async;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistent;
 import org.syncany.plugins.transfer.features.PathAware;
 import org.syncany.plugins.transfer.features.Retriable;
 import org.syncany.plugins.transfer.features.TransactionAware;
@@ -79,7 +79,7 @@ public abstract class AbstractTransferOperation extends Operation {
 
 			TransactionAwareFeatureTransferManager regularFileTransferManager = TransferManagerFactory
 					.build(config)
-					.withFeature(Async.class)
+					.withFeature(ReadAfterWriteConsistent.class)
 					.withFeature(Retriable.class)
 					.withFeature(PathAware.class)
 					.withFeature(TransactionAware.class)

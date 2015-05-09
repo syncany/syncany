@@ -37,7 +37,7 @@ import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory.TransferManagerBuilder;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.plugins.transfer.features.Async;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistent;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -131,7 +131,7 @@ public abstract class AbstractInitOperation extends Operation {
 		tmbConstructor.setAccessible(true);
 
 		return tmbConstructor.newInstance(config, transferManager)
-						.withFeature(Async.class)
+						.withFeature(ReadAfterWriteConsistent.class)
 						.asDefault();
 	}
 }
