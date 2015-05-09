@@ -23,6 +23,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * <p>Some storage backends do not guarantee that a file immediately exists on the
+ * remote side after it is uploaded or moved.<br/>
+ * This feature handles such cases by relaxing the strong assumption that a file
+ * is immediately available after creation due to upload or move operations.
+ *
+ * <p>The {@link AsyncFeatureTransferManager} throttles existence check using a simple
+ *   exponential method:<br/>
+ *
+ * <code>throttle(n) = 3 ^ n * 100 ms, with n being the current iteration
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 
@@ -30,7 +40,19 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Async {
+
+	/**
+	 * @see AsyncFeatureExtension
+	 */
 	Class<? extends AsyncFeatureExtension> extension();
+
+	/**
+	 * Define how often a transfer manager will try to find a file on the remote side.
+	 */
 	int maxRetries() default 5;
+
+	/**
+	 * Define the maximum wait time until a file has to exist on the remote side.
+	 */
 	int maxWaitTime() default 10000;
 }

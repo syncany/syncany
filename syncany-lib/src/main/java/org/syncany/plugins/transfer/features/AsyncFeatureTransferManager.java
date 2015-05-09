@@ -32,6 +32,14 @@ import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.util.ReflectionUtil;
 
 /**
+ * <p>The AsyncFeatureTransferManager waits specific amount of time after {@link #upload(File, RemoteFile)}
+ * and {@link #move(RemoteFile, RemoteFile)} operations because some storage backends do no guarantee that
+ * a file immediately exists after creation.
+ *
+ * <p>It throttles existence check using a simple exponential method:<br/>
+ *
+ * <code>throttle(n) = 3 ^ n * 100 ms, with n being the current iteration
+ *
  * @author Christian Roth <christian.roth@port17.de>
  */
 
@@ -162,14 +170,13 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 	}
 
 	private class Throttler {
-
 		private final int maxRetries;
 		private final int maxWait;
 		private int currentIteration = 0;
 
 		public Throttler(int maxRetries, int maxWait) {
 			this.maxRetries = maxRetries;
-			this.maxWait = maxWait * 1000; // maxWait in seconds
+			this.maxWait = maxWait;
 		}
 
 		public long next() throws InterruptedException {
