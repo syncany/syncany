@@ -29,6 +29,7 @@ public class UpOperationResult implements OperationResult {
 	private UpResultCode resultCode;
 	private StatusOperationResult statusResult = new StatusOperationResult();
 	private ChangeSet uploadChangeSet = new ChangeSet();
+	private long transactionsCompleted = 0L;
 
 	public UpResultCode getResultCode() {
 		return resultCode;
@@ -52,5 +53,13 @@ public class UpOperationResult implements OperationResult {
 
 	public ChangeSet getChangeSet() {
 		return uploadChangeSet;
+	}
+
+	public long getTransactionsCompleted() {
+		return transactionsCompleted;
+	}
+
+	public void incrementTransactionsCompleted() {
+		transactionsCompleted++;
 	}
 }

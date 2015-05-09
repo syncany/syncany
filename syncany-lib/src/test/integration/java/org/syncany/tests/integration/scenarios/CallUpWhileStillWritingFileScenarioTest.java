@@ -31,7 +31,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
-import org.syncany.config.Logging;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.status.StatusOperationResult;
 import org.syncany.operations.up.UpOperationResult;
@@ -58,7 +57,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 			@Override
 			public void run() {
 				try {
-					logger.log(Level.SEVERE, "Started thread to write file to " + testFile + "  ...");
+					logger.log(Level.INFO, "Started thread to write file to " + testFile + "  ...");
 
 					FileOutputStream fos = new FileOutputStream(testFile);
 					Random randomEngine = new Random();
@@ -75,7 +74,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 
 					fos.close();
 
-					logger.log(Level.SEVERE, "Ended thread to write file to " + testFile + "  ...");
+					logger.log(Level.INFO, "Ended thread to write file to " + testFile + "  ...");
 				}
 				catch (IOException e) {
 					logger.log(Level.FINE, "Thread failed to write to file", e);
@@ -83,7 +82,7 @@ public class CallUpWhileStillWritingFileScenarioTest {
 			}
 		}, "writerThread");
 
-		Logging.setGlobalLogLevel(Level.SEVERE);
+
 
 		// Before start: setup up databases (takes a while)
 		clientA.status();
@@ -94,10 +93,10 @@ public class CallUpWhileStillWritingFileScenarioTest {
 
 		Thread.sleep(50);
 
-		logger.log(Level.SEVERE, "Started clientA.up()");
+		logger.log(Level.INFO, "Started clientA.up()");
 		UpOperationResult upResult = clientA.up();
 		StatusOperationResult statusResult = upResult.getStatusResult();
-		logger.log(Level.SEVERE, "Ended clientA.up()");
+		logger.log(Level.INFO, "Ended clientA.up()");
 
 		writeFileThread.join();
 
