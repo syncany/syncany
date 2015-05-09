@@ -28,9 +28,7 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public interface ReadAfterWriteConsistentFeatureExtension extends FeatureExtension {
-
 	/**
 	 * Check if a file on the remote side already exists.
 	 *
@@ -39,5 +37,4 @@ public interface ReadAfterWriteConsistentFeatureExtension extends FeatureExtensi
 	 * @throws StorageException Thrown if an error occurred
 	 */
 	boolean exists(RemoteFile remoteFile) throws StorageException;
-
 }

@@ -35,12 +35,10 @@ import java.lang.annotation.Target;
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 @Feature(required = false)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ReadAfterWriteConsistent {
-
 	/**
 	 * @see ReadAfterWriteConsistentFeatureExtension
 	 */

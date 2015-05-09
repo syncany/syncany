@@ -43,20 +43,16 @@ import org.syncany.util.ReflectionUtil;
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
-
 public class ReadAfterWriteConsistentFeatureTransferManager implements FeatureTransferManager {
 	private static final Logger logger = Logger.getLogger(ReadAfterWriteConsistentFeatureTransferManager.class.getSimpleName());
 
 	private final TransferManager underlyingTransferManager;
-	private final Config config;
 	private final Throttler throttler;
 	private final ReadAfterWriteConsistentFeatureExtension readAfterWriteConsistentFeatureExtension;
 
 	public ReadAfterWriteConsistentFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, ReadAfterWriteConsistent readAfterWriteConsistentAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
-		this.config = config;
 		this.throttler = new Throttler(readAfterWriteConsistentAnnotation.maxRetries(), readAfterWriteConsistentAnnotation.maxWaitTime());
-
 		this.readAfterWriteConsistentFeatureExtension = getReadAfterWriteConsistentFeatureExtension(originalTransferManager, readAfterWriteConsistentAnnotation);
 	}
 
@@ -194,5 +190,4 @@ public class ReadAfterWriteConsistentFeatureTransferManager implements FeatureTr
 			currentIteration = 0;
 		}
 	}
-
 }
