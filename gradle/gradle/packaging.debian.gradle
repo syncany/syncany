@@ -30,7 +30,8 @@ task debianPrepare(dependsOn: [debianClean, installApp, debianManpages]) {
 		}
 
 		copy {
-			from rootProject.files("build/install/syncany/LICENSE") 
+			from rootProject.files("build/install/syncany/LICENSE-GPLv3") 
+			from rootProject.files("build/install/syncany/LICENSE.md") 
 			into rootProject.file("build/debian/syncany/debian")
 		}
 
