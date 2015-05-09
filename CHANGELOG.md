@@ -5,8 +5,10 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Use smaller transactions in Up #364
+  + Add 'Use short links' option to GUI
 - Bugfixes and other things:
   + Update licensing to match GPLv3+ #457
+  + Prepare fix for read-after-write issue with S3 and Swift plugin #456
   + Change default crypto to just AES-128/GCM
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
