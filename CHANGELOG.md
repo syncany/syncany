@@ -5,6 +5,8 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Use smaller transactions in Up #364
+- Bugfixes and other things:
+  + Update licensing to match GPLv3+ #457
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
