@@ -3,7 +3,7 @@ require "formula"
 class Syncany < Formula
   homepage "https://www.syncany.org"
   url "https://codeload.github.com/syncany/syncany/tar.gz/v0.4.5-alpha"
-  sha256 "198bfa86d2e1b6deede632ac7e4a7bce54b9fdf63f2b9b49fbff24a3c9b94e9e"
+  sha256 "957537a7177a5234e794d871043e67ac8e06ff3ff1ee059e599dfd477c5bb8e5"
   version "0.4.5-alpha"
   head "https://github.com/syncany/syncany.git", :branch => "develop"
 
