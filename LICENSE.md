@@ -2,6 +2,7 @@ Syncany License Terms
 =====================
 
 [Syncany](https://www.syncany.org/) is an open-source cloud storage and filesharing application.
+
 Copyright © [Philipp C. Heckel](http://blog.philippheckel.com/), the [Syncany Team](https://github.com/orgs/syncany/teams/syncany-team) and [many](AUTHORS.md) [others](https://github.com/syncany/syncany/graphs/contributors).
 
 This program is free software: you can redistribute it and/or modify
