@@ -31,13 +31,10 @@ import org.syncany.config.to.RepoTO;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
@@ -61,10 +58,9 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 public class InitOperation extends AbstractInitOperation {
 	public static final String DEFAULT_IGNORE_FILE = "/" + InitOperation.class.getPackage().getName().replace('.', '/') + "/default.syignore";
 
-	private InitOperationOptions options;
-	private InitOperationResult result;
+	private final InitOperationOptions options;
+	private final InitOperationResult result;
 
-	private TransferPlugin plugin;
 	private TransferManager transferManager;
 
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
@@ -80,13 +76,7 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		// Init plugin and transfer manager
-		plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
-
-		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-		transferSettings.setUserInteractionListener(listener);
-
-		transferManager = plugin.createTransferManager(transferSettings, config);
+		transferManager = createTransferManagerFromNullConfig(options.getConfigTO());
 
 		// Test the repo
 		if (!performRepoTest()) {
@@ -107,20 +97,20 @@ public class InitOperation extends AbstractInitOperation {
 		File appDir = createAppDirs(options.getLocalDir()); // TODO [medium] create temp dir first, ask password cannot be done after
 		File configFile = new File(appDir, Config.FILE_CONFIG);
 		File repoFile = new File(appDir, Config.FILE_REPO);
-		File masterFile = new File(appDir, Config.FILE_MASTER);		
+		File masterFile = new File(appDir, Config.FILE_MASTER);
 
 		// Save config.xml and repo file
-		saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);		
+		saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);
 
 		// Make remote changes
 		logger.log(Level.INFO, "Uploading local repository ...");
 		makeRemoteChanges(configFile, masterFile, repoFile);
-		
+
 		// Shutdown plugin
 		transferManager.disconnect();
 
 		// Add to daemon (if requested)
-		addToDaemonIfEnabled();		
+		addToDaemonIfEnabled();
 		createDefaultIgnoreFile();
 
 		// Make link
@@ -135,15 +125,15 @@ public class InitOperation extends AbstractInitOperation {
 	private void createDefaultIgnoreFile() throws IOException {
 		try {
 			File ignoreFile = new File(options.getLocalDir(), Config.FILE_IGNORE);
-			
+
 			logger.log(Level.INFO, "Creating default .syignore file at " + ignoreFile + " ...");
-			
+
 			InputStream defaultConfigFileinputStream = InitOperation.class.getResourceAsStream(DEFAULT_IGNORE_FILE);
 			Files.copy(defaultConfigFileinputStream, ignoreFile.toPath());
 		}
 		catch (IOException e) {
 			logger.log(Level.WARNING, "Error creating default .syignore file. IGNORING.", e);
-		}		
+		}
 	}
 
 	private void saveLocalConfig(File configFile, File repoFile, File masterFile, String masterKeyPassword) throws Exception {
@@ -217,7 +207,7 @@ public class InitOperation extends AbstractInitOperation {
 		try {
 			// Create 'syncany' and 'master' file, and all the remote folders
 			transferManager.init(options.isCreateTarget());
-			
+
 			// Some plugins change the transfer settings, re-save
 			options.getConfigTO().save(configFile);
 		}

@@ -19,6 +19,7 @@ package org.syncany.operations.init;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Constructor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,8 +42,10 @@ import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory.TransferManagerBuilder;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.features.Async;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
@@ -69,10 +72,9 @@ public class ConnectOperation extends AbstractInitOperation {
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
 
-	private ConnectOperationOptions options;
-	private ConnectOperationResult result;
+	private final ConnectOperationOptions options;
+	private final ConnectOperationResult result;
 
-	private TransferPlugin plugin;
 	private TransferManager transferManager;
 
 	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
@@ -100,13 +102,7 @@ public class ConnectOperation extends AbstractInitOperation {
 		}
 
 		// Init plugin and transfer manager
-		String pluginId = options.getConfigTO().getTransferSettings().getType();
-		plugin = Plugins.get(pluginId, TransferPlugin.class);
-
-		TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-		transferSettings.setUserInteractionListener(listener);
-
-		transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
+		transferManager = createTransferManagerFromNullConfig(options.getConfigTO());
 
 		// Test the repo
 		if (!performRepoTest(transferManager)) {
