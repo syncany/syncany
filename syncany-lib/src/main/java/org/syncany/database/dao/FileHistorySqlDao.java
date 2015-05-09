@@ -168,11 +168,22 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	/**
+	 * This function returns FileHistories with the last version for which this last version
+	 * matches the given checksum, size and modified date. 
+	 * 
+	 * An empty Collection is returned if none exist.
+	 */
 	public Collection<PartialFileHistory> getFileHistoriesByChecksumSizeAndModifiedDate(String filecontentChecksum, long size, Date modifiedDate) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByChecksumSizeAndModifiedDate.sql")) {
+			// This first query retrieves the last version for each FileHistory matching the three requested properties.
+			// However, it does not guarantee that this version is indeed the last version in that particular
+			// FileHistory, so we need another query to verify that.
+
 			preparedStatement.setString(1, filecontentChecksum);
 			preparedStatement.setLong(2, size);
 			preparedStatement.setTimestamp(3, new Timestamp(modifiedDate.getTime()));
+
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				Collection<PartialFileHistory> fileHistories = new ArrayList<>();
 				while (resultSet.next()) {
@@ -180,6 +191,9 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 					PartialFileHistory fileHistory = getLastVersionByFileHistoryId(fileHistoryId);
 					boolean resultIsLatestVersion = fileHistory.getLastVersion().getVersion() == resultSet.getLong("version");
 					boolean resultIsNotDelete = fileHistory.getLastVersion().getStatus() != FileVersion.FileStatus.DELETED;
+
+					// Only if the result is indeed the last in it's history, we can use it
+					// to base other versions off it. So we return it.
 					if (resultIsLatestVersion && resultIsNotDelete) {
 						fileHistories.add(fileHistory);
 					}
@@ -193,6 +207,13 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 		}
 	}
 
+	/**
+	 * This function returns a FileHistory, with as last version a FileVersion with
+	 * the given path. 
+	 * 
+	 * If the last FileVersion referring to this path is not the last in the
+	 * FileHistory, or no such FileVersion exists, null is returned.
+	 */
 	public PartialFileHistory getFileHistoryWithLastVersionByPath(String path) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.findLatestFileVersionsForPath.sql")) {
 			preparedStatement.setString(1, path);
