@@ -163,8 +163,8 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 				logger.log(Level.FINER, "File not found on the remote side, perhaps its in transit, waiting " + waitForMs + "ms ...");
 				Thread.sleep(waitForMs);
 			}
-			catch (InterruptedException ie) {
-				throw new StorageException("Unable to retry", ie);
+			catch (InterruptedException e) {
+				throw new StorageException("Unable to wait anymore", e);
 			}
 		}
 	}
@@ -183,7 +183,7 @@ public class AsyncFeatureTransferManager implements FeatureTransferManager {
 			long waitFor = (long) Math.pow(3, currentIteration++) * 100;
 
 			if (waitFor > maxWait || currentIteration > maxRetries) {
-				throw new InterruptedException("Unable to retry again, because ending criteria reached");
+				throw new InterruptedException("Unable to wait anymore, because ending criteria reached");
 			}
 
 			return waitFor;
