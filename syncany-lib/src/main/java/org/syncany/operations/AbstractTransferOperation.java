@@ -74,6 +74,7 @@ public abstract class AbstractTransferOperation extends Operation {
 
 			TransferManager actionFileTransferManager = TransferManagerFactory
 					.build(config)
+					.withFeature(ReadAfterWriteConsistent.class)
 					.withFeature(Retriable.class)
 					.asDefault();
 

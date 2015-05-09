@@ -193,7 +193,6 @@ public class ReadAfterWriteConsistentFeatureTransferManager implements FeatureTr
 		public void reset() {
 			currentIteration = 0;
 		}
-
 	}
 
 }
