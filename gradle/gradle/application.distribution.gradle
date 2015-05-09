@@ -179,7 +179,7 @@ startScripts {
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
-	include "AUTHORS.md", "CHANGELOG.md", "LICENSE", "README.md"
+	include "AUTHORS.md", "CHANGELOG.md", "LICENSE-GPLv3", "LICENSE.md", "README.md"
 
 	// Copy syncany(.bat) to sy(.bat)
 	from("${startScripts.outputDir}/") {
