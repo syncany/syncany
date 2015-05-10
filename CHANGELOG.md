@@ -10,6 +10,7 @@ Change Log
   + Update licensing to match GPLv3+ #457
   + Prepare fix for read-after-write issue with S3 and Swift plugin #456
   + Change default crypto to just AES-128/GCM
+  + Fix table creation process to not throw an error.
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

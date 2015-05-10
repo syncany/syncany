@@ -148,15 +148,14 @@ public class DatabaseConnectionFactory {
 		}
 	}
 
-	private static boolean tablesExist(Connection connection) {
-		try {
-			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
-
-			return resultSet.next();
-		}
-		catch (SQLException e) {
-			logger.log(Level.FINE, "Failed to execute SQL", e);
-			return false;
+	private static boolean tablesExist(Connection connection) throws SQLException {
+		try (ResultSet resultSet = connection.prepareStatement(
+				"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SYSTEM_TABLES WHERE TABLE_TYPE='TABLE'")
+				.executeQuery()) {
+			resultSet.next();
+			int numberOfTables = resultSet.getInt(1);
+			logger.log(Level.INFO, "Found " + numberOfTables + " tables.");
+			return (numberOfTables == 12);
 		}
 	}
 
