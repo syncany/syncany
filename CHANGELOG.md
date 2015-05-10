@@ -5,8 +5,15 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Use smaller transactions in Up #364
+  + Add 'Use short links' option to GUI
 - Bugfixes and other things:
   + Update licensing to match GPLv3+ #457
+  + Prepare fix for read-after-write issue with S3 and Swift plugin #456
+  + Fix S3 read-after-write consistent issue #448
+  + Change default crypto to just AES-128/GCM
+  + Fix table creation process to not throw an error
+  + Fix swift read after write consistent issue #276
+  + Create target in `sy init` by default (disable with -T)
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

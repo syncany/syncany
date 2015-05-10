@@ -148,15 +148,17 @@ public class DatabaseConnectionFactory {
 		}
 	}
 
-	private static boolean tablesExist(Connection connection) {
-		try {
-			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
+	private static boolean tablesExist(Connection connection) throws SQLException {
+		try (ResultSet resultSet = connection.prepareStatement(
+				"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SYSTEM_TABLES WHERE TABLE_TYPE='TABLE'")
+				.executeQuery()) {
+			resultSet.next();
+			int numberOfTables = resultSet.getInt(1);
+			logger.log(Level.INFO, "Found " + numberOfTables + " tables.");
 
-			return resultSet.next();
-		}
-		catch (SQLException e) {
-			logger.log(Level.FINE, "Failed to execute SQL", e);
-			return false;
+			// If we have 12 or more tables, we assume the creation scripts has created
+			// all tables and indices.
+			return (numberOfTables >= 12);
 		}
 	}
 

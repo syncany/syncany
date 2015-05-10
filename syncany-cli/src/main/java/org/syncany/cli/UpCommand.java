@@ -39,7 +39,7 @@ import com.google.common.eventbus.Subscribe;
 
 public class UpCommand extends Command {
 	private int totalFileCount = -1;
-	private int uploadedFileCount = 0;
+	
 	@Override
 	public CommandScope getRequiredCommandScope() {
 		return CommandScope.INITIALIZED_LOCALDIR;
