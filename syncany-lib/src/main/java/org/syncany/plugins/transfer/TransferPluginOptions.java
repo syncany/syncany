@@ -19,10 +19,10 @@ package org.syncany.plugins.transfer;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.simpleframework.xml.Element;
 import org.syncany.util.ReflectionUtil;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -35,7 +35,6 @@ import com.google.common.primitives.Ints;
  * @author Christian Roth <christian.roth@port17.de>
  */
 public class TransferPluginOptions {
-	private static final Logger logger = Logger.getLogger(TransferPluginOptions.class.getName());
 	private static final int MAX_NESTED_LEVELS = 3;
 
 	/**
