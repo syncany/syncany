@@ -155,7 +155,10 @@ public class DatabaseConnectionFactory {
 			resultSet.next();
 			int numberOfTables = resultSet.getInt(1);
 			logger.log(Level.INFO, "Found " + numberOfTables + " tables.");
-			return (numberOfTables == 12);
+
+			// If we have 12 or more tables, we assume the creation scripts has created
+			// all tables and indices.
+			return (numberOfTables >= 12);
 		}
 	}
 
