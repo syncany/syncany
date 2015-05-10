@@ -494,11 +494,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String value = knownOptionValue;
 
 		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s: ", option.getDescription());
+			out.printf("- %s: ", getDescription(settings, option));
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", getDescription(settings, option), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -520,11 +520,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				defaultValueDescription = "none";
 			}
 
-			out.printf("- %s (optional, default is %s): ", option.getDescription(), defaultValueDescription);
+			out.printf("- %s (optional, default is %s): ", getDescription(settings, option), defaultValueDescription);
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", getDescription(settings, option), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -541,11 +541,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String optionalIndicator = option.isRequired() ? "" : ", optional";
 
 		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (not displayed%s): ", option.getDescription(), optionalIndicator);
+			out.printf("- %s (not displayed%s): ", getDescription(settings, option), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}
 		else {
-			out.printf("- %s (***, not displayed%s): ", option.getDescription(), optionalIndicator);
+			out.printf("- %s (***, not displayed%s): ", getDescription(settings, option), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 
 			if ("".equals(value)) {
@@ -554,6 +554,25 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 
 		return value;
+	}
+
+	private String getDescription(TransferSettings settings, TransferPluginOption option) {
+		Class<?> clazzForType = ReflectionUtil.getClassFromType(option.getType());
+
+		if (Enum.class.isAssignableFrom(clazzForType)) {
+			Object[] enumValues = clazzForType.getEnumConstants();
+
+			if (enumValues == null) {
+				throw new RuntimeException("Invalid TransferSettings class found: Enum at " + settings + " has no values");
+			}
+
+			logger.log(Level.FINE, "Found enum option, values are: " + StringUtil.join(enumValues, ", "));
+
+			return String.format("Choose '%s' from %s", option.getDescription(), StringUtil.join(enumValues, ", "));
+		}
+		else {
+			return option.getDescription();
+		}
 	}
 
 	protected TransferPlugin askPlugin() {
