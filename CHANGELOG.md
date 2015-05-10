@@ -12,6 +12,7 @@ Change Log
   + Change default crypto to just AES-128/GCM
   + Fix table creation process to not throw an error.
   + Fix swift read after write consistent issue #276
+  + Fix s3 read after write consistent issue #448
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
