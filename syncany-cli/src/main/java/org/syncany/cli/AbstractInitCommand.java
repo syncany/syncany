@@ -568,7 +568,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 
 			logger.log(Level.FINE, "Found enum option, values are: " + StringUtil.join(enumValues, ", "));
 
-			return String.format("Choose '%s' from %s", option.getDescription(), StringUtil.join(enumValues, ", "));
+			return String.format("%s, choose from %s", option.getDescription(), StringUtil.join(enumValues, ", "));
 		}
 		else {
 			return option.getDescription();
