@@ -53,6 +53,7 @@ public class UserConfig {
 
 	// These fields are not final to enable a PluginOperationTest
 	private static File USER_APP_DIR_WINDOWS = new File(System.getenv("APPDATA") + "\\Syncany");
+	private static File USER_APP_DIR_OSX = new File(System.getProperty("user.home") + "/Library/Application Support/Syncany");
 	private static File USER_APP_DIR_UNIX_LIKE = new File(System.getProperty("user.home") + "/.config/syncany");
 	private static final String USER_LOG_DIR = "logs";
 	private static final String USER_PLUGINS_LIB_DIR = "plugins/lib";
@@ -115,7 +116,7 @@ public class UserConfig {
 	public static boolean isPreventStandby() {
 		return preventStandby;
 	}
-	
+
 	public static void setPreventStandby(boolean newPreventStandby) {
 		preventStandby = newPreventStandby;
 	}
@@ -151,7 +152,22 @@ public class UserConfig {
 	// General initialization methods
 
 	private static void initUserAppDirs() {
-		userConfigDir = (EnvironmentUtil.isWindows()) ? USER_APP_DIR_WINDOWS : USER_APP_DIR_UNIX_LIKE;
+		switch(EnvironmentUtil.getOperatingSystem()) {
+			case WINDOWS:
+				userConfigDir = USER_APP_DIR_WINDOWS;
+				break;
+
+			case OSX:
+				userConfigDir = USER_APP_DIR_OSX;
+				break;
+
+			case UNIX_LIKE:
+				userConfigDir = USER_APP_DIR_UNIX_LIKE;
+				break;
+
+			default:
+				throw new RuntimeException("Unsupported operation system found, unable to find config dir");
+		}
 		userConfigDir.mkdirs();
 
 		userLogDir = new File(userConfigDir, USER_LOG_DIR);
@@ -179,7 +195,7 @@ public class UserConfig {
 
 			// System properties
 			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
-				String propertyValue = (systemProperty.getValue() != null) ? systemProperty.getValue() : ""; 
+				String propertyValue = (systemProperty.getValue() != null) ? systemProperty.getValue() : "";
 				System.setProperty(systemProperty.getKey(), propertyValue);
 			}
 
