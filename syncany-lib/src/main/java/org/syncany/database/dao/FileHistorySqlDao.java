@@ -172,7 +172,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	 * This function returns FileHistories with the last version for which this last version
 	 * matches the given checksum, size and modified date. 
 	 * 
-	 * An empty Collection is returned if none exist.
+	 * @return An empty Collection is returned if none exist.
 	 */
 	public Collection<PartialFileHistory> getFileHistoriesByChecksumSizeAndModifiedDate(String filecontentChecksum, long size, Date modifiedDate) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByChecksumSizeAndModifiedDate.sql")) {
@@ -186,18 +186,22 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				Collection<PartialFileHistory> fileHistories = new ArrayList<>();
+				
 				while (resultSet.next()) {
 					String fileHistoryId = resultSet.getString("filehistory_id");
 					PartialFileHistory fileHistory = getLastVersionByFileHistoryId(fileHistoryId);
+					
 					boolean resultIsLatestVersion = fileHistory.getLastVersion().getVersion() == resultSet.getLong("version");
 					boolean resultIsNotDelete = fileHistory.getLastVersion().getStatus() != FileVersion.FileStatus.DELETED;
 
 					// Only if the result is indeed the last in it's history, we can use it
 					// to base other versions off it. So we return it.
+					
 					if (resultIsLatestVersion && resultIsNotDelete) {
 						fileHistories.add(fileHistory);
 					}
 				}
+				
 				return fileHistories;
 			}
 
@@ -217,15 +221,22 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	public PartialFileHistory getFileHistoryWithLastVersionByPath(String path) {
 		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.findLatestFileVersionsForPath.sql")) {
 			preparedStatement.setString(1, path);
+
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				// Fetch the latest versions of all files that once existed with the given path and find the most recent by comparing vector clocks
+				// Fetch the latest versions of all files that once existed with the given
+				// path and find the most recent by comparing vector clocks
+
 				String latestFileHistoryId = null;
 				Long latestFileVersion = null;
 				VectorClock latestVectorClock = null;
+
 				while (resultSet.next()) {
-					VectorClock clock = VectorClock.parseVectorClock(resultSet.getString("vectorclock_serialized"));
-					if (latestVectorClock == null || VectorClock.compare(clock, latestVectorClock) == VectorClock.VectorClockComparison.GREATER) {
-						latestVectorClock = clock;
+					VectorClock resultSetVectorClock = VectorClock.parseVectorClock(resultSet.getString("vectorclock_serialized"));
+					boolean vectorClockIsGreater = latestVectorClock == null
+							|| VectorClock.compare(resultSetVectorClock, latestVectorClock) == VectorClock.VectorClockComparison.GREATER;
+
+					if (vectorClockIsGreater) {
+						latestVectorClock = resultSetVectorClock;
 						latestFileHistoryId = resultSet.getString("filehistory_id");
 						latestFileVersion = resultSet.getLong("version");
 					}
@@ -238,9 +249,11 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 				// Find for the latest file history the last file version to check if the file has moved
 				PartialFileHistory fileHistory = getLastVersionByFileHistoryId(latestFileHistoryId);
+				
 				if (fileHistory.getLastVersion().getVersion() == latestFileVersion) {
 					return fileHistory;
-				} else {
+				}
+				else {
 					return null;
 				}
 			}
@@ -262,8 +275,10 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryIdData);
 					fileHistory.addFileVersion(lastFileVersion);
+					
 					return fileHistory;
-				} else {
+				}
+				else {
 					return null;
 				}
 			}

@@ -249,8 +249,9 @@ public class UpOperation extends AbstractTransferOperation {
 	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue, Iterator<RemoteTransaction> remoteTransactionsToResume,
 			TransactionRemoteFile transactionRemoteFileToResume)
 			throws Exception {
-		int numberOfCompletedTransactions = 0;
+		
 		boolean resuming = true;
+		
 		if (remoteTransactionsToResume == null) {
 			resuming = false;
 		}
@@ -329,7 +330,6 @@ public class UpOperation extends AbstractTransferOperation {
 					localDatabase.commit();
 
 					committingFailed = false;
-					numberOfCompletedTransactions++;
 				}
 				catch (Exception e) {
 					detectedFailure = true;

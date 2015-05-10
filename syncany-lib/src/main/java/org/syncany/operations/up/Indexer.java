@@ -78,10 +78,10 @@ import org.syncany.util.StringUtil;
  */
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
+	
 	private static final String DEFAULT_POSIX_PERMISSIONS_FILE = "rw-r--r--";
 	private static final String DEFAULT_POSIX_PERMISSIONS_FOLDER = "rwxr-xr-x";
 	private static final String DEFAULT_DOS_ATTRIBUTES = "--a-";
-	private static final long CONNECTION_REFRESH_TIME = 60_000L;
 
 	private Config config;
 	private Deduper deduper;
@@ -119,20 +119,20 @@ public class Indexer {
 	 * @param databaseVersionQueue Queue to which created databaseVersions are offered
 	 * @throws IOException If the chunking/deduplication cannot read/process any of the files
 	 */
-
-	public void index(List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue)
-			throws IOException {
-		boolean firstFile = true;
-		int fullFileCount = files.size();
-
-		// If there are no files to index, we still need to check for deletions.
-		if (files.isEmpty()) {
-			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
-			// Find and remove deleted files
-			removeDeletedFiles(newDatabaseVersion, deletedFiles);
-			logger.log(Level.FINE, "Added database version with only deletions: " + newDatabaseVersion);
-			databaseVersionQueue.offer(newDatabaseVersion);
+	public void index(List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue) throws IOException {
+		if (!files.isEmpty()) {
+			indexWithNewFiles(files, deletedFiles, databaseVersionQueue);
 		}
+		else {
+			indexWithoutNewFiles(files, deletedFiles, databaseVersionQueue);
+		}
+
+		localDatabase.finalize();
+	}
+
+	private void indexWithNewFiles(List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue) throws IOException {
+		boolean isFirstFile = true;
+		int filesCount = files.size();
 
 		while (!files.isEmpty()) {
 			DatabaseVersion newDatabaseVersion = new DatabaseVersion();
@@ -141,11 +141,11 @@ public class Indexer {
 			DeduperListener deduperListener = new IndexerDeduperListener(newDatabaseVersion);
 
 			// Signal the start of indexing if we are about to deduplicate the first file
-			if (firstFile) {
-				deduperListener.onStart(files.size());
-				// Add deletions in first databaseversion.
-				removeDeletedFiles(newDatabaseVersion, deletedFiles);
-				firstFile = false;
+			if (isFirstFile) {
+				deduperListener.onStart(files.size());				
+				removeDeletedFiles(newDatabaseVersion, deletedFiles); // Add deletions in first database version
+				
+				isFirstFile = false;
 			}
 
 			// Find and index new files
@@ -154,7 +154,9 @@ public class Indexer {
 			if (!newDatabaseVersion.getFileHistories().isEmpty()) {
 				logger.log(Level.FINE, "Processed new database version: " + newDatabaseVersion);
 				databaseVersionQueue.offer(newDatabaseVersion);
-				eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), fullFileCount, fullFileCount - files.size()));
+				
+				int remainingFilesCount = filesCount - files.size();
+				eventBus.post(new UpIndexMidSyncExternalEvent(config.getLocalDir().toString(), filesCount, remainingFilesCount));
 			}
 			//else { (comment-only else case)
 			// Just chunks and multichunks, no filehistory. Since this means the file was being
@@ -162,9 +164,15 @@ public class Indexer {
 			// wants it indexed, Up can be run again.
 			//}
 		}
+	}
 
-		// Close database connection.
-		localDatabase.finalize();
+	private void indexWithoutNewFiles(List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> databaseVersionQueue) {
+		DatabaseVersion newDatabaseVersion = new DatabaseVersion();
+		
+		removeDeletedFiles(newDatabaseVersion, deletedFiles);
+		logger.log(Level.FINE, "Added database version with only deletions: " + newDatabaseVersion);
+		
+		databaseVersionQueue.offer(newDatabaseVersion);
 	}
 
 	private void removeDeletedFiles(DatabaseVersion newDatabaseVersion, List<File> deletedFiles) {
@@ -215,7 +223,6 @@ public class Indexer {
 
 		return deletedFileHistory;
 	}
-
 
 	private PartialFileHistory getFileHistoryByPathFromDatabaseVersion(DatabaseVersion databaseVersion, String path) {
 		// TODO [medium] Extremely performance intensive, because this is called inside a loop above. Implement better caching for database version!!!
@@ -332,7 +339,8 @@ public class Indexer {
 
 			// 2. If file type changed, "close" the old file history by adding a file version that deletes the old file/directory
 			PartialFileHistory deletedFileHistory = null;
-			if (lastFileVersion != null && (lastFileVersion.getType() != fileProperties.getType())) {
+			
+			if (lastFileVersion != null && lastFileVersion.getType() != fileProperties.getType()) {
 				logger.log(Level.FINER, "   * Detected change in file type. Deleting old file and starting a new file history.");
 
 				deletedFileHistory = createFileHistoryForDeletion(lastFileHistory, lastFileVersion);
@@ -353,6 +361,7 @@ public class Indexer {
 			if (newVersionDiffersFromToLastVersion) {
 				fileHistory.addFileVersion(fileVersion);
 				newDatabaseVersion.addFileHistory(fileHistory);
+				
 				if (deletedFileHistory != null) {
 					newDatabaseVersion.addFileHistory(deletedFileHistory);
 				}
@@ -497,8 +506,6 @@ public class Indexer {
 				return null;
 			}
 			else {
-				FileVersion lastFileVersion = lastFileHistory.getLastVersion();
-
 				logger.log(Level.FINER,
 						"   * Found old file history " + lastFileHistory.getFileHistoryId() + " (by path: " + fileProperties.getRelativePath()
 								+ "), " + fileProperties.getType() + ", appending new version.");
@@ -589,6 +596,7 @@ public class Indexer {
 								// The candidate no longer matches, take the current path.
 								break;
 							}
+							
 							if (!filePath.regionMatches(filePath.length() - i, currentPreviousPath, currentPreviousPath.length() - i, i)) {
 								// The current previous path no longer matches, take the new candidate
 								lastFileHistory = fileHistoryWithSameChecksum;

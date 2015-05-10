@@ -1,3 +1,13 @@
+-- Select file history identifier, file version and corresponding database version for all non-deleted file versions with the given path.
+-- 
+-- Strategy:
+-- - Select file history identifier and max. file version from `fileversion` (fvmax)
+-- - Join rest of the table (fv)
+-- - Join database version table (dbv)
+-- - Rule out deleted versions (where)
+-- 
+-- Please note: It is important that the initial inner select (fvmax) does not rule out deleted versions, as this has caused trouble in the past
+
 SELECT fvmax.version AS version,
   fvmax.filehistory_id AS filehistory_id,
   dbv.vectorclock_serialized AS vectorclock_serialized
