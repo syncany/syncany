@@ -7,7 +7,10 @@
 -- - Rule out deleted versions (where)
 -- 
 -- Please note: It is important that the initial inner select (fvmax) does not rule out deleted versions, as this has caused trouble in the past
-
+--
+-- Note that we only select the newest version from every filehistory, since we use this query to
+-- find filehistories to build on, so older versions are not needed. In addition, we only consider
+-- versions in MASTER, since we can't build on DIRTY databases.
 SELECT fvmax.version AS version,
   fvmax.filehistory_id AS filehistory_id,
   dbv.vectorclock_serialized AS vectorclock_serialized
