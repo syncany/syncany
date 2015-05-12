@@ -73,7 +73,11 @@ public class SqlDatabase {
 	protected DatabaseVersionSqlDao databaseVersionDao;
 
 	public SqlDatabase(Config config) {
-		this.connection = config.createDatabaseConnection();
+		this(config, false);
+	}
+
+	public SqlDatabase(Config config, boolean readOnly) {
+		this.connection = config.createDatabaseConnection(readOnly);
 		this.applicationDao = new ApplicationSqlDao(connection);
 		this.chunkDao = new ChunkSqlDao(connection);
 		this.fileContentDao = new FileContentSqlDao(connection);
@@ -81,6 +85,7 @@ public class SqlDatabase {
 		this.fileHistoryDao = new FileHistorySqlDao(connection, fileVersionDao);
 		this.multiChunkDao = new MultiChunkSqlDao(connection);
 		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
+
 	}
 
 	// General

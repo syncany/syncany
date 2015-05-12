@@ -20,7 +20,6 @@ package org.syncany.operations.up;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -93,14 +92,7 @@ public class Indexer {
 	public Indexer(Config config, Deduper deduper) {
 		this.config = config;
 		this.deduper = deduper;
-		this.localDatabase = new SqlDatabase(config);
-		try {
-			localDatabase.getConnection().setReadOnly(true);
-		}
-		catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.localDatabase = new SqlDatabase(config, true);
 
 		this.eventBus = LocalEventBus.getInstance();
 	}

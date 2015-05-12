@@ -73,7 +73,7 @@ public class DatabaseConnectionFactory {
 	 * @param databaseFile File at which to create/load the database
 	 * @return Returns a valid database connection
 	 */
-	public static Connection createConnection(File databaseFile) {
+	public static Connection createConnection(File databaseFile, boolean readOnly) {
 		String databaseFilePath = FileUtil.getDatabasePath(databaseFile.toString());
 		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFilePath);
 
@@ -81,7 +81,7 @@ public class DatabaseConnectionFactory {
 			connectionString += ";hsqldb.sqllog=3";
 		}
 
-		return createConnection(connectionString);
+		return createConnection(connectionString, readOnly);
 	}
 
 	/**
@@ -122,10 +122,11 @@ public class DatabaseConnectionFactory {
 		return statementInputStream;
 	}
 
-	private static Connection createConnection(String connectionString) {
+	private static Connection createConnection(String connectionString, boolean readOnly) {
 		try {
 			Connection connection = DriverManager.getConnection(connectionString);
 			connection.setAutoCommit(false);
+			connection.setReadOnly(readOnly);
 
 			// We use UNCOMMITTED read to enable operations to alter the database and continue
 			// with those changes, but still roll back the database if something goes wrong later.
