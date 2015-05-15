@@ -59,7 +59,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 		for (DatabaseRemoteFile databaseRemoteFile : remoteDatabases) {
 			preparedStatement.setString(1, databaseRemoteFile.getClientName());
 			preparedStatement.setInt(2, (int) databaseRemoteFile.getClientVersion());
-			
+
 			preparedStatement.addBatch();
 		}
 
@@ -100,7 +100,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 				while (resultSet.next()) {
 					String clientName = resultSet.getString("client");
 					int fileNumber = resultSet.getInt("filenumber");
-					
+
 					knownDatabases.add(new DatabaseRemoteFile(clientName, fileNumber));
 				}
 

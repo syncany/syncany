@@ -50,59 +50,61 @@ public class CipherTransformer extends Transformer {
 	public static final String PROPERTY_CIPHER_SPECS = "cipherspecs";
 	public static final String PROPERTY_MASTER_KEY = "masterkey";
 	public static final String PROPERTY_MASTER_KEY_SALT = "mastersalt";
-	
+
 	private List<CipherSpec> cipherSpecs;
 	private CipherSession cipherSession;
-	
+
 	public CipherTransformer() {
 		this.cipherSpecs = new ArrayList<CipherSpec>();
 		this.cipherSession = null;
 	}
-	
-    public CipherTransformer(List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) {
-    	this.cipherSpecs = cipherSpecs;
-    	this.cipherSession = new CipherSession(masterKey);
-    }    
-    
-    /**
-     * Initializes the cipher transformer using a settings map. Required settings
-     * are: {@link #PROPERTY_CIPHER_SPECS}, {@link #PROPERTY_MASTER_KEY} and 
-     * {@link #PROPERTY_MASTER_KEY_SALT}.
-     */
-    @Override
-    public void init(Map<String, String> settings) throws Exception {
-    	String masterKeyStr = settings.get(PROPERTY_MASTER_KEY);
-    	String masterKeySaltStr = settings.get(PROPERTY_MASTER_KEY);
-    	String cipherSpecsListStr = settings.get(PROPERTY_CIPHER_SPECS);
-    	
-    	if (masterKeyStr == null || masterKeySaltStr == null || cipherSpecsListStr == null) {
-    		throw new Exception("Settings '"+PROPERTY_CIPHER_SPECS+"', '"+PROPERTY_MASTER_KEY+"' and '"+PROPERTY_MASTER_KEY_SALT+"' must both be filled.");
-    	}
-    	
-    	initCipherSpecs(cipherSpecsListStr);
-    	initCipherSession(masterKeyStr, masterKeySaltStr);    	
-    }
-    
-    private void initCipherSpecs(String cipherSpecListStr) throws Exception {
-    	String[] cipherSpecIdStrs = cipherSpecListStr.split(",");
-    	
-    	for (String cipherSpecIdStr : cipherSpecIdStrs) {
-    		int cipherSpecId = Integer.parseInt(cipherSpecIdStr);
-    		CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
-    		
-    		if (cipherSpec == null) {
-    			throw new Exception("Cannot find cipher suite with ID '"+cipherSpecId+"'");
-    		}
-    		
-    		cipherSpecs.add(cipherSpec);
-    	}
+
+	public CipherTransformer(List<CipherSpec> cipherSpecs, SaltedSecretKey masterKey) {
+		this.cipherSpecs = cipherSpecs;
+		this.cipherSession = new CipherSession(masterKey);
+	}
+
+	/**
+	 * Initializes the cipher transformer using a settings map. Required settings
+	 * are: {@link #PROPERTY_CIPHER_SPECS}, {@link #PROPERTY_MASTER_KEY} and 
+	 * {@link #PROPERTY_MASTER_KEY_SALT}.
+	 */
+	@Override
+	public void init(Map<String, String> settings) throws InvalidSettingsException {
+		String masterKeyStr = settings.get(PROPERTY_MASTER_KEY);
+		String masterKeySaltStr = settings.get(PROPERTY_MASTER_KEY);
+		String cipherSpecsListStr = settings.get(PROPERTY_CIPHER_SPECS);
+
+		if (masterKeyStr == null || masterKeySaltStr == null || cipherSpecsListStr == null) {
+			throw new InvalidSettingsException("Settings '" + PROPERTY_CIPHER_SPECS + "', '" + PROPERTY_MASTER_KEY + "' and '"
+					+ PROPERTY_MASTER_KEY_SALT
+					+ "' must both be filled.");
+		}
+
+		initCipherSpecs(cipherSpecsListStr);
+		initCipherSession(masterKeyStr, masterKeySaltStr);
+	}
+
+	private void initCipherSpecs(String cipherSpecListStr) throws InvalidSettingsException {
+		String[] cipherSpecIdStrs = cipherSpecListStr.split(",");
+
+		for (String cipherSpecIdStr : cipherSpecIdStrs) {
+			int cipherSpecId = Integer.parseInt(cipherSpecIdStr);
+			CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
+
+			if (cipherSpec == null) {
+				throw new InvalidSettingsException("Cannot find cipher suite with ID '" + cipherSpecId + "'");
+			}
+
+			cipherSpecs.add(cipherSpec);
+		}
 	}
 
 	private void initCipherSession(String masterKeyStr, String masterKeySaltStr) {
 		byte[] masterKeySalt = StringUtil.fromHex(masterKeySaltStr);
 		byte[] masterKeyBytes = StringUtil.fromHex(masterKeyStr);
-		
-		SaltedSecretKey masterKey = new SaltedSecretKey(new SecretKeySpec(masterKeyBytes, "RAW"), masterKeySalt);		
+
+		SaltedSecretKey masterKey = new SaltedSecretKey(new SecretKeySpec(masterKeyBytes, "RAW"), masterKeySalt);
 		cipherSession = new CipherSession(masterKey);
 	}
 
@@ -111,21 +113,21 @@ public class CipherTransformer extends Transformer {
 		if (cipherSession == null) {
 			throw new RuntimeException("Cipher session is not initialized. Call init() before!");
 		}
-		
-    	return new MultiCipherOutputStream(out, cipherSpecs, cipherSession);    	
-    }
 
-    @Override
-    public InputStream createInputStream(InputStream in) throws IOException {
+		return new MultiCipherOutputStream(out, cipherSpecs, cipherSession);
+	}
+
+	@Override
+	public InputStream createInputStream(InputStream in) throws IOException {
 		if (cipherSession == null) {
 			throw new RuntimeException("Cipher session is not initialized. Call init() before!");
 		}
-		
-    	return new MultiCipherInputStream(in, cipherSession);    	
-    }    
 
-    @Override
-    public String toString() {
-        return (nextTransformer == null) ? "Cipher" : "Cipher-"+nextTransformer;
-    }     
+		return new MultiCipherInputStream(in, cipherSession);
+	}
+
+	@Override
+	public String toString() {
+		return (nextTransformer == null) ? "Cipher" : "Cipher-" + nextTransformer;
+	}
 }

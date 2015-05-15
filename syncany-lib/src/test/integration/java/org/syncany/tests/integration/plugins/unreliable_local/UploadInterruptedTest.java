@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.simpleframework.xml.core.Persister;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.up.UpOperationOptions;
-import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 import org.syncany.plugins.transfer.TransferManagerFactory;
 import org.syncany.plugins.transfer.features.TransactionAware;
@@ -77,7 +77,7 @@ public class UploadInterruptedTest {
 				clientA.up();
 				clientA.down();
 			}
-			catch (StorageException e) {
+			catch (OperationException e) {
 				logger.log(Level.INFO, e.getMessage());
 			}
 		}
@@ -117,7 +117,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			upFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -172,7 +172,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			upFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -239,7 +239,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			upFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -318,7 +318,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			firstUpFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -357,7 +357,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up(upOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			secondUpFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -427,7 +427,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			firstUpFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -467,7 +467,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up(upOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			secondUpFailed = true;
 			logger.log(Level.INFO, e.getMessage());
 		}
@@ -514,7 +514,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			failed = true;
 		}
 
@@ -565,7 +565,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			failed = true;
 		}
 
@@ -580,7 +580,7 @@ public class UploadInterruptedTest {
 		try {
 			clientA.up(upOptions);
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			failed = true;
 		}
 

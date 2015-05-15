@@ -15,11 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.plugins.transfer;
 
 /**
- * @author Jesse Donkervliet
+ * Exception that wraps {@link Exception} thrown by the XML Nodes for getValue() and others.
+ * 
+ * @author Stefan Hugtenburg
+ *
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class InvalidXmlNodeException extends Exception {
+
+	private static final long serialVersionUID = -1558271087474264455L;
+
+	/**
+	 * @param e Exception that caused this exception.
+	 */
+	public InvalidXmlNodeException(Exception e) {
+		super(e);
+	}
+
 }

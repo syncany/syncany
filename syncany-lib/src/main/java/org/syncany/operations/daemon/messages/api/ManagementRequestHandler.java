@@ -24,17 +24,22 @@ import org.syncany.config.LocalEventBus;
 public abstract class ManagementRequestHandler {
 	protected static final Logger logger = Logger.getLogger(ManagementRequestHandler.class.getSimpleName());
 	protected LocalEventBus eventBus;
-	
+
 	public ManagementRequestHandler() {
 		this.eventBus = LocalEventBus.getInstance();
 	}
-	
-	public abstract Response handleRequest(ManagementRequest request);
-	
-	public static ManagementRequestHandler createManagementRequestHandler(Request request) throws Exception {		
-		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
-		Class<?> clazz = Class.forName(fqClassName);
 
-		return (ManagementRequestHandler) clazz.newInstance();
-	}    
+	public abstract Response handleRequest(ManagementRequest request);
+
+	public static ManagementRequestHandler createManagementRequestHandler(Request request) throws ClassNotFoundException {
+		String fqClassName = request.getClass().getName() + "Handler"; // TODO [medium] Ugly hardcoded string
+		try {
+			Class<?> clazz = Class.forName(fqClassName);
+
+			return (ManagementRequestHandler) clazz.newInstance();
+		}
+		catch (IllegalAccessException | InstantiationException e) {
+			throw new ClassNotFoundException("No such class for this request", e);
+		}
+	}
 }

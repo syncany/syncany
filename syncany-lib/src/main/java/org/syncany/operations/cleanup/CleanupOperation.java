@@ -45,6 +45,7 @@ import org.syncany.database.SqlDatabase;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.FileVersionSqlDao;
 import org.syncany.operations.AbstractTransferOperation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.operations.daemon.messages.CleanupEndSyncExternalEvent;
@@ -120,70 +121,84 @@ public class CleanupOperation extends AbstractTransferOperation {
 	}
 
 	@Override
-	public CleanupOperationResult execute() throws Exception {
+	public CleanupOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Cleanup' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-
-		// Do initial check out remote repository preconditions
-		CleanupResultCode preconditionResult = checkPreconditions();
-
-		fireStartEvent();
-		if (preconditionResult != CleanupResultCode.OK) {
-			fireEndEvent();
-			return new CleanupOperationResult(preconditionResult);
-		}
-
-		fireCleanupNeededEvent();
-
-		// At this point, the operation will lock the repository
-		startOperation();
-
-		// If there are any, rollback any existing/old transactions.
-		// If other clients have unfinished transactions with deletions, do not proceed.
 		try {
-			transferManager.cleanTransactions();
-		}
-		catch (BlockingTransfersException ignored) {
+			// Do initial check out remote repository preconditions
+			CleanupResultCode preconditionResult = checkPreconditions();
+
+			fireStartEvent();
+			if (preconditionResult != CleanupResultCode.OK) {
+				fireEndEvent();
+				return new CleanupOperationResult(preconditionResult);
+			}
+
+			fireCleanupNeededEvent();
+
+			// At this point, the operation will lock the repository
+			startOperation();
+
+			// If there are any, rollback any existing/old transactions.
+			// If other clients have unfinished transactions with deletions, do not proceed.
+			try {
+				transferManager.cleanTransactions();
+			}
+			catch (BlockingTransfersException ignored) {
+				finishOperation();
+				fireEndEvent();
+				return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
+			}
+
+			// Wait two seconds (conservative cleanup, see #104)
+			logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
+			try {
+				Thread.sleep(BEFORE_DOUBLE_CHECK_TIME);
+			}
+			catch (InterruptedException e) {
+				logger.log(Level.INFO, "Cleanup: Waiting was interrupted. Will still try.");
+			}
+
+			// Check again. No other clients should be busy, because we waited BEFORE_DOUBLE_CHECK_TIME
+			preconditionResult = checkPreconditions();
+
+			if (preconditionResult != CleanupResultCode.OK) {
+				finishOperation();
+				fireEndEvent();
+				return new CleanupOperationResult(preconditionResult);
+			}
+
+			// If we do cleanup, we are no longer allowed to resume a transaction
+			transferManager.clearResumableTransactions();
+			transferManager.clearPendingTransactions();
+
+			// Now do the actual work!
+			logger.log(Level.INFO, "Cleanup: Starting transaction.");
+			remoteTransaction = new RemoteTransaction(config, transferManager);
+
+			removeOldVersions();
+
+			if (options.isRemoveUnreferencedTemporaryFiles()) {
+				transferManager.removeUnreferencedTemporaryFiles();
+			}
+
+			mergeRemoteFiles();
+
+			// We went succesfully through the entire operation and checked everything. Hence we update the last cleanup time.
+			try {
+				updateLastCleanupTime();
+			}
+			catch (SQLException e) {
+				throw new StorageException(e);
+			}
+
 			finishOperation();
 			fireEndEvent();
-			return new CleanupOperationResult(CleanupResultCode.NOK_REPO_BLOCKED);
 		}
-
-		// Wait two seconds (conservative cleanup, see #104)
-		logger.log(Level.INFO, "Cleanup: Waiting a while to be sure that no other actions are running ...");
-		Thread.sleep(BEFORE_DOUBLE_CHECK_TIME);
-
-		// Check again. No other clients should be busy, because we waited BEFORE_DOUBLE_CHECK_TIME
-		preconditionResult = checkPreconditions();
-
-		if (preconditionResult != CleanupResultCode.OK) {
-			finishOperation();
-			fireEndEvent();
-			return new CleanupOperationResult(preconditionResult);
+		catch (StorageException | IOException e) {
+			throw new OperationException(e);
 		}
-
-		// If we do cleanup, we are no longer allowed to resume a transaction
-		transferManager.clearResumableTransactions();
-		transferManager.clearPendingTransactions();
-
-		// Now do the actual work!
-		logger.log(Level.INFO, "Cleanup: Starting transaction.");
-		remoteTransaction = new RemoteTransaction(config, transferManager);
-
-		removeOldVersions();
-
-		if (options.isRemoveUnreferencedTemporaryFiles()) {
-			transferManager.removeUnreferencedTemporaryFiles();
-		}
-
-		mergeRemoteFiles();
-
-		// We went succesfully through the entire operation and checked everything. Hence we update the last cleanup time.
-		updateLastCleanupTime();
-
-		finishOperation();
-		fireEndEvent();
 
 		return updateResultCode(result);
 	}
@@ -223,8 +238,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * see if cleanup should be performed.
 	 *
 	 * @return {@link CleanupResultCode.OK} if nothing prevents continuing, another relevant code otherwise.
+	 * @throws IOException 
+	 * @throws StorageException 
 	 */
-	private CleanupResultCode checkPreconditions() throws Exception {
+	private CleanupResultCode checkPreconditions() throws OperationException, StorageException {
 		if (hasDirtyDatabaseVersions()) {
 			return CleanupResultCode.NOK_DIRTY_LOCAL;
 		}
@@ -248,7 +265,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return CleanupResultCode.OK;
 	}
 
-	private boolean hasLocalChanges() throws Exception {
+	private boolean hasLocalChanges() throws OperationException {
 		StatusOperationResult statusOperationResult = new StatusOperation(config, options.getStatusOptions()).execute();
 		return statusOperationResult.getChangeSet().hasChanges();
 	}
@@ -256,8 +273,9 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * This method checks if there exist {@link FileVersion}s which are to be deleted because the history they are a part
 	 * of is too long. It will collect these, remove them locally and add them to the {@link RemoteTransaction} for deletion.
+	 * @throws StorageException 
 	 */
-	private void removeOldVersions() throws Exception {
+	private void removeOldVersions() throws StorageException {
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new TreeMap<FileHistoryId, List<FileVersion>>();
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new TreeMap<FileHistoryId, FileVersion>();
 
@@ -281,8 +299,13 @@ public class CleanupOperation extends AbstractTransferOperation {
 				purgeBeforeFileVersions.size() });
 
 		// Local: First, remove file versions that are not longer needed
-		localDatabase.removeSmallerOrEqualFileVersions(purgeBeforeFileVersions);
-		localDatabase.removeFileVersions(purgeFileVersions);
+		try {
+			localDatabase.removeSmallerOrEqualFileVersions(purgeBeforeFileVersions);
+			localDatabase.removeFileVersions(purgeFileVersions);
+		}
+		catch (SQLException e) {
+			throw new StorageException(e);
+		}
 
 		// Local: Then, determine what must be changed remotely and remove it locally
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunks = localDatabase.getUnusedMultiChunks();
@@ -304,14 +327,14 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private Map<FileHistoryId, FileVersion> collectPurgeBeforeFileVersions(Map<FileHistoryId, List<FileVersion>> purgeFileVersions) {
 		long deleteBeforeTimestamp = System.currentTimeMillis() - options.getMinKeepDeletedSeconds() * 1000;
-		
+
 		Map<FileHistoryId, FileVersion> deletedFileVersionsBeforeTimestamp = localDatabase.getDeletedFileVersionsBefore(deleteBeforeTimestamp);
 		Map<FileHistoryId, List<FileVersion>> selectedPurgeFileVersions = localDatabase.getFileHistoriesToPurgeBefore(deleteBeforeTimestamp);
-		
+
 		Map<FileHistoryId, FileVersion> purgeBeforeFileVersions = new HashMap<FileHistoryId, FileVersion>();
 		purgeBeforeFileVersions.putAll(deletedFileVersionsBeforeTimestamp);
 		putAllFileVersionsInMap(selectedPurgeFileVersions, purgeFileVersions);
-		
+
 		return purgeBeforeFileVersions;
 	}
 
@@ -327,15 +350,15 @@ public class CleanupOperation extends AbstractTransferOperation {
 		Map<FileHistoryId, List<FileVersion>> purgeFileVersions = new HashMap<FileHistoryId, List<FileVersion>>();
 
 		long currentTime = System.currentTimeMillis();
-		long previousTruncateIntervalTimeMultiplier = 0;		
-		
+		long previousTruncateIntervalTimeMultiplier = 0;
+
 		for (Map.Entry<Long, TimeUnit> purgeFileVersionSetting : options.getPurgeFileVersionSettings().entrySet()) {
 			Long truncateIntervalMultiplier = purgeFileVersionSetting.getKey();
-			TimeUnit truncateIntervalTimeUnit = purgeFileVersionSetting.getValue();			
-			
+			TimeUnit truncateIntervalTimeUnit = purgeFileVersionSetting.getValue();
+
 			long beginIntervalTimestamp = currentTime - truncateIntervalMultiplier * 1000;
 			long endIntervalTimestamp = currentTime - previousTruncateIntervalTimeMultiplier * 1000;
-			
+
 			Map<FileHistoryId, List<FileVersion>> newPurgeFileVersions = localDatabase.getFileHistoriesToPurgeInInterval(
 					beginIntervalTimestamp, endIntervalTimestamp, truncateIntervalTimeUnit);
 
@@ -348,11 +371,11 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 	private void putAllFileVersionsInMap(Map<FileHistoryId, List<FileVersion>> newFileVersions,
 			Map<FileHistoryId, List<FileVersion>> fileHistoryPurgeFileVersions) {
-		
+
 		for (FileHistoryId fileHistoryId : newFileVersions.keySet()) {
 			List<FileVersion> purgeFileVersions = fileHistoryPurgeFileVersions.get(fileHistoryId);
 			List<FileVersion> newPurgeFileVersions = newFileVersions.get(fileHistoryId);
-			
+
 			if (purgeFileVersions != null) {
 				purgeFileVersions.addAll(newPurgeFileVersions);
 			}
@@ -381,7 +404,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 		return dirtyDatabaseVersions.hasNext(); // TODO [low] Is this a resource creeper?
 	}
 
-	private boolean hasRemoteChanges() throws Exception {
+	private boolean hasRemoteChanges() throws OperationException {
 		LsRemoteOperationResult lsRemoteOperationResult = new LsRemoteOperation(config).execute();
 		return lsRemoteOperationResult.getUnknownRemoteDatabases().size() > 0;
 	}
@@ -389,7 +412,7 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * Checks if Cleanup has been performed less then a configurable time ago.
 	 */
-	private boolean wasCleanedRecently() throws Exception {
+	private boolean wasCleanedRecently() {
 		Long lastCleanupTime = localDatabase.getCleanupTime();
 
 		if (lastCleanupTime == null) {
@@ -405,8 +428,10 @@ public class CleanupOperation extends AbstractTransferOperation {
 	 * To make the state clear and prevent issues with replacing files, new database files are given a higher number
 	 * than all existing database files.
 	 * Both the deletions and the new files added to the current @{link RemoteTransaction}.
+	 * @throws StorageException 
+	 * @throws IOException 
 	 */
-	private void mergeRemoteFiles() throws Exception {
+	private void mergeRemoteFiles() throws StorageException, IOException {
 		// Retrieve all database versions
 		Map<String, List<DatabaseRemoteFile>> allDatabaseFilesMap = retrieveAllRemoteDatabaseFiles();
 
@@ -437,7 +462,12 @@ public class CleanupOperation extends AbstractTransferOperation {
 
 		}
 
-		rememberDatabases(allMergedDatabaseFiles);
+		try {
+			rememberDatabases(allMergedDatabaseFiles);
+		}
+		catch (SQLException e) {
+			throw new StorageException(e);
+		}
 
 		// 3. Prepare transaction
 
@@ -533,21 +563,28 @@ public class CleanupOperation extends AbstractTransferOperation {
 	/**
 	 * This method finishes the merging of remote files, by attempting to commit the {@link RemoteTransaction}.
 	 * If this fails, it will roll back the local database.
+	 * @throws IOException 
+	 * @throws StorageException 
 	 */
-	private void finishMerging() throws Exception {
+	private void finishMerging() throws StorageException, IOException {
 		updateCleanupFileInTransaction();
 
 		try {
-			logger.log(Level.INFO, "Cleanup: COMMITTING TX ...");
+			try {
+				logger.log(Level.INFO, "Cleanup: COMMITTING TX ...");
 
-			remoteTransaction.commit();
-			localDatabase.commit();
+				remoteTransaction.commit();
+				localDatabase.commit();
+			}
+			catch (StorageException e) {
+				logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
+
+				localDatabase.rollback();
+				throw e;
+			}
 		}
-		catch (StorageException e) {
-			logger.log(Level.INFO, "Cleanup: FAILED TO COMMIT TX. Rolling back ...");
-
-			localDatabase.rollback();
-			throw e;
+		catch (SQLException e) {
+			throw new StorageException(e);
 		}
 
 		logger.log(Level.INFO, "Cleanup: SUCCESS COMMITTING TX.");

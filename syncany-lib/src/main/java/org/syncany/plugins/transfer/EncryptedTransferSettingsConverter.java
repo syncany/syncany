@@ -7,6 +7,7 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 import org.syncany.config.UserConfig;
+import org.syncany.crypto.CipherException;
 import org.syncany.util.ReflectionUtil;
 
 import com.google.common.collect.Lists;
@@ -30,18 +31,26 @@ public class EncryptedTransferSettingsConverter implements Converter<String> {
 	}
 
 	@Override
-	public String read(InputNode node) throws Exception {
+	public String read(InputNode node) throws InvalidXmlNodeException, CipherException {
 		InputNode encryptedAttribute = node.getAttribute("encrypted");
-		
-		if (encryptedAttribute != null && encryptedAttribute.getValue().equals(Boolean.TRUE.toString())) {
-			return TransferSettings.decrypt(node.getValue());
+
+		try {
+			if (encryptedAttribute != null && encryptedAttribute.getValue().equals(Boolean.TRUE.toString())) {
+				return TransferSettings.decrypt(node.getValue());
+			}
+			return node.getValue();
+		}
+		catch (CipherException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new InvalidXmlNodeException(e);
 		}
 
-		return node.getValue();
 	}
 
 	@Override
-	public void write(OutputNode node, String raw) throws Exception {
+	public void write(OutputNode node, String raw) throws CipherException {
 		if (encryptedFields.contains(node.getName())) {
 			node.setValue(TransferSettings.encrypt(raw));
 			node.setAttribute("encrypted", Boolean.TRUE.toString());
@@ -53,11 +62,11 @@ public class EncryptedTransferSettingsConverter implements Converter<String> {
 
 	private List<String> getEncryptedFields(Class<? extends TransferSettings> clazz) {
 		List<String> encryptedFields = Lists.newArrayList();
-		
+
 		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(clazz, Encrypted.class)) {
 			encryptedFields.add(field.getName());
 		}
-		
+
 		return encryptedFields;
 	}
 }

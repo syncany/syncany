@@ -15,11 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations;
 
 /**
- * @author Jesse Donkervliet
+ * Wrapper for exceptions that can be thrown when executing operations.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class OperationException extends Exception {
+	private static final long serialVersionUID = -4277673078529131874L;
+
+	/**
+	 * @param e Exception that caused it.
+	 */
+	public OperationException(Exception e) {
+		super(e);
+	}
 }

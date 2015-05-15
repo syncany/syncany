@@ -34,32 +34,32 @@ public class NoTransformer extends Transformer {
 	 * not be initialized. This method does nothing.
 	 */
 	@Override
-	public void init(Map<String, String> settings) throws Exception {
+	public void init(Map<String, String> settings) {
 		// Nothing here
 	}
-	
-    @Override
-    public OutputStream createOutputStream(OutputStream out) throws IOException {
-        if (nextTransformer == null) {
-            return out;
-        }
-        else {
-            return nextTransformer.createOutputStream(out);
-        }
-    }
 
-    @Override
-    public InputStream createInputStream(InputStream in) throws IOException {
-        if (nextTransformer == null) {
-            return in;
-        }
-        else {
-            return nextTransformer.createInputStream(in);
-        }
-    }
+	@Override
+	public OutputStream createOutputStream(OutputStream out) throws IOException {
+		if (nextTransformer == null) {
+			return out;
+		}
+		else {
+			return nextTransformer.createOutputStream(out);
+		}
+	}
 
-    @Override
-    public String toString() {
-        return (nextTransformer == null) ? "None" : "None-"+nextTransformer;
-    }    
+	@Override
+	public InputStream createInputStream(InputStream in) throws IOException {
+		if (nextTransformer == null) {
+			return in;
+		}
+		else {
+			return nextTransformer.createInputStream(in);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return (nextTransformer == null) ? "None" : "None-" + nextTransformer;
+	}
 }

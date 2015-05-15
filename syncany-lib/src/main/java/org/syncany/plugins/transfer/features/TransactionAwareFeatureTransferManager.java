@@ -60,7 +60,8 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	private final TransferManager underlyingTransferManager;
 	private final Config config;
 
-	public TransactionAwareFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config, TransactionAware transactionAwareAnnotation) {
+	public TransactionAwareFeatureTransferManager(TransferManager originalTransferManager, TransferManager underlyingTransferManager, Config config,
+			TransactionAware transactionAwareAnnotation) {
 		this.underlyingTransferManager = underlyingTransferManager;
 		this.config = config;
 	}
@@ -204,10 +205,10 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	 */
 	public List<TransactionRemoteFile> getTransactionsByClient(String client) throws StorageException {
 		Objects.requireNonNull(config, "Cannot get transactions if config is null.");
-		
+
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
 		List<TransactionRemoteFile> transactionsByClient = new ArrayList<TransactionRemoteFile>();
-		
+
 		for (TransactionTO potentiallyResumableTransaction : transactions.keySet()) {
 			boolean isCancelledOwnTransaction = potentiallyResumableTransaction.getMachineName().equals(config.getMachineName());
 
@@ -234,15 +235,15 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	 */
 	public void clearResumableTransactions() {
 		Objects.requireNonNull(config, "Cannot delete resumable transactions if config is null.");
-		
+
 		File transactionFile = config.getTransactionFile();
-		
+
 		if (transactionFile.exists()) {
 			transactionFile.delete();
 		}
 
 		File transactionDatabaseFile = config.getTransactionDatabaseFile();
-		
+
 		if (transactionDatabaseFile.exists()) {
 			transactionFile.delete();
 		}
@@ -348,7 +349,7 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	private void rollbackActions(List<ActionTO> unfinishedActions) throws StorageException {
 		for (ActionTO action : unfinishedActions) {
 			logger.log(Level.INFO, "- Needs to be rolled back: " + action);
-			
+
 			switch (action.getType()) {
 			case UPLOAD:
 				delete(action.getRemoteFile());

@@ -15,11 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.plugins.transfer.to;
 
 /**
- * @author Jesse Donkervliet
+ * Exception that wraps the Exceptions thrown by the deserialization library calls.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class DeserializableException extends Exception {
+
+	private static final long serialVersionUID = -8419362053442130951L;
+
+	/**
+	 * @param e Exception that caused this exception.
+	 */
+	public DeserializableException(Exception e) {
+		super(e);
+	}
+
+	/**
+	 * @param string
+	 */
+	public DeserializableException(String string) {
+		super(string);
+	}
+
 }

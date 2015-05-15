@@ -32,7 +32,7 @@ import org.syncany.operations.Operation;
 
 public class LogOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LogOperation.class.getSimpleName());
-	
+
 	private LogOperationOptions options;
 	private SqlDatabase localDatabase;
 
@@ -44,7 +44,7 @@ public class LogOperation extends Operation {
 	}
 
 	@Override
-	public LogOperationResult execute() throws Exception {
+	public LogOperationResult execute() {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Log' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -52,14 +52,14 @@ public class LogOperation extends Operation {
 		ArrayList<LightweightDatabaseVersion> databaseVersions = new ArrayList<>();
 		Iterator<DatabaseVersion> databaseVersionsIterator = localDatabase.getLastDatabaseVersions(options.getMaxDatabaseVersionCount(),
 				options.getStartDatabaseVersionIndex(), options.getMaxFileHistoryCount());
-				
+
 		while (databaseVersionsIterator.hasNext()) {
 			DatabaseVersion databaseVersion = databaseVersionsIterator.next();
-			LightweightDatabaseVersion lightweightDatabaseVersion = createLightweightDatabaseVersion(databaseVersion);			
-			
+			LightweightDatabaseVersion lightweightDatabaseVersion = createLightweightDatabaseVersion(databaseVersion);
+
 			databaseVersions.add(lightweightDatabaseVersion);
 		}
-		
+
 		return new LogOperationResult(databaseVersions);
 	}
 
@@ -69,12 +69,12 @@ public class LogOperation extends Operation {
 
 		for (PartialFileHistory fileHistory : databaseVersion.getFileHistories()) {
 			FileVersion fileVersion = fileHistory.getLastVersion();
-			
+
 			switch (fileVersion.getStatus()) {
 			case NEW:
 				changedFiles.getNewFiles().add(fileVersion.getPath());
 				break;
-				
+
 			case CHANGED:
 			case RENAMED:
 				changedFiles.getChangedFiles().add(fileVersion.getPath());
@@ -85,14 +85,14 @@ public class LogOperation extends Operation {
 				break;
 			}
 		}
-		
+
 		// Create lightweight database version
 		LightweightDatabaseVersion lightweightDatabaseVersion = new LightweightDatabaseVersion();
 
 		lightweightDatabaseVersion.setClient(databaseVersion.getHeader().getClient());
 		lightweightDatabaseVersion.setDate(databaseVersion.getHeader().getDate());
 		lightweightDatabaseVersion.setChangeSet(changedFiles);
-		
+
 		return lightweightDatabaseVersion;
 	}
 }

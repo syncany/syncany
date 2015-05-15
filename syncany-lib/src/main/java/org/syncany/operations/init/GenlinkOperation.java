@@ -17,12 +17,17 @@
  */
 package org.syncany.operations.init;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
+import org.syncany.config.ConfigException;
 import org.syncany.config.ConfigHelper;
 import org.syncany.config.to.ConfigTO;
+import org.syncany.crypto.CipherException;
+import org.syncany.operations.OperationException;
+import org.syncany.plugins.transfer.to.SerializableException;
 
 /**
  * This operation generates a link which can be shared among users to connect to
@@ -33,7 +38,7 @@ import org.syncany.config.to.ConfigTO;
  */
 public class GenlinkOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());
-	
+
 	private GenlinkOperationOptions options;
 	private ConfigTO configTO;
 
@@ -48,23 +53,40 @@ public class GenlinkOperation extends AbstractInitOperation {
 	}
 
 	@Override
-	public GenlinkOperationResult execute() throws Exception {
+	public GenlinkOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'GenLink'");
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		if (configTO == null) {
-			configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
+			try {
+				configTO = ConfigHelper.loadConfigTO(config.getLocalDir());
+			}
+			catch (ConfigException e) {
+				throw new OperationException(e);
+			}
 		}
 
 		ApplicationLink applicationLink = new ApplicationLink(configTO.getTransferSettings(), options.isShortUrl());
 
-		if (configTO.getMasterKey() != null) {	
-			String encryptedLinkStr = applicationLink.createEncryptedLink(configTO.getMasterKey());
+		if (configTO.getMasterKey() != null) {
+			String encryptedLinkStr;
+			try {
+				encryptedLinkStr = applicationLink.createEncryptedLink(configTO.getMasterKey());
+			}
+			catch (SerializableException | CipherException | IOException e) {
+				throw new OperationException(e);
+			}
 			return new GenlinkOperationResult(encryptedLinkStr, true);
 		}
 		else {
-			String plaintextLinkStr = applicationLink.createPlaintextLink();
+			String plaintextLinkStr;
+			try {
+				plaintextLinkStr = applicationLink.createPlaintextLink();
+			}
+			catch (SerializableException | IOException e) {
+				throw new OperationException(e);
+			}
 			return new GenlinkOperationResult(plaintextLinkStr, false);
 		}
 	}

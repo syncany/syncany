@@ -27,6 +27,7 @@ import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.daemon.messages.LsRemoteEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.LsRemoteStartSyncExternalEvent;
 import org.syncany.plugins.transfer.StorageException;
@@ -65,19 +66,24 @@ public class LsRemoteOperation extends Operation {
 	}
 
 	@Override
-	public LsRemoteOperationResult execute() throws Exception {
+	public LsRemoteOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Remote Status' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
 		eventBus.post(new LsRemoteStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
+		List<DatabaseRemoteFile> unknownRemoteDatabases;
+		try {
+			TransferManager transferManager = createTransferManager(loadedTransferManager);
 
-		TransferManager transferManager = createTransferManager(loadedTransferManager);
+			List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
+			unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);
 
-		List<DatabaseRemoteFile> knownDatabases = localDatabase.getKnownDatabases();
-		List<DatabaseRemoteFile> unknownRemoteDatabases = listUnknownRemoteDatabases(transferManager, knownDatabases);
-
-		transferManager.disconnect();
+			transferManager.disconnect();
+		}
+		catch (StorageException e) {
+			throw new OperationException(e);
+		}
 
 		boolean hasChanges = unknownRemoteDatabases.size() > 0;
 		eventBus.post(new LsRemoteEndSyncExternalEvent(config.getLocalDir().getAbsolutePath(), hasChanges));

@@ -18,6 +18,8 @@
 package org.syncany.operations.restore;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.io.FileUtils;
 import org.syncany.config.Config;
@@ -25,59 +27,66 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.operations.down.actions.ChecksumMismatchException;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.util.NormalizedPath;
 
 public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 	private String relativeTargetPath;
-	
+
 	public RestoreFileSystemAction(Config config, FileVersion fileVersion, String relativeTargetPath) {
 		super(config, new MemoryDatabase(), null, fileVersion);
 		this.relativeTargetPath = relativeTargetPath;
 	}
 
 	@Override
-	public RestoreFileSystemActionResult execute() throws Exception {
+	public RestoreFileSystemActionResult execute() throws IOException {
 		if (fileVersion2.getType() == FileType.FOLDER) {
-			throw new Exception("Cannot restore folders.");
+			throw new IOException("Cannot restore folders.");
 		}
 		else if (fileVersion2.getType() == FileType.SYMLINK) {
-			throw new Exception("Not yet implemented.");
+			throw new IOException("Not yet implemented.");
 		}
 		else {
 			if (fileVersion2.getStatus() == FileStatus.DELETED) {
-				throw new Exception("Cannot restore version marked DELETED. Try previous version.");
+				throw new IOException("Cannot restore version marked DELETED. Try previous version.");
 			}
-			
+
 			// Assemble file to cache
-			File cacheFile = assembleFileToCache(fileVersion2);
-			
+			File cacheFile;
+			try {
+				cacheFile = assembleFileToCache(fileVersion2);
+			}
+			catch (NoSuchAlgorithmException | ChecksumMismatchException e) {
+				throw new IOException(e);
+			}
+
 			// Find target path & folder
 			NormalizedPath targetPath = findTargetPath();
 			NormalizedPath targetFolder = targetPath.getParent();
-			
+
 			// Create folder (if necessary) and move file
 			if (!targetFolder.toFile().isDirectory()) {
 				targetFolder.toFile().mkdirs();
 			}
-			
+
 			FileUtils.moveFile(cacheFile, targetPath.toFile());
-			
+
 			return new RestoreFileSystemActionResult(targetPath.toFile());
 		}
 	}
 
-	private NormalizedPath findTargetPath() throws Exception {
+	private NormalizedPath findTargetPath() throws IOException {
 		NormalizedPath targetPath = null;
-		
+
 		if (relativeTargetPath == null) {
-			String restoredSuffix = "restored version " + fileVersion2.getVersion(); 
+			String restoredSuffix = "restored version " + fileVersion2.getVersion();
 			targetPath = new NormalizedPath(config.getLocalDir(), fileVersion2.getPath()).withSuffix(restoredSuffix, false);
 		}
 		else {
 			targetPath = new NormalizedPath(config.getLocalDir(), relativeTargetPath);
 		}
-		
+
 		return targetPath;
 	}
 }

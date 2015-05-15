@@ -33,15 +33,16 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.Downloader;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.restore.RestoreOperationResult.RestoreResultCode;
 import org.syncany.plugins.transfer.StorageException;
 
 public class RestoreOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(RestoreOperation.class.getSimpleName());
 	public static final String ACTION_ID = "restore";
-	
+
 	private RestoreOperationOptions options;
-	
+
 	private SqlDatabase localDatabase;
 	private Downloader downloader;
 
@@ -51,25 +52,25 @@ public class RestoreOperation extends AbstractTransferOperation {
 
 	public RestoreOperation(Config config, RestoreOperationOptions options) {
 		super(config, ACTION_ID);
-		
+
 		this.options = options;
 		this.localDatabase = new SqlDatabase(config);
 		this.downloader = new Downloader(config, transferManager);
 	}
 
 	@Override
-	public RestoreOperationResult execute() throws Exception {
+	public RestoreOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Restore' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
-		
+
 		// Find file history
 		FileHistoryId restoreFileHistoryId = findFileHistoryId();
 
 		if (restoreFileHistoryId == null) {
 			return new RestoreOperationResult(RestoreResultCode.NACK_NO_FILE);
 		}
-		
+
 		// Find file version
 		FileVersion restoreFileVersion = findRestoreFileVersion(restoreFileHistoryId);
 
@@ -81,21 +82,32 @@ public class RestoreOperation extends AbstractTransferOperation {
 		}
 
 		logger.log(Level.INFO, "Restore file identified: " + restoreFileVersion);
-		
+
 		// Download multichunks
-		downloadMultiChunks(restoreFileVersion);
-		
+		try {
+			downloadMultiChunks(restoreFileVersion);
+		}
+		catch (StorageException | IOException e) {
+			throw new OperationException(e);
+		}
+
 		// Restore file
 		logger.log(Level.INFO, "- Restoring: " + restoreFileVersion);
 
 		RestoreFileSystemAction restoreAction = new RestoreFileSystemAction(config, restoreFileVersion, options.getRelativeTargetPath());
-		RestoreFileSystemActionResult restoreResult = restoreAction.execute();
+		RestoreFileSystemActionResult restoreResult;
+		try {
+			restoreResult = restoreAction.execute();
+		}
+		catch (IOException e) {
+			throw new OperationException(e);
+		}
 
 		return new RestoreOperationResult(RestoreResultCode.ACK, restoreResult.getTargetFile());
 	}
 
 	private FileHistoryId findFileHistoryId() {
-		return localDatabase.expandFileHistoryId(options.getFileHistoryId()); 
+		return localDatabase.expandFileHistoryId(options.getFileHistoryId());
 	}
 
 	private FileVersion findRestoreFileVersion(FileHistoryId restoreFileHistoryId) {
@@ -104,9 +116,9 @@ public class RestoreOperation extends AbstractTransferOperation {
 		}
 		else {
 			List<FileVersion> fileHistory = localDatabase.getFileHistory(restoreFileHistoryId);
-			
-			if (fileHistory.size() >= 2) { 
-				return fileHistory.get(fileHistory.size()-2);
+
+			if (fileHistory.size() >= 2) {
+				return fileHistory.get(fileHistory.size() - 2);
 			}
 			else {
 				return null;
@@ -117,7 +129,7 @@ public class RestoreOperation extends AbstractTransferOperation {
 	private void downloadMultiChunks(FileVersion restoreFileVersion) throws StorageException, IOException {
 		Set<MultiChunkId> multiChunksToDownload = new HashSet<MultiChunkId>();
 		FileChecksum restoreFileChecksum = restoreFileVersion.getChecksum();
-			
+
 		if (restoreFileChecksum != null) {
 			multiChunksToDownload.addAll(localDatabase.getMultiChunkIds(restoreFileChecksum));
 

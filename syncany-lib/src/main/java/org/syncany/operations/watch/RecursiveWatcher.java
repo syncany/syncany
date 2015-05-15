@@ -94,7 +94,7 @@ public abstract class RecursiveWatcher {
 	 * until all directories are being monitored. For normal cases (1-100 folders), this
 	 * should not take longer than a few milliseconds.
 	 */
-	public void start() throws Exception {
+	public void start() throws IOException {
 		// Call before-start hook
 		beforeStart();
 
@@ -174,8 +174,9 @@ public abstract class RecursiveWatcher {
 	/**
 	 * Called before the {@link #start()} method. This method is
 	 * only called once.
+	 * @throws IOException 
 	 */
-	protected abstract void beforeStart() throws Exception;
+	protected abstract void beforeStart() throws IOException;
 
 	/**
 	 * Called in the watch service polling thread, right

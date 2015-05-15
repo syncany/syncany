@@ -15,11 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.plugin;
 
 /**
- * @author Jesse Donkervliet
+ * Base class for exceptions related to installed/uninstallable plugins.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class PluginException extends Exception {
+	private static final long serialVersionUID = -6416898105831663385L;
+
+	/**
+	 * @param string Message to pass on
+	 */
+	public PluginException(String string) {
+		super(string);
+	}
+
+	/**
+	 * @param e Exception that was the cause.
+	 */
+	public PluginException(Exception e) {
+		super(e);
+	}
 }
