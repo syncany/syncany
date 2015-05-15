@@ -26,10 +26,13 @@ import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
-import org.syncany.plugins.transfer.RetriableTransferManager;
 import org.syncany.plugins.transfer.StorageException;
-import org.syncany.plugins.transfer.TransactionAwareTransferManager;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.features.PathAware;
+import org.syncany.plugins.transfer.features.Retriable;
+import org.syncany.plugins.transfer.features.TransactionAware;
+import org.syncany.plugins.transfer.features.TransactionAwareFeatureTransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -56,7 +59,7 @@ public abstract class AbstractTransferOperation extends Operation {
 	 */
 	private static final int ACTION_FILE_DELETE_TIME = ActionFileHandler.ACTION_RENEWAL_INTERVAL + 5 * 60 * 1000; // Minutes
 
-	protected TransactionAwareTransferManager transferManager;
+	protected TransactionAwareFeatureTransferManager transferManager;
 	protected ActionFileHandler actionHandler;
 
 	protected LocalEventBus eventBus;
@@ -66,24 +69,28 @@ public abstract class AbstractTransferOperation extends Operation {
 
 		this.eventBus = LocalEventBus.getInstance();
 
-		// Do NOT reuse TransferManager for action file renewal; see #140
-
 		try {
-			this.actionHandler = new ActionFileHandler(createReliableTransferManager(config), operationName, config.getMachineName());
-			this.transferManager = createReliableTransferManager(config);
+			// Do NOT reuse TransferManager for action file renewal; see #140
+
+			TransferManager actionFileTransferManager = TransferManagerFactory
+					.build(config)
+					.withFeature(Retriable.class)
+					.asDefault();
+			
+			TransactionAwareFeatureTransferManager regularFileTransferManager = TransferManagerFactory
+					.build(config)
+					.withFeature(Retriable.class)
+					.withFeature(PathAware.class)
+					.withFeature(TransactionAware.class)
+					.as(TransactionAware.class);
+			
+			this.actionHandler = new ActionFileHandler(actionFileTransferManager, operationName, config.getMachineName());
+			this.transferManager = regularFileTransferManager;
 		}
 		catch (StorageException e) {
 			logger.log(Level.SEVERE, "Unable to create AbstractTransferOperation: Unable to create TransferManager", e);
 			throw new RuntimeException("Unable to create AbstractTransferOperation: Unable to create TransferManager: " + e.getMessage());
 		}
-	}
-
-	private TransactionAwareTransferManager createReliableTransferManager(Config config) throws StorageException {
-		return new TransactionAwareTransferManager(createRetriableTransferManager(config), config);
-	}
-
-	private TransferManager createRetriableTransferManager(Config config) throws StorageException {
-		return new RetriableTransferManager(config.getTransferPlugin().createTransferManager(config.getConnection(), config));
 	}
 
 	protected void startOperation() throws StorageException, IOException {

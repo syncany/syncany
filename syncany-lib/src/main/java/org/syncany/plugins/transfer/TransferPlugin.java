@@ -30,8 +30,8 @@ import org.syncany.util.ReflectionUtil;
  * to the remote storage. Implementations must provide implementations for
  * {@link TransferPlugin} (this class), {@link TransferSettings} (connection
  * details) and {@link TransferManager} (transfer methods).<br/><br/>
- * *
- *<i>Plugins have to follow a naming convention</i>
+ *
+ * <p>Plugins have to follow a naming convention:
  * <ul>
  *   <li>Package names have to be lower snaked cased</li>
  *   <li>Class names have to be camel cased</li>
@@ -39,7 +39,7 @@ import org.syncany.util.ReflectionUtil;
  *      subsequent character.</li>
  * </ul>
  *
- * Example:
+ * <p>Example:</b> 
  * A plugin is called DummyPlugin, hence <i>org.syncany.plugins.dummy_plugin.DummyPluginTransferPlugin</i> is the
  * plugin's {@link TransferPlugin} class and <i>org.syncany.plugins.dummy_plugin.DummyPluginTransferSettings</i> is the
  * corresponding {@link TransferSettings} implementation.

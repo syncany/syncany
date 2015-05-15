@@ -55,6 +55,7 @@ public abstract class TransferPluginUtil {
 				String pluginPackageIdentifier = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, pluginNameIdentifier);
 				String transferSettingsClassName = MessageFormat.format(PLUGIN_TRANSFER_SETTINGS_CLASS_NAME, pluginPackageIdentifier,
 						pluginNameIdentifier);
+				
 				return Class.forName(transferSettingsClassName).asSubclass(TransferSettings.class);
 			}
 			catch (Exception e) {
