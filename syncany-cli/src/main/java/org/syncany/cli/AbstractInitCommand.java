@@ -33,6 +33,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
@@ -58,12 +61,11 @@ import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -494,11 +496,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String value = knownOptionValue;
 
 		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s: ", option.getDescription());
+			out.printf("- %s: ", getDescription(settings, option));
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", getDescription(settings, option), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -520,11 +522,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 				defaultValueDescription = "none";
 			}
 
-			out.printf("- %s (optional, default is %s): ", option.getDescription(), defaultValueDescription);
+			out.printf("- %s (optional, default is %s): ", getDescription(settings, option), defaultValueDescription);
 			value = console.readLine();
 		}
 		else {
-			out.printf("- %s (%s): ", option.getDescription(), knownOptionValue);
+			out.printf("- %s (%s): ", getDescription(settings, option), knownOptionValue);
 			value = console.readLine();
 
 			if ("".equals(value)) {
@@ -541,11 +543,11 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		String optionalIndicator = option.isRequired() ? "" : ", optional";
 
 		if (option.isSingular() || knownOptionValue == null || "".equals(knownOptionValue)) {
-			out.printf("- %s (not displayed%s): ", option.getDescription(), optionalIndicator);
+			out.printf("- %s (not displayed%s): ", getDescription(settings, option), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 		}
 		else {
-			out.printf("- %s (***, not displayed%s): ", option.getDescription(), optionalIndicator);
+			out.printf("- %s (***, not displayed%s): ", getDescription(settings, option), optionalIndicator);
 			value = String.copyValueOf(console.readPassword());
 
 			if ("".equals(value)) {
@@ -554,6 +556,25 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 		}
 
 		return value;
+	}
+
+	private String getDescription(TransferSettings settings, TransferPluginOption option) {
+		Class<?> clazzForType = ReflectionUtil.getClassFromType(option.getType());
+
+		if (clazzForType != null && Enum.class.isAssignableFrom(clazzForType)) {
+			Object[] enumValues = clazzForType.getEnumConstants();
+
+			if (enumValues == null) {
+				throw new RuntimeException("Invalid TransferSettings class found: Enum at " + settings + " has no values");
+			}
+
+			logger.log(Level.FINE, "Found enum option, values are: " + StringUtil.join(enumValues, ", "));
+
+			return String.format("%s, choose from %s", option.getDescription(), StringUtil.join(enumValues, ", "));
+		}
+		else {
+			return option.getDescription();
+		}
 	}
 
 	protected TransferPlugin askPlugin() {

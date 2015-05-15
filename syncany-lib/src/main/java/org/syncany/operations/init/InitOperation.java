@@ -20,6 +20,7 @@ package org.syncany.operations.init;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.util.logging.Level;
 
@@ -34,13 +35,10 @@ import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.operations.OperationException;
 import org.syncany.operations.init.InitOperationResult.InitResultCode;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferPlugin;
-import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 
@@ -64,10 +62,9 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
 public class InitOperation extends AbstractInitOperation {
 	public static final String DEFAULT_IGNORE_FILE = "/" + InitOperation.class.getPackage().getName().replace('.', '/') + "/default.syignore";
 
-	private InitOperationOptions options;
-	private InitOperationResult result;
+	private final InitOperationOptions options;
+	private final InitOperationResult result;
 
-	private TransferPlugin plugin;
 	private TransferManager transferManager;
 
 	public InitOperation(InitOperationOptions options, UserInteractionListener listener) {
@@ -83,13 +80,13 @@ public class InitOperation extends AbstractInitOperation {
 		logger.log(Level.INFO, "Running 'Init'");
 		logger.log(Level.INFO, "--------------------------------------------");
 		try {
-			// Init plugin and transfer manager
-			plugin = Plugins.get(options.getConfigTO().getTransferSettings().getType(), TransferPlugin.class);
 
-			TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-			transferSettings.setUserInteractionListener(listener);
-
-			transferManager = plugin.createTransferManager(transferSettings, config);
+			try {
+				transferManager = createTransferManagerFromNullConfig(options.getConfigTO());
+			}
+			catch (IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchMethodException e) {
+				throw new OperationException(e);
+			}
 
 			// Test the repo
 			if (!performRepoTest()) {
@@ -117,7 +114,7 @@ public class InitOperation extends AbstractInitOperation {
 				saveLocalConfig(configFile, repoFile, masterFile, masterKeyPassword);
 			}
 			catch (CipherException e) {
-				throw new StorageException(e);
+				throw new OperationException(e);
 			}
 
 			// Make remote changes

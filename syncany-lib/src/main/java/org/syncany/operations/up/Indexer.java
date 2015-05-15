@@ -123,7 +123,7 @@ public class Indexer {
 		// Load file history cache
 		List<PartialFileHistory> fileHistoriesWithLastVersion = localDatabase.getFileHistoriesWithLastVersion();
 
-		// TODO [medium] This should be in FileHistoryDao
+		// TODO [high] This should be in FileHistoryDao. Very memory intensive 
 		Map<FileChecksum, List<PartialFileHistory>> fileChecksumCache = fillFileChecksumCache(fileHistoriesWithLastVersion);
 		Map<String, PartialFileHistory> filePathCache = fillFilePathCache(fileHistoriesWithLastVersion);
 

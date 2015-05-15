@@ -61,7 +61,7 @@ public class CipherSpecs {
 	public static final int AES_256_GCM = 0x03;
 	public static final int TWOFISH_256_GCM = 0x04;
 
-	public static final int[] DEFAULT_CIPHER_SPECS = new int[] { CipherSpecs.AES_128_GCM, CipherSpecs.TWOFISH_128_GCM };
+	public static final int[] DEFAULT_CIPHER_SPECS = new int[] { CipherSpecs.AES_128_GCM };
 
 	static {
 		CipherSpec[] tmpCipherSpecs = new CipherSpec[] {

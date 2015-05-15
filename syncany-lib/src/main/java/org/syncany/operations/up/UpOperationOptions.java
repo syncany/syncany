@@ -29,6 +29,7 @@ public class UpOperationOptions implements OperationOptions {
 	 create and commit a new DatabaseVersion whenever MultiChunks with a total size of at least this limit have been
 	 processed, or when all files have been processed. */
 	public static final long DEFAULT_TRANSACTION_SIZE_LIMIT = 50 * 1024 * 1024;
+	public static final long DEFAULT_TRANSACTION_FILE_LIMIT = 10000;
 
 	@Element(name = "status", required = false)
 	private StatusOperationOptions statusOptions = new StatusOperationOptions();
@@ -41,6 +42,9 @@ public class UpOperationOptions implements OperationOptions {
 
 	@Element(required = false)
 	private long transactionSizeLimit = DEFAULT_TRANSACTION_SIZE_LIMIT;
+
+	@Element(required = false)
+	private long transactionFileLimit = DEFAULT_TRANSACTION_FILE_LIMIT;
 
 	public StatusOperationOptions getStatusOptions() {
 		return statusOptions;
@@ -72,5 +76,13 @@ public class UpOperationOptions implements OperationOptions {
 
 	public void setTransactionSizeLimit(long transactionSizeLimit) {
 		this.transactionSizeLimit = transactionSizeLimit;
+	}
+
+	public long getTransactionFileLimit() {
+		return transactionFileLimit;
+	}
+
+	public void setTransactionFileLimit(long transactionFileLimit) {
+		this.transactionFileLimit = transactionFileLimit;
 	}
 }

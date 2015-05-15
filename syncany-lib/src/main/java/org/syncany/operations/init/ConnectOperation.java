@@ -20,6 +20,7 @@ package org.syncany.operations.init;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,12 +40,10 @@ import org.syncany.operations.OperationException;
 import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
 import org.syncany.operations.init.ConnectOperationOptions.ConnectOptionsStrategy;
 import org.syncany.operations.init.ConnectOperationResult.ConnectResultCode;
-import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageTestResult;
 import org.syncany.plugins.transfer.TransferManager;
-import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
@@ -72,10 +71,9 @@ public class ConnectOperation extends AbstractInitOperation {
 	private static final int MAX_RETRY_PASSWORD_COUNT = 3;
 	private int retryPasswordCount = 0;
 
-	private ConnectOperationOptions options;
-	private ConnectOperationResult result;
+	private final ConnectOperationOptions options;
+	private final ConnectOperationResult result;
 
-	private TransferPlugin plugin;
 	private TransferManager transferManager;
 
 	public ConnectOperation(ConnectOperationOptions options, UserInteractionListener listener) {
@@ -103,13 +101,12 @@ public class ConnectOperation extends AbstractInitOperation {
 			}
 
 			// Init plugin and transfer manager
-			String pluginId = options.getConfigTO().getTransferSettings().getType();
-			plugin = Plugins.get(pluginId, TransferPlugin.class);
-
-			TransferSettings transferSettings = options.getConfigTO().getTransferSettings();
-			transferSettings.setUserInteractionListener(listener);
-
-			transferManager = plugin.createTransferManager(transferSettings, null); // "null" because no config exists yet!
+			try {
+				transferManager = createTransferManagerFromNullConfig(options.getConfigTO());
+			}
+			catch (IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchMethodException e) {
+				throw new OperationException(e);
+			}
 
 			// Test the repo
 			if (!performRepoTest(transferManager)) {

@@ -19,15 +19,25 @@ package org.syncany.operations.init;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
+import org.syncany.config.to.ConfigTO;
 import org.syncany.operations.Operation;
 import org.syncany.operations.daemon.messages.ShowMessageExternalEvent;
+import org.syncany.plugins.Plugins;
 import org.syncany.plugins.UserInteractionListener;
+import org.syncany.plugins.transfer.StorageException;
+import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.TransferManagerFactory.TransferManagerBuilder;
+import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistent;
 import org.syncany.util.EnvironmentUtil;
 
 /**
@@ -45,7 +55,7 @@ public abstract class AbstractInitOperation extends Operation {
 
 	public AbstractInitOperation(Config config, UserInteractionListener listener) {
 		super(config);
-		
+
 		this.listener = listener;
 		this.eventBus = LocalEventBus.getInstance();
 	}
@@ -104,5 +114,24 @@ public abstract class AbstractInitOperation extends Operation {
 
 	protected void fireNotifyCreateMaster() {
 		eventBus.post(new ShowMessageExternalEvent("Creating master key from password (this might take a while) ..."));
+	}
+
+	protected TransferManager createTransferManagerFromNullConfig(ConfigTO configTo) throws IllegalAccessException,
+					InvocationTargetException, InstantiationException, NoSuchMethodException, StorageException {
+
+		// Init plugin and transfer manager
+		TransferPlugin plugin = Plugins.get(configTo.getTransferSettings().getType(), TransferPlugin.class);
+
+		TransferSettings transferSettings = configTo.getTransferSettings();
+		transferSettings.setUserInteractionListener(listener);
+		TransferManager transferManager = plugin.createTransferManager(transferSettings, config);
+
+		// constructor is not visible and config seems to be null at this point, hence we cannot use the build method here
+		Constructor<TransferManagerBuilder> tmbConstructor = TransferManagerBuilder.class.getDeclaredConstructor(Config.class, TransferManager.class);
+		tmbConstructor.setAccessible(true);
+
+		return tmbConstructor.newInstance(config, transferManager)
+						.withFeature(ReadAfterWriteConsistent.class)
+						.asDefault();
 	}
 }

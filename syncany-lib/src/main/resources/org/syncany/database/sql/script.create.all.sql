@@ -1,6 +1,6 @@
 -- Tables
 
-CREATE CACHED TABLE databaseversion (
+CREATE CACHED TABLE IF NOT EXISTS databaseversion (
   id int NOT NULL IDENTITY,
   status varchar(45) NOT NULL,
   localtime datetime NOT NULL,
@@ -9,7 +9,7 @@ CREATE CACHED TABLE databaseversion (
   UNIQUE (vectorclock_serialized)
 );
 
-CREATE CACHED TABLE chunk (
+CREATE CACHED TABLE IF NOT EXISTS  chunk (
   checksum varchar(40) NOT NULL,
   databaseversion_id int NOT NULL,
   size bigint NOT NULL,
@@ -17,7 +17,7 @@ CREATE CACHED TABLE chunk (
   FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE databaseversion_vectorclock (
+CREATE CACHED TABLE IF NOT EXISTS  databaseversion_vectorclock (
   databaseversion_id int NOT NULL,
   client varchar(45) NOT NULL,
   logicaltime int NOT NULL,
@@ -25,7 +25,7 @@ CREATE CACHED TABLE databaseversion_vectorclock (
   FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE filecontent (
+CREATE CACHED TABLE IF NOT EXISTS  filecontent (
   checksum varchar(40) NOT NULL,
   databaseversion_id int NOT NULL,
   size bigint NOT NULL,
@@ -33,7 +33,7 @@ CREATE CACHED TABLE filecontent (
   FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE filecontent_chunk (
+CREATE CACHED TABLE IF NOT EXISTS  filecontent_chunk (
   filecontent_checksum varchar(40) NOT NULL,
   chunk_checksum varchar(40) NOT NULL,
   num int NOT NULL,
@@ -42,14 +42,14 @@ CREATE CACHED TABLE filecontent_chunk (
   FOREIGN KEY (chunk_checksum) REFERENCES chunk (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE filehistory (
+CREATE CACHED TABLE IF NOT EXISTS  filehistory (
   id varchar(40) NOT NULL,
   databaseversion_id int NOT NULL,
   PRIMARY KEY (id, databaseversion_id),
   FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE fileversion (
+CREATE CACHED TABLE IF NOT EXISTS  fileversion (
   filehistory_id varchar(40) NOT NULL,
   version int NOT NULL,
   databaseversion_id int NOT NULL,
@@ -68,7 +68,7 @@ CREATE CACHED TABLE fileversion (
   FOREIGN KEY (filecontent_checksum) REFERENCES filecontent (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE multichunk (
+CREATE CACHED TABLE IF NOT EXISTS  multichunk (
   id varchar(40) NOT NULL,
   databaseversion_id int NOT NULL,
   size bigint NOT NULL,  
@@ -76,7 +76,7 @@ CREATE CACHED TABLE multichunk (
   FOREIGN KEY (databaseversion_id) REFERENCES databaseversion (id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE multichunk_chunk (
+CREATE CACHED TABLE IF NOT EXISTS  multichunk_chunk (
   multichunk_id varchar(40) NOT NULL,
   chunk_checksum varchar(40) NOT NULL,
   PRIMARY KEY (multichunk_id, chunk_checksum),
@@ -84,21 +84,21 @@ CREATE CACHED TABLE multichunk_chunk (
   FOREIGN KEY (chunk_checksum) REFERENCES chunk (checksum) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-CREATE CACHED TABLE multichunk_muddy (
+CREATE CACHED TABLE IF NOT EXISTS  multichunk_muddy (
   id varchar(40) NOT NULL,
   machine_name varchar(255) NOT NULL,
   machine_version int NOT NULL,
   PRIMARY KEY (id)
 );
 
-CREATE CACHED TABLE known_databases (
+CREATE CACHED TABLE IF NOT EXISTS  known_databases (
   id int NOT NULL IDENTITY,
   client varchar(45) NOT NULL,
   filenumber int NOT NULL,
   UNIQUE (client, filenumber)
 );
 
-CREATE CACHED TABLE general_settings (
+CREATE CACHED TABLE IF NOT EXISTS  general_settings (
   key varchar(255) NOT NULL,
   value varchar(255) NOT NULL,
   PRIMARY KEY (key)
