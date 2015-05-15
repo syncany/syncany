@@ -21,9 +21,9 @@ package org.syncany.chunk;
  * Thrown by Transformer init methods when their settings are not valid.
  * 
  * @author Stefan Hugtenburg
- *
  */
 public class InvalidSettingsException extends Exception {
+	private static final long serialVersionUID = -280945343359999227L;
 
 	/**
 	 * @param msg Message for the Exception.
@@ -31,7 +31,4 @@ public class InvalidSettingsException extends Exception {
 	public InvalidSettingsException(String msg) {
 		super(msg);
 	}
-
-	private static final long serialVersionUID = -280945343359999227L;
-
 }
