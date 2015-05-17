@@ -45,10 +45,8 @@ import org.syncany.tests.util.TestDaemonUtil;
  * using Mockito for mocking its instance variable options.
  * 
  * @author Niels Spruit
- *
  */
 public class DaemonOperationTest {
-
 	private DaemonOperationOptions options;
 	private DaemonOperation deamonOp;
 
@@ -65,7 +63,6 @@ public class DaemonOperationTest {
 	public void setUp() throws Exception {
 		options = mock(DaemonOperationOptions.class);
 		deamonOp = new DaemonOperation(options);
-
 	}
 
 	@Test

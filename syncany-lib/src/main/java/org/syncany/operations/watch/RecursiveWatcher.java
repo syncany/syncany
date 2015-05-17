@@ -18,6 +18,7 @@
 package org.syncany.operations.watch;
 
 import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Timer;
@@ -114,7 +115,11 @@ public abstract class RecursiveWatcher {
 						}
 					}
 					catch (InterruptedException e) {
-						logger.log(Level.FINE, "Could not poll the events", e);
+						logger.log(Level.FINE, "Could not poll the events. EXITING watcher.", e);
+						running.set(false);
+					}
+					catch (ClosedWatchServiceException e) {
+						logger.log(Level.FINE, "Watch closed or polling failed. EXITING watcher.", e);
 						running.set(false);
 					}
 				}
