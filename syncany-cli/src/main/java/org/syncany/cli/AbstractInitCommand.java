@@ -33,6 +33,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import org.syncany.cli.util.InitConsole;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.crypto.CipherUtil;
@@ -58,12 +61,11 @@ import org.syncany.plugins.transfer.oauth.OAuthTokenWebListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 /**
  * The abstract init command provides multiple shared methods for the 'init'
@@ -559,7 +561,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	private String getDescription(TransferSettings settings, TransferPluginOption option) {
 		Class<?> clazzForType = ReflectionUtil.getClassFromType(option.getType());
 
-		if (Enum.class.isAssignableFrom(clazzForType)) {
+		if (clazzForType != null && Enum.class.isAssignableFrom(clazzForType)) {
 			Object[] enumValues = clazzForType.getEnumConstants();
 
 			if (enumValues == null) {
