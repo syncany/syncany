@@ -244,7 +244,6 @@ public class Config {
 		return DatabaseConnectionFactory.createConnection(getDatabaseFile(), readOnly);
 	}
 
-
 	public File getCacheDir() {
 		return cacheDir;
 	}
