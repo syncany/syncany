@@ -71,6 +71,7 @@ public class DatabaseConnectionFactory {
 	 * and the application tables are created.
 	 *
 	 * @param databaseFile File at which to create/load the database
+	 * @param readOnly True if this connection is only used for reading.
 	 * @return Returns a valid database connection
 	 */
 	public static Connection createConnection(File databaseFile, boolean readOnly) {
