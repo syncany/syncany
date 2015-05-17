@@ -22,10 +22,9 @@ import org.syncany.database.DatabaseVersion;
 public class AsyncIndexer implements Runnable {
 	private static final Logger logger = Logger.getLogger(AsyncIndexer.class.getSimpleName());
 
-	public static final DatabaseVersion FINAL_DATABASE_VERSION = new DatabaseVersion();
-
 	private final Indexer indexer;
 	private final List<File> files;
+	private final List<File> deletedFiles;
 	private final Queue<DatabaseVersion> databaseVersionQueue;
 
 	/** 
@@ -34,17 +33,18 @@ public class AsyncIndexer implements Runnable {
 	 * @param files List of Files to be indexed.
 	 * @param queue a threadsafe Queue to communicate DatabaseVersions.
 	 */
-	public AsyncIndexer(Config config, Deduper deduper, List<File> files, Queue<DatabaseVersion> queue) {
+	public AsyncIndexer(Config config, Deduper deduper, List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> queue) {
 		this.files = files;
 		this.databaseVersionQueue = queue;
 		this.indexer = new Indexer(config, deduper);
+		this.deletedFiles = deletedFiles;
 	}
 
 	@Override
 	public void run() {
 		try {
 			logger.log(Level.INFO, "Starting Indexing.");
-			indexer.index(files, databaseVersionQueue);
+			indexer.index(files, deletedFiles, databaseVersionQueue);
 		}
 		catch (IOException e) {
 			// TODO: Store this exception as a "result"?
@@ -52,7 +52,7 @@ public class AsyncIndexer implements Runnable {
 		}
 		// Signal end-of-stream.
 		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
-		databaseVersionQueue.offer(FINAL_DATABASE_VERSION);
+		databaseVersionQueue.offer(new DatabaseVersion());
 	}
 
 }

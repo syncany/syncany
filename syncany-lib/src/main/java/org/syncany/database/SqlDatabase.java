@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
@@ -72,7 +73,11 @@ public class SqlDatabase {
 	protected DatabaseVersionSqlDao databaseVersionDao;
 
 	public SqlDatabase(Config config) {
-		this.connection = config.createDatabaseConnection();
+		this(config, false);
+	}
+
+	public SqlDatabase(Config config, boolean readOnly) {
+		this.connection = config.createDatabaseConnection(readOnly);
 		this.applicationDao = new ApplicationSqlDao(connection);
 		this.chunkDao = new ChunkSqlDao(connection);
 		this.fileContentDao = new FileContentSqlDao(connection);
@@ -80,6 +85,7 @@ public class SqlDatabase {
 		this.fileHistoryDao = new FileHistorySqlDao(connection, fileVersionDao);
 		this.multiChunkDao = new MultiChunkSqlDao(connection);
 		this.databaseVersionDao = new DatabaseVersionSqlDao(connection, chunkDao, fileContentDao, fileVersionDao, fileHistoryDao, multiChunkDao);
+
 	}
 
 	// General
@@ -90,6 +96,19 @@ public class SqlDatabase {
 
 	public void commit() throws SQLException {
 		connection.commit();
+	}
+
+	@Override
+	public void finalize() {
+		try {
+			if (!connection.isClosed()) {
+				connection.commit();
+				connection.close();
+			}
+		}
+		catch (SQLException e) {
+			logger.log(Level.WARNING, "Failed to close database connection. Possible resource leak.", e);
+		}
 	}
 
 	public void rollback() throws SQLException {
@@ -216,6 +235,14 @@ public class SqlDatabase {
 
 	public List<PartialFileHistory> getFileHistoriesWithLastVersion() {
 		return fileHistoryDao.getFileHistoriesWithLastVersion();
+	}
+
+	public Collection<PartialFileHistory> getFileHistoriesWithLastVersionByChecksumSizeAndModifiedDate(String checksum, long size, Date modifiedDate) {
+		return fileHistoryDao.getFileHistoriesByChecksumSizeAndModifiedDate(checksum, size, modifiedDate);
+	}
+
+	public PartialFileHistory getFileHistoriesWithLastVersionByPath(String path) {
+		return fileHistoryDao.getFileHistoryWithLastVersionByPath(path);
 	}
 
 	private void removeUnreferencedFileHistories() throws SQLException {

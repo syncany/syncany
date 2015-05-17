@@ -237,8 +237,13 @@ public class Config {
 	}
 
 	public java.sql.Connection createDatabaseConnection() {
-		return DatabaseConnectionFactory.createConnection(getDatabaseFile());
+		return DatabaseConnectionFactory.createConnection(getDatabaseFile(), false);
 	}
+
+	public java.sql.Connection createDatabaseConnection(boolean readOnly) {
+		return DatabaseConnectionFactory.createConnection(getDatabaseFile(), readOnly);
+	}
+
 
 	public File getCacheDir() {
 		return cacheDir;

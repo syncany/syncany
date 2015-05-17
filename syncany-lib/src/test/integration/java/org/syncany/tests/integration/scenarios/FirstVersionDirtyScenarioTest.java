@@ -53,8 +53,8 @@ public class FirstVersionDirtyScenarioTest {
 		// Client B loses		
 		clientB.down();  // <<<<<<< This used to throw all sorts of PRIMARY KEY CONSTRAINT errors
 		
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
-		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile(), false);
 		
 		TestAssertUtil.assertSqlDatabaseTablesEqual(clientA.getDatabaseFile(), clientB.getDatabaseFile(), new String[] {
 			"chunk", "multichunk", "filecontent", "filecontent_chunk"

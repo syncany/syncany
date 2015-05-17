@@ -156,7 +156,7 @@ public class UpOperation extends AbstractTransferOperation {
 					resuming = true;
 				}
 				// Add stopping marker
-				databaseVersionQueue.add(AsyncIndexer.FINAL_DATABASE_VERSION);
+				databaseVersionQueue.add(new DatabaseVersion());
 
 				try {
 					transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();
@@ -175,11 +175,12 @@ public class UpOperation extends AbstractTransferOperation {
 			// Get a list of files that have been updated
 			ChangeSet localChanges = result.getStatusResult().getChangeSet();
 			List<File> locallyUpdatedFiles = extractLocallyUpdatedFiles(localChanges);
+			List<File> locallyDeletedFiles = extractLocallyDeletedFiles(localChanges);
 			// Iterate over the changes, deduplicate, and feed DatabaseVersions into an iterator
 			Deduper deduper = new Deduper(config.getChunker(), config.getMultiChunker(), config.getTransformer(), options.getTransactionSizeLimit(),
 					options.getTransactionFileLimit());
 			
-			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, databaseVersionQueue);
+			AsyncIndexer asyncIndexer = new AsyncIndexer(config, deduper, locallyUpdatedFiles, locallyDeletedFiles, databaseVersionQueue);
 			new Thread(asyncIndexer).start();
 		}
 
@@ -210,6 +211,10 @@ public class UpOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Sync up done.");
 			result.setResultCode(UpResultCode.OK_CHANGES_UPLOADED);
 		}
+
+		// Close database connection
+		localDatabase.finalize();
+
 		// Finish 'up' before 'cleanup' starts
 		finishOperation();
 		fireEndEvent();
@@ -244,8 +249,9 @@ public class UpOperation extends AbstractTransferOperation {
 	private int executeTransactions(BlockingQueue<DatabaseVersion> databaseVersionQueue, Iterator<RemoteTransaction> remoteTransactionsToResume,
 			TransactionRemoteFile transactionRemoteFileToResume)
 			throws Exception {
-		int numberOfCompletedTransactions = 0;
+		
 		boolean resuming = true;
+		
 		if (remoteTransactionsToResume == null) {
 			resuming = false;
 		}
@@ -260,9 +266,13 @@ public class UpOperation extends AbstractTransferOperation {
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
 		DatabaseVersion databaseVersion = databaseVersionQueue.take();
-		while (databaseVersion != AsyncIndexer.FINAL_DATABASE_VERSION) {
-			RemoteTransaction remoteTransaction = null;
+		boolean noDatabaseVersions = databaseVersion.isEmpty();
+		// Add dirty data to first database
+		addDirtyData(databaseVersion);
 
+		//
+		while (!databaseVersion.isEmpty()) {
+			RemoteTransaction remoteTransaction = null;
 			if (!resuming) {
 				VectorClock newVectorClock = findNewVectorClock();
 				databaseVersion.setVectorClock(newVectorClock);
@@ -304,13 +314,22 @@ public class UpOperation extends AbstractTransferOperation {
 						transactionRemoteFileToResume = null;
 					}
 
+					logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
+					long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
+
+					logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
+					localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
+
+					logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion);
+					addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
+
+					result.incrementTransactionsCompleted();
 
 
 					logger.log(Level.INFO, "Committing local database.");
 					localDatabase.commit();
 
 					committingFailed = false;
-					numberOfCompletedTransactions++;
 				}
 				catch (Exception e) {
 					detectedFailure = true;
@@ -325,18 +344,6 @@ public class UpOperation extends AbstractTransferOperation {
 						remainingRemoteTransactions.add(remoteTransaction);
 						remainingDatabaseVersions.add(databaseVersion);
 					}
-					else {
-						logger.log(Level.INFO, "Persisting local SQL database (new database version {0}) ...", databaseVersion.getHeader().toString());
-						long newDatabaseVersionId = localDatabase.writeDatabaseVersion(databaseVersion);
-
-						logger.log(Level.INFO, "Removing DIRTY database versions from database ...");
-						localDatabase.removeDirtyDatabaseVersions(newDatabaseVersionId);
-
-						logger.log(Level.INFO, "Adding database version to result changes:" + databaseVersion);
-						addNewDatabaseChangesToResultChanges(databaseVersion, result.getChangeSet());
-
-						result.incrementTransactionsCompleted();
-					}
 				}
 			}
 			else {
@@ -344,9 +351,16 @@ public class UpOperation extends AbstractTransferOperation {
 				remainingDatabaseVersions.add(databaseVersion);
 			}
 			
-			logger.log(Level.FINE, "Waiting for new database version.");
-			databaseVersion = databaseVersionQueue.take();
-			logger.log(Level.FINE, "Took new database version: " + databaseVersion);
+			if (!noDatabaseVersions) {
+				logger.log(Level.FINE, "Waiting for new database version.");
+				databaseVersion = databaseVersionQueue.take();
+				logger.log(Level.FINE, "Took new database version: " + databaseVersion);
+			}
+			else {
+				logger.log(Level.FINE, "Not waiting for new database version, last one has been taken.");
+				break;
+			}
+
 		}
 
 		if (detectedFailure) {
@@ -354,7 +368,8 @@ public class UpOperation extends AbstractTransferOperation {
 			serializeRemoteTransactionsAndMetadata(remainingRemoteTransactions, remainingDatabaseVersions);
 			throw caughtFailure;
 		}
-		return numberOfCompletedTransactions;
+
+		return (int) result.getTransactionsCompleted();
 	}
 
 	private TransactionRemoteFile attemptResumeTransactionRemoteFile() throws StorageException, BlockingTransfersException {
@@ -500,9 +515,6 @@ public class UpOperation extends AbstractTransferOperation {
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
 
-		// Add dirty data (if existent)
-		addDirtyData(deltaDatabaseVersion);
-
 		// New delta database
 		MemoryDatabase deltaDatabase = new MemoryDatabase();
 		deltaDatabase.addDatabaseVersion(deltaDatabaseVersion);
@@ -593,6 +605,16 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		return locallyUpdatedFiles;
+	}
+
+	private List<File> extractLocallyDeletedFiles(ChangeSet localChanges) {
+		List<File> locallyDeletedFiles = new ArrayList<File>();
+
+		for (String relativeFilePath : localChanges.getDeletedFiles()) {
+			locallyDeletedFiles.add(new File(config.getLocalDir() + File.separator + relativeFilePath));
+		}
+
+		return locallyDeletedFiles;
 	}
 
 	/**
