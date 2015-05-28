@@ -22,7 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import org.syncany.config.IgnoredFiles;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperation;
@@ -72,11 +72,11 @@ public class StatusCommand extends Command {
 		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
 
 		// --filter
-		IgnoredFiles ignoredFiles = null;
+		FileNameMatcher filenameMatcher = null;
 		if (options.has(optionFilePattern)) {
-			ignoredFiles = new IgnoredFiles(options.valueOf(optionFilePattern));
+			filenameMatcher = new FileNameMatcher(options.valueOf(optionFilePattern));
 		}
-		operationOptions.setIncludeFilePattern(ignoredFiles);
+		operationOptions.setIncludeFilePattern(filenameMatcher);
 
 		return operationOptions;
 	}

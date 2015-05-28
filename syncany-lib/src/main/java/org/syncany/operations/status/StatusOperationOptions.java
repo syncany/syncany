@@ -19,7 +19,7 @@ package org.syncany.operations.status;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
-import org.syncany.config.IgnoredFiles;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.operations.OperationOptions;
 
 @Root(name="status")
@@ -31,7 +31,7 @@ public class StatusOperationOptions implements OperationOptions {
 	private boolean delete = true;
 	
 	@Element(required = false)
-	private IgnoredFiles ignoredFilesPattern = null;
+	private FileNameMatcher ignoredFilesPattern = null;
 
 	public boolean isForceChecksum() {
 		return forceChecksum;
@@ -49,11 +49,11 @@ public class StatusOperationOptions implements OperationOptions {
 		this.delete = delete;
 	}
 
-	public IgnoredFiles getFilePattern() {
+	public FileNameMatcher getFilePattern() {
 		return ignoredFilesPattern;
 	}
 
-	public void setIncludeFilePattern(IgnoredFiles filePattern) {
+	public void setIncludeFilePattern(FileNameMatcher filePattern) {
 		this.ignoredFilesPattern = filePattern;
 	}
 }

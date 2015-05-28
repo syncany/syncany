@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.syncany.config.Config;
-import org.syncany.config.IgnoredFiles;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.config.LocalEventBus;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -160,7 +160,7 @@ public class StatusOperation extends Operation {
 		/**
 		 * File pattern used to match files. If <code>null</code>, match defaults to <code>true</code>.
 		 */
-		private IgnoredFiles filePattern;
+		private FileNameMatcher filePattern;
 
 		public StatusFileVisitor(Path root, Map<String, FileVersion> currentFileTree) {
 			this.root = root;
@@ -172,11 +172,11 @@ public class StatusOperation extends Operation {
 			return changeSet;
 		}
 
-		public IgnoredFiles getFilePattern() {
+		public FileNameMatcher getFilePattern() {
 			return filePattern;
 		}
 
-		public void setFilePattern(IgnoredFiles pattern) {
+		public void setFilePattern(FileNameMatcher pattern) {
 			this.filePattern = pattern;
 		}
 
