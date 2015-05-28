@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.syncany.config.Config;
