@@ -67,44 +67,6 @@ public class UpOperationTest {
 	}
 
 	@Test
-	public void testPatternRejectWordsFiles() throws Exception {
-
-		String alphabet = "abcdefghijklmnopqrstuvwxyz";
-		final int numfiles = 26;
-		StringBuilder builder = new StringBuilder();
-		List<File> originalFiles = new ArrayList<>();
-		for (int i = 0; i < numfiles; i++) {
-			builder.append(testConfig.getLocalDir());
-			builder.append("/");
-			builder.append(alphabet.charAt(i % alphabet.length()));
-			File file = new File(builder.toString());
-			originalFiles.add(file);
-			file.createNewFile();
-			builder.setLength(0);
-		}
-
-		// Create options. Set file pattern.
-		StatusOperationOptions statusOptions = new StatusOperationOptions();
-		statusOptions.setIncludeFilePattern(new IgnoredFiles("[!a-zA-Z0-9]"));
-		UpOperationOptions options = new UpOperationOptions();
-		options.setStatusOptions(statusOptions);
-
-		// Run!
-		AbstractTransferOperation op = new UpOperation(testConfig, options);
-		op.execute();
-
-		// Get databases (for comparison)
-		LocalTransferSettings localConnection = (LocalTransferSettings) testConfig.getConnection();
-
-		File localDatabaseDir = testConfig.getDatabaseDir();
-		File remoteDatabaseFile = new File(localConnection.getPath() + "/databases/database-" + testConfig.getMachineName() + "-0000000001");
-
-		assertNotNull(localDatabaseDir.listFiles());
-		assertTrue(localDatabaseDir.listFiles().length > 0);
-		assertFalse(remoteDatabaseFile.exists());
-	}
-
-	@Test
 	public void testUploadLocalDatabase() throws Exception {
 		int fileSize = 1230 * 1024;
 		int fileAmount = 3;
