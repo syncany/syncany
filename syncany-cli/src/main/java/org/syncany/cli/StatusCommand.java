@@ -18,13 +18,11 @@
 package org.syncany.cli;
 
 import static java.util.Arrays.asList;
-
-import java.util.regex.Pattern;
-
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.syncany.config.IgnoredFiles;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.daemon.messages.StatusStartSyncExternalEvent;
 import org.syncany.operations.status.StatusOperation;
@@ -63,7 +61,7 @@ public class StatusCommand extends Command {
 
 		OptionSpec<Void> optionForceChecksum = parser.acceptsAll(asList("f", "force-checksum"));
 		OptionSpec<Void> optionNoDeleteUpload = parser.acceptsAll(asList("D", "no-delete"));
-		OptionSpec<String> optionFilePattern = parser.accepts("filter").withRequiredArg().ofType(String.class);
+		OptionSpec<String> optionFilePattern = parser.accepts("include").withRequiredArg().ofType(String.class);
 
 		OptionSet options = parser.parse(operationArgs);
 
@@ -74,11 +72,11 @@ public class StatusCommand extends Command {
 		operationOptions.setDelete(!options.has(optionNoDeleteUpload));
 
 		// --filter
-		Pattern filePattern = null;
+		IgnoredFiles ignoredFiles = null;
 		if (options.has(optionFilePattern)) {
-			filePattern = Pattern.compile(options.valueOf(optionFilePattern));
+			ignoredFiles = new IgnoredFiles(options.valueOf(optionFilePattern));
 		}
-		operationOptions.setFilePattern(filePattern);
+		operationOptions.setIncludeFilePattern(ignoredFiles);
 
 		return operationOptions;
 	}

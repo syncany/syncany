@@ -33,17 +33,29 @@ import java.util.logging.Logger;
  */
 public class IgnoredFiles {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
-	
+
 	private Set<String> ignorePatterns;
 	private Set<String> ignorePaths;
-	private File ignoreFile;
 
 	public IgnoredFiles(File ignoreFile) {
-		this.ignoreFile = ignoreFile;
 		this.ignorePatterns = new HashSet<String>();
 		this.ignorePaths = new HashSet<String>();
 
-		loadPatterns();
+		loadPatterns(ignoreFile);
+	}
+	
+	public IgnoredFiles(String pattern) {
+		this.ignorePatterns = new HashSet<String>();
+		this.ignorePaths = new HashSet<String>();
+
+		parseIgnoreLine(pattern);
+	}
+
+	public IgnoredFiles(Set<String> patterns) {
+		this.ignorePatterns = new HashSet<String>();
+		this.ignorePaths = new HashSet<String>();
+
+		parseIgnoreLines(patterns);
 	}
 
 	/**
@@ -68,7 +80,7 @@ public class IgnoredFiles {
 		return false;
 	}
 
-	public void loadPatterns() {
+	public void loadPatterns(File ignoreFile) {
 		if (ignoreFile != null && ignoreFile.exists()) {
 			try {
 				Scanner scanner = new Scanner(ignoreFile);
@@ -77,10 +89,10 @@ public class IgnoredFiles {
 					String ignorePatternLine = scanner.nextLine().trim();
 
 					if (!ignorePatternLine.isEmpty()) {
-						parseIgnoreFileLine(ignorePatternLine);						
+						parseIgnoreLine(ignorePatternLine);
 					}
 				}
-				
+
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
@@ -94,7 +106,13 @@ public class IgnoredFiles {
 		}
 	}
 
-	private void parseIgnoreFileLine(String ignorePattern) {
+	private void parseIgnoreLines(Set<String> ignorePatterns) {
+		for (String line : ignorePatterns) {
+			parseIgnoreLine(line);
+		}
+	}
+
+	private void parseIgnoreLine(String ignorePattern) {
 		if (ignorePattern.startsWith("regex:")) {
 			// Chop off regex: indicator
 			ignorePatterns.add(ignorePattern.substring(6));

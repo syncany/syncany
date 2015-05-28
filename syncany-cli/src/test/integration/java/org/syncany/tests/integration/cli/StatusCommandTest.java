@@ -169,7 +169,7 @@ public class StatusCommandTest {
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"status",
-				"--filter", "somefolder1"
+				"--include", "somefolder1"
 		}));
 
 		// Test
@@ -194,7 +194,7 @@ public class StatusCommandTest {
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"status",
-				"--filter", "\\.syignore"
+				"--include", ".syignore"
 		}));
 
 		// Test
@@ -268,7 +268,7 @@ public class StatusCommandTest {
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"status",
-				"--filter", "somefolder1"
+				"--include", "somefolder1"
 		}));
 
 		// Test
@@ -304,7 +304,7 @@ public class StatusCommandTest {
 		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"status",
-				"--filter", "\\.syignore"
+				"--include", ".syignore"
 		}));
 
 		// Test

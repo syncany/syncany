@@ -18,7 +18,6 @@
 package org.syncany.tests.integration.operations;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
@@ -26,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.config.IgnoredFiles;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
@@ -180,7 +180,7 @@ public class StatusOperationTest {
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setFilePattern(Pattern.compile(".+"));
+		options.setIncludeFilePattern(new IgnoredFiles("*"));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
@@ -192,22 +192,24 @@ public class StatusOperationTest {
 	}
 
 	@Test
-	public void testFilePatternNewFilesAcceptWordCharacters() throws Exception {
+	public void testFilePatternNewFilesAcceptNamesWithPrefix() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
+		String prefix = "bla";
 
 		int numfiles = 100;
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < numfiles; i++) {
 			builder.append(config.getLocalDir());
 			builder.append("/");
+			builder.append(prefix);
 			builder.append(i);
 			new File(builder.toString()).createNewFile();
 			builder.setLength(0);
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setFilePattern(Pattern.compile("\\w+"));
+		options.setIncludeFilePattern(new IgnoredFiles(prefix + "*"));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
@@ -219,9 +221,10 @@ public class StatusOperationTest {
 	}
 
 	@Test
-	public void testFilePatternNewFilesAcceptNonWordCharacters() throws Exception {
+	public void testFilePatternNewFilesAcceptNamesWithSuffix() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
+		String suffix = "bla";
 
 		int numfiles = 100;
 		StringBuilder builder = new StringBuilder();
@@ -229,68 +232,43 @@ public class StatusOperationTest {
 			builder.append(config.getLocalDir());
 			builder.append("/");
 			builder.append(i);
+			builder.append(suffix);
 			new File(builder.toString()).createNewFile();
 			builder.setLength(0);
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setFilePattern(Pattern.compile("\\W+"));
+		options.setIncludeFilePattern(new IgnoredFiles("*" + suffix));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
 
-		assertEquals(0, changeSet.getNewFiles().size());
+		assertEquals(numfiles, changeSet.getNewFiles().size());
 
 		// Cleanup 
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
 
 	@Test
-	public void testFilePatternNewFilesAcceptNumericalFiles() throws Exception {
+	public void testFilePatternNewFilesAcceptNamesWithWildCardInMiddle() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
+		String filenamepart = "bla";
 
-		String alphabet = "abcdefghijklmnopqrstuvwxyz";
-		int numfiles = 26;
+		int numfiles = 100;
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < numfiles; i++) {
 			builder.append(config.getLocalDir());
 			builder.append("/");
-			builder.append(alphabet.charAt(i % alphabet.length()));
+			builder.append(filenamepart);
+			builder.append(i);
+			builder.append(filenamepart);
 			new File(builder.toString()).createNewFile();
 			builder.setLength(0);
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setFilePattern(Pattern.compile("\\d+"));
-
-		StatusOperation operation = new StatusOperation(config, options);
-		ChangeSet changeSet = (operation.execute()).getChangeSet();
-
-		assertEquals(0, changeSet.getNewFiles().size());
-
-		// Cleanup 
-		TestConfigUtil.deleteTestLocalConfigAndData(config);
-	}
-
-	@Test
-	public void testFilePatternNewFilesAcceptNonNumericalFiles() throws Exception {
-		// Setup
-		Config config = TestConfigUtil.createTestLocalConfig();
-
-		String alphabet = "abcdefghijklmnopqrstuvwxyz";
-		final int numfiles = 26;
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < numfiles; i++) {
-			builder.append(config.getLocalDir());
-			builder.append("/");
-			builder.append(alphabet.charAt(i % alphabet.length()));
-			new File(builder.toString()).createNewFile();
-			builder.setLength(0);
-		}
-
-		StatusOperationOptions options = new StatusOperationOptions();
-		options.setFilePattern(Pattern.compile("\\D+"));
+		options.setIncludeFilePattern(new IgnoredFiles(filenamepart + "*" + filenamepart));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();

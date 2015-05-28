@@ -29,9 +29,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.syncany.config.Config;
+import org.syncany.config.IgnoredFiles;
 import org.syncany.config.LocalEventBus;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -135,7 +135,7 @@ public class StatusOperation extends Operation {
 
 	private void findAndAppendDeletedFiles(ChangeSet localChanges, Map<String, FileVersion> filesInDatabase) {
 		for (FileVersion lastLocalVersion : filesInDatabase.values()) {
-			if (options.getFilePattern() == null || options.getFilePattern().matcher(lastLocalVersion.getPath()).matches()) {
+			if (options.getFilePattern() == null || options.getFilePattern().isFileIgnored(lastLocalVersion.getPath())) {
 				// Check if file exists, remove if it doesn't
 				File lastLocalVersionOnDisk = new File(config.getLocalDir() + File.separator + lastLocalVersion.getPath());
 
@@ -160,7 +160,7 @@ public class StatusOperation extends Operation {
 		/**
 		 * File pattern used to match files. If <code>null</code>, match defaults to <code>true</code>.
 		 */
-		private Pattern filePattern;
+		private IgnoredFiles filePattern;
 
 		public StatusFileVisitor(Path root, Map<String, FileVersion> currentFileTree) {
 			this.root = root;
@@ -172,11 +172,11 @@ public class StatusOperation extends Operation {
 			return changeSet;
 		}
 
-		public Pattern getFilePattern() {
+		public IgnoredFiles getFilePattern() {
 			return filePattern;
 		}
 
-		public void setFilePattern(Pattern pattern) {
+		public void setFilePattern(IgnoredFiles pattern) {
 			this.filePattern = pattern;
 		}
 
@@ -249,7 +249,7 @@ public class StatusOperation extends Operation {
 		}
 
 		private boolean filePatternAbsentOrMatches(String relativeFilePath) {
-			return this.filePattern == null || filePattern.matcher(relativeFilePath).matches();
+			return this.filePattern == null || filePattern.isFileIgnored(relativeFilePath);
 		}
 
 		@Override
