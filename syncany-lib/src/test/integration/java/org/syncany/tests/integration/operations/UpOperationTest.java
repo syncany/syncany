@@ -34,7 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.config.IgnoredFiles;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -186,7 +186,7 @@ public class UpOperationTest {
 
 		// Create options. Set file pattern.
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
-		statusOptions.setIncludeFilePattern(new IgnoredFiles("[0-9]"));
+		statusOptions.setIncludeFilePattern(new FileNameMatcher("notdeleted"));
 		UpOperationOptions options = new UpOperationOptions();
 		options.setStatusOptions(statusOptions);
 
@@ -227,7 +227,7 @@ public class UpOperationTest {
 
 		// Create options. Set file pattern.
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
-		statusOptions.setIncludeFilePattern(new IgnoredFiles("0"));
+		statusOptions.setIncludeFilePattern(new FileNameMatcher("0"));
 		UpOperationOptions options = new UpOperationOptions();
 		options.setStatusOptions(statusOptions);
 
@@ -282,7 +282,7 @@ public class UpOperationTest {
 
 		// Create options. Set file pattern.
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
-		statusOptions.setIncludeFilePattern(new IgnoredFiles("*"));
+		statusOptions.setIncludeFilePattern(new FileNameMatcher("*"));
 		UpOperationOptions options = new UpOperationOptions();
 		options.setStatusOptions(statusOptions);
 
@@ -345,7 +345,7 @@ public class UpOperationTest {
 
 		// Create options. Set file pattern.
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
-		statusOptions.setIncludeFilePattern(new IgnoredFiles("deleted"));
+		statusOptions.setIncludeFilePattern(new FileNameMatcher("deleted"));
 		UpOperationOptions options = new UpOperationOptions();
 		options.setStatusOptions(statusOptions);
 

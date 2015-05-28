@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.syncany.config.Config;
-import org.syncany.config.IgnoredFiles;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
@@ -180,7 +180,7 @@ public class StatusOperationTest {
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setIncludeFilePattern(new IgnoredFiles("*"));
+		options.setIncludeFilePattern(new FileNameMatcher("*"));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
@@ -209,7 +209,7 @@ public class StatusOperationTest {
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setIncludeFilePattern(new IgnoredFiles(prefix + "*"));
+		options.setIncludeFilePattern(new FileNameMatcher(prefix + "*"));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
@@ -238,7 +238,7 @@ public class StatusOperationTest {
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setIncludeFilePattern(new IgnoredFiles("*" + suffix));
+		options.setIncludeFilePattern(new FileNameMatcher("*" + suffix));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
@@ -268,7 +268,7 @@ public class StatusOperationTest {
 		}
 
 		StatusOperationOptions options = new StatusOperationOptions();
-		options.setIncludeFilePattern(new IgnoredFiles(filenamepart + "*" + filenamepart));
+		options.setIncludeFilePattern(new FileNameMatcher(filenamepart + "*" + filenamepart));
 
 		StatusOperation operation = new StatusOperation(config, options);
 		ChangeSet changeSet = (operation.execute()).getChangeSet();
