@@ -32,7 +32,7 @@ public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 	private String relativeTargetPath;
 	
 	public RestoreFileSystemAction(Config config, FileVersion fileVersion, String relativeTargetPath) {
-		super(config, new MemoryDatabase(), null, fileVersion);
+		super(config, new MemoryDatabase(), null, null, fileVersion);
 		this.relativeTargetPath = relativeTargetPath;
 	}
 

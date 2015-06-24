@@ -469,7 +469,13 @@ public class DownOperation extends AbstractTransferOperation {
 					logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
 				}
 
-				persistDatabaseVersions(winnersApplyBranch, winnersDatabase);
+				// We only persist the versions that we have already computed.
+				DatabaseBranch currentApplyBranch = new DatabaseBranch();
+				for (DatabaseVersion databaseVersion : winnersDatabase.getDatabaseVersions()) {
+					currentApplyBranch.add(databaseVersion.getHeader());
+				}
+
+				persistDatabaseVersions(currentApplyBranch, winnersDatabase);
 				localDatabase.commit();
 			}
 

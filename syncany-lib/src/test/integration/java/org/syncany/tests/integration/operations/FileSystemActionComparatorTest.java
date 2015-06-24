@@ -83,7 +83,7 @@ public class FileSystemActionComparatorTest {
 
 	private NewFileSystemAction createNewFileSystemAction(String path, FileType type) throws Exception {
 		FileVersion firstFileVersion = createFileVersion(path, type);
-		return new NewFileSystemAction(createDummyConfig(), firstFileVersion, null);
+		return new NewFileSystemAction(createDummyConfig(), null, null, firstFileVersion);
 	}
 	
 	private RenameFileSystemAction createRenameFileSystemAction(String fromPath, String toPath, FileType type) throws Exception {
