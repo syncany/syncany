@@ -457,120 +457,27 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 		else {
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");
-			MemoryDatabase winnersDatabase = readWinnersDatabase(winnersApplyBranch, databaseVersionLocations);
+			DatabaseFileReader databaseFileReader = new DatabaseFileReader(databaseSerializer, winnersApplyBranch, databaseVersionLocations);
 
-			if (options.isApplyChanges()) {
-				new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred,
-						preDeleteFileHistoriesWithLastVersion).execute();
-			}
-			else {
-				logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
-			}
+			while (databaseFileReader.hasNext()) {
+				MemoryDatabase winnersDatabase = databaseFileReader.next();
+				if (options.isApplyChanges()) {
+					new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred,
+							preDeleteFileHistoriesWithLastVersion).execute();
+				}
+				else {
+					logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
+				}
 
-			persistDatabaseVersions(winnersApplyBranch, winnersDatabase);
+				persistDatabaseVersions(winnersApplyBranch, winnersDatabase);
+				localDatabase.commit();
+			}
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
-	/**
-	 * Loads the winner's database branch into the memory in a {@link MemoryDatabase} object, by using
-	 * the already downloaded list of remote database files.
-	 *
-	 * <p>Because database files can contain multiple {@link DatabaseVersion}s per client, a range for which
-	 * to load the database versions must be determined.
-	 *
-	 * <p><b>Example 1:</b><br />
-	 * <pre>
-	 *  db-A-0001   (A1)     Already known             Not loaded
-	 *  db-A-0005   (A2)     Already known             Not loaded
-	 *              (A3)     Already known             Not loaded
-	 *              (A4)     Part of winner's branch   Loaded
-	 *              (A5)     Purge database version    Ignored (only DEFAULT)
-	 *  db-B-0001   (A5,B1)  Part of winner's branch   Loaded
-	 *  db-A-0006   (A6,B1)  Part of winner's branch   Loaded
-	 * </pre>
-	 *
-	 * <p>In example 1, only (A4)-(A5) must be loaded from db-A-0005, and not all four database versions.
-	 *
-	 * <p><b>Other example:</b><br />
-	 * <pre>
-	 *  db-A-0005   (A1)     Part of winner's branch   Loaded
-	 *  db-A-0005   (A2)     Part of winner's branch   Loaded
-	 *  db-B-0001   (A2,B1)  Part of winner's branch   Loaded
-	 *  db-A-0005   (A3,B1)  Part of winner's branch   Loaded
-	 *  db-A-0005   (A4,B1)  Part of winner's branch   Loaded
-	 *  db-A-0005   (A5,B1)  Purge database version    Ignored (only DEFAULT)
-	 * </pre>
-	 *
-	 * <p>In example 2, (A1)-(A5,B1) [except (A2,B1)] are contained in db-A-0005 (after merging!), so
-	 * db-A-0005 must be processed twice; each time loading separate parts of the file. In this case:
-	 * First load (A1)-(A2) from db-A-0005, then load (A2,B1) from db-B-0001, then load (A3,B1)-(A4,B1)
-	 * from db-A-0005, and ignore (A5,B1).
-	 * @param databaseFileList
-	 * @param ignoredMostRecentPurgeVersions
-	 *
-	 * @return Returns a loaded memory database containing all metadata from the winner's branch
-	 */
-	private MemoryDatabase readWinnersDatabase(DatabaseBranch winnersApplyBranch, Map<DatabaseVersionHeader, File> databaseVersionLocations)
-			throws IOException, StorageException {
 
-		MemoryDatabase winnerBranchDatabase = new MemoryDatabase();
-
-		List<DatabaseVersionHeader> winnersApplyBranchList = winnersApplyBranch.getAll();
-
-		String rangeClientName = null;
-		VectorClock rangeVersionFrom = null;
-		VectorClock rangeVersionTo = null;
-
-		for (int i = 0; i < winnersApplyBranchList.size(); i++) {
-			DatabaseVersionHeader currentDatabaseVersionHeader = winnersApplyBranchList.get(i);
-			DatabaseVersionHeader nextDatabaseVersionHeader = (i + 1 < winnersApplyBranchList.size()) ? winnersApplyBranchList.get(i + 1) : null;
-
-			// First of range for this client
-			if (rangeClientName == null) {
-				rangeClientName = currentDatabaseVersionHeader.getClient();
-				rangeVersionFrom = currentDatabaseVersionHeader.getVectorClock();
-				rangeVersionTo = currentDatabaseVersionHeader.getVectorClock();
-			}
-
-			// Still in range for this client
-			else {
-				rangeVersionTo = currentDatabaseVersionHeader.getVectorClock();
-			}
-
-			// Now load this stuff from the database file (or not)
-			//   - If the database file exists, load the range and reset it
-			//   - If not, only force a load if this is the range end
-
-			File databaseVersionFile = databaseVersionLocations.get(currentDatabaseVersionHeader);
-
-			if (databaseVersionFile == null) {
-				throw new StorageException("Could not find file corresponding to " + currentDatabaseVersionHeader
-						+ ", while it is in the winners branch.");
-			}
-
-			boolean lastDatabaseVersionHeader = nextDatabaseVersionHeader == null;
-			boolean nextDatabaseVersionInSameFile = lastDatabaseVersionHeader
-					|| databaseVersionFile.equals(databaseVersionLocations.get(nextDatabaseVersionHeader));
-			boolean rangeEnds = lastDatabaseVersionHeader || !nextDatabaseVersionInSameFile;
-
-			if (rangeEnds) {
-				databaseSerializer.load(winnerBranchDatabase, databaseVersionFile, rangeVersionFrom, rangeVersionTo, DatabaseReadType.FULL);
-				rangeClientName = null;
-			}
-		}
-
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, "Winner Database Branch:");
-
-			for (DatabaseVersion dbv : winnerBranchDatabase.getDatabaseVersions()) {
-				logger.log(Level.FINE, "- " + dbv.getHeader());
-			}
-		}
-
-		return winnerBranchDatabase;
-	}
 
 	/**
 	 * Persists the given winners branch to the local database, i.e. for every database version
