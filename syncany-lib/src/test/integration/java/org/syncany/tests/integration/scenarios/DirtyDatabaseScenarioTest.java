@@ -168,12 +168,12 @@ public class DirtyDatabaseScenarioTest {
 
 		clientA.down(); // resolve conflict (wins, no DIRTY)
 
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 		assertEquals("0", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionA));
 
 		clientB.down(); // resolve conflict (loses, creates DIRTY version)
 
-		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile(), false);
 		assertEquals("2", TestSqlUtil.runSqlSelect("select count(*) from databaseversion where status='DIRTY'", databaseConnectionB));
 		assertEquals("(A1,B2)\n(A1,B3)",
 				TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion where status='DIRTY' order by id", databaseConnectionB));

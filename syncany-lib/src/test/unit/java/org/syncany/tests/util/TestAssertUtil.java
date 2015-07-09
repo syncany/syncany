@@ -197,7 +197,7 @@ public class TestAssertUtil {
 	}
 
 	public static void assertSqlResultEquals(File databaseFile, String sqlQuery, String expectedResultStr) throws SQLException {
-		Connection databaseConnection = DatabaseConnectionFactory.createConnection(databaseFile);
+		Connection databaseConnection = DatabaseConnectionFactory.createConnection(databaseFile, true);
 		ResultSet resultSet = databaseConnection.prepareStatement(sqlQuery).executeQuery();
 
 		List<String> actualResultStrList = new ArrayList<String>();
@@ -232,8 +232,8 @@ public class TestAssertUtil {
 
 	public static void assertSqlDatabaseTablesEqual(File expectedDatabaseFile, File actualDatabaseFile, String[]... compareTablesAndIgnoreColumns)
 			throws IOException, SQLException {
-		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createConnection(expectedDatabaseFile);
-		Connection actualDatabaseConnection = DatabaseConnectionFactory.createConnection(actualDatabaseFile);
+		Connection expectedDatabaseConnection = DatabaseConnectionFactory.createConnection(expectedDatabaseFile, true);
+		Connection actualDatabaseConnection = DatabaseConnectionFactory.createConnection(actualDatabaseFile, true);
 
 		for (String[] tableNameAndIgnoreColumns : compareTablesAndIgnoreColumns) {
 			String tableName = tableNameAndIgnoreColumns[0];

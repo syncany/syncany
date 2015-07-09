@@ -247,13 +247,18 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 					return null;
 				}
 
-				// Find for the latest file history the last file version to check if the file has moved
+				// Get the last FileVersion of the FileHistory in the database with the largest vectorclock.
 				PartialFileHistory fileHistory = getLastVersionByFileHistoryId(latestFileHistoryId);
 				
+				// The above query does not guarantee the resulting version is the last in its
+				// history. We need to check this before returning the file.
 				if (fileHistory.getLastVersion().getVersion() == latestFileVersion) {
 					return fileHistory;
 				}
 				else {
+					// The version retrieved by the path query is not a fileversion which is in the current
+					// filetree. Since it was the last version with this path, there is no other history
+					// which should be continued.
 					return null;
 				}
 			}

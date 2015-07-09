@@ -14,6 +14,7 @@ Change Log
   + Fix table creation process to not throw an error
   + Fix swift read after write consistent issue #276
   + Create target in `sy init` by default (disable with -T)
+  + Fix API to support ARM for platform-independent plugins #495
 
 ### Syncany 0.4.5-alpha (Date: 8 May 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)

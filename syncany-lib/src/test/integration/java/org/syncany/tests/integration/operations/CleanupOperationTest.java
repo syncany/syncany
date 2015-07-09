@@ -89,7 +89,7 @@ public class CleanupOperationTest {
 		clientA.deleteFile("deletedfile.txt");
 		clientA.upWithForceChecksum();
 
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 		assertEquals("12", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionA));
 		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionA));
 		assertEquals("10", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionA));
@@ -99,7 +99,7 @@ public class CleanupOperationTest {
 		// B: Sync down by other client
 		clientB.down();
 
-		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile(), false);
 		assertEquals("12", TestSqlUtil.runSqlSelect("select count(*) from fileversion", databaseConnectionB));
 		assertEquals("11", TestSqlUtil.runSqlSelect("select count(*) from chunk", databaseConnectionB));
 		assertEquals("10", TestSqlUtil.runSqlSelect("select count(*) from multichunk", databaseConnectionB));

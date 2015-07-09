@@ -126,8 +126,8 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		TestClient clientB = new TestClient("B", testConnection);
 		TestClient clientC = new TestClient("C", testConnection);
 
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
-		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
+		java.sql.Connection databaseConnectionB = DatabaseConnectionFactory.createConnection(clientB.getDatabaseFile(), false);
 
 		CleanupOperationOptions options = new CleanupOperationOptions();
 		options.setRemoveOldVersions(true);
@@ -540,7 +540,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		clientD.upWithForceChecksum();
 		clientD.cleanup(cleanupOptionsKeepOneForce);
 
-		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile());
+		java.sql.Connection databaseConnectionD = DatabaseConnectionFactory.createConnection(clientD.getDatabaseFile(), false);
 		assertEquals("A,2\nB,2\nC,2\nD,2",
 				TestSqlUtil.runSqlSelect("select client, filenumber from known_databases order by client, filenumber", databaseConnectionD));
 		assertEquals("", TestSqlUtil.runSqlSelect("select vectorclock_serialized from databaseversion", databaseConnectionD));
@@ -565,7 +565,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientA.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientA.getLocalFiles());
 
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 		assertEquals("A,2\nB,2\nC,2\nD,2",
 				TestSqlUtil.runSqlSelect("select client, filenumber from known_databases order by client, filenumber", databaseConnectionA));
 
@@ -587,7 +587,7 @@ public class CleanupMergeDatabaseFilesScenarioTest {
 		assertSqlDatabaseEquals(clientD.getDatabaseFile(), clientE.getDatabaseFile());
 		assertFileListEquals(clientD.getLocalFiles(), clientE.getLocalFiles());
 
-		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientE.getDatabaseFile());
+		java.sql.Connection databaseConnectionE = DatabaseConnectionFactory.createConnection(clientE.getDatabaseFile(), false);
 		assertEquals("A,2\nB,2\nC,2\nD,2",
 				TestSqlUtil.runSqlSelect("select client, filenumber from known_databases order by client, filenumber", databaseConnectionE));
 
