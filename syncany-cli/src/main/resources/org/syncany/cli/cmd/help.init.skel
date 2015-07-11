@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
   sy init [-P | --plugin=<plugin>] [-o | --plugin-option=<key=value>]
           [-E | --no-encryption] [-G | --no-compression] [-s | --short]
-          [-t | --create-target] [-a | --advanced] [-n | --add-daemon]
+          [-T | --no-create-target] [-a | --advanced] [-n | --add-daemon]
           [--password]
 
 DESCRIPTION
@@ -42,10 +42,9 @@ OPTIONS
     files are stored in uncompressed form. Can increase indexing performance,
     but will also increase transfer times and remote storage space.
 
-  -t, --create-target
-    If not existent, creates the target path on the remote storage. If this
-    option is not given, the command will fail if the target folder/path does
-    not exist.
+  -T, --no-create-target
+    Disables the creation of the target path/folder if it does not exist. If
+    this option is not given, the command will try to create the target.
 
   -a, --advanced
     Runs the interactive setup in an advanced mode, querying the user for more

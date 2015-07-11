@@ -172,14 +172,17 @@ public class PidFileUtil {
 	
 	/**
 	 * Determines whether a process with the given PID is running using the POSIX 
-	 * <tt>kill -0</tt> command.
+	 * <tt>ps -p $pid</tt> command.
+	 * 
+	 * @param pid Process ID (PID) to check
+	 * @return True if process is running, false otherwise
 	 */
 	private static boolean isProcessRunningUnixLike(int pid) {
 		try {
 			Runtime runtime = Runtime.getRuntime();
-			Process killProcess = runtime.exec(new String[] { "kill", "-0", ""+pid });
+			Process process = runtime.exec(new String[] { "/bin/ps", "-p", ""+pid });
 			
-			int killProcessExitCode = killProcess.waitFor();
+			int killProcessExitCode = process.waitFor();
 			boolean processRunning = killProcessExitCode == 0;
 
 			logger.log(Level.INFO, "isProcessRunningUnixLike(" + pid + ") returned " + killProcessExitCode + ", process running = " + processRunning);

@@ -80,6 +80,7 @@ public class NoCliRequestsWhileSyncingTest {
 		// Create large file, then wait 3sec for the settlement timer and
 		// send the CLI request at the same time
 		clientA.createNewFile("largefile", 10 * 1024 * 1024);
+
 		Response response = null;
 		for (int i = 1; i < 100; i++) {
 			cliStatusRequest.setId(i);

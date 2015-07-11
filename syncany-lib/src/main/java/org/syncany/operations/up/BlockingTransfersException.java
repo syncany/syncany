@@ -15,21 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.integration.scenarios.framework;
+package org.syncany.operations.up;
 
-import java.io.File;
-import java.io.RandomAccessFile;
+/**
+ * @author Jesse Donkervliet
+ *
+ */
+public class BlockingTransfersException extends Exception {
 
-public class ChangeFileSize extends AbstractClientAction {
-	@Override
-	public void execute() throws Exception {
-		File file = pickReadableAndWritableFile(81818);
-		
-		log(this, file.getAbsolutePath());
-		
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-		randomAccessFile.seek(randomAccessFile.length());
-		randomAccessFile.writeBytes("added some bytes");
-		randomAccessFile.close();
-	}		
-}	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7635231951027588892L;
+
+}

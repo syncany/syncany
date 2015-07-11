@@ -35,7 +35,7 @@ public class TestSqlDatabase extends SqlDatabase {
 	
 	public TestSqlDatabase(Config config) {
 		super(config);
-		this.testDao = new TestSqlDao(config.createDatabaseConnection());
+		this.testDao = new TestSqlDao(config.createDatabaseConnection(false));
 	}
 	
 	public PartialFileHistory getFileHistoryWithFileVersions(String relativePath) {

@@ -43,7 +43,7 @@ Break some hashes for us by [donating some Bitcoins](https://blockchain.info/add
 
 Licensing, website and contact
 ------------------------------
-Syncany is licensed under the GPLv3 open source license. It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/), the [Syncany Team](https://github.com/orgs/syncany/teams/syncany-team) and [many](AUTHORS.md) [others](https://github.com/syncany/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the [GPLv3 open source license](LICENSE.md). It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/), the [Syncany Team](https://github.com/orgs/syncany/teams/syncany-team) and [many](AUTHORS.md) [others](https://github.com/syncany/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany Website](https://www.syncany.org/), the main website
 - [Syncany User Guide](http://syncany.readthedocs.org/), **most important resource for end users**

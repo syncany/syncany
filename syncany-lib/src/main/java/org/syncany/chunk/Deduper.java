@@ -47,11 +47,15 @@ public class Deduper {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
+	private long maxTotalSize;
+	private long maxNumberOfFiles;
 
-	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer) {		
+	public Deduper(Chunker chunker, MultiChunker multiChunker, Transformer transformer, long maxTotalSize, long maxNumberOfFiles) {
 		this.chunker = chunker;
 		this.multiChunker = multiChunker;
 		this.transformer = transformer;
+		this.maxTotalSize = maxTotalSize;
+		this.maxNumberOfFiles = maxNumberOfFiles;
 	}
 	
 	/**
@@ -60,18 +64,19 @@ public class Deduper {
 	 * <p>A brief description of the algorithm (and further links to a detailed description)
 	 * are given in the {@link Deduper}.
 	 *  	
-	 * @param files List of files to be deduplicated
+	 * @param files List of files to be deduplicated (will be modified!)
 	 * @param listener Listener to react of file/chunk/multichunk events, and to implement the chunk index
 	 * @throws IOException If a file cannot be read or an unexpected exception occurs
 	 */
 	public void deduplicate(List<File> files, DeduperListener listener) throws IOException {
 		Chunk chunk = null;
 		MultiChunk multiChunk = null;
+		long totalMultiChunkSize = 0L;
+		long totalNumFiles = 0L;
 		
-		listener.onStart(files.size());
-		
-		for (int i=0; i<files.size(); i++) {
-			File file = files.get(i);
+		while (!files.isEmpty()) {
+			File file = files.remove(0);
+			totalNumFiles++;
 			
 			// Filter ignored files
 			boolean fileAccepted = listener.onFileFilter(file);
@@ -81,7 +86,7 @@ public class Deduper {
 			}
 			
 			// Decide whether to index the contents
-			boolean dedupContents = listener.onFileStart(file, i);
+			boolean dedupContents = listener.onFileStart(file);
 
 			if (dedupContents) {
 				// Create chunks from file
@@ -100,6 +105,7 @@ public class Deduper {
 					else {					
 						// - Check if multichunk full
 						if (multiChunk != null && multiChunk.isFull()) {
+							totalMultiChunkSize += multiChunk.getSize();
 							multiChunk.close();
 							listener.onMultiChunkClose(multiChunk);
 
@@ -126,7 +132,8 @@ public class Deduper {
 				}
 
 				// Closing file is necessary!
-				chunksEnum.close(); 
+				chunksEnum.close();
+
 			}
 
 			if (chunk != null) {			
@@ -138,6 +145,18 @@ public class Deduper {
 			
 			// Reset chunk (if folder after chunk, the folder would have a checksum b/c of chunk.getFileChecksum())
 			chunk = null;
+
+			// Check if we have reached the transaction limit
+			if (multiChunk != null) {
+				if (totalMultiChunkSize + multiChunk.getSize() >= maxTotalSize || totalNumFiles >= maxNumberOfFiles) {
+					multiChunk.close();
+					listener.onMultiChunkClose(multiChunk);
+					return;
+				}
+			}
+			else if (totalMultiChunkSize >= maxTotalSize || totalNumFiles >= maxNumberOfFiles) {
+				return;
+			}
 		}
 
 		// Close and add last multichunk
@@ -147,8 +166,10 @@ public class Deduper {
 			listener.onMultiChunkClose(multiChunk);
 
 			multiChunk = null;
-		}	
+		}
 		
 		listener.onFinish();
+
+		return;
 	}	
 }

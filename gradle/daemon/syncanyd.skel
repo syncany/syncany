@@ -9,10 +9,16 @@ DAEMON_CMD="daemon run"
 
 # Daemon functions
 daemon_get_pid() {
+	local PID
+
 	if [ -e "$DAEMON_PIDFILE" ]; then
-		echo $(cat "$DAEMON_PIDFILE")
+		PID=$(cat "$DAEMON_PIDFILE")
+	fi
+
+	if [ -n "$PID" ]; then
+		echo $PID
 	else
-		echo "-1"
+		echo -1
 	fi
 }
 

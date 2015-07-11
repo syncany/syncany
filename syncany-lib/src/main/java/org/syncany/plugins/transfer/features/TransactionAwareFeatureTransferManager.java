@@ -19,8 +19,11 @@ package org.syncany.plugins.transfer.features;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.logging.Logger;
 
 import org.syncany.chunk.Transformer;
 import org.syncany.config.Config;
+import org.syncany.operations.up.BlockingTransfersException;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.StorageFileNotFoundException;
 import org.syncany.plugins.transfer.StorageMoveException;
@@ -162,9 +166,9 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	 *  <li>Files in the transaction marked "DELETE" are moved back to their original place.</li>
 	 * </ul>
 	 *
-	 * @return false if we cannot proceed (Deleting transaction by another client exists).
+	 * @throws BlockingTransfersException if we cannot proceed (Deleting transaction by another client exists).
 	 */
-	public boolean cleanTransactions() throws StorageException {
+	public void cleanTransactions() throws StorageException, BlockingTransfersException {
 		Objects.requireNonNull(config, "Cannot clean transactions if config is null.");
 
 		Map<TransactionTO, TransactionRemoteFile> transactions = retrieveRemoteTransactions();
@@ -188,7 +192,10 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 		}
 
 		logger.log(Level.INFO, "Done rolling back previous transactions.");
-		return noBlockingTransactionsExist;
+
+		if (!noBlockingTransactionsExist) {
+			throw new BlockingTransfersException();
+		}
 	}
 
 	/**
@@ -239,6 +246,50 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 		if (transactionDatabaseFile.exists()) {
 			transactionFile.delete();
 		}
+	}
+
+	/**
+	 * clearPendingTransactions provides a way to delete the multiple transactions
+	 * that might be queued after an interrupted up.
+	 */
+	public void clearPendingTransactions() throws IOException {
+		Objects.requireNonNull(config, "Cannot delete resumable transaction backlog if config is null.");
+		Collection<Long> resumableTransactionList = loadPendingTransactionList();
+
+		for (long resumableTransactionId : resumableTransactionList) {
+			File transactionFile = config.getTransactionFile(resumableTransactionId);
+			if (transactionFile.exists()) {
+				transactionFile.delete();
+			}
+
+			File transactionDatabaseFile = config.getTransactionDatabaseFile(resumableTransactionId);
+			if (transactionDatabaseFile.exists()) {
+				transactionDatabaseFile.delete();
+			}
+		}
+
+		File transactionListFile = config.getTransactionListFile();
+		if (transactionListFile.exists()) {
+			transactionListFile.delete();
+		}
+	}
+
+	/**
+	 * Check if we have transactions from an Up operation that we can resume.
+	 */
+	public Collection<Long> loadPendingTransactionList() throws IOException {
+		Objects.requireNonNull(config, "Cannot read pending transaction list if config is null.");
+		Collection<Long> databaseVersionNumbers = new ArrayList<>();
+		File transactionListFile = config.getTransactionListFile();
+		if (!transactionListFile.exists()) {
+			return Collections.emptyList();
+		}
+
+		Collection<String> transactionLines = Files.readAllLines(transactionListFile.toPath(), Charset.forName("UTF-8"));
+		for (String transactionLine : transactionLines) {
+			databaseVersionNumbers.add(Long.parseLong(transactionLine));
+		}
+		return databaseVersionNumbers;
 	}
 
 	/**

@@ -1,0 +1,58 @@
+package org.syncany.operations.up;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.syncany.chunk.Deduper;
+import org.syncany.config.Config;
+import org.syncany.database.DatabaseVersion;
+
+/**
+ * AsyncIndexer provides a Runnable to start as a separate thread. Running
+ * this will result in the list of files provided being indexed and deduped. 
+ * The result of this indexation will be captured in DatabaseVersions, which
+ * will be stored in the provided Queue, which must be threadsafe.
+ * 
+ * @author Tim Hegeman
+ */
+public class AsyncIndexer implements Runnable {
+	private static final Logger logger = Logger.getLogger(AsyncIndexer.class.getSimpleName());
+
+	private final Indexer indexer;
+	private final List<File> files;
+	private final List<File> deletedFiles;
+	private final Queue<DatabaseVersion> databaseVersionQueue;
+
+	/** 
+	 * @param config specifying all necessary options
+	 * @param deduper the Deduper, already configured.
+	 * @param files List of Files to be indexed.
+	 * @param queue a threadsafe Queue to communicate DatabaseVersions.
+	 */
+	public AsyncIndexer(Config config, Deduper deduper, List<File> files, List<File> deletedFiles, Queue<DatabaseVersion> queue) {
+		this.files = files;
+		this.databaseVersionQueue = queue;
+		this.indexer = new Indexer(config, deduper);
+		this.deletedFiles = deletedFiles;
+	}
+
+	@Override
+	public void run() {
+		try {
+			logger.log(Level.INFO, "Starting Indexing.");
+			indexer.index(files, deletedFiles, databaseVersionQueue);
+		}
+		catch (IOException e) {
+			// TODO: Store this exception as a "result"?
+			e.printStackTrace();
+		}
+		// Signal end-of-stream.
+		logger.log(Level.INFO, "Stopping indexing. Signal end of stream with empty databaseversion");
+		databaseVersionQueue.offer(new DatabaseVersion());
+	}
+
+}

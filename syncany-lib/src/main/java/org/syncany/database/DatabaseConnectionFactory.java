@@ -49,7 +49,7 @@ public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());
 
 	public static final String DATABASE_DRIVER = "org.hsqldb.jdbcDriver";
-	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false;shutdown=true";
+	public static final String DATABASE_CONNECTION_FILE_STRING = "jdbc:hsqldb:file:%DATABASEFILE%;user=sa;password=;create=true;write_delay=false;hsqldb.write_delay=false";
 	public static final String DATABASE_RESOURCE_PATTERN = "/org/syncany/database/sql/%s";
 	public static final String DATABASE_RESOURCE_CREATE_ALL = "script.create.all.sql";
 
@@ -71,9 +71,10 @@ public class DatabaseConnectionFactory {
 	 * and the application tables are created.
 	 *
 	 * @param databaseFile File at which to create/load the database
+	 * @param readOnly True if this connection is only used for reading.
 	 * @return Returns a valid database connection
 	 */
-	public static Connection createConnection(File databaseFile) {
+	public static Connection createConnection(File databaseFile, boolean readOnly) {
 		String databaseFilePath = FileUtil.getDatabasePath(databaseFile.toString());
 		String connectionString = DATABASE_CONNECTION_FILE_STRING.replaceAll("%DATABASEFILE%", databaseFilePath);
 
@@ -81,7 +82,7 @@ public class DatabaseConnectionFactory {
 			connectionString += ";hsqldb.sqllog=3";
 		}
 
-		return createConnection(connectionString);
+		return createConnection(connectionString, readOnly);
 	}
 
 	/**
@@ -122,10 +123,11 @@ public class DatabaseConnectionFactory {
 		return statementInputStream;
 	}
 
-	private static Connection createConnection(String connectionString) {
+	private static Connection createConnection(String connectionString, boolean readOnly) {
 		try {
 			Connection connection = DriverManager.getConnection(connectionString);
 			connection.setAutoCommit(false);
+			connection.setReadOnly(readOnly);
 
 			// We use UNCOMMITTED read to enable operations to alter the database and continue
 			// with those changes, but still roll back the database if something goes wrong later.
@@ -148,15 +150,17 @@ public class DatabaseConnectionFactory {
 		}
 	}
 
-	private static boolean tablesExist(Connection connection) {
-		try {
-			ResultSet resultSet = connection.prepareStatement("select count(*) from chunk").executeQuery();
+	private static boolean tablesExist(Connection connection) throws SQLException {
+		try (ResultSet resultSet = connection.prepareStatement(
+				"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SYSTEM_TABLES WHERE TABLE_TYPE='TABLE'")
+				.executeQuery()) {
+			resultSet.next();
+			int numberOfTables = resultSet.getInt(1);
+			logger.log(Level.INFO, "Found " + numberOfTables + " tables.");
 
-			return resultSet.next();
-		}
-		catch (SQLException e) {
-			logger.log(Level.FINE, "Failed to execute SQL", e);
-			return false;
+			// If we have 12 or more tables, we assume the creation scripts has created
+			// all tables and indices.
+			return (numberOfTables >= 12);
 		}
 	}
 

@@ -21,8 +21,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,6 +161,131 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				return createFileHistoriesFromResult(resultSet);
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * This function returns FileHistories with the last version for which this last version
+	 * matches the given checksum, size and modified date. 
+	 * 
+	 * @return An empty Collection is returned if none exist.
+	 */
+	public Collection<PartialFileHistory> getFileHistoriesByChecksumSizeAndModifiedDate(String filecontentChecksum, long size, Date modifiedDate) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getFileHistoriesByChecksumSizeAndModifiedDate.sql")) {
+			// This first query retrieves the last version for each FileHistory matching the three requested properties.
+			// However, it does not guarantee that this version is indeed the last version in that particular
+			// FileHistory, so we need another query to verify that.
+
+			preparedStatement.setString(1, filecontentChecksum);
+			preparedStatement.setLong(2, size);
+			preparedStatement.setTimestamp(3, new Timestamp(modifiedDate.getTime()));
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				Collection<PartialFileHistory> fileHistories = new ArrayList<>();
+				
+				while (resultSet.next()) {
+					String fileHistoryId = resultSet.getString("filehistory_id");
+					PartialFileHistory fileHistory = getLastVersionByFileHistoryId(fileHistoryId);
+					
+					boolean resultIsLatestVersion = fileHistory.getLastVersion().getVersion() == resultSet.getLong("version");
+					boolean resultIsNotDelete = fileHistory.getLastVersion().getStatus() != FileVersion.FileStatus.DELETED;
+
+					// Only if the result is indeed the last in it's history, we can use it
+					// to base other versions off it. So we return it.
+					
+					if (resultIsLatestVersion && resultIsNotDelete) {
+						fileHistories.add(fileHistory);
+					}
+				}
+				
+				return fileHistories;
+			}
+
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * This function returns a FileHistory, with as last version a FileVersion with
+	 * the given path. 
+	 * 
+	 * If the last FileVersion referring to this path is not the last in the
+	 * FileHistory, or no such FileVersion exists, null is returned.
+	 */
+	public PartialFileHistory getFileHistoryWithLastVersionByPath(String path) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.findLatestFileVersionsForPath.sql")) {
+			preparedStatement.setString(1, path);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				// Fetch the latest versions of all files that once existed with the given
+				// path and find the most recent by comparing vector clocks
+
+				String latestFileHistoryId = null;
+				Long latestFileVersion = null;
+				VectorClock latestVectorClock = null;
+
+				while (resultSet.next()) {
+					VectorClock resultSetVectorClock = VectorClock.parseVectorClock(resultSet.getString("vectorclock_serialized"));
+					boolean vectorClockIsGreater = latestVectorClock == null
+							|| VectorClock.compare(resultSetVectorClock, latestVectorClock) == VectorClock.VectorClockComparison.GREATER;
+
+					if (vectorClockIsGreater) {
+						latestVectorClock = resultSetVectorClock;
+						latestFileHistoryId = resultSet.getString("filehistory_id");
+						latestFileVersion = resultSet.getLong("version");
+					}
+				}
+
+				// If no active file history exists for this path, return
+				if (latestFileHistoryId == null) {
+					return null;
+				}
+
+				// Get the last FileVersion of the FileHistory in the database with the largest vectorclock.
+				PartialFileHistory fileHistory = getLastVersionByFileHistoryId(latestFileHistoryId);
+				
+				// The above query does not guarantee the resulting version is the last in its
+				// history. We need to check this before returning the file.
+				if (fileHistory.getLastVersion().getVersion() == latestFileVersion) {
+					return fileHistory;
+				}
+				else {
+					// The version retrieved by the path query is not a fileversion which is in the current
+					// filetree. Since it was the last version with this path, there is no other history
+					// which should be continued.
+					return null;
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private PartialFileHistory getLastVersionByFileHistoryId(String fileHistoryId) {
+		try (PreparedStatement preparedStatement = getStatement("filehistory.select.master.getLastVersionByFileHistoryId.sql")) {
+			preparedStatement.setString(1, fileHistoryId);
+			preparedStatement.setString(2, fileHistoryId);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					FileVersion lastFileVersion = fileVersionDao.createFileVersionFromRow(resultSet);
+					FileHistoryId fileHistoryIdData = FileHistoryId.parseFileId(resultSet.getString("filehistory_id"));
+
+					PartialFileHistory fileHistory = new PartialFileHistory(fileHistoryIdData);
+					fileHistory.addFileVersion(lastFileVersion);
+					
+					return fileHistory;
+				}
+				else {
+					return null;
+				}
 			}
 		}
 		catch (SQLException e) {

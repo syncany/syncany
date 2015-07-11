@@ -15,21 +15,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.tests.integration.scenarios.framework;
+package org.syncany.operations.daemon.messages;
 
-import java.io.File;
-import java.io.RandomAccessFile;
+public class UpIndexMidSyncExternalEvent extends SyncExternalEvent {
+	private int fileCount;
+	private int currentIndex;
+	
+	public UpIndexMidSyncExternalEvent() {
+		// Nothing
+	}
+	
+	public UpIndexMidSyncExternalEvent(String root, int fileCount, int currentIndex) {
+		super(root);
+		this.fileCount = fileCount;
+		this.currentIndex = currentIndex;
+	}	
 
-public class ChangeFileSize extends AbstractClientAction {
-	@Override
-	public void execute() throws Exception {
-		File file = pickReadableAndWritableFile(81818);
-		
-		log(this, file.getAbsolutePath());
-		
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-		randomAccessFile.seek(randomAccessFile.length());
-		randomAccessFile.writeBytes("added some bytes");
-		randomAccessFile.close();
-	}		
-}	
+	public int getFileCount() {
+		return fileCount;
+	}
+
+	public int getCurrentIndex() {
+		return currentIndex;
+	}
+}

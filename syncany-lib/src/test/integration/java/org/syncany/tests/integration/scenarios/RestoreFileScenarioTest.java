@@ -43,7 +43,7 @@ public class RestoreFileScenarioTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 				
 		// A new/up
 		clientA.createNewFile("A-original");		
@@ -86,7 +86,7 @@ public class RestoreFileScenarioTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 				
 		// A new/up
 		clientA.createNewFile("A-original");		
@@ -130,7 +130,7 @@ public class RestoreFileScenarioTest {
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
 		TestClient clientA = new TestClient("A", testConnection);
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile());
+		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
 				
 		// A new/up
 		clientA.createNewFolder("folder/subfolder");
