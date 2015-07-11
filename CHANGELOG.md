@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.6-alpha (Date: TBA)
+### Syncany 0.4.6-alpha (Date: 11 July 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Use smaller transactions in Up #364
