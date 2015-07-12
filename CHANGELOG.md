@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### Syncany 0.4.6-alpha (Date: Tbd.)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Bugfixes and other things:
+  + Refactoring and simplification of UpOperation
+  + Refactoring of error handling (don't throw 'Exception')
+
 ### Syncany 0.4.6-alpha (Date: 11 July 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
