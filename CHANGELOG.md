@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.6-alpha (Date: Tbd.)
+### Syncany 0.4.7-alpha (Date: Tbd.)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Bugfixes and other things:
   + Refactoring and simplification of UpOperation
