@@ -48,7 +48,7 @@ public class LsOperation extends Operation {
 	}
 
 	@Override
-	public LsOperationResult execute() throws Exception {
+	public LsOperationResult execute() {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Ls' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
@@ -56,7 +56,8 @@ public class LsOperation extends Operation {
 		String pathExpression = parsePathExpression(options.getPathExpression(), options.isFileHistoryId());
 		Set<FileType> fileTypes = options.getFileTypes();
 
-		List<FileVersion> fileList = localDatabase.getFileList(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(), options.isDeleted(), fileTypes);
+		List<FileVersion> fileList = localDatabase.getFileList(pathExpression, options.getDate(), options.isFileHistoryId(), options.isRecursive(),
+				options.isDeleted(), fileTypes);
 		Map<FileHistoryId, PartialFileHistory> fileHistories = null;
 
 		if (options.isFetchHistories()) {
@@ -83,7 +84,7 @@ public class LsOperation extends Operation {
 			if (isFileHistoryId) {
 				String randomFileHistoryId = FileHistoryId.secureRandomFileId().toString();
 				boolean isFullLength = pathExpression.length() == randomFileHistoryId.length();
-				
+
 				if (isFullLength) {
 					return pathExpression;
 				}

@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.daemon.messages.api;
 
+import java.io.InvalidClassException;
 import java.util.logging.Level;
 
 import com.google.common.base.Optional;
@@ -33,27 +34,27 @@ public abstract class JsonMessageFactory extends MessageFactory {
 	private static final Gson SERIALIZER = new Gson();
 	private static final JsonParser PARSER = new JsonParser();
 
-	public static Response toResponse(String responseMessageString) throws Exception {
+	public static Response toResponse(String responseMessageString) throws InvalidClassException, ClassNotFoundException {
 		Message responseMessage = toMessage(responseMessageString);
 
 		if (!(responseMessage instanceof Response)) {
-			throw new Exception("Invalid class: Message is not a response type: " + responseMessage.getClass());
+			throw new InvalidClassException("Invalid class: Message is not a response type: " + responseMessage.getClass());
 		}
 
 		return (Response) responseMessage;
 	}
 
-	public static Request toRequest(String responseMessageString) throws Exception {
+	public static Request toRequest(String responseMessageString) throws InvalidClassException, ClassNotFoundException {
 		Message requestMessage = toMessage(responseMessageString);
 
 		if (!(requestMessage instanceof Request)) {
-			throw new Exception("Invalid class: Message is not a request type:" + requestMessage.getClass());
+			throw new InvalidClassException("Invalid class: Message is not a request type:" + requestMessage.getClass());
 		}
 
 		return (Request) requestMessage;
 	}
 
-	public static Message toMessage(String messageStr) throws Exception {
+	public static Message toMessage(String messageStr) throws ClassNotFoundException {
 		String messageType = getMessageType(messageStr);
 		Class<? extends Message> messageClass = getMessageClass(messageType);
 
@@ -66,7 +67,7 @@ public abstract class JsonMessageFactory extends MessageFactory {
 		return message;
 	}
 
-	public static String toJson(Message response) throws Exception {
+	public static String toJson(Message response) {
 		JsonElement je = SERIALIZER.toJsonTree(response);
 		JsonObject jo = new JsonObject();
 		jo.add(response.getClass().getSimpleName(), je);
@@ -85,13 +86,13 @@ public abstract class JsonMessageFactory extends MessageFactory {
 	 * }
 	 * </pre>
 	 */
-	private static String getMessageType(String message) throws Exception {
+	private static String getMessageType(String message) {
 		try {
 			JsonObject result = PARSER.parse(message).getAsJsonObject();
 			return Iterables.get(result.entrySet(), 0).getKey();
 		}
 		catch (Exception e) {
-			throw new Exception("Cannot find type of message. Invalid JSON: " + message);
+			throw new IllegalArgumentException("Cannot find type of message. Invalid JSON: " + message);
 		}
 	}
 }

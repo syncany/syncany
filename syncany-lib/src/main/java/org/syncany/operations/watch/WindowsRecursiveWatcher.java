@@ -61,7 +61,7 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public void beforeStart() throws Exception {
+	public void beforeStart() throws IOException {
 		name.pachler.nio.file.Path extLibRootDir = name.pachler.nio.file.Paths.get(root.toString());
 
 		watchService = FileSystems.getDefault().newWatchService();
@@ -87,8 +87,8 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 				boolean ignoreEvent = false;
 
 				name.pachler.nio.file.Path extLibFilePath = (name.pachler.nio.file.Path) watchEvent.context();
-				Path filePath = toAbsoluteNormalizedPath(extLibFilePath.toString());				
-				
+				Path filePath = toAbsoluteNormalizedPath(extLibFilePath.toString());
+
 				for (Path ignorePath : ignorePaths) {
 					if (filePath.startsWith(ignorePath.toAbsolutePath().normalize())) {
 						ignoreEvent = true;
@@ -109,7 +109,7 @@ public class WindowsRecursiveWatcher extends RecursiveWatcher {
 
 	private Path toAbsoluteNormalizedPath(String potentiallyRelativePathStr) {
 		Path filePath = Paths.get(potentiallyRelativePathStr);
-		
+
 		if (!filePath.isAbsolute()) {
 			return Paths.get(root.toString(), filePath.toString()).normalize();
 		}

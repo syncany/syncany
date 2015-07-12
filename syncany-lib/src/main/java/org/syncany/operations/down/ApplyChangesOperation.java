@@ -17,6 +17,7 @@
  */
 package org.syncany.operations.down;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -35,9 +36,11 @@ import org.syncany.database.PartialFileHistory;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Downloader;
 import org.syncany.operations.Operation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.OperationResult;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.operations.down.actions.FileSystemAction;
+import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
 
 /**
@@ -64,15 +67,15 @@ public class ApplyChangesOperation extends Operation {
 
 	private MemoryDatabase winnersDatabase;
 	private DownOperationResult result;
-	
+
 	private boolean cleanupOccurred;
 	private List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion;
 
 	public ApplyChangesOperation(Config config, SqlDatabase localDatabase, TransferManager transferManager, MemoryDatabase winnersDatabase,
 			DownOperationResult result, boolean cleanupOccurred, List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) {
-		
+
 		super(config);
-		
+
 		this.localDatabase = localDatabase;
 		this.downloader = new Downloader(config, transferManager);
 		this.winnersDatabase = winnersDatabase;
@@ -82,12 +85,12 @@ public class ApplyChangesOperation extends Operation {
 	}
 
 	@Override
-	public OperationResult execute() throws Exception {
-		logger.log(Level.INFO, "Determine file system actions ...");		
-		
+	public OperationResult execute() throws OperationException {
+		logger.log(Level.INFO, "Determine file system actions ...");
+
 		FileSystemActionReconciliator actionReconciliator = new FileSystemActionReconciliator(config, result.getChangeSet());
 		List<FileSystemAction> actions;
-		
+
 		if (cleanupOccurred) {
 			actions = actionReconciliator.determineFileSystemActions(winnersDatabase, true, preDeleteFileHistoriesWithLastVersion);
 		}
@@ -96,15 +99,20 @@ public class ApplyChangesOperation extends Operation {
 		}
 
 		Set<MultiChunkId> unknownMultiChunks = determineRequiredMultiChunks(actions, winnersDatabase);
-		
-		downloader.downloadAndDecryptMultiChunks(unknownMultiChunks);
-		result.getDownloadedMultiChunks().addAll(unknownMultiChunks);
 
-		applyFileSystemActions(actions);
-		
+		try {
+			downloader.downloadAndDecryptMultiChunks(unknownMultiChunks);
+			result.getDownloadedMultiChunks().addAll(unknownMultiChunks);
+
+			applyFileSystemActions(actions);
+		}
+		catch (StorageException | IOException e) {
+			throw new OperationException(e);
+		}
+
 		return null;
 	}
-	
+
 	/**
 	 * Finds the multichunks that need to be downloaded to apply the given file system actions.
 	 * The method looks at all {@link FileCreatingFileSystemAction}s and returns their multichunks. 
@@ -120,7 +128,7 @@ public class ApplyChangesOperation extends Operation {
 
 		return multiChunksToDownload;
 	}
-	
+
 	/**
 	 * Finds the multichunks that need to be downloaded for the given file version -- using the local 
 	 * database and given winners database. Returns a set of multichunk identifiers.
@@ -130,33 +138,33 @@ public class ApplyChangesOperation extends Operation {
 
 		// First: Check if we know this file locally!
 		List<MultiChunkId> multiChunkIds = localDatabase.getMultiChunkIds(fileVersion.getChecksum());
-		
+
 		if (multiChunkIds.size() > 0) {
 			multiChunksToDownload.addAll(multiChunkIds);
 		}
 		else {
 			// Second: We don't know it locally; must be from the winners database
-			FileContent winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());			
+			FileContent winningFileContent = winnersDatabase.getContent(fileVersion.getChecksum());
 			boolean winningFileHasContent = winningFileContent != null;
 
 			if (winningFileHasContent) { // File can be empty!
-				List<ChunkChecksum> fileChunks = winningFileContent.getChunks(); 
-				
+				List<ChunkChecksum> fileChunks = winningFileContent.getChunks();
+
 				// TODO [medium] Instead of just looking for multichunks to download here, we should look for chunks in local files as well
 				// and return the chunk positions in the local files ChunkPosition (chunk123 at file12, offset 200, size 250)
-				
+
 				Map<ChunkChecksum, MultiChunkId> checksumsWithMultiChunkIds = localDatabase.getMultiChunkIdsByChecksums(fileChunks);
-				
+
 				for (ChunkChecksum chunkChecksum : fileChunks) {
 					MultiChunkId multiChunkIdForChunk = checksumsWithMultiChunkIds.get(chunkChecksum);
 					if (multiChunkIdForChunk == null) {
 						multiChunkIdForChunk = winnersDatabase.getMultiChunkIdForChunk(chunkChecksum);
-						
+
 						if (multiChunkIdForChunk == null) {
-							throw new RuntimeException("Cannot find multichunk for chunk "+chunkChecksum);	
+							throw new RuntimeException("Cannot find multichunk for chunk " + chunkChecksum);
 						}
 					}
-					
+
 					if (!multiChunksToDownload.contains(multiChunkIdForChunk)) {
 						logger.log(Level.INFO, "  + Adding multichunk " + multiChunkIdForChunk + " to download list ...");
 						multiChunksToDownload.add(multiChunkIdForChunk);
@@ -164,16 +172,16 @@ public class ApplyChangesOperation extends Operation {
 				}
 			}
 		}
-		
+
 		return multiChunksToDownload;
 	}
-	
+
 	/**
 	 * Applies the given file system actions in a sensible order. To do that, 
 	 * the given actions are first sorted using the {@link FileSystemActionComparator} and
 	 * then executed individually using {@link FileSystemAction#execute()}.
 	 */
-	private void applyFileSystemActions(List<FileSystemAction> actions) throws Exception {
+	private void applyFileSystemActions(List<FileSystemAction> actions) throws IOException {
 		// Sort
 		FileSystemActionComparator actionComparator = new FileSystemActionComparator();
 		actionComparator.sort(actions);
@@ -187,11 +195,11 @@ public class ApplyChangesOperation extends Operation {
 			}
 
 			// Execute the file system action
-			
+
 			// Note that exceptions are not caught here, to prevent 
 			// apply-failed-delete-on-up situations.
-			
-			action.execute(); 
+
+			action.execute();
 		}
 	}
 }

@@ -17,9 +17,6 @@
  */
 package org.syncany.crypto;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -121,9 +118,8 @@ public class CipherSession {
 	 *
 	 * @param cipherSpec Defines the type of key to be created (or retrieved); used as key for the cache retrieval
 	 * @return Returns a newly created secret key or a cached key
-	 * @throws Exception If an error occurs with key creation
 	 */
-	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) throws Exception {
+	public SaltedSecretKey getWriteSecretKey(CipherSpec cipherSpec) {
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyWriteCache.get(cipherSpec);
 
 		// Remove key if use more than X times
@@ -143,7 +139,8 @@ public class CipherSession {
 			return secretKeyCacheEntry.getSaltedSecretKey();
 		}
 		else {
-			SaltedSecretKey saltedSecretKey = createSaltedSecretKey(cipherSpec);
+			SaltedSecretKey saltedSecretKey;
+			saltedSecretKey = createSaltedSecretKey(cipherSpec);
 
 			secretKeyCacheEntry = new SecretKeyCacheEntry(saltedSecretKey);
 			secretKeyWriteCache.put(cipherSpec, secretKeyCacheEntry);
@@ -168,9 +165,8 @@ public class CipherSession {
 	 * @param cipherSpec Defines the type of key to be created (or retrieved); used as one part of the key for cache retrieval
 	 * @param salt Defines the salt for the key to be created (or retrieved); used as one part of the key for cache retrieval
 	 * @return Returns a newly created secret key or a cached key
-	 * @throws Exception If an error occurs with key creation
 	 */
-	public SaltedSecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) throws Exception {
+	public SaltedSecretKey getReadSecretKey(CipherSpec cipherSpec, byte[] salt) {
 		CipherSpecWithSalt cipherSpecWithSalt = new CipherSpecWithSalt(cipherSpec, salt);
 		SecretKeyCacheEntry secretKeyCacheEntry = secretKeyReadCache.get(cipherSpecWithSalt);
 
@@ -198,14 +194,12 @@ public class CipherSession {
 		}
 	}
 
-	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec) throws InvalidKeySpecException, NoSuchAlgorithmException,
-	NoSuchProviderException {
+	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec) {
 		byte[] salt = CipherUtil.createRandomArray(MultiCipherOutputStream.SALT_SIZE);
 		return createSaltedSecretKey(cipherSpec, salt);
 	}
 
-	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec, byte[] salt) throws InvalidKeySpecException, NoSuchAlgorithmException,
-	NoSuchProviderException {
+	private SaltedSecretKey createSaltedSecretKey(CipherSpec cipherSpec, byte[] salt) {
 		return CipherUtil.createDerivedKey(masterKey, salt, cipherSpec);
 	}
 

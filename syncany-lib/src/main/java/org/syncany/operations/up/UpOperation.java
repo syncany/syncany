@@ -51,6 +51,7 @@ import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.AbstractTransferOperation;
 import org.syncany.operations.ChangeSet;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.daemon.messages.UpEndSyncExternalEvent;
 import org.syncany.operations.daemon.messages.UpStartSyncExternalEvent;
@@ -69,6 +70,7 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
 import org.syncany.plugins.transfer.to.ActionTO;
 import org.syncany.plugins.transfer.to.ActionTO.ActionStatus;
 import org.syncany.plugins.transfer.to.ActionTO.ActionType;
+import org.syncany.plugins.transfer.to.DeserializableException;
 import org.syncany.plugins.transfer.to.TransactionTO;
 
 /**
@@ -130,52 +132,57 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	@Override
-	public UpOperationResult execute() throws Exception {
+	public UpOperationResult execute() throws OperationException {
 		logger.log(Level.INFO, "");
 		logger.log(Level.INFO, "Running 'Sync up' at client " + config.getMachineName() + " ...");
 		logger.log(Level.INFO, "--------------------------------------------");
 
-		fireStartEvent();
-
-		if (!checkPreconditions()) {
-			fireEndEvent();
-			return result;
-		}
-
-		// Upload action file (lock for cleanup)
-		startOperation();
-
 		try {
-			if (options.isResume()) {
-				prepareResume();			
+			fireStartEvent();
+	
+			if (!checkPreconditions()) {
+				fireEndEvent();
+				return result;
 			}
-
-			if (!resuming) {
-				startIndexerThread(databaseVersionQueue);			
+	
+			// Upload action file (lock for cleanup)
+			startOperation();
+	
+			try {
+				if (options.isResume()) {
+					prepareResume();			
+				}
+	
+				if (!resuming) {
+					startIndexerThread(databaseVersionQueue);			
+				}
+	
+				// If we are not resuming from a remote transaction, we need to clean transactions.
+				if (transactionRemoteFileToResume == null) {
+					transferManager.cleanTransactions();
+				}			
 			}
-
-			// If we are not resuming from a remote transaction, we need to clean transactions.
-			if (transactionRemoteFileToResume == null) {
-				transferManager.cleanTransactions();
-			}			
-		}
-		catch (BlockingTransfersException e) {
-			stopBecauseOfBlockingTransactions();
+			catch (BlockingTransfersException e) {
+				stopBecauseOfBlockingTransactions();
+				return result;
+			}
+			
+			// Go wild
+			int numberOfPerformedTransactions = executeTransactions();
+			updateResult(numberOfPerformedTransactions);		
+	
+			// Close database connection
+			localDatabase.finalize();
+	
+			// Finish 'up' before 'cleanup' starts
+			finishOperation();
+			fireEndEvent();
+		
 			return result;
 		}
-		
-		// Go wild
-		int numberOfPerformedTransactions = executeTransactions();
-		updateResult(numberOfPerformedTransactions);		
-
-		// Close database connection
-		localDatabase.finalize();
-
-		// Finish 'up' before 'cleanup' starts
-		finishOperation();
-		fireEndEvent();
-		
-		return result;
+		catch (StorageException | IOException e) {
+			throw new OperationException(e);
+		}
 	}
 
 	private void updateResult(int numberOfPerformedTransactions) {
@@ -203,31 +210,42 @@ public class UpOperation extends AbstractTransferOperation {
 		new Thread(asyncIndexer, "AsyncI/" + config.getLocalDir().getName()).start();
 	}
 
-	private void prepareResume() throws Exception {	
-		Collection<Long> versionsToResume = transferManager.loadPendingTransactionList();
-		boolean hasVersionsToResume = versionsToResume != null && versionsToResume.size() > 0;
+	private void prepareResume() throws BlockingTransfersException, OperationException {	
+		try {
+			Collection<Long> versionsToResume = transferManager.loadPendingTransactionList();
+			boolean hasVersionsToResume = versionsToResume != null && versionsToResume.size() > 0;
 
-		if (hasVersionsToResume) {
-			logger.log(Level.INFO, "Found local transaction to resume.");
-			logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
+			if (hasVersionsToResume) {
+				logger.log(Level.INFO, "Found local transaction to resume.");
+				logger.log(Level.INFO, "Attempting to find transactionRemoteFile");
 
-			remoteTransactionsToResume = attemptResumeTransactions(versionsToResume);
-			Collection<DatabaseVersion> remoteDatabaseVersionsToResume = attemptResumeDatabaseVersions(versionsToResume);
+				try {
+					remoteTransactionsToResume = attemptResumeTransactions(versionsToResume);
+				}
+				catch (DeserializableException e) {
+					throw new StorageException(e);
+				}
+				
+				Collection<DatabaseVersion> remoteDatabaseVersionsToResume = attemptResumeDatabaseVersions(versionsToResume);
 
-			resuming = remoteDatabaseVersionsToResume != null && remoteTransactionsToResume != null &&
-					remoteDatabaseVersionsToResume.size() == remoteTransactionsToResume.size();
-			
-			if (resuming) {
-				databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);
+				resuming = remoteDatabaseVersionsToResume != null && remoteTransactionsToResume != null &&
+						remoteDatabaseVersionsToResume.size() == remoteTransactionsToResume.size();
+				
+				if (resuming) {
+					databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);
+				}
+				
+				// Add stopping marker
+				databaseVersionQueue.add(new DatabaseVersion());			
+				transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();			
 			}
-			
-			// Add stopping marker
-			databaseVersionQueue.add(new DatabaseVersion());			
-			transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();			
+			else {
+				transferManager.clearResumableTransactions();
+			}
 		}
-		else {
-			transferManager.clearResumableTransactions();
-		}
+		catch (IOException | StorageException e) {
+			throw new OperationException(e);
+		}		
 	}
 
 	/**
@@ -245,7 +263,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 *	@param remoteTransactionsToResume {@link RemoteTransaction} objects that correspond to the given {@link DatabaseVersion} objects.
 	 *	@param transactionRemoteFileToResume The file on the remote that was used for the specific transaction that was interrupted.
 	 */
-	private int executeTransactions() throws Exception {
+	private int executeTransactions() throws IOException, StorageException {
 		Iterator<RemoteTransaction> remoteTransactionsToResumeIterator = (resuming) ? remoteTransactionsToResume.iterator() : null;
 		
 		// At this point, if a failure occurs from which we can resume, new transaction files will be written
@@ -253,11 +271,19 @@ public class UpOperation extends AbstractTransferOperation {
 		transferManager.clearPendingTransactions();
 
 		boolean detectedFailure = false;
-		Exception caughtFailure = null;
+		StorageException caughtFailure = null;
 		List<RemoteTransaction> remainingRemoteTransactions = new ArrayList<>();
 		List<DatabaseVersion> remainingDatabaseVersions = new ArrayList<>();
 		
-		DatabaseVersion databaseVersion = databaseVersionQueue.take();
+		DatabaseVersion databaseVersion;
+		
+		try {
+			databaseVersion = databaseVersionQueue.take();
+		}
+		catch (InterruptedException e1) {
+			return (int) result.getTransactionsCompleted();
+		}
+		
 		boolean noDatabaseVersions = databaseVersion.isEmpty();
 		
 		// Add dirty data to first database
@@ -327,9 +353,9 @@ public class UpOperation extends AbstractTransferOperation {
 
 					committingFailed = false;
 				}
-				catch (Exception e) {
+				catch (StorageException | SQLException e) {
 					detectedFailure = true;
-					caughtFailure = e;
+					caughtFailure = new StorageException(e);
 				}
 				finally {
 					// The JVM has not shut down, so we can remove the shutdown hook.
@@ -349,7 +375,12 @@ public class UpOperation extends AbstractTransferOperation {
 			
 			if (!noDatabaseVersions) {
 				logger.log(Level.FINE, "Waiting for new database version.");
-				databaseVersion = databaseVersionQueue.take();
+				try {
+					databaseVersion = databaseVersionQueue.take();
+				}
+				catch (InterruptedException e) {
+					return (int) result.getTransactionsCompleted();
+				}
 				logger.log(Level.FINE, "Took new database version: " + databaseVersion);
 			}
 			else {
@@ -360,7 +391,12 @@ public class UpOperation extends AbstractTransferOperation {
 		}
 
 		if (detectedFailure) {
-			localDatabase.rollback();
+			try {
+				localDatabase.rollback();
+			}
+			catch (SQLException e) {
+				throw caughtFailure;
+			}
 			serializeRemoteTransactionsAndMetadata(remainingRemoteTransactions, remainingDatabaseVersions);
 			throw caughtFailure;
 		}
@@ -451,7 +487,7 @@ public class UpOperation extends AbstractTransferOperation {
 	 *
 	 * @returns boolean true if Up can and should be done, false otherwise.
 	 */
-	private boolean checkPreconditions() throws Exception {
+	private boolean checkPreconditions() throws OperationException, StorageException {
 		// Find local changes
 		StatusOperation statusOperation = new StatusOperation(config, options.getStatusOptions());
 		StatusOperationResult statusOperationResult = statusOperation.execute();
@@ -506,9 +542,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 * @param resuming boolean indicating if the current transaction is in the process of being resumed.
 	 */
 	private void writeAndAddDeltaDatabase(RemoteTransaction remoteTransaction, DatabaseVersion newDatabaseVersion, boolean resuming)
-			throws InterruptedException, StorageException,
-			IOException,
-			SQLException {
+			throws StorageException, IOException {
+		
 		// Clone database version (necessary, because the original must not be touched)
 		DatabaseVersion deltaDatabaseVersion = newDatabaseVersion.clone();
 
@@ -534,7 +569,13 @@ public class UpOperation extends AbstractTransferOperation {
 		// Remember uploaded database as known.
 		List<DatabaseRemoteFile> newDatabaseRemoteFiles = new ArrayList<DatabaseRemoteFile>();
 		newDatabaseRemoteFiles.add(remoteDeltaDatabaseFile);
-		localDatabase.writeKnownRemoteDatabases(newDatabaseRemoteFiles);
+		
+		try {
+			localDatabase.writeKnownRemoteDatabases(newDatabaseRemoteFiles);
+		}
+		catch (SQLException e) {
+			throw new StorageException(e);
+		}
 	}
 
 	/**
@@ -649,7 +690,8 @@ public class UpOperation extends AbstractTransferOperation {
 	 * @param multiChunkEntries Collection of multiChunkEntries that are included in the new {@link DatabaseVersion}
 	 */
 	private void addMultiChunksToTransaction(RemoteTransaction remoteTransaction, Collection<MultiChunkEntry> multiChunksEntries)
-			throws InterruptedException, StorageException {
+			throws StorageException {
+		
 		List<MultiChunkId> dirtyMultiChunkIds = localDatabase.getDirtyMultiChunkIds();
 
 		for (MultiChunkEntry multiChunkEntry : multiChunksEntries) {
@@ -669,8 +711,7 @@ public class UpOperation extends AbstractTransferOperation {
 	}
 
 	private void addLocalDatabaseToTransaction(RemoteTransaction remoteTransaction, File localDatabaseFile, DatabaseRemoteFile remoteDatabaseFile)
-			throws InterruptedException,
-			StorageException {
+			throws StorageException {
 		
 		logger.log(Level.INFO, "- Uploading " + localDatabaseFile + " to " + remoteDatabaseFile + " ...");
 		remoteTransaction.upload(localDatabaseFile, remoteDatabaseFile);
@@ -725,7 +766,7 @@ public class UpOperation extends AbstractTransferOperation {
 		return newVectorClock;
 	}
 
-	private Collection<RemoteTransaction> attemptResumeTransactions(Collection<Long> versions) throws Exception {
+	private Collection<RemoteTransaction> attemptResumeTransactions(Collection<Long> versions) throws IOException, DeserializableException {
 		Collection<RemoteTransaction> remoteTransactions = new ArrayList<>();
 		for (Long version : versions) {
 			File transactionFile = config.getTransactionFile(version);
@@ -754,7 +795,7 @@ public class UpOperation extends AbstractTransferOperation {
 		return remoteTransactions;
 	}
 
-	private Collection<DatabaseVersion> attemptResumeDatabaseVersions(Collection<Long> versions) throws Exception {
+	private Collection<DatabaseVersion> attemptResumeDatabaseVersions(Collection<Long> versions) throws IOException {
 		Collection<DatabaseVersion> databaseVersions = new ArrayList<>();
 		for (Long version : versions) {
 			File databaseFile = config.getTransactionDatabaseFile(version);

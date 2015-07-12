@@ -33,6 +33,7 @@ import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Operation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.cleanup.CleanupOperation;
 import org.syncany.operations.cleanup.CleanupOperationResult;
 import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
@@ -233,7 +234,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	 * Runs one iteration of the main synchronization loop, containing a {@link DownOperation},
 	 * an {@link UpOperation} and (if required), a {@link CleanupOperation}.
 	 */
-	private void runSync() throws Exception {
+	private void runSync() throws OperationException {
 		if (!syncRunning.get()) {
 			syncRunning.set(true);
 			syncRequested.set(false);
@@ -272,7 +273,7 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 			finally {
 				logger.log(Level.INFO, "SYNC DONE.");
 				syncRunning.set(false);
-				
+
 				fireEndEvent();
 			}
 		}
@@ -389,11 +390,10 @@ public class WatchOperation extends Operation implements NotificationListenerLis
 	}
 
 	private void fireStartEvent() {
-		eventBus.post(new WatchStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));	
+		eventBus.post(new WatchStartSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 
-
 	private void fireEndEvent() {
-		eventBus.post(new WatchEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));	
+		eventBus.post(new WatchEndSyncExternalEvent(config.getLocalDir().getAbsolutePath()));
 	}
 }

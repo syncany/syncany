@@ -19,6 +19,7 @@ package org.syncany.config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,10 +27,12 @@ import java.util.logging.Logger;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.config.to.ConfigTO;
 import org.syncany.config.to.RepoTO;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.crypto.SaltedSecretKey;
 import org.syncany.plugins.Plugins;
 import org.syncany.plugins.transfer.TransferPlugin;
+import org.syncany.plugins.transfer.to.DeserializableException;
 
 /**
  * The config helper provides convenience functions to load the configuration from
@@ -99,26 +102,28 @@ public class ConfigHelper {
 	 * Loads the config transfer object from the local directory
 	 * or throws an exception if the file does not exist.
 	 */
-    public static ConfigTO loadConfigTO(File localDir) throws ConfigException {
-    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+	public static ConfigTO loadConfigTO(File localDir) throws ConfigException {
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
 		File configFile = new File(appDir, Config.FILE_CONFIG);
 
 		if (!configFile.exists()) {
-			throw new ConfigException("Cannot find config file at "+configFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
+			throw new ConfigException("Cannot find config file at " + configFile
+					+ ". Try connecting to a repository using 'connect', or 'init' to create a new one.");
 		}
 
 		return ConfigTO.load(configFile);
 	}
 
-    /**
-     * Loads the repository transfer object from the local directory.
-     */
-    public static RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws ConfigException {
-    	File appDir = new File(localDir, Config.DIR_APPLICATION);
+	/**
+	 * Loads the repository transfer object from the local directory.
+	 */
+	public static RepoTO loadRepoTO(File localDir, ConfigTO configTO) throws ConfigException {
+		File appDir = new File(localDir, Config.DIR_APPLICATION);
 		File repoFile = new File(appDir, Config.FILE_REPO);
 
 		if (!repoFile.exists()) {
-			throw new ConfigException("Cannot find repository file at "+repoFile+". Try connecting to a repository using 'connect', or 'init' to create a new one.");
+			throw new ConfigException("Cannot find repository file at " + repoFile
+					+ ". Try connecting to a repository using 'connect', or 'init' to create a new one.");
 		}
 
 		try {
@@ -130,33 +135,33 @@ public class ConfigHelper {
 			}
 		}
 		catch (Exception e) {
-			throw new ConfigException("Cannot load repo file: "+e.getMessage(), e);
+			throw new ConfigException("Cannot load repo file: " + e.getMessage(), e);
 		}
 	}
 
-    /**
-     * Helper method to find the local sync directory, starting from a path equal
-     * or inside the local sync directory. If the starting path is not inside or equal
-     * to the local directory, <tt>null</tt> is returned.
-     *
-     * <p>To find the local directory, the method looks for a file named
-     * "{@link Config#DIR_APPLICATION}/{@link Config#FILE_CONFIG}". If it is found, it stops.
-     * If not, it continues looking in the parent directory.
-     *
-     * <p>Example: If /home/user/Syncany is the local sync directory and /home/user/NotSyncany
-     * is not a local directory, the method will return the following:
-     *
-     * <ul>
-     *  <li>findLocalDirInPath(/home/user/Syncany) -&gt; /home/user/Syncany</li>
-     *  <li>findLocalDirInPath(/home/user/Syncany/some/subfolder) -&gt; /home/user/Syncany</li>
-     *  <li>findLocalDirInPath(/home/user/NotSyncany) -&gt;null</li>
-     * </ul>
-     *
-     * @param startingPath Path to start the search from
-     * @return Returns the local directory (if found), or <tt>null</tt> otherwise
-     */
-    public static File findLocalDirInPath(File startingPath) {
-    	try {
+	/**
+	 * Helper method to find the local sync directory, starting from a path equal
+	 * or inside the local sync directory. If the starting path is not inside or equal
+	 * to the local directory, <tt>null</tt> is returned.
+	 *
+	 * <p>To find the local directory, the method looks for a file named
+	 * "{@link Config#DIR_APPLICATION}/{@link Config#FILE_CONFIG}". If it is found, it stops.
+	 * If not, it continues looking in the parent directory.
+	 *
+	 * <p>Example: If /home/user/Syncany is the local sync directory and /home/user/NotSyncany
+	 * is not a local directory, the method will return the following:
+	 *
+	 * <ul>
+	 *  <li>findLocalDirInPath(/home/user/Syncany) -&gt; /home/user/Syncany</li>
+	 *  <li>findLocalDirInPath(/home/user/Syncany/some/subfolder) -&gt; /home/user/Syncany</li>
+	 *  <li>findLocalDirInPath(/home/user/NotSyncany) -&gt;null</li>
+	 * </ul>
+	 *
+	 * @param startingPath Path to start the search from
+	 * @return Returns the local directory (if found), or <tt>null</tt> otherwise
+	 */
+	public static File findLocalDirInPath(File startingPath) {
+		try {
 			File currentSearchFolder = startingPath.getCanonicalFile();
 
 			while (currentSearchFolder != null) {
@@ -171,19 +176,25 @@ public class ConfigHelper {
 			}
 
 			return null;
-    	}
-    	catch (IOException e) {
-    		throw new RuntimeException("Unable to determine local directory starting from: "+startingPath, e);
-    	}
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Unable to determine local directory starting from: " + startingPath, e);
+		}
 	}
 
-    private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
-		return new Persister().read(RepoTO.class, repoFile);
-    }
+	private static RepoTO loadPlaintextRepoTO(File repoFile, ConfigTO configTO) throws DeserializableException {
+		logger.log(Level.INFO, "Loading (unencrypted) repo file from {0} ...", repoFile);
+		try {
+			return new Persister().read(RepoTO.class, repoFile);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
+	}
 
-    private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws Exception {
-    	logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);
+	private static RepoTO loadEncryptedRepoTO(File repoFile, ConfigTO configTO) throws ConfigException, CipherException, DeserializableException,
+			FileNotFoundException {
+		logger.log(Level.INFO, "Loading encrypted repo file from {0} ...", repoFile);
 
 		SaltedSecretKey masterKey = configTO.getMasterKey();
 
@@ -192,6 +203,11 @@ public class ConfigHelper {
 		}
 
 		String repoFileStr = new String(CipherUtil.decrypt(new FileInputStream(repoFile), masterKey));
-		return new Persister().read(RepoTO.class, repoFileStr);
-    }
+		try {
+			return new Persister().read(RepoTO.class, repoFileStr);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
+	}
 }

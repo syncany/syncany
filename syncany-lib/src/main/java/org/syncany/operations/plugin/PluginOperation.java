@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,19 +42,24 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.crypto.CryptoException;
 import org.simpleframework.xml.core.Persister;
 import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.config.UserConfig;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherUtil;
 import org.syncany.operations.Operation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.daemon.messages.PluginInstallExternalEvent;
+import org.syncany.operations.down.actions.ChecksumMismatchException;
 import org.syncany.operations.plugin.PluginOperationOptions.PluginListMode;
 import org.syncany.operations.plugin.PluginOperationResult.PluginResultCode;
 import org.syncany.plugins.Plugin;
 import org.syncany.plugins.Plugins;
+import org.syncany.plugins.transfer.to.DeserializableException;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;
@@ -112,28 +118,27 @@ public class PluginOperation extends Operation {
 	}
 
 	@Override
-	public PluginOperationResult execute() throws Exception {
+	public PluginOperationResult execute() throws OperationException {
 		result.setAction(options.getAction());
 
 		switch (options.getAction()) {
-			case LIST:
-				return executeList();
+		case LIST:
+			return executeList();
+		case INSTALL:
+			return executeInstall();
 
-			case INSTALL:
-				return executeInstall();
+		case REMOVE:
+			return executeRemove();
 
-			case REMOVE:
-				return executeRemove();
+		case UPDATE:
+			return executeUpdate();
 
-			case UPDATE:
-				return executeUpdate();
-
-			default:
-				throw new Exception("Unknown action: " + options.getAction());
+		default:
+			throw new IllegalArgumentException("Unknown action: " + options.getAction());
 		}
 	}
 
-	private PluginOperationResult executeUpdate() throws Exception {
+	private PluginOperationResult executeUpdate() throws OperationException {
 		List<String> updateablePlugins = findUpdateCandidates();
 		List<String> erroneousPlugins = Lists.newArrayList();
 		List<String> delayedPlugins = Lists.newArrayList();
@@ -170,7 +175,7 @@ public class PluginOperation extends Operation {
 				File updatefilePath = new File(UserConfig.getUserConfigDir(), UPDATE_FILENAME);
 
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(updatefilePath, true)))) {
-					out.println(pluginId + (options.isSnapshots() ?  " --snapshot" : ""));
+					out.println(pluginId + (options.isSnapshots() ? " --snapshot" : ""));
 					delayedPlugins.add(pluginId);
 				}
 				catch (IOException e) {
@@ -179,7 +184,13 @@ public class PluginOperation extends Operation {
 				}
 			}
 			else {
-				PluginOperationResult installResult = executeInstallFromApiHost(pluginId);
+				PluginOperationResult installResult;
+				try {
+					installResult = executeInstallFromApiHost(pluginId);
+				}
+				catch (UninstallablePluginException | IOException | CryptoException | ChecksumMismatchException e) {
+					throw new OperationException(e);
+				}
 
 				if (installResult.getResultCode() == PluginResultCode.NOK) {
 					logger.log(Level.SEVERE, "Unable to install " + pluginId + " during the update process");
@@ -202,7 +213,7 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
-	private List<String> findUpdateCandidates() throws Exception {
+	private List<String> findUpdateCandidates() throws OperationException {
 		List<ExtendedPluginInfo> updateCandidates = executeList().getPluginList();
 
 		Iterables.removeIf(updateCandidates, new Predicate<ExtendedPluginInfo>() {
@@ -220,29 +231,35 @@ public class PluginOperation extends Operation {
 		});
 	}
 
-	private PluginOperationResult executeRemove() throws Exception {
+	private PluginOperationResult executeRemove() throws OperationException {
 		return executeRemove(options.getPluginId());
 	}
 
-	private PluginOperationResult executeRemove(String pluginId) throws Exception {
+	private PluginOperationResult executeRemove(String pluginId) throws OperationException {
 		Plugin plugin = Plugins.get(pluginId);
 
 		if (plugin == null) {
-			throw new Exception("Plugin not installed.");
+			throw new OperationException(new PluginNotInstalledException("Plugin not installed."));
 		}
 
 		File pluginJarFile = getJarFile(plugin);
 		boolean canUninstall = canUninstall(pluginJarFile);
 
 		if (canUninstall) {
-			PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
+			PluginInfo pluginInfo;
+			try {
+				pluginInfo = readPluginInfoFromJar(pluginJarFile);
+			}
+			catch (IOException e1) {
+				throw new OperationException(e1);
+			}
 
 			logger.log(Level.INFO, "Uninstalling plugin from file " + pluginJarFile);
 			boolean deleted = pluginJarFile.delete();
 
 			// JAR files are locked on Windows, adding JAR filename to a list for delayed deletion (by batch file)
 			if (EnvironmentUtil.isWindows() || !deleted) {
-				logger.log(Level.FINE, "Appending jar to purgefile (" + EnvironmentUtil.isWindows() + ", "+ deleted +")");
+				logger.log(Level.FINE, "Appending jar to purgefile (" + EnvironmentUtil.isWindows() + ", " + deleted + ")");
 				File purgefilePath = new File(UserConfig.getUserConfigDir(), PURGEFILE_FILENAME);
 
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(purgefilePath, true)))) {
@@ -294,28 +311,40 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private PluginOperationResult executeInstall() throws Exception {
+	private PluginOperationResult executeInstall() throws OperationException {
 		String pluginId = options.getPluginId();
 		File potentialLocalPluginJarFile = new File(pluginId);
 
-		if (pluginId.matches("^https?://.+")) {
-			return executeInstallFromUrl(pluginId);
+		try {
+			if (pluginId.matches("^https?://.+")) {
+				return executeInstallFromUrl(pluginId);
+			}
+			else if (potentialLocalPluginJarFile.exists()) {
+				return executeInstallFromLocalFile(potentialLocalPluginJarFile);
+			}
+			else {
+				return executeInstallFromApiHost(pluginId);
+			}
 		}
-		else if (potentialLocalPluginJarFile.exists()) {
-			return executeInstallFromLocalFile(potentialLocalPluginJarFile);
-		}
-		else {
-			return executeInstallFromApiHost(pluginId);
+		catch (IOException | ChecksumMismatchException | CryptoException | UninstallablePluginException e) {
+			throw new OperationException(e);
 		}
 	}
 
-	private PluginOperationResult executeInstallFromApiHost(String pluginId) throws Exception {
+	private PluginOperationResult executeInstallFromApiHost(String pluginId) throws IOException, UninstallablePluginException, CryptoException,
+			ChecksumMismatchException {
 		checkPluginNotInstalled(pluginId);
 
-		PluginInfo pluginInfo = getRemotePluginInfo(pluginId);
+		PluginInfo pluginInfo;
+		try {
+			pluginInfo = getRemotePluginInfo(pluginId);
+		}
+		catch (DeserializableException e) {
+			throw new UninstallablePluginException(e);
+		}
 
 		if (pluginInfo == null) {
-			throw new Exception("Plugin with ID '" + pluginId + "' not found");
+			throw new UninstallablePluginException("Plugin with ID '" + pluginId + "' not found");
 		}
 
 		checkPluginCompatibility(pluginInfo);
@@ -324,10 +353,16 @@ public class PluginOperation extends Operation {
 
 		File tempPluginJarFile = downloadPluginJar(pluginInfo.getDownloadUrl());
 		String expectedChecksum = pluginInfo.getSha256sum();
-		String actualChecksum = calculateChecksum(tempPluginJarFile);
+		String actualChecksum;
+		try {
+			actualChecksum = calculateChecksum(tempPluginJarFile);
+		}
+		catch (NoSuchAlgorithmException | CipherException e) {
+			throw new CryptoException("Error with crypto", e);
+		}
 
 		if (expectedChecksum == null || !expectedChecksum.equals(actualChecksum)) {
-			throw new Exception("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
+			throw new ChecksumMismatchException("Checksum mismatch. Expected: " + expectedChecksum + ", but was: " + actualChecksum);
 		}
 
 		logger.log(Level.INFO, "Plugin JAR checksum verified: " + actualChecksum);
@@ -342,7 +377,7 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
-	private void checkPluginCompatibility(PluginInfo pluginInfo) throws Exception {
+	private void checkPluginCompatibility(PluginInfo pluginInfo) throws UninstallablePluginException {
 		Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Version pluginAppMinVersion = Version.valueOf(pluginInfo.getPluginAppMinVersion());
 
@@ -351,8 +386,8 @@ public class PluginOperation extends Operation {
 		logger.log(Level.INFO, "- Plugin min. application version: " + pluginInfo.getPluginAppMinVersion() + "(" + pluginAppMinVersion + ")");
 
 		if (applicationVersion.lessThan(pluginAppMinVersion)) {
-			throw new Exception("Plugin is incompatible to this application version. Plugin min. application version is "
-							+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
+			throw new UninstallablePluginException("Plugin is incompatible to this application version. Plugin min. application version is "
+					+ pluginInfo.getPluginAppMinVersion() + ", current application version is " + Client.getApplicationVersion());
 		}
 
 		// Verify if any conflicting plugins are installed
@@ -377,14 +412,14 @@ public class PluginOperation extends Operation {
 		result.setConflictingPlugins(conflictingInstalledIds);
 	}
 
-	private String calculateChecksum(File tempPluginJarFile) throws Exception {
+	private String calculateChecksum(File tempPluginJarFile) throws NoSuchAlgorithmException, IOException, CipherException {
 		CipherUtil.enableUnlimitedStrength();
 
 		byte[] actualChecksum = FileUtil.createChecksum(tempPluginJarFile, "SHA256");
 		return StringUtil.toHex(actualChecksum);
 	}
 
-	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws Exception {
+	private PluginOperationResult executeInstallFromLocalFile(File pluginJarFile) throws IOException, UninstallablePluginException {
 		eventBus.post(new PluginInstallExternalEvent(pluginJarFile.getAbsolutePath()));
 
 		PluginInfo pluginInfo = readPluginInfoFromJar(pluginJarFile);
@@ -402,7 +437,7 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
-	private PluginOperationResult executeInstallFromUrl(String downloadJarUrl) throws Exception {
+	private PluginOperationResult executeInstallFromUrl(String downloadJarUrl) throws IOException, UninstallablePluginException {
 		eventBus.post(new PluginInstallExternalEvent(downloadJarUrl));
 
 		File tempPluginJarFile = downloadPluginJar(downloadJarUrl);
@@ -421,28 +456,29 @@ public class PluginOperation extends Operation {
 		return result;
 	}
 
-	private void checkPluginNotInstalled(String pluginId) throws Exception {
+	private void checkPluginNotInstalled(String pluginId) throws UninstallablePluginException {
 		Plugin locallyInstalledPlugin = Plugins.get(pluginId);
 
 		if (locallyInstalledPlugin != null) {
-			throw new Exception("Plugin '" + pluginId + "' already installed. Use 'sy plugin remove " + pluginId + "' to uninstall it first.");
+			throw new UninstallablePluginException("Plugin '" + pluginId + "' already installed. Use 'sy plugin remove " + pluginId
+					+ "' to uninstall it first.");
 		}
 
 		logger.log(Level.INFO, "Plugin '" + pluginId + "' not installed. Okay!");
 	}
 
-	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws Exception {
+	private PluginInfo readPluginInfoFromJar(File pluginJarFile) throws IOException {
 		try (JarInputStream jarStream = new JarInputStream(new FileInputStream(pluginJarFile))) {
 			Manifest jarManifest = jarStream.getManifest();
 
 			if (jarManifest == null) {
-				throw new Exception("Given file is not a valid Syncany plugin file (not a JAR file, or no manifest).");
+				throw new IllegalArgumentException("Given file is not a valid Syncany plugin file (not a JAR file, or no manifest).");
 			}
 
 			String pluginId = jarManifest.getMainAttributes().getValue("Plugin-Id");
 
 			if (pluginId == null) {
-				throw new Exception("Given file is not a valid Syncany plugin file (no plugin ID in manifest).");
+				throw new IllegalArgumentException("Given file is not a valid Syncany plugin file (no plugin ID in manifest).");
 			}
 
 			PluginInfo pluginInfo = new PluginInfo();
@@ -467,7 +503,7 @@ public class PluginOperation extends Operation {
 		globalUserPluginDir.mkdirs();
 
 		File targetPluginJarFile = new File(globalUserPluginDir, String.format("syncany-plugin-%s-%s.jar", pluginInfo.getPluginId(),
-						pluginInfo.getPluginVersion()));
+				pluginInfo.getPluginVersion()));
 
 		logger.log(Level.INFO, "Installing plugin from " + pluginJarFile + " to " + targetPluginJarFile + " ...");
 		FileUtils.copyFile(pluginJarFile, targetPluginJarFile);
@@ -479,7 +515,7 @@ public class PluginOperation extends Operation {
 	 * Downloads the plugin JAR from the given URL to a temporary
 	 * local location.
 	 */
-	private File downloadPluginJar(String pluginJarUrl) throws Exception {
+	private File downloadPluginJar(String pluginJarUrl) throws IOException {
 		URL pluginJarFile = new URL(pluginJarUrl);
 		logger.log(Level.INFO, "Querying " + pluginJarFile + " ...");
 
@@ -500,13 +536,13 @@ public class PluginOperation extends Operation {
 		tempPluginFileOutputStream.close();
 
 		if (!tempPluginFile.exists() || tempPluginFile.length() == 0) {
-			throw new Exception("Downloading plugin file failed, URL was " + pluginJarUrl);
+			throw new IOException("Downloading plugin file failed, URL was " + pluginJarUrl);
 		}
 
 		return tempPluginFile;
 	}
 
-	private PluginOperationResult executeList() throws Exception {
+	private PluginOperationResult executeList() throws OperationException {
 		final Version applicationVersion = Version.valueOf(Client.getApplicationVersion());
 		Map<String, ExtendedPluginInfo> pluginInfos = new TreeMap<String, ExtendedPluginInfo>();
 
@@ -537,36 +573,41 @@ public class PluginOperation extends Operation {
 
 		// Then, list remote plugins
 		if (options.getListMode() == PluginListMode.ALL || options.getListMode() == PluginListMode.REMOTE) {
-			for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
-				if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
-					continue;
+			try {
+				for (PluginInfo remotePluginInfo : getRemotePluginInfoList()) {
+					if (options.getPluginId() != null && !remotePluginInfo.getPluginId().equals(options.getPluginId())) {
+						continue;
+					}
+
+					ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
+					boolean localPluginInstalled = extendedPluginInfo != null;
+
+					if (!localPluginInstalled) { // Locally not installed
+						extendedPluginInfo = new ExtendedPluginInfo();
+
+						extendedPluginInfo.setInstalled(false);
+						extendedPluginInfo.setRemoteAvailable(true);
+					}
+					else { // Locally also installed
+						extendedPluginInfo.setRemoteAvailable(true);
+
+						Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
+						Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
+						Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
+
+						boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
+						boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
+						boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
+
+						extendedPluginInfo.setOutdated(pluginIsOutdated);
+					}
+
+					extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
+					pluginInfos.put(remotePluginInfo.getPluginId(), extendedPluginInfo);
 				}
-
-				ExtendedPluginInfo extendedPluginInfo = pluginInfos.get(remotePluginInfo.getPluginId());
-				boolean localPluginInstalled = extendedPluginInfo != null;
-
-				if (!localPluginInstalled) { // Locally not installed
-					extendedPluginInfo = new ExtendedPluginInfo();
-
-					extendedPluginInfo.setInstalled(false);
-					extendedPluginInfo.setRemoteAvailable(true);
-				}
-				else { // Locally also installed
-					extendedPluginInfo.setRemoteAvailable(true);
-
-					Version localVersion = Version.valueOf(extendedPluginInfo.getLocalPluginInfo().getPluginVersion());
-					Version remoteVersion = Version.valueOf(remotePluginInfo.getPluginVersion());
-					Version remoteMinAppVersion = Version.valueOf(remotePluginInfo.getPluginAppMinVersion());
-
-					boolean localVersionOutdated = localVersion.lessThan(remoteVersion);
-					boolean applicationVersionCompatible = applicationVersion.greaterThanOrEqualTo(remoteMinAppVersion);
-					boolean pluginIsOutdated = localVersionOutdated && applicationVersionCompatible;
-
-					extendedPluginInfo.setOutdated(pluginIsOutdated);
-				}
-
-				extendedPluginInfo.setRemotePluginInfo(remotePluginInfo);
-				pluginInfos.put(remotePluginInfo.getPluginId(), extendedPluginInfo);
+			}
+			catch (IOException | DeserializableException e) {
+				throw new OperationException(e);
 			}
 		}
 
@@ -592,16 +633,28 @@ public class PluginOperation extends Operation {
 		return localPluginInfos;
 	}
 
-	private List<PluginInfo> getRemotePluginInfoList() throws Exception {
+	private List<PluginInfo> getRemotePluginInfoList() throws IOException, DeserializableException {
 		String remoteListStr = getRemoteListStr(null);
-		PluginListResponse pluginListResponse = new Persister().read(PluginListResponse.class, remoteListStr);
+		PluginListResponse pluginListResponse;
+		try {
+			pluginListResponse = new Persister().read(PluginListResponse.class, remoteListStr);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
 
 		return pluginListResponse.getPlugins();
 	}
 
-	private PluginInfo getRemotePluginInfo(String pluginId) throws Exception {
+	private PluginInfo getRemotePluginInfo(String pluginId) throws IOException, DeserializableException {
 		String remoteListStr = getRemoteListStr(pluginId);
-		PluginListResponse pluginListResponse = new Persister().read(PluginListResponse.class, remoteListStr);
+		PluginListResponse pluginListResponse;
+		try {
+			pluginListResponse = new Persister().read(PluginListResponse.class, remoteListStr);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
 
 		if (pluginListResponse.getPlugins().size() > 0) {
 			return pluginListResponse.getPlugins().get(0);
@@ -611,7 +664,7 @@ public class PluginOperation extends Operation {
 		}
 	}
 
-	private String getRemoteListStr(String pluginId) throws Exception {
+	private String getRemoteListStr(String pluginId) throws IOException {
 		String appVersion = Client.getApplicationVersion();
 		String snapshotsEnabled = (options.isSnapshots()) ? "true" : "false";
 		String pluginIdQueryStr = (pluginId != null) ? pluginId : "";
@@ -619,7 +672,8 @@ public class PluginOperation extends Operation {
 		String archStr = EnvironmentUtil.getArchDescription();
 
 		String apiEndpointUrl = (options.getApiEndpoint() != null) ? options.getApiEndpoint() : API_DEFAULT_ENDPOINT_URL;
-		URL pluginListUrl = new URL(String.format(API_PLUGIN_LIST_REQUEST_FORMAT, apiEndpointUrl, appVersion, snapshotsEnabled, pluginIdQueryStr, osStr, archStr));
+		URL pluginListUrl = new URL(String.format(API_PLUGIN_LIST_REQUEST_FORMAT, apiEndpointUrl, appVersion, snapshotsEnabled, pluginIdQueryStr,
+				osStr, archStr));
 
 		logger.log(Level.INFO, "Querying " + pluginListUrl + " ...");
 		eventBus.post(new ConnectToHostExternalEvent(pluginListUrl.getHost()));

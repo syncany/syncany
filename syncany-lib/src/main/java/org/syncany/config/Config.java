@@ -24,6 +24,7 @@ import java.util.List;
 import org.syncany.chunk.Chunker;
 import org.syncany.chunk.CipherTransformer;
 import org.syncany.chunk.FixedChunker;
+import org.syncany.chunk.InvalidSettingsException;
 import org.syncany.chunk.MultiChunker;
 import org.syncany.chunk.NoTransformer;
 import org.syncany.chunk.Transformer;
@@ -162,7 +163,7 @@ public class Config {
 		repoId = repoTO.getRepoId();
 	}
 
-	private void initChunker(RepoTO repoTO) throws Exception {
+	private void initChunker(RepoTO repoTO) {
 		// TODO [feature request] make chunking options configurable, something like described in #29
 		// See: https://github.com/syncany/syncany/issues/29#issuecomment-43425647
 
@@ -185,7 +186,7 @@ public class Config {
 		multiChunker.init(multiChunkerTO.getSettings());
 	}
 
-	private void initTransformers(RepoTO repoTO) throws Exception {
+	private void initTransformers(RepoTO repoTO) throws ConfigException, InvalidSettingsException {
 		if (repoTO.getTransformers() == null || repoTO.getTransformers().size() == 0) {
 			transformer = new NoTransformer();
 		}

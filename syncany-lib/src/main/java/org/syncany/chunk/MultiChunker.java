@@ -80,12 +80,12 @@ public abstract class MultiChunker {
 	 */
 	public void init(Map<String, String> settings) {
 		String size = settings.get(PROPERTY_SIZE);
-		
+
 		if (size == null) {
 			logger.log(Level.SEVERE, String.format("Property %s must not be null.", PROPERTY_SIZE));
 			throw new IllegalArgumentException(String.format("Property %s must not be null.", PROPERTY_SIZE));
 		}
-		
+
 		try {
 			this.minMultiChunkSize = Integer.parseInt(size);
 		}
@@ -157,8 +157,7 @@ public abstract class MultiChunker {
 	 * where <tt>X</tt> is the camel-cased type attribute.  
 	 * 
 	 * @param type Type/name of the multichunker (corresponds to its camel case class name)
-	 * @return a new multichunker
-	 * @throws Exception If the FQCN cannot be found or the class cannot be instantiated
+	 * @return a new multichunker or null if the FQCN cannot be found or the class cannot be instantiated
 	 */
 	public static MultiChunker getInstance(String type) {
 		String thisPackage = MultiChunker.class.getPackage().getName();

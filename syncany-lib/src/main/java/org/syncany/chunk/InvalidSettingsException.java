@@ -15,11 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.chunk;
 
 /**
- * @author Jesse Donkervliet
+ * Thrown by Transformer init methods when their settings are not valid.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class InvalidSettingsException extends Exception {
+	private static final long serialVersionUID = -280945343359999227L;
+
+	/**
+	 * @param msg Message for the Exception.
+	 */
+	public InvalidSettingsException(String msg) {
+		super(msg);
+	}
 }

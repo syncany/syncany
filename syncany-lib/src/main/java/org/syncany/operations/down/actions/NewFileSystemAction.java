@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.down.actions;
 
+import java.io.IOException;
+
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.MemoryDatabase;
@@ -26,22 +28,22 @@ public class NewFileSystemAction extends FileCreatingFileSystemAction {
 	public NewFileSystemAction(Config config, FileVersion newFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, null, newFileVersion);
 	}
-	
+
 	@Override
-	public FileSystemActionResult execute() throws Exception {
+	public FileSystemActionResult execute() throws IOException {
 		if (fileExists(fileVersion2)) {
 			if (fileAsExpected(fileVersion2)) {
 				// Nothing to do
 			}
 			else {
 				moveToConflictFile(fileVersion2);
-				createFileFolderOrSymlink(fileVersion2);				
+				createFileFolderOrSymlink(fileVersion2);
 			}
 		}
 		else {
 			createFileFolderOrSymlink(fileVersion2);
-		}	
-		
+		}
+
 		return new FileSystemActionResult();
 	}
 
@@ -50,4 +52,3 @@ public class NewFileSystemAction extends FileCreatingFileSystemAction {
 		return "NewFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 }
-
