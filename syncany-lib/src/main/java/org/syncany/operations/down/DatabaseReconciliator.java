@@ -69,7 +69,7 @@ public class DatabaseReconciliator {
 	 * @return Returns the branch of the winning client
 	 */
 	public Map.Entry<String, DatabaseBranch> findWinnerBranch(DatabaseBranches allBranches)
-			throws Exception {
+	{
 
 		Entry<String, DatabaseBranch> winnersNameAndBranch = findWinnersNameAndBranch(allBranches);
 
@@ -191,11 +191,11 @@ public class DatabaseReconciliator {
 	 */
 	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = sortBranches(allBranches);
-		
+
 		if (databaseVersionHeaders.size() == 0) {
 			return null;
 		}
-		
+
 		// Determine winning branch
 		DatabaseBranch winnersBranch = new DatabaseBranch();
 		DatabaseVersionHeaderComparator databaseVersionHeaderComparator = new DatabaseVersionHeaderComparator(false);
@@ -219,7 +219,7 @@ public class DatabaseReconciliator {
 		for (String currentClient : allBranches.getClients()) {
 			DatabaseBranch currentBranch = allBranches.getBranch(currentClient);
 			DatabaseVersionHeader currentBranchLastDatabaseVersionHeader = currentBranch.getLast();
-			
+
 			if (winningLastDatabaseVersionHeader.equals(currentBranchLastDatabaseVersionHeader)) {
 				return new AbstractMap.SimpleEntry<String, DatabaseBranch>(currentClient, winnersBranch);
 			}
@@ -230,11 +230,11 @@ public class DatabaseReconciliator {
 
 	private List<DatabaseVersionHeader> sortBranches(DatabaseBranches allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
-		
+
 		for (String client : allBranches.getClients()) {
 			databaseVersionHeaders.addAll(allBranches.getBranch(client).getAll());
 		}
-		
+
 		Collections.sort(databaseVersionHeaders, new DatabaseVersionHeaderComparator(true));
 
 		return databaseVersionHeaders;

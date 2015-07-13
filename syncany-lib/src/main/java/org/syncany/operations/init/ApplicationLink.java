@@ -49,6 +49,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.stream.Format;
+import org.syncany.crypto.CipherException;
 import org.syncany.crypto.CipherSpec;
 import org.syncany.crypto.CipherSpecs;
 import org.syncany.crypto.CipherUtil;
@@ -58,6 +59,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferPlugin;
 import org.syncany.plugins.transfer.TransferPluginUtil;
 import org.syncany.plugins.transfer.TransferSettings;
+import org.syncany.plugins.transfer.to.SerializableException;
 import org.syncany.util.Base58;
 
 import com.google.common.primitives.Ints;
@@ -134,7 +136,7 @@ public class ApplicationLink {
 		return masterKeySalt;
 	}
 
-	public TransferSettings createTransferSettings(SaltedSecretKey masterKey) throws Exception {
+	public TransferSettings createTransferSettings(SaltedSecretKey masterKey) throws CipherException, StorageException, IOException {
 		if (!encrypted || encryptedSettingsBytes == null) {
 			throw new IllegalArgumentException("Link is not encrypted. Cannot call this method.");
 		}
@@ -143,7 +145,7 @@ public class ApplicationLink {
 		return createTransferSettings(plaintextPluginSettingsBytes);
 	}
 
-	public TransferSettings createTransferSettings() throws Exception {
+	public TransferSettings createTransferSettings() throws StorageException, IOException {
 		if (encrypted || plaintextSettingsBytes == null) {
 			throw new IllegalArgumentException("Link is encrypted. Cannot call this method.");
 		}
@@ -151,7 +153,7 @@ public class ApplicationLink {
 		return createTransferSettings(plaintextSettingsBytes);
 	}
 
-	public String createEncryptedLink(SaltedSecretKey masterKey) throws Exception {
+	public String createEncryptedLink(SaltedSecretKey masterKey) throws IOException, SerializableException, CipherException {
 		byte[] plaintextStorageXml = getPlaintextStorageXml();
 		List<CipherSpec> cipherSpecs = CipherSpecs.getDefaultCipherSpecs(); // TODO [low] Shouldn't this be the same as the application?!
 
@@ -171,7 +173,7 @@ public class ApplicationLink {
 		}
 	}
 
-	public String createPlaintextLink() throws Exception {
+	public String createPlaintextLink() throws IOException, SerializableException {
 		byte[] plaintextStorageXml = getPlaintextStorageXml();
 		String plaintextEncodedStorage = Base58.encode(plaintextStorageXml);
 
@@ -191,7 +193,8 @@ public class ApplicationLink {
 
 	private String resolveLink(String httpApplicationLink, int redirectCount) throws IllegalArgumentException, StorageException {
 		if (redirectCount >= LINK_HTTP_MAX_REDIRECT_COUNT) {
-			throw new IllegalArgumentException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT + " for URL reached. Cannot find syncany:// link.");
+			throw new IllegalArgumentException("Max. redirect count of " + LINK_HTTP_MAX_REDIRECT_COUNT
+					+ " for URL reached. Cannot find syncany:// link.");
 		}
 
 		try {
@@ -272,16 +275,16 @@ public class ApplicationLink {
 		if (proxyHost != null && proxyPortStr != null) {
 			try {
 				Integer proxyPort = Integer.parseInt(proxyPortStr);
-				
+
 				requestConfigBuilder.setProxy(new HttpHost(proxyHost, proxyPort));
 				logger.log(Level.INFO, "Using proxy: " + proxyHost + ":" + proxyPort);
-	
+
 				if (proxyUser != null && proxyPassword != null) {
 					logger.log(Level.INFO, "Proxy required credentials; using '" + proxyUser + "' (username) and *** (hidden password)");
 
 					CredentialsProvider credsProvider = new BasicCredentialsProvider();
 					credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
-					httpClientBuilder.setDefaultCredentialsProvider(credsProvider);					
+					httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
 				}
 			}
 			catch (NumberFormatException e) {
@@ -361,14 +364,21 @@ public class ApplicationLink {
 		}
 	}
 
-	private byte[] getPlaintextStorageXml() throws Exception {
+	private byte[] getPlaintextStorageXml() throws IOException, SerializableException {
 		ByteArrayOutputStream plaintextByteArrayOutputStream = new ByteArrayOutputStream();
 		DataOutputStream plaintextOutputStream = new DataOutputStream(plaintextByteArrayOutputStream);
 		plaintextOutputStream.writeInt(transferSettings.getType().getBytes().length);
 		plaintextOutputStream.write(transferSettings.getType().getBytes());
 
 		GZIPOutputStream plaintextGzipOutputStream = new GZIPOutputStream(plaintextOutputStream);
-		new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
+
+		try {
+			new Persister(new Format(0)).write(transferSettings, plaintextGzipOutputStream);
+		}
+		catch (Exception e) {
+			throw new SerializableException(e);
+		}
+
 		plaintextGzipOutputStream.close();
 
 		return plaintextByteArrayOutputStream.toByteArray();

@@ -35,17 +35,19 @@ import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Date;
@@ -62,6 +64,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -206,7 +209,7 @@ public class CipherUtil {
 	 * @return Returns a derived key (including the given input salt)
 	 */
 	public static SaltedSecretKey createDerivedKey(SecretKey inputKey, byte[] inputSalt, CipherSpec outputCipherSpec)
-			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	{
 
 		return createDerivedKey(inputKey.getEncoded(), inputSalt, outputCipherSpec.getAlgorithm(), outputCipherSpec.getKeySize());
 	}
@@ -228,7 +231,7 @@ public class CipherUtil {
 	 * @see <a href="http://tools.ietf.org/html/rfc5869">RFC 5869</a>
 	 */
 	public static SaltedSecretKey createDerivedKey(byte[] inputKeyMaterial, byte[] inputSalt, String outputKeyAlgorithm, int outputKeySize)
-			throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	{
 
 		HKDFBytesGenerator hkdf = new HKDFBytesGenerator(KEY_DERIVATION_DIGEST);
 		hkdf.init(new HKDFParameters(inputKeyMaterial, inputSalt, KEY_DERIVATION_INFO));
@@ -350,7 +353,7 @@ public class CipherUtil {
 	 * @see <a href="https://code.google.com/p/gitblit/source/browse/src/com/gitblit/MakeCertificate.java?r=88598bb2f779b73479512d818c675dea8fa72138">Original source of this method</a>
 	 */
 	public static X509Certificate generateSelfSignedCertificate(String commonName, KeyPair keyPair) throws OperatorCreationException,
-	CertificateException,
+			CertificateException,
 			InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 
 		// Certificate CN, O and OU
@@ -373,12 +376,12 @@ public class CipherUtil {
 				new JcaX509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, keyPair.getPublic());
 
 		ContentSigner signatureGenerator = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-		.setProvider(CipherParams.CRYPTO_PROVIDER)
-		.build(keyPair.getPrivate());
+				.setProvider(CipherParams.CRYPTO_PROVIDER)
+				.build(keyPair.getPrivate());
 
 		X509Certificate certificate = new JcaX509CertificateConverter()
-		.setProvider(CipherParams.CRYPTO_PROVIDER)
-		.getCertificate(certificateGenerator.build(signatureGenerator));
+				.setProvider(CipherParams.CRYPTO_PROVIDER)
+				.getCertificate(certificateGenerator.build(signatureGenerator));
 
 		certificate.checkValidity(new Date());
 		certificate.verify(certificate.getPublicKey());
@@ -389,7 +392,7 @@ public class CipherUtil {
 	/**
 	 * Creates an SSL context, given a key store and a trust store.
 	 */
-	public static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws Exception {
+	public static SSLContext createSSLContext(KeyStore keyStore, KeyStore trustStore) throws SSLException {
 		try {
 			// Server key and certificate
 			KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -409,8 +412,8 @@ public class CipherUtil {
 
 			return sslContext;
 		}
-		catch (Exception e) {
-			throw new Exception("Unable to initialize SSL context", e);
+		catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | UnrecoverableKeyException e) {
+			throw new SSLException("Unable to initialize SSL context", e);
 		}
 	}
 }

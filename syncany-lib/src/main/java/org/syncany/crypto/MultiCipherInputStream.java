@@ -21,6 +21,9 @@ import static org.syncany.crypto.CipherParams.CRYPTO_PROVIDER_ID;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Arrays;
 
 import javax.crypto.Mac;
@@ -31,18 +34,18 @@ public class MultiCipherInputStream extends InputStream {
 
 	private InputStream cipherInputStream;
 	private CipherSession cipherSession;
-	
+
 	private boolean headerRead;
 	private Mac headerHmac;
-		
+
 	public MultiCipherInputStream(InputStream in, CipherSession cipherSession) throws IOException {
-		this.underlyingInputStream = in;		
+		this.underlyingInputStream = in;
 
 		this.cipherInputStream = null;
 		this.cipherSession = cipherSession;
-		
-		this.headerRead = false;		
-		this.headerHmac = null;		
+
+		this.headerRead = false;
+		this.headerHmac = null;
 	}
 
 	@Override
@@ -50,39 +53,39 @@ public class MultiCipherInputStream extends InputStream {
 		readHeader();
 		return cipherInputStream.read();
 	}
-	
+
 	@Override
 	public int read(byte[] b) throws IOException {
 		readHeader();
 		return cipherInputStream.read(b, 0, b.length);
 	}
-	
+
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		readHeader();
 		return cipherInputStream.read(b, off, len);
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		cipherInputStream.close();
-	}	
-	
+	}
+
 	private void readHeader() throws IOException {
 		if (!headerRead) {
 			try {
 				readAndVerifyMagicNoHmac(underlyingInputStream);
 				readAndVerifyVersionNoHmac(underlyingInputStream);
 
-				headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);				
+				headerHmac = readHmacSaltAndInitHmac(underlyingInputStream, cipherSession);
 				cipherInputStream = readCipherSpecsAndUpdateHmac(underlyingInputStream, headerHmac, cipherSession);
 
-				readAndVerifyHmac(underlyingInputStream, headerHmac);			
+				readAndVerifyHmac(underlyingInputStream, headerHmac);
 			}
 			catch (Exception e) {
 				throw new IOException(e);
 			}
-			
+
 			headerRead = true;
 		}
 	}
@@ -90,7 +93,7 @@ public class MultiCipherInputStream extends InputStream {
 	private void readAndVerifyMagicNoHmac(InputStream inputStream) throws IOException {
 		byte[] streamMagic = new byte[MultiCipherOutputStream.STREAM_MAGIC.length];
 		inputStream.read(streamMagic);
-		
+
 		if (!Arrays.equals(MultiCipherOutputStream.STREAM_MAGIC, streamMagic)) {
 			throw new IOException("Not a Syncany-encrypted file, no magic!");
 		}
@@ -98,71 +101,73 @@ public class MultiCipherInputStream extends InputStream {
 
 	private void readAndVerifyVersionNoHmac(InputStream inputStream) throws IOException {
 		byte streamVersion = (byte) inputStream.read();
-		
+
 		if (streamVersion != MultiCipherOutputStream.STREAM_VERSION) {
-			throw new IOException("Stream version not supported: "+streamVersion);
-		}		
+			throw new IOException("Stream version not supported: " + streamVersion);
+		}
 	}
-	
-	private Mac readHmacSaltAndInitHmac(InputStream inputStream, CipherSession cipherSession) throws Exception {
+
+	private Mac readHmacSaltAndInitHmac(InputStream inputStream, CipherSession cipherSession) throws IOException, NoSuchAlgorithmException,
+			NoSuchProviderException, InvalidKeyException {
 		byte[] hmacSalt = readNoHmac(inputStream, MultiCipherOutputStream.SALT_SIZE);
 		SecretKey hmacSecretKey = cipherSession.getReadSecretKey(MultiCipherOutputStream.HMAC_SPEC, hmacSalt);
-		
+
 		Mac hmac = Mac.getInstance(MultiCipherOutputStream.HMAC_SPEC.getAlgorithm(), CRYPTO_PROVIDER_ID);
-		hmac.init(hmacSecretKey);	
-		
+		hmac.init(hmacSecretKey);
+
 		return hmac;
 	}
-	
-	private InputStream readCipherSpecsAndUpdateHmac(InputStream underlyingInputStream, Mac hmac, CipherSession cipherSession) throws Exception {
-		int cipherSpecCount = readByteAndUpdateHmac(underlyingInputStream, hmac);		
+
+	private InputStream readCipherSpecsAndUpdateHmac(InputStream underlyingInputStream, Mac hmac, CipherSession cipherSession) throws IOException,
+			CipherException {
+		int cipherSpecCount = readByteAndUpdateHmac(underlyingInputStream, hmac);
 		InputStream nestedCipherInputStream = underlyingInputStream;
-		
-		for (int i=0; i<cipherSpecCount; i++) {
-			int cipherSpecId = readByteAndUpdateHmac(underlyingInputStream, hmac);				
+
+		for (int i = 0; i < cipherSpecCount; i++) {
+			int cipherSpecId = readByteAndUpdateHmac(underlyingInputStream, hmac);
 			CipherSpec cipherSpec = CipherSpecs.getCipherSpec(cipherSpecId);
-			
+
 			if (cipherSpec == null) {
-				throw new IOException("Cannot find cipher spec with ID "+cipherSpecId);
+				throw new IOException("Cannot find cipher spec with ID " + cipherSpecId);
 			}
 
 			byte[] salt = readAndUpdateHmac(underlyingInputStream, MultiCipherOutputStream.SALT_SIZE, hmac);
-			byte[] iv = readAndUpdateHmac(underlyingInputStream, cipherSpec.getIvSize()/8, hmac);
-			
-			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);			
-			nestedCipherInputStream = cipherSpec.newCipherInputStream(nestedCipherInputStream, secretKey.getEncoded(), iv);		
-		}	 
-		
+			byte[] iv = readAndUpdateHmac(underlyingInputStream, cipherSpec.getIvSize() / 8, hmac);
+
+			SecretKey secretKey = cipherSession.getReadSecretKey(cipherSpec, salt);
+			nestedCipherInputStream = cipherSpec.newCipherInputStream(nestedCipherInputStream, secretKey.getEncoded(), iv);
+		}
+
 		return nestedCipherInputStream;
 	}
 
-	private void readAndVerifyHmac(InputStream inputStream, Mac hmac) throws Exception {
+	private void readAndVerifyHmac(InputStream inputStream, Mac hmac) throws IOException {
 		byte[] calculatedHeaderHmac = hmac.doFinal();
 		byte[] readHeaderHmac = readNoHmac(inputStream, calculatedHeaderHmac.length);
-		
+
 		if (!Arrays.equals(calculatedHeaderHmac, readHeaderHmac)) {
-			throw new Exception("Integrity exception: Calculated HMAC and read HMAC do not match.");
-		}			
+			throw new IOException("Integrity exception: Calculated HMAC and read HMAC do not match.");
+		}
 	}
 
 	private byte[] readNoHmac(InputStream inputStream, int size) throws IOException {
-		byte[] bytes = new byte[size];		
-		inputStream.read(bytes);	
-		
+		byte[] bytes = new byte[size];
+		inputStream.read(bytes);
+
 		return bytes;
 	}
 
 	private byte[] readAndUpdateHmac(InputStream inputStream, int size, Mac hmac) throws IOException {
-		byte[] bytes = readNoHmac(inputStream, size);		
+		byte[] bytes = readNoHmac(inputStream, size);
 		hmac.update(bytes);
-		
+
 		return bytes;
 	}
 
 	private int readByteAndUpdateHmac(InputStream inputStream, Mac hmac) throws IOException {
 		int abyte = inputStream.read();
 		hmac.update((byte) abyte);
-		
+
 		return abyte;
 	}
 }

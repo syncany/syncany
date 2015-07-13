@@ -32,59 +32,59 @@ import java.util.zip.GZIPOutputStream;
  * @author Philipp C. Heckel <philipp.heckel@gmail.com>
  */
 public class GzipTransformer extends Transformer {
-    public static final String TYPE = "gzip";
+	public static final String TYPE = "gzip";
 	private int level;
-    
-    public GzipTransformer() {
-        this(Deflater.DEFAULT_COMPRESSION, null);
-    }
-    
-    public GzipTransformer(Transformer nextTransformer) {
-        this(Deflater.DEFAULT_COMPRESSION, nextTransformer);
-    }
-    
-    public GzipTransformer(int level, Transformer nextTransformer) {
-        super(nextTransformer);
-        this.level = level;
-    }
-    
-    @Override
-    public void init(Map<String, String> settings) throws Exception {
-    	// Nothing here    	
-    }
-    
-    @Override
-    public OutputStream createOutputStream(OutputStream out) throws IOException {
-        if (nextTransformer == null) {
-            return new GZIPOutputStreamEx(out, level);
-        }
-        else {
-            return new GZIPOutputStreamEx(nextTransformer.createOutputStream(out), level);
-        }
-    }
 
-    @Override
-    public InputStream createInputStream(InputStream in) throws IOException {
-        if (nextTransformer == null) {
-            return new GZIPInputStream(in);
-        }
-        else {
-            return new GZIPInputStream(nextTransformer.createInputStream(in));
-        }
-    }
-    
-    public static class GZIPOutputStreamEx extends GZIPOutputStream {
-        /**
-         * Level is 1-9 -- 1 being best speed, and 9 being best compression
-         */
-        public GZIPOutputStreamEx(OutputStream out, int level) throws IOException {
-            super(out);
-            def.setLevel(level);
-        }
-    }    
-    
-    @Override
-    public String toString() {
-        return (nextTransformer == null) ? "Gzip" : "Gzip-"+nextTransformer;
-    }    
+	public GzipTransformer() {
+		this(Deflater.DEFAULT_COMPRESSION, null);
+	}
+
+	public GzipTransformer(Transformer nextTransformer) {
+		this(Deflater.DEFAULT_COMPRESSION, nextTransformer);
+	}
+
+	public GzipTransformer(int level, Transformer nextTransformer) {
+		super(nextTransformer);
+		this.level = level;
+	}
+
+	@Override
+	public void init(Map<String, String> settings) {
+		// Nothing here    	
+	}
+
+	@Override
+	public OutputStream createOutputStream(OutputStream out) throws IOException {
+		if (nextTransformer == null) {
+			return new GZIPOutputStreamEx(out, level);
+		}
+		else {
+			return new GZIPOutputStreamEx(nextTransformer.createOutputStream(out), level);
+		}
+	}
+
+	@Override
+	public InputStream createInputStream(InputStream in) throws IOException {
+		if (nextTransformer == null) {
+			return new GZIPInputStream(in);
+		}
+		else {
+			return new GZIPInputStream(nextTransformer.createInputStream(in));
+		}
+	}
+
+	public static class GZIPOutputStreamEx extends GZIPOutputStream {
+		/**
+		 * Level is 1-9 -- 1 being best speed, and 9 being best compression
+		 */
+		public GZIPOutputStreamEx(OutputStream out, int level) throws IOException {
+			super(out);
+			def.setLevel(level);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return (nextTransformer == null) ? "Gzip" : "Gzip-" + nextTransformer;
+	}
 }

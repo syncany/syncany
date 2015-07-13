@@ -15,11 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.plugin;
 
 /**
- * @author Jesse Donkervliet
+ * Exception that can be used when a plugin is not installed yet needs/wants to be used.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class PluginNotInstalledException extends PluginException {
+	private static final long serialVersionUID = -5474064178037413316L;
+
+	/**
+	 * @param string Message to pass on
+	 */
+	public PluginNotInstalledException(String string) {
+		super(string);
+	}
 }

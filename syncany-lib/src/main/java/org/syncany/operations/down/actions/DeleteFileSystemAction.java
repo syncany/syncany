@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.down.actions;
 
+import java.io.IOException;
+
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
@@ -45,34 +47,34 @@ public class DeleteFileSystemAction extends FileSystemAction {
 	 * Otherwise, a conflict file is created. 
 	 */
 	@Override
-	public FileSystemActionResult execute() throws Exception {
+	public FileSystemActionResult execute() throws IOException {
 		// Special case: locally unknown file to be deleted		
 		if (fileVersion1 == null) {
 			if (fileExists(fileVersion2)) {
 				FileVersion pretendChangedFileVersion = fileVersion2.clone();
-				pretendChangedFileVersion.setStatus(FileStatus.CHANGED); 
-				
+				pretendChangedFileVersion.setStatus(FileStatus.CHANGED);
+
 				if (fileAsExpected(pretendChangedFileVersion)) {
-					deleteFile(fileVersion2);					
+					deleteFile(fileVersion2);
 				}
 				else {
-					moveToConflictFile(fileVersion2);					
+					moveToConflictFile(fileVersion2);
 				}
-			}			
+			}
 		}
-		
+
 		// Normal case: locally known file to be deleted
 		else {
 			if (!fileAsExpected(fileVersion1)) {
 				if (fileExists(fileVersion1)) {
-					moveToConflictFile(fileVersion2);	
+					moveToConflictFile(fileVersion2);
 				}
 			}
 			else {
-				deleteFile(fileVersion1);	
+				deleteFile(fileVersion1);
 			}
 		}
-					
+
 		return new FileSystemActionResult();
 	}
 
@@ -81,4 +83,3 @@ public class DeleteFileSystemAction extends FileSystemAction {
 		return "DeleteFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 }
-

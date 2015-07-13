@@ -15,11 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.daemon.handlers;
 
 /**
- * @author Jesse Donkervliet
+ * Wrapper for vague Exceptions of the HTTP library.
+ * 
+ * @author Stefan Hugtenburg
+ *
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class HttpExchangeException extends Exception {
+	private static final long serialVersionUID = 435046193187597016L;
+
+	/**
+	 * @param e Exception that caused it.
+	 */
+	public HttpExchangeException(Exception e) {
+		super(e);
+	}
 }

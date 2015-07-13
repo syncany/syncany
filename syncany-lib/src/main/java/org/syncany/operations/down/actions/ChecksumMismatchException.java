@@ -15,11 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.operations.down.actions;
 
 /**
- * @author Jesse Donkervliet
+ * Used when checksums of two files do not match.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class ChecksumMismatchException extends Exception {
+	private static final long serialVersionUID = -1267840379811129659L;
+
+	/**
+	 * @param string Message to use for this Exception.
+	 */
+	public ChecksumMismatchException(String string) {
+		super(string);
+	}
 }

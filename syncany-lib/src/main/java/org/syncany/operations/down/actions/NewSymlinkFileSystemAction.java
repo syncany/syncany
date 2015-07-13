@@ -17,6 +17,8 @@
  */
 package org.syncany.operations.down.actions;
 
+import java.io.IOException;
+
 import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersionComparator.FileChange;
@@ -28,12 +30,12 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 	public NewSymlinkFileSystemAction(Config config, FileVersion newFileVersion, MemoryDatabase winningDatabase) {
 		super(config, winningDatabase, null, newFileVersion);
 	}
-	
+
 	@Override
-	public FileSystemActionResult execute() throws Exception {
+	public FileSystemActionResult execute() throws IOException {
 		if (fileExists(fileVersion2)) {
 			FileVersionComparison fileComparison = fileChanges(fileVersion2);
-			
+
 			if (fileComparison.areEqual()) {
 				// Nothing to do.
 			}
@@ -48,13 +50,13 @@ public class NewSymlinkFileSystemAction extends FileSystemAction {
 		}
 		else {
 			createSymlink(fileVersion2);
-		}			
-		
+		}
+
 		return new FileSystemActionResult();
 	}
 
 	@Override
 	public String toString() {
 		return "NewSymlinkFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
-	}				
-}	
+	}
+}

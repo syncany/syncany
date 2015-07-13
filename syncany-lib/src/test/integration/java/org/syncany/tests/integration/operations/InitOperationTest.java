@@ -29,11 +29,11 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.init.InitOperation;
 import org.syncany.operations.init.InitOperationOptions;
 import org.syncany.operations.init.InitOperationResult;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.unreliable_local.UnreliableLocalTransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
@@ -92,7 +92,7 @@ public class InitOperationTest {
 		try {
 			op.execute();
 		}
-		catch (StorageException e) {
+		catch (OperationException e) {
 			logger.log(Level.INFO, "This operation failed because of the unreliable connection.", e);
 		}
 

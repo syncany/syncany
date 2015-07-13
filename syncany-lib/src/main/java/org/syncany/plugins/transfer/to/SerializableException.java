@@ -15,11 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.syncany.operations.up;
+package org.syncany.plugins.transfer.to;
+
 
 /**
- * @author Jesse Donkervliet
+ * Exception that wraps the Exceptions thrown by the Serializer class.
+ * 
+ * @author Stefan Hugtenburg
  */
-public class BlockingTransfersException extends Exception {
-	private static final long serialVersionUID = -7635231951027588892L;
+public class SerializableException extends Exception {
+
+	private static final long serialVersionUID = -6810580275275626438L;
+	
+	/**
+	 * @param e Exception that caused this exception.
+	 */
+	public SerializableException(Exception e) {
+		super(e);
+	}
+
 }

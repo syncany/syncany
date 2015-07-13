@@ -170,7 +170,7 @@ public class FileUtil {
 		}
 	}
 
-	public static void createSymlink(String targetPathStr, File symlinkFile) throws Exception {
+	public static void createSymlink(String targetPathStr, File symlinkFile) throws IOException {
 		Path targetPath = Paths.get(targetPathStr);
 		Path symlinkPath = Paths.get(symlinkFile.getPath());
 

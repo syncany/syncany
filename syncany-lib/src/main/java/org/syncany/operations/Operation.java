@@ -35,10 +35,10 @@ import org.syncany.config.Config;
  */
 public abstract class Operation {
 	protected Config config;
-	
+
 	public Operation(Config config) {
 		this.config = config;
-	}	
+	}
 
 	/**
 	 * Executes the operation synchronously and returns a result when 
@@ -46,7 +46,7 @@ public abstract class Operation {
 	 * override execute so as to return a OperationFooResult rather than OperationResult.   
 	 *   
 	 * @return Returns an operation-specific operation result
-	 * @throws Exception If the operation fails
+	 * @throws OperationException If the operation fails
 	 */
-	public abstract OperationResult execute() throws Exception;
+	public abstract OperationResult execute() throws OperationException;
 }

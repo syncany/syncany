@@ -17,12 +17,14 @@
  */
 package org.syncany.config;
 
-import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.security.KeyStore;
 import java.util.Map;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 
 import org.syncany.config.to.UserConfigTO;
 import org.syncany.crypto.CipherException;
@@ -115,7 +117,7 @@ public class UserConfig {
 	public static boolean isPreventStandby() {
 		return preventStandby;
 	}
-	
+
 	public static void setPreventStandby(boolean newPreventStandby) {
 		preventStandby = newPreventStandby;
 	}
@@ -144,7 +146,7 @@ public class UserConfig {
 		storeKeyStore(userKeyStore, userKeyStoreFile);
 	}
 
-	public static SSLContext createUserSSLContext() throws Exception {
+	public static SSLContext createUserSSLContext() throws SSLException {
 		return CipherUtil.createSSLContext(userKeyStore, userTrustStore);
 	}
 
@@ -179,7 +181,7 @@ public class UserConfig {
 
 			// System properties
 			for (Map.Entry<String, String> systemProperty : userConfigTO.getSystemProperties().entrySet()) {
-				String propertyValue = (systemProperty.getValue() != null) ? systemProperty.getValue() : ""; 
+				String propertyValue = (systemProperty.getValue() != null) ? systemProperty.getValue() : "";
 				System.setProperty(systemProperty.getKey(), propertyValue);
 			}
 
@@ -199,7 +201,8 @@ public class UserConfig {
 
 		try {
 			System.out.println("First launch, creating a secret key (could take a sec)...");
-			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
+			SaltedSecretKey configEncryptionKey = CipherUtil.createMasterKey(CipherUtil
+					.createRandomAlphabeticString(USER_CONFIG_ENCRYPTION_KEY_LENGTH));
 
 			userConfigTO.setConfigEncryptionKey(configEncryptionKey);
 			userConfigTO.save(userConfigFile);

@@ -18,6 +18,7 @@
 package org.syncany.operations.down.actions;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
@@ -32,69 +33,68 @@ public class RenameFileSystemAction extends FileSystemAction {
 	}
 
 	@Override
-	public FileSystemActionResult execute() throws Exception {		
+	public FileSystemActionResult execute() throws IOException {
 		File fromFileOnDisk = getAbsolutePathFile(fileVersion1.getPath());
-		File targetFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());	
-		
+		File targetFileOnDisk = getAbsolutePathFile(fileVersion2.getPath());
+
 		boolean fromFileExists = FileUtil.exists(fromFileOnDisk);
 		boolean targetFileExists = FileUtil.exists(targetFileOnDisk);
-		
+
 		boolean fileRenamed = !targetFileOnDisk.equals(fromFileOnDisk);
-				
+
 		if (fileRenamed) {
-			if (fromFileExists && !targetFileExists) { 
+			if (fromFileExists && !targetFileExists) {
 				if (fileAsExpected(fileVersion1)) { // << Expected case!
-					logger.log(Level.INFO, "     - (1) Renaming file "+fromFileOnDisk+" to "+targetFileOnDisk+" ...");				
+					logger.log(Level.INFO, "     - (1) Renaming file " + fromFileOnDisk + " to " + targetFileOnDisk + " ...");
 					targetFileOnDisk = moveFileToFinalLocation(fromFileOnDisk, fileVersion2);
 				}
 				else {
 					logger.log(Level.INFO, "     - (2) Source file differs from what we expected.");
-					throw new Exception("Source file differs from what we expected.");
+					throw new IOException("Source file differs from what we expected.");
 				}
 			}
 			else if (fromFileExists && targetFileExists) {
 				if (fileAsExpected(fileVersion1)) {
 					if (fileAsExpected(fileVersion2)) {
-						logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for "+targetFileOnDisk+" ...");
+						logger.log(Level.INFO, "     - (3) File at destination is what was expected. Nothing to do for " + targetFileOnDisk + " ...");
 					}
 					else {
-						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for "+targetFileOnDisk+" ...");
-						
+						logger.log(Level.INFO, "     - (4) File at destination differs, creating conflict file for " + targetFileOnDisk + " ...");
+
 						moveToConflictFile(fileVersion2);
 						FileUtils.moveFile(fromFileOnDisk, targetFileOnDisk);
 					}
 				}
 				else {
 					logger.log(Level.INFO, "     - (5) Cannot rename because orig. file does not exist.");
-					throw new Exception("Cannot rename because orig. file does not exist");
-				}			
-			}		
+					throw new IOException("Cannot rename because orig. file does not exist");
+				}
+			}
 			else if (!fromFileExists && !targetFileExists) {
 				logger.log(Level.INFO, "     - (6) Cannot rename because orig. file does not exist.");
-				throw new Exception("Cannot rename because orig. file does not exist");
+				throw new IOException("Cannot rename because orig. file does not exist");
 			}
 			else if (!fromFileExists && targetFileExists) {
 				if (fileAsExpected(fileVersion2)) {
-					logger.log(Level.INFO, "     - (7) File at destination is what was expected. Nothing to do for "+targetFileOnDisk+" ...");
+					logger.log(Level.INFO, "     - (7) File at destination is what was expected. Nothing to do for " + targetFileOnDisk + " ...");
 				}
 				else {
 					logger.log(Level.INFO, "     - (8) Cannot rename because orig. file does not exist.");
-					throw new Exception("Cannot rename because orig. file does not exist");
+					throw new IOException("Cannot rename because orig. file does not exist");
 				}
-			}	
+			}
 		}
-		
+
 		// Set attributes
 		setFileAttributes(fileVersion2, targetFileOnDisk); // TODO [low] check for fileAsExpected
 		setLastModified(fileVersion2, targetFileOnDisk);
-		
+
 		return new FileSystemActionResult();
-	}	
-	
+	}
+
 	@Override
 	public String toString() {
 		return "RenameFileSystemAction [file1=" + fileVersion1 + ", file2=" + fileVersion2 + "]";
 	}
 
-	
 }

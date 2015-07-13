@@ -31,7 +31,7 @@ import org.syncany.util.StringUtil;
 public abstract class MessageFactory {
 	protected static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());
 
-	protected static Class<? extends Message> getMessageClass(String requestType) throws Exception {
+	protected static Class<? extends Message> getMessageClass(String requestType) throws ClassNotFoundException {
 		String thisPackage = Message.class.getPackage().getName();
 		String parentPackage = thisPackage.substring(0, thisPackage.lastIndexOf("."));
 		String camelCaseMessageType = StringUtil.toCamelCase(requestType);
@@ -43,7 +43,7 @@ public abstract class MessageFactory {
 		}
 		catch (Exception e) {
 			logger.log(Level.INFO, "Could not find FQCN " + fqMessageClassName, e);
-			throw new Exception("Cannot read request class from request type: " + requestType, e);
+			throw new ClassNotFoundException("Cannot read request class from request type: " + requestType, e);
 		}
 	}
 }

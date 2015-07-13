@@ -18,6 +18,7 @@
 package org.syncany.operations.update;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,9 +31,11 @@ import org.syncany.Client;
 import org.syncany.config.Config;
 import org.syncany.config.LocalEventBus;
 import org.syncany.operations.Operation;
+import org.syncany.operations.OperationException;
 import org.syncany.operations.daemon.messages.ConnectToHostExternalEvent;
 import org.syncany.operations.update.UpdateOperationResult.UpdateResultCode;
 import org.syncany.plugins.Plugins;
+import org.syncany.plugins.transfer.to.DeserializableException;
 import org.syncany.util.EnvironmentUtil;
 
 import com.github.zafarkhaja.semver.Version;
@@ -72,23 +75,34 @@ public class UpdateOperation extends Operation {
 	}
 
 	@Override
-	public UpdateOperationResult execute() throws Exception {
+	public UpdateOperationResult execute() throws OperationException {
 		result.setAction(options.getAction());
 
 		switch (options.getAction()) {
 		case CHECK:
-			return executeCheck();
+			try {
+				return executeCheck();
+			}
+			catch (DeserializableException | IOException e) {
+				throw new OperationException(e);
+			}
 
 		default:
-			throw new Exception("Unknown action: " + options.getAction());
+			throw new IllegalArgumentException("Unknown action: " + options.getAction());
 		}
 	}
 
-	private UpdateOperationResult executeCheck() throws Exception {
+	private UpdateOperationResult executeCheck() throws IOException, DeserializableException {
 		Version localAppVersion = Version.valueOf(Client.getApplicationVersion());
 
 		String appInfoResponseStr = getAppInfoResponseStr();
-		AppInfoResponse appInfoResponse = new Persister().read(AppInfoResponse.class, appInfoResponseStr);
+		AppInfoResponse appInfoResponse;
+		try {
+			appInfoResponse = new Persister().read(AppInfoResponse.class, appInfoResponseStr);
+		}
+		catch (Exception e) {
+			throw new DeserializableException(e);
+		}
 
 		ArrayList<AppInfo> appInfoList = appInfoResponse.getAppInfoList();
 
@@ -110,7 +124,7 @@ public class UpdateOperation extends Operation {
 		}
 	}
 
-	private String getAppInfoResponseStr() throws Exception {
+	private String getAppInfoResponseStr() throws IOException {
 		boolean hasGuiPlugin = Plugins.get(GUI_PLUGIN_ID) != null;
 
 		String typeStr = determineType(hasGuiPlugin);

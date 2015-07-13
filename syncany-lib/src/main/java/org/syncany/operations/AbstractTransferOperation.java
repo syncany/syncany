@@ -17,6 +17,7 @@
  */
 package org.syncany.operations;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,7 @@ public abstract class AbstractTransferOperation extends Operation {
 		}
 	}
 
-	protected void startOperation() throws Exception {
+	protected void startOperation() throws StorageException, IOException {
 		actionHandler.start();
 	}
 

@@ -65,7 +65,7 @@ public class DefaultRecursiveWatcher extends RecursiveWatcher {
 	}
 
 	@Override
-	public void beforeStart() throws Exception {
+	public void beforeStart() throws IOException {
 		watchService = FileSystems.getDefault().newWatchService();
 	}
 

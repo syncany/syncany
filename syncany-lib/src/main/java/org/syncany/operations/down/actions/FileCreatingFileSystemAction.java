@@ -18,6 +18,8 @@
 package org.syncany.operations.down.actions;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 
 import org.syncany.config.Config;
@@ -30,10 +32,10 @@ import org.syncany.util.NormalizedPath;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, winningDatabase, file1, file2);				
+		super(config, winningDatabase, file1, file2);
 	}
 
-	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
+	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws IOException {
 		if (reconstructedFileVersion.getType() == FileType.FILE) {
 			createFile(reconstructedFileVersion);
 		}
@@ -45,20 +47,20 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 		else {
 			logger.log(Level.INFO, "     - Unknown file type: " + reconstructedFileVersion.getType());
-			throw new Exception("Unknown file type: " + reconstructedFileVersion.getType());
+			throw new IllegalArgumentException("Unknown file type: " + reconstructedFileVersion.getType());
 		}
 	}
 
-	protected void createFolder(FileVersion targetFileVersion) throws Exception {
+	protected void createFolder(FileVersion targetFileVersion) {
 		NormalizedPath targetDirPath = new NormalizedPath(config.getLocalDir(), targetFileVersion.getPath());
-		
+
 		logger.log(Level.INFO, "     - Creating folder at " + targetFileVersion + " ...");
-		
+
 		try {
 			// Clean filename
 			if (targetDirPath.hasIllegalChars()) {
 				targetDirPath = targetDirPath.toCreatable("filename conflict", true);
-				logger.log(Level.INFO, "     - Had illegal chars, cleaned to "+targetDirPath);
+				logger.log(Level.INFO, "     - Had illegal chars, cleaned to " + targetDirPath);
 			}
 
 			// Try creating it
@@ -70,20 +72,26 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 		}
 	}
 
-	protected void createFile(FileVersion reconstructedFileVersion) throws Exception {
-		File reconstructedFileInCache = assembleFileToCache(reconstructedFileVersion);		
-		moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);	
+	protected void createFile(FileVersion reconstructedFileVersion) throws IOException {
+		try {
+			File reconstructedFileInCache = assembleFileToCache(reconstructedFileVersion);
+			moveFileToFinalLocation(reconstructedFileInCache, reconstructedFileVersion);
+		}
+		catch (NoSuchAlgorithmException | ChecksumMismatchException e) {
+			throw new IOException(e);
+		}
+
 	}
-	
-	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
+
+	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws IOException, NoSuchAlgorithmException, ChecksumMismatchException {
 		SqlDatabase localDatabase = new SqlDatabase(config);
 		Assembler assembler = new Assembler(config, localDatabase, winningDatabase);
 
 		File reconstructedFileInCache = assembler.assembleToCache(reconstructedFileVersion);
-		 
+
 		setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
 		setLastModified(reconstructedFileVersion, reconstructedFileInCache);
-		
+
 		return reconstructedFileInCache;
-	}	
+	}
 }
