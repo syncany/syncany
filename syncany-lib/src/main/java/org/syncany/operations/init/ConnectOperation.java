@@ -315,7 +315,7 @@ public class ConnectOperation extends AbstractInitOperation {
 				throw new RuntimeException("Repository file is encrypted, but password cannot be queried (no listener).");
 			}
 
-			return listener.onUserPassword(null, "Password: ");
+			return listener.onUserPassword(null, "Master Password: ");
 		}
 		else {
 			return options.getPassword();
