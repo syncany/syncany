@@ -25,14 +25,15 @@ import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.operations.Assembler;
 import org.syncany.operations.down.actions.FileCreatingFileSystemAction;
 import org.syncany.util.NormalizedPath;
 
 public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 	private String relativeTargetPath;
 	
-	public RestoreFileSystemAction(Config config, FileVersion fileVersion, String relativeTargetPath) {
-		super(config, new MemoryDatabase(), null, null, fileVersion);
+	public RestoreFileSystemAction(Config config, Assembler assembler, FileVersion fileVersion, String relativeTargetPath) {
+		super(config, new MemoryDatabase(), assembler, null, fileVersion);
 		this.relativeTargetPath = relativeTargetPath;
 	}
 
