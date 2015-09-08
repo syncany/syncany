@@ -24,13 +24,15 @@ import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileType;
 import org.syncany.database.MemoryDatabase;
-import org.syncany.database.SqlDatabase;
 import org.syncany.operations.Assembler;
 import org.syncany.util.NormalizedPath;
 
 public abstract class FileCreatingFileSystemAction extends FileSystemAction {
-	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, FileVersion file1, FileVersion file2) {
-		super(config, winningDatabase, file1, file2);				
+	protected Assembler assembler;
+
+	public FileCreatingFileSystemAction(Config config, MemoryDatabase winningDatabase, Assembler assembler, FileVersion file1, FileVersion file2) {
+		super(config, winningDatabase, file1, file2);
+		this.assembler = assembler;
 	}
 
 	protected void createFileFolderOrSymlink(FileVersion reconstructedFileVersion) throws Exception {
@@ -76,9 +78,6 @@ public abstract class FileCreatingFileSystemAction extends FileSystemAction {
 	}
 	
 	protected File assembleFileToCache(FileVersion reconstructedFileVersion) throws Exception {
-		SqlDatabase localDatabase = new SqlDatabase(config);
-		Assembler assembler = new Assembler(config, localDatabase, winningDatabase);
-
 		File reconstructedFileInCache = assembler.assembleToCache(reconstructedFileVersion);
 		 
 		setFileAttributes(reconstructedFileVersion, reconstructedFileInCache);
