@@ -459,31 +459,42 @@ public class DownOperation extends AbstractTransferOperation {
 			logger.log(Level.INFO, "Loading winners database (DEFAULT) ...");
 			DatabaseFileReader databaseFileReader = new DatabaseFileReader(databaseSerializer, winnersApplyBranch, databaseVersionLocations);
 
-			while (databaseFileReader.hasNext()) {
-				MemoryDatabase winnersDatabase = databaseFileReader.next();
-				if (options.isApplyChanges()) {
-					new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred,
-							preDeleteFileHistoriesWithLastVersion).execute();
+			boolean noDatabaseVersions = !databaseFileReader.hasNext();
+			
+			if (noDatabaseVersions) {
+				applyChangesAndPersistDatabase(new MemoryDatabase(), cleanupOccurred, preDeleteFileHistoriesWithLastVersion);
+			} 
+			else {
+				while (databaseFileReader.hasNext()) {
+					MemoryDatabase winnersDatabase = databaseFileReader.next();
+					applyChangesAndPersistDatabase(winnersDatabase, cleanupOccurred, preDeleteFileHistoriesWithLastVersion);					
 				}
-				else {
-					logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
-				}
-
-				// We only persist the versions that we have already computed.
-				DatabaseBranch currentApplyBranch = new DatabaseBranch();
-				for (DatabaseVersion databaseVersion : winnersDatabase.getDatabaseVersions()) {
-					currentApplyBranch.add(databaseVersion.getHeader());
-				}
-
-				persistDatabaseVersions(currentApplyBranch, winnersDatabase);
-				localDatabase.commit();
 			}
 
 			result.setResultCode(DownResultCode.OK_WITH_REMOTE_CHANGES);
 		}
 	}
 
+	private void applyChangesAndPersistDatabase(MemoryDatabase winnersDatabase, boolean cleanupOccurred, 
+			List<PartialFileHistory> preDeleteFileHistoriesWithLastVersion) throws Exception {
+		
+		if (options.isApplyChanges()) {
+			new ApplyChangesOperation(config, localDatabase, transferManager, winnersDatabase, result, cleanupOccurred,
+					preDeleteFileHistoriesWithLastVersion).execute();
+		}
+		else {
+			logger.log(Level.INFO, "Doing nothing on the file system, because --no-apply switched on");
+		}
 
+		// We only persist the versions that we have already applied.
+		DatabaseBranch currentApplyBranch = new DatabaseBranch();
+		for (DatabaseVersion databaseVersion : winnersDatabase.getDatabaseVersions()) {
+			currentApplyBranch.add(databaseVersion.getHeader());
+		}
+
+		persistDatabaseVersions(currentApplyBranch, winnersDatabase);
+		localDatabase.commit();
+	}
 
 	/**
 	 * Persists the given winners branch to the local database, i.e. for every database version

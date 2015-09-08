@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
@@ -37,12 +36,9 @@ import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
  * none of which are too large.
  * 
  * @author Pim Otte
- *
  */
 public class DatabaseFileReader implements Iterator<MemoryDatabase> {
-	private static final Logger logger = Logger.getLogger(DatabaseFileReader.class.getSimpleName());
-
-	private static final int MAX_FILES = 9_999;
+	private static final int MAX_FILES = 9999;
 
 	private DatabaseXmlSerializer databaseSerializer;
 	private List<DatabaseVersionHeader> winnersApplyBranchList;
@@ -51,6 +47,7 @@ public class DatabaseFileReader implements Iterator<MemoryDatabase> {
 
 	public DatabaseFileReader(DatabaseXmlSerializer databaseSerializer, DatabaseBranch winnersApplyBranch,
 			Map<DatabaseVersionHeader, File> databaseVersionLocations) {
+		
 		this.winnersApplyBranchList = winnersApplyBranch.getAll();
 		this.databaseVersionLocations = databaseVersionLocations;
 		this.databaseSerializer = databaseSerializer;
