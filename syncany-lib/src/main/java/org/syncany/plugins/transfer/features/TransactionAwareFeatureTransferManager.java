@@ -279,16 +279,25 @@ public class TransactionAwareFeatureTransferManager implements FeatureTransferMa
 	 */
 	public Collection<Long> loadPendingTransactionList() throws IOException {
 		Objects.requireNonNull(config, "Cannot read pending transaction list if config is null.");
+		
 		Collection<Long> databaseVersionNumbers = new ArrayList<>();
 		File transactionListFile = config.getTransactionListFile();
+		
 		if (!transactionListFile.exists()) {
 			return Collections.emptyList();
 		}
 
 		Collection<String> transactionLines = Files.readAllLines(transactionListFile.toPath(), Charset.forName("UTF-8"));
+		
 		for (String transactionLine : transactionLines) {
-			databaseVersionNumbers.add(Long.parseLong(transactionLine));
+			try {
+				databaseVersionNumbers.add(Long.parseLong(transactionLine));	
+			} catch (NumberFormatException e) {
+				logger.log(Level.WARNING, "Cannot parse line in transaction list: " + transactionLine + ". Cannot resume.");
+				return Collections.emptyList(); 
+			}			
 		}
+		
 		return databaseVersionNumbers;
 	}
 

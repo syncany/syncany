@@ -218,12 +218,14 @@ public class UpOperation extends AbstractTransferOperation {
 					remoteDatabaseVersionsToResume.size() == remoteTransactionsToResume.size();
 			
 			if (resuming) {
-				databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);
+				databaseVersionQueue.addAll(remoteDatabaseVersionsToResume);				
+				databaseVersionQueue.add(new DatabaseVersion()); // Empty database version is the stopping marker			
+				
+				transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();			
+			} 
+			else {
+				transferManager.clearResumableTransactions();
 			}
-			
-			// Add stopping marker
-			databaseVersionQueue.add(new DatabaseVersion());			
-			transactionRemoteFileToResume = attemptResumeTransactionRemoteFile();			
 		}
 		else {
 			transferManager.clearResumableTransactions();
@@ -725,56 +727,70 @@ public class UpOperation extends AbstractTransferOperation {
 		return newVectorClock;
 	}
 
-	private Collection<RemoteTransaction> attemptResumeTransactions(Collection<Long> versions) throws Exception {
-		Collection<RemoteTransaction> remoteTransactions = new ArrayList<>();
-		for (Long version : versions) {
-			File transactionFile = config.getTransactionFile(version);
+	private Collection<RemoteTransaction> attemptResumeTransactions(Collection<Long> versions) {
+		try {
+			Collection<RemoteTransaction> remoteTransactions = new ArrayList<>();
 
-			// If a single transaction file is missing, we should restart
-			if (!transactionFile.exists()) {
-				return null;
-			}
+			for (Long version : versions) {
+				File transactionFile = config.getTransactionFile(version);
 
-			TransactionTO transactionTO = TransactionTO.load(null, transactionFile);
+				// If a single transaction file is missing, we should restart
+				if (!transactionFile.exists()) {
+					return null;
+				}
 
-			// Verify if all files needed are in cache.
-			for (ActionTO action : transactionTO.getActions()) {
-				if (action.getType() == ActionType.UPLOAD) {
-					if (action.getStatus() == ActionStatus.UNSTARTED) {
-						if (!action.getLocalTempLocation().exists()) {
-							// Unstarted upload has no cached local copy, abort
-							return null;
+				TransactionTO transactionTO = TransactionTO.load(null, transactionFile);
+
+				// Verify if all files needed are in cache.
+				for (ActionTO action : transactionTO.getActions()) {
+					if (action.getType() == ActionType.UPLOAD) {
+						if (action.getStatus() == ActionStatus.UNSTARTED) {
+							if (!action.getLocalTempLocation().exists()) {
+								// Unstarted upload has no cached local copy, abort
+								return null;
+							}
 						}
 					}
 				}
-			}
 
-			remoteTransactions.add(new RemoteTransaction(config, transferManager, transactionTO));
+				remoteTransactions.add(new RemoteTransaction(config, transferManager, transactionTO));
+			}
+			
+			return remoteTransactions;
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Invalid transaction file. Cannot resume!");
+			return null;
 		}
-		return remoteTransactions;
 	}
 
 	private Collection<DatabaseVersion> attemptResumeDatabaseVersions(Collection<Long> versions) throws Exception {
-		Collection<DatabaseVersion> databaseVersions = new ArrayList<>();
-		for (Long version : versions) {
-			File databaseFile = config.getTransactionDatabaseFile(version);
+		try {
+			Collection<DatabaseVersion> databaseVersions = new ArrayList<>();
+			
+			for (Long version : versions) {
+				File databaseFile = config.getTransactionDatabaseFile(version);
 
-			// If a single database file is missing, we should restart
-			if (!databaseFile.exists()) {
-				return null;
+				// If a single database file is missing, we should restart
+				if (!databaseFile.exists()) {
+					return null;
+				}
+
+				DatabaseXmlSerializer databaseSerializer = new DatabaseXmlSerializer();
+				MemoryDatabase memoryDatabase = new MemoryDatabase();
+				databaseSerializer.load(memoryDatabase, databaseFile, null, null, DatabaseReadType.FULL);
+
+				if (memoryDatabase.getDatabaseVersions().size() == 0) {
+					return null;
+				}
+
+				databaseVersions.add(memoryDatabase.getLastDatabaseVersion());
 			}
-
-			DatabaseXmlSerializer databaseSerializer = new DatabaseXmlSerializer();
-			MemoryDatabase memoryDatabase = new MemoryDatabase();
-			databaseSerializer.load(memoryDatabase, databaseFile, null, null, DatabaseReadType.FULL);
-
-			if (memoryDatabase.getDatabaseVersions().size() == 0) {
-				return null;
-			}
-
-			databaseVersions.add(memoryDatabase.getLastDatabaseVersion());
+			
+			return databaseVersions;			
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Cannot load database versions from 'state'. Cannot resume.");
+			return null;
 		}
-		return databaseVersions;
 	}
 
 	/**
