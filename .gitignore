@@ -10,3 +10,4 @@ gradle/arch/syncany/pkg
 gradle/arch/syncany/src
 gradle/arch/syncany/syncany*.tar*
 *.orig
+.recommenders

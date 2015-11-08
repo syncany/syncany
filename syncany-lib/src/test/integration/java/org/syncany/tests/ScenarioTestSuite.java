@@ -48,6 +48,8 @@ import org.syncany.tests.integration.scenarios.Issue288ScenarioTest;
 import org.syncany.tests.integration.scenarios.Issue303ScenarioTest;
 import org.syncany.tests.integration.scenarios.Issue316ScenarioTest;
 import org.syncany.tests.integration.scenarios.Issue374Pre1965DateScenarioTest;
+import org.syncany.tests.integration.scenarios.Issue429ScenarioTest;
+import org.syncany.tests.integration.scenarios.Issue520NoResumeOnCorruptXmlScenarioTest;
 import org.syncany.tests.integration.scenarios.ManyRenamesScenarioTest;
 import org.syncany.tests.integration.scenarios.ManySyncUpsAndDatabaseFileCleanupScenarioTest;
 import org.syncany.tests.integration.scenarios.ManySyncUpsAndOtherClientSyncDownScenarioTest;
@@ -94,6 +96,8 @@ import org.syncany.tests.integration.scenarios.SymlinkSyncScenarioTest;
 		Issue303ScenarioTest.class,
 		Issue316ScenarioTest.class,
 		Issue374Pre1965DateScenarioTest.class,
+		Issue429ScenarioTest.class,
+		Issue520NoResumeOnCorruptXmlScenarioTest.class,
 		ManyRenamesScenarioTest.class,
 		ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
 		ManySyncUpsLargeFileScenarioTest.class,

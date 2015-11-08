@@ -2,9 +2,9 @@ require "formula"
 
 class Syncany < Formula
   homepage "https://www.syncany.org"
-  url "https://codeload.github.com/syncany/syncany/tar.gz/v0.4.5-alpha"
-  sha256 "957537a7177a5234e794d871043e67ac8e06ff3ff1ee059e599dfd477c5bb8e5"
-  version "0.4.5-alpha"
+  url "https://codeload.github.com/syncany/syncany/tar.gz/v0.4.6-alpha"
+  sha256 "1dfd92e7618297eae6ee0d8acb7103f55c8d18500da409d032a5941147fbcd85"
+  version "0.4.6-alpha"
   head "https://github.com/syncany/syncany.git", :branch => "develop"
 
   depends_on :java => "1.7+"
@@ -26,7 +26,7 @@ class Syncany < Formula
     bin.install_symlink Dir["#{libexec}/bin/sy"]
   end
 
-  plist_options :manual => "sy --daemon"
+  plist_options :manual => "sy daemon start"
 
   def plist; <<-EOS.undent
     <?xml version="1.0" encoding="UTF-8"?>
@@ -38,7 +38,8 @@ class Syncany < Formula
       <key>ProgramArguments</key>
       <array>
         <string>#{prefix}/bin/sy</string>
-        <string>--daemon</string>
+        <string>daemon</string>
+        <string>start</string>
       </array>
       <key>ProcessType</key>
       <string>Background</string>

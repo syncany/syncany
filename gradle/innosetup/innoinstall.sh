@@ -4,11 +4,8 @@ rm -rf /tmp/inno
 mkdir /tmp/inno
 cd /tmp/inno
 
-wget -O is.exe http://www.jrsoftware.org/download.php/is.exe
+wget -O is.exe http://files.jrsoftware.org/is/5/isetup-5.5.5.exe
 innoextract is.exe
 mkdir -p ~/".wine/drive_c/inno"
 cp -a app/* ~/".wine/drive_c/inno"
-
-#mkdir ~/".wine/drive_c/Program Files (x86)/Inno Setup 5"
-#cp -a app/* ~/".wine/drive_c/Program Files (x86)/Inno Setup 5"
 

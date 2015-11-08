@@ -23,10 +23,12 @@ import org.syncany.config.Config;
 import org.syncany.database.FileVersion;
 import org.syncany.database.FileVersion.FileStatus;
 import org.syncany.database.MemoryDatabase;
+import org.syncany.operations.Assembler;
 
 public class ChangeFileSystemAction extends FileCreatingFileSystemAction {
-	public ChangeFileSystemAction(Config config, FileVersion fromFileVersion, FileVersion toFileVersion, MemoryDatabase winningDatabase) {
-		super(config, winningDatabase, fromFileVersion, toFileVersion);
+	public ChangeFileSystemAction(Config config, MemoryDatabase winningDatabase, Assembler assembler, FileVersion fromFileVersion,
+			FileVersion toFileVersion) {
+		super(config, winningDatabase, assembler, fromFileVersion, toFileVersion);
 	}
 	
 	@Override

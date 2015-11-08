@@ -229,7 +229,7 @@ public class LocalTransferManager extends AbstractTransferManager {
 				}
 				catch (StorageException e) {
 					logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for file " + path
-									+ "; maybe invalid file name pattern. Ignoring file.", e);
+									+ "; maybe invalid file name pattern. Ignoring file.");
 				}
 			}
 		}
