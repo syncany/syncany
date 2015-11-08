@@ -206,6 +206,12 @@ applicationDistribution.from("${rootProject.projectDir}/") {
 		include "syncany.bash-completion"
 		into "bash"
 	}
+
+    // Copy systemd file to distribution
+    from("${rootProject.projectDir}/gradle/systemd") {
+        include "syncany*"
+        into "systemd"
+    }
 }
 
 task manpages(dependsOn: compileJava) {

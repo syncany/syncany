@@ -1,0 +1,12 @@
+[Unit]
+Description=Syncany Daemon
+
+[Service]
+Type=forking
+PIDFile=%h/.config/syncany/daemon.pid
+ExecStart=/usr/bin/syncany daemon start
+ExecReload=/usr/bin/syncany daemon reload
+ExecStop=/usr/bin/syncany daemon stop
+
+[Install]
+WantedBy=default.target

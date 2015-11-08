@@ -1,0 +1,8 @@
+[Unit]
+Description=Syncany GUI
+
+[Service]
+ExecStart=/usr/bin/syncany gui
+
+[Install]
+WantedBy=default.target
