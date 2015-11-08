@@ -26,7 +26,7 @@ class Syncany < Formula
     bin.install_symlink Dir["#{libexec}/bin/sy"]
   end
 
-  plist_options :manual => "sy --daemon"
+  plist_options :manual => "sy daemon start"
 
   def plist; <<-EOS.undent
     <?xml version="1.0" encoding="UTF-8"?>
@@ -38,7 +38,8 @@ class Syncany < Formula
       <key>ProgramArguments</key>
       <array>
         <string>#{prefix}/bin/sy</string>
-        <string>--daemon</string>
+        <string>daemon</string>
+        <string>start</string>
       </array>
       <key>ProcessType</key>
       <string>Background</string>
