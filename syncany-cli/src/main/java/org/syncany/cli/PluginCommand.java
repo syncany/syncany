@@ -225,7 +225,7 @@ public class PluginCommand extends Command {
 			
 			if (thirdPartyCount > 0) {
 				String pluginPlugins = (thirdPartyCount == 1) ? "plugin" : "plugins";				
-				out.printf("\nThird party plugins:\nPlease note that the Syncany Team does not take review or maintain the third-party %s\nlisted above. Please report issues to the corresponding plugin site.\n", pluginPlugins);
+				out.printf("\nThird party plugins:\nPlease note that the Syncany Team does not review or maintain the third-party %s\nlisted above. Please report issues to the corresponding plugin site.\n", pluginPlugins);
 			}
 		}
 		else {
