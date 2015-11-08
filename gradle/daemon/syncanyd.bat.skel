@@ -1,10 +1,10 @@
 rem Embedded Daemon script begins ################################SYNCANY_INCL_3#
 
 set APP_NAME=syncanyd
-set APP_USER_DIR=%AppData%\Syncany
-set APP_DAEMON_CONTROL=%APP_USER_DIR%\daemon.ctrl
-set APP_DAEMON_PIDFILE=%APP_USER_DIR%\daemon.pid
-set APP_DAEMON_PIDFILE_TMP=%APP_USER_DIR%\daemon.pid.tmp
+set APP_USER_DIR="%AppData%\Syncany"
+set APP_DAEMON_CONTROL="%APP_USER_DIR%\daemon.ctrl"
+set APP_DAEMON_PIDFILE="%APP_USER_DIR%\daemon.pid"
+set APP_DAEMON_PIDFILE_TMP="%APP_USER_DIR%\daemon.pid.tmp"
 
 if not exist "%APP_USER_DIR%" mkdir "%APP_USER_DIR%" 
 
