@@ -96,7 +96,6 @@ import org.syncany.tests.integration.scenarios.SymlinkSyncScenarioTest;
 		Issue303ScenarioTest.class,
 		Issue316ScenarioTest.class,
 		Issue374Pre1965DateScenarioTest.class,
-		Issue429ScenarioTest.class,
 		Issue520NoResumeOnCorruptXmlScenarioTest.class,
 		ManyRenamesScenarioTest.class,
 		ManySyncUpsAndDatabaseFileCleanupScenarioTest.class,
