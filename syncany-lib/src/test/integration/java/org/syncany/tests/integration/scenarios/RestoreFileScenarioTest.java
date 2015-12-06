@@ -23,14 +23,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.syncany.database.DatabaseConnectionFactory;
 import org.syncany.database.PartialFileHistory.FileHistoryId;
-import org.syncany.operations.cleanup.CleanupOperationOptions;
-import org.syncany.operations.cleanup.CleanupOperationOptions.TimeUnit;
 import org.syncany.operations.restore.RestoreOperationOptions;
 import org.syncany.plugins.transfer.TransferSettings;
 import org.syncany.tests.unit.util.TestFileUtil;
@@ -84,60 +81,7 @@ public class RestoreFileScenarioTest {
 	}
 	
 	@Test
-	public void testRestoreDeletedFileOnlyDeletedVersionRemaining() throws Exception {
-		// Setup 
-		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();
-		TestClient clientA = new TestClient("A", testConnection);
-		java.sql.Connection databaseConnectionA = DatabaseConnectionFactory.createConnection(clientA.getDatabaseFile(), false);
-
-		// A new/up
-		clientA.createNewFile("A-original");
-		clientA.upWithForceChecksum();
-
-		String originalFileHistoryStr = TestSqlUtil.runSqlSelect("select filehistory_id from fileversion", databaseConnectionA);
-		assertNotNull(originalFileHistoryStr);
-
-		FileHistoryId originalFileHistoryId = FileHistoryId.parseFileId(originalFileHistoryStr);
-
-		// A "delete"
-		File deletedFile = new File(tempDir, "A-original-DELETED");
-		FileUtils.moveFile(clientA.getLocalFile("A-original"), deletedFile);
-
-		clientA.upWithForceChecksum();
-
-		// A "cleanup"
-		// This cleanup is meant to delete the original version and only leave the
-		// deleted version. This should result in being able to restore.
-		
-		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
-		TreeMap<Long, TimeUnit> purgeSettings = new TreeMap<Long, TimeUnit>();
-		purgeSettings.put(24L * 3600L, TimeUnit.DAYS);
-
-		cleanupOptions.setPurgeFileVersionSettings(purgeSettings);
-		clientA.cleanup(cleanupOptions);
-
-		// A restore
-		RestoreOperationOptions operationOptions = new RestoreOperationOptions();
-
-		operationOptions.setFileHistoryId(originalFileHistoryId);
-
-		clientA.restore(operationOptions);
-
-		assertTrue(clientA.getLocalFile("A-original (restored version 2)").exists());
-		assertEquals(
-				StringUtil.toHex(TestFileUtil.createChecksum(deletedFile)),
-				StringUtil.toHex(TestFileUtil.createChecksum(clientA.getLocalFile("A-original (restored version 2)"))));
-		assertEquals(deletedFile.lastModified(), clientA.getLocalFile("A-original (restored version 2)").lastModified());
-		assertEquals(deletedFile.length(), clientA.getLocalFile("A-original (restored version 2)").length());
-
-		// Tear down
-		clientA.deleteTestData();
-		TestFileUtil.deleteDirectory(tempDir);
-	}
-
-	@Test
-	public void testRestoreDeletedFileWithTargetFile() throws Exception {
+    public void testRestoreDeletedFileWithTargetFile() throws Exception {
 		// Setup 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		
