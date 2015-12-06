@@ -112,6 +112,9 @@ public class RestoreOperation extends AbstractTransferOperation {
 			if (fileHistory.size() >= 2) { 
 				return fileHistory.get(fileHistory.size()-2);
 			}
+			else if (fileHistory.size() == 1){
+				return fileHistory.get(0);
+			}
 			else {
 				return null;
 			}
