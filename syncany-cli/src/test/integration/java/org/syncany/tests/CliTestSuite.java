@@ -3,10 +3,7 @@
  * Copyright (C) 2011-2015 Philipp C. Heckel <philipp.heckel@gmail.com> 
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
+ * it under the terms of the GNU General Public License as published by * the Free Software Foundation, either version 3 of the License, or * (at your option) any later version.  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -44,10 +41,10 @@ import org.syncany.tests.integration.cli.WatchCommandTest;
 //	GenlinkCommandTest.class,
 //	InitAndConnectCommandNoEncryptionTest.class,
 //	LsCommandTest.class,
-	LsRemoteCommandTest.class,
-	PluginCommandTest.class,
-	RestoreCommandTest.class,
-	StatusCommandTest.class,
+//	LsRemoteCommandTest.class,
+//	PluginCommandTest.class,
+//	RestoreCommandTest.class,
+//	StatusCommandTest.class,
 	UpCommandTest.class,	
 	UpdateCommandTest.class,
 	WatchCommandTest.class
