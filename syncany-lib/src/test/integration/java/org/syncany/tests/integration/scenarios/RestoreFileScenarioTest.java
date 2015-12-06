@@ -107,7 +107,9 @@ public class RestoreFileScenarioTest {
 		clientA.upWithForceChecksum();
 
 		// A "cleanup"
-
+		// This cleanup is meant to delete the original version and only leave the
+		// deleted version. This should result in being able to restore.
+		
 		CleanupOperationOptions cleanupOptions = new CleanupOperationOptions();
 		TreeMap<Long, TimeUnit> purgeSettings = new TreeMap<Long, TimeUnit>();
 		purgeSettings.put(24L * 3600L, TimeUnit.DAYS);
