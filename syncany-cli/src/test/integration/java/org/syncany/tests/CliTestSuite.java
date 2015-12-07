@@ -34,17 +34,17 @@ import org.syncany.tests.integration.cli.WatchCommandTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-//	CliPluginsTest.class,
-//	CommandLineInterfaceTest.class,
-//	ConnectCommandWithEncryptionTest.class,
-//	DownCommandTest.class,
-//	GenlinkCommandTest.class,
-//	InitAndConnectCommandNoEncryptionTest.class,
-//	LsCommandTest.class,
-//	LsRemoteCommandTest.class,
-//	PluginCommandTest.class,
-//	RestoreCommandTest.class,
-//	StatusCommandTest.class,
+	CliPluginsTest.class,
+	CommandLineInterfaceTest.class,
+	ConnectCommandWithEncryptionTest.class,
+	DownCommandTest.class,
+	GenlinkCommandTest.class,
+	InitAndConnectCommandNoEncryptionTest.class,
+	LsCommandTest.class,
+	LsRemoteCommandTest.class,
+	PluginCommandTest.class,
+	RestoreCommandTest.class,
+	StatusCommandTest.class,
 	UpCommandTest.class,	
 	UpdateCommandTest.class,
 	WatchCommandTest.class
