@@ -78,7 +78,7 @@ subprojects {
 		group = "verification"	
 		description = "All tests except long running"
 		ignoreFailures = true
-		maxParallelForks = 2
+		maxParallelForks = 1
 		dependsOn testClasses, integrationClasses
 		testLogging { events 'started', 'passed'}
 		exclude '**/LongRunning*', '**/*TestSuite*'
