@@ -1,42 +1,57 @@
-// Coverage (Cobertura) ////////////////////////////////////////////////////////
-// Run as: gradle testGlobal coberturaReport performCoverageCheck
+// Coverage (JaCoCo) ////////////////////////////////////////////////////////
+// Run as: gradle testGlobal jacocoRootReport
 
 buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.2.2'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1'
-    }
+	repositories {
+		mavenCentral()
+	}
 }
 
-// Reference by FQCN instead of name: http://forums.gradle.org/gradle/topics/plugin_not_found_when_i_using_a_gradle_from_other_gradle_file
-apply plugin: net.saliman.gradle.plugin.cobertura.CoberturaPlugin
-apply plugin: org.kt3k.gradle.plugin.CoverallsPlugin
+apply plugin: "jacoco"
 
 subprojects {
-    apply plugin: net.saliman.gradle.plugin.cobertura.CoberturaPlugin
+	apply plugin: "jacoco"
+
+	jacoco {
+		toolVersion = "0.7.1.201405082137"
+	}
+	test {
+		jacoco {
+			append = true
+			classDumpFile = file("${rootProject.buildDir}/jacoco/classpathdumps")
+			destinationFile = file("${rootProject.buildDir}/jacoco/tests.exec")
+		}
+	}
+
+
+	jacocoTestReport {
+		additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+		sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+		classDirectories =  files(sourceSets.main.output)
+
+		reports {
+			html.enabled = true
+			xml.enabled = true
+			csv.enabled = false
+		}
+	}
 }
 
-cobertura {
-    coverageFormats = ['html', 'xml']
-    coverageReportDatafile = file("build/cobertura/cobertura.ser")
-    coverageReportDir = file("build/reports/coverage")
+task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+	dependsOn = subprojects.test
+	additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
+	sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+	classDirectories =  files(subprojects.sourceSets.main.output)
+	executionData = files(subprojects.jacocoTestReport.executionData)
 
-    coverageDirs = []
-    coverageSourceDirs = []
-    coverageMergeDatafiles = []
+	reports {
+		html.enabled = true
+		html.destination "${rootProject.buildDir}/reports/coverage"
 
-    rootProject.subprojects.each {
-        coverageFormats = ['html', 'xml']
-        coverageDirs << file("${it.buildDir}/classes/main")
-        coverageSourceDirs << file("${it.projectDir}/src/main/java")
-        coverageMergeDatafiles << file("${it.buildDir}/cobertura/cobertura.ser")
-    }
+		xml.enabled = true
+		xml.destination "${rootProject.buildDir}/reports/coverage/coverage.xml"
+
+		csv.enabled = false
+	}   
 }
 
-coveralls {
-    coberturaReportPath = "${buildDir}/reports/coverage/coverage.xml"
-}

@@ -1,5 +1,7 @@
 language: java
-jdk: openjdk7
+jdk: openjdk8
+sudo: required
+dist: trusty
 
 env:
   global:
@@ -27,6 +29,8 @@ notifications:
   irc: "chat.freenode.net#syncany"
   
 before_install:
+  # Enable i386 for wine
+  - sudo dpkg --add-architecture i386
   # Update APT (necessary!)
   - sudo apt-get update
 
@@ -44,8 +48,7 @@ before_install:
   
   # Inno Setup (for Windows executable/installer)
   # Note: If this code is changed, also update syncany-plugin-gui/.travis.yml
-  - sudo add-apt-repository --yes ppa:arx/release
-  - sudo apt-get update -d
+
   - sudo apt-get install -y -q innoextract wine python-software-properties
   - wine --version 
   - innoextract --version 
