@@ -3,7 +3,7 @@
 set -e
 
 # Run JUnit tests and generate reports
-./gradlew testGlobal coberturaReport performCoverageCheck coveralls javadocAll
+./gradlew testGlobal jacocoRootReport javadocAll
 
 # SonarQube disabled for now. Took >43min on Travis!
 
