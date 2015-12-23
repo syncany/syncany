@@ -46,10 +46,6 @@ public class RestoreFileSystemAction extends FileCreatingFileSystemAction {
 			throw new Exception("Not yet implemented.");
 		}
 		else {
-			if (fileVersion2.getStatus() == FileStatus.DELETED) {
-				throw new Exception("Cannot restore version marked DELETED. Try previous version.");
-			}
-			
 			// Assemble file to cache
 			File cacheFile = assembleFileToCache(fileVersion2);
 			

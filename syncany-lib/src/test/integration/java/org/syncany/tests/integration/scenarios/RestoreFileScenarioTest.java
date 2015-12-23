@@ -81,7 +81,7 @@ public class RestoreFileScenarioTest {
 	}
 	
 	@Test
-	public void testRestoreDeletedFileWithTargetFile() throws Exception {
+    public void testRestoreDeletedFileWithTargetFile() throws Exception {
 		// Setup 
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
 		TransferSettings testConnection = TestConfigUtil.createTestLocalConnection();		

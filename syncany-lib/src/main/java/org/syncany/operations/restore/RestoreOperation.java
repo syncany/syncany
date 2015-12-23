@@ -110,7 +110,12 @@ public class RestoreOperation extends AbstractTransferOperation {
 			List<FileVersion> fileHistory = localDatabase.getFileHistory(restoreFileHistoryId);
 			
 			if (fileHistory.size() >= 2) { 
+				// In this case, we automatically restore the "previous" version
 				return fileHistory.get(fileHistory.size()-2);
+			}
+			else if (fileHistory.size() == 1){
+				// In this case, we restore the last version. This is likely a deleted version.
+				return fileHistory.get(0);
 			}
 			else {
 				return null;
