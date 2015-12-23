@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.4.8-alpha (Date: TBA)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Bugfixes and other things:
+  + Fixed bug with `sy restore` #534/#535
+ 
 ### Syncany 0.4.7-alpha (Date: 7 Nov 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Bugfixes and other things:
