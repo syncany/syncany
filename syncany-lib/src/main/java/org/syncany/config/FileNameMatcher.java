@@ -31,19 +31,31 @@ import java.util.logging.Logger;
  *
  * @author Pim Otte
  */
-public class IgnoredFiles {
+public class FileNameMatcher {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
+
+	private Set<String> filePatterns;
+	private Set<String> filePaths;
+
+	public FileNameMatcher(File ignoreFile) {
+		this.filePatterns = new HashSet<String>();
+		this.filePaths = new HashSet<String>();
+
+		loadPatterns(ignoreFile);
+	}
 	
-	private Set<String> ignorePatterns;
-	private Set<String> ignorePaths;
-	private File ignoreFile;
+	public FileNameMatcher(String pattern) {
+		this.filePatterns = new HashSet<String>();
+		this.filePaths = new HashSet<String>();
 
-	public IgnoredFiles(File ignoreFile) {
-		this.ignoreFile = ignoreFile;
-		this.ignorePatterns = new HashSet<String>();
-		this.ignorePaths = new HashSet<String>();
+		parseIgnoreLine(pattern);
+	}
 
-		loadPatterns();
+	public FileNameMatcher(Set<String> patterns) {
+		this.filePatterns = new HashSet<String>();
+		this.filePaths = new HashSet<String>();
+
+		parseIgnoreLines(patterns);
 	}
 
 	/**
@@ -52,14 +64,14 @@ public class IgnoredFiles {
 	 */
 	public boolean isFileIgnored(String filePath) {
 		// Check all exact paths
-		for (String path : ignorePaths) {
+		for (String path : filePaths) {
 			if (path.equals(filePath)) {
 				return true;
 			}
 		}
 
 		// Check all regular expressions
-		for (String pattern : ignorePatterns) {
+		for (String pattern : filePatterns) {
 			if (filePath.matches(pattern)) {
 				return true;
 			}
@@ -68,7 +80,7 @@ public class IgnoredFiles {
 		return false;
 	}
 
-	public void loadPatterns() {
+	public void loadPatterns(File ignoreFile) {
 		if (ignoreFile != null && ignoreFile.exists()) {
 			try {
 				Scanner scanner = new Scanner(ignoreFile);
@@ -77,10 +89,10 @@ public class IgnoredFiles {
 					String ignorePatternLine = scanner.nextLine().trim();
 
 					if (!ignorePatternLine.isEmpty()) {
-						parseIgnoreFileLine(ignorePatternLine);						
+						parseIgnoreLine(ignorePatternLine);
 					}
 				}
-				
+
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
@@ -89,23 +101,29 @@ public class IgnoredFiles {
 		}
 		else {
 			// In case the ignoreFile has been deleted, reset patterns
-			ignorePatterns = new HashSet<String>();
-			ignorePaths = new HashSet<String>();
+			filePatterns = new HashSet<String>();
+			filePaths = new HashSet<String>();
 		}
 	}
 
-	private void parseIgnoreFileLine(String ignorePattern) {
+	private void parseIgnoreLines(Set<String> ignorePatterns) {
+		for (String line : ignorePatterns) {
+			parseIgnoreLine(line);
+		}
+	}
+
+	private void parseIgnoreLine(String ignorePattern) {
 		if (ignorePattern.startsWith("regex:")) {
 			// Chop off regex: indicator
-			ignorePatterns.add(ignorePattern.substring(6));
+			filePatterns.add(ignorePattern.substring(6));
 		}
 		else {
 			if (ignorePattern.contains("*") || ignorePattern.contains("?")) {
 				// wildcards handling, converting them to regexps
-				ignorePatterns.add(convertWildcardsToRegexp(ignorePattern));
+				filePatterns.add(convertWildcardsToRegexp(ignorePattern));
 			}
 			else {
-				ignorePaths.add(ignorePattern);
+				filePaths.add(ignorePattern);
 			}
 		}
 	}

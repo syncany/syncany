@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.syncany.config.Config;
+import org.syncany.config.FileNameMatcher;
 import org.syncany.operations.ChangeSet;
 import org.syncany.operations.status.StatusOperation;
 import org.syncany.operations.status.StatusOperationOptions;
@@ -38,23 +39,23 @@ public class StatusOperationTest {
 	public void testStatusOperation() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
-		
+
 		// Add new files 
-		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500*1024, 3);
-		 
+		List<File> originalFiles = TestFileUtil.createRandomFilesInDirectory(config.getLocalDir(), 500 * 1024, 3);
+
 		// Status
-		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();				
-		
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();
+
 		assertEquals(changeSet.getNewFiles().size(), originalFiles.size());
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
-				
+
 		// Up
-		new UpOperation(config).execute();		
-				
+		new UpOperation(config).execute();
+
 		// Status
-		changeSet = (new StatusOperation(config).execute()).getChangeSet();		
-		
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();
+
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
@@ -64,100 +65,215 @@ public class StatusOperationTest {
 
 		for (File file : originalFiles) {
 			TestFileUtil.changeRandomPartOfBinaryFile(file);
-		}		
-		
+		}
+
 		changeSet = (new StatusOperation(config).execute()).getChangeSet();
-		
+
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), originalFiles.size());
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
-		
+
 		// Up
 		new UpOperation(config).execute();
-				
+
 		// Delete all files, run 'status' again
 		for (File file : originalFiles) {
 			TestFileUtil.deleteFile(file);
 		}
-				
+
 		changeSet = (new StatusOperation(config).execute()).getChangeSet();
-		
+
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), originalFiles.size());
-				
+
 		// Cleanup
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
-	
+
 	@Test
 	public void testVeryRecentFileModificationWithoutSizeOrModifiedDateChange() throws Exception {
 		// Setup
-		Config config = TestConfigUtil.createTestLocalConfig();		
+		Config config = TestConfigUtil.createTestLocalConfig();
 		File testFile = TestFileUtil.createRandomFileInDirectory(config.getLocalDir(), 40);
-		
+
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
 
 		UpOperationOptions syncUpOptions = new UpOperationOptions();
-		syncUpOptions.setStatusOptions(statusOptions);			
-		
+		syncUpOptions.setStatusOptions(statusOptions);
+
 		// Perform 'up' and immediately change test file
 		// IMPORTANT: Do NOT sleep to enforce checksum-based comparison in 'status'
-		new UpOperation(config, syncUpOptions).execute();		
+		new UpOperation(config, syncUpOptions).execute();
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
-		
+
 		// Run 'status', this should run a checksum-based file comparison
-		ChangeSet changeSet = (new StatusOperation(config, statusOptions).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config, statusOptions).execute()).getChangeSet();
 		assertEquals(changeSet.getChangedFiles().size(), 1);
-				
+
 		// Cleanup 
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
-	
+
 	@Test
 	public void testNotSoRecentFileModificationWithoutSizeOrModifiedDateChange() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
 		File testFile = TestFileUtil.createRandomFileInDirectory(config.getLocalDir(), 40);
-		
+
 		// Perform 'up', wait a second and then change test file
 		// IMPORTANT: Sleep to prevent detailed checksum-based update check in 'status' operation
-		new UpOperation(config).execute();				
+		new UpOperation(config).execute();
 		Thread.sleep(2000);
 		TestFileUtil.changeRandomPartOfBinaryFile(testFile);
-		
+
 		// Run 'status', this should NOT run a checksum-based file comparison
-		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();
 		assertEquals(changeSet.getChangedFiles().size(), 1);
-				
+
 		// Cleanup 
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}
-	
+
 	@Test
 	public void testCreateFolderAndRunStatus() throws Exception {
 		// Setup
 		Config config = TestConfigUtil.createTestLocalConfig();
-		new File(config.getLocalDir()+"/somefolder").mkdir();
-				
+		new File(config.getLocalDir() + "/somefolder").mkdir();
+
 		// Run 'status', this SHOULD list the folder
-		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();						
+		ChangeSet changeSet = (new StatusOperation(config).execute()).getChangeSet();
 		assertEquals(changeSet.getNewFiles().size(), 1);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
-		assertEquals(changeSet.getUnchangedFiles().size(), 0);	
-		
+		assertEquals(changeSet.getUnchangedFiles().size(), 0);
+
 		// Run 'up' to check in the folder
 		new UpOperation(config).execute();
-		
+
 		// Run 'status', this SHOULD NOT list the folder in the changed/new files
-		changeSet = (new StatusOperation(config).execute()).getChangeSet();						
+		changeSet = (new StatusOperation(config).execute()).getChangeSet();
 		assertEquals(changeSet.getNewFiles().size(), 0);
 		assertEquals(changeSet.getChangedFiles().size(), 0);
 		assertEquals(changeSet.getDeletedFiles().size(), 0);
-		assertEquals(changeSet.getUnchangedFiles().size(), 1);		
-				
+		assertEquals(changeSet.getUnchangedFiles().size(), 1);
+
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
+
+	@Test
+	public void testFilePatternNewFilesAcceptAll() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+
+		int numfiles = 100;
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(config.getLocalDir());
+			builder.append("/");
+			builder.append(i);
+			new File(builder.toString()).createNewFile();
+			builder.setLength(0);
+		}
+
+		StatusOperationOptions options = new StatusOperationOptions();
+		options.setIncludeFilePattern(new FileNameMatcher("*"));
+
+		StatusOperation operation = new StatusOperation(config, options);
+		ChangeSet changeSet = (operation.execute()).getChangeSet();
+
+		assertEquals(numfiles, changeSet.getNewFiles().size());
+
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
+
+	@Test
+	public void testFilePatternNewFilesAcceptNamesWithPrefix() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+		String prefix = "bla";
+
+		int numfiles = 100;
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(config.getLocalDir());
+			builder.append("/");
+			builder.append(prefix);
+			builder.append(i);
+			new File(builder.toString()).createNewFile();
+			builder.setLength(0);
+		}
+
+		StatusOperationOptions options = new StatusOperationOptions();
+		options.setIncludeFilePattern(new FileNameMatcher(prefix + "*"));
+
+		StatusOperation operation = new StatusOperation(config, options);
+		ChangeSet changeSet = (operation.execute()).getChangeSet();
+
+		assertEquals(numfiles, changeSet.getNewFiles().size());
+
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
+
+	@Test
+	public void testFilePatternNewFilesAcceptNamesWithSuffix() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+		String suffix = "bla";
+
+		int numfiles = 100;
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(config.getLocalDir());
+			builder.append("/");
+			builder.append(i);
+			builder.append(suffix);
+			new File(builder.toString()).createNewFile();
+			builder.setLength(0);
+		}
+
+		StatusOperationOptions options = new StatusOperationOptions();
+		options.setIncludeFilePattern(new FileNameMatcher("*" + suffix));
+
+		StatusOperation operation = new StatusOperation(config, options);
+		ChangeSet changeSet = (operation.execute()).getChangeSet();
+
+		assertEquals(numfiles, changeSet.getNewFiles().size());
+
+		// Cleanup 
+		TestConfigUtil.deleteTestLocalConfigAndData(config);
+	}
+
+	@Test
+	public void testFilePatternNewFilesAcceptNamesWithWildCardInMiddle() throws Exception {
+		// Setup
+		Config config = TestConfigUtil.createTestLocalConfig();
+		String filenamepart = "bla";
+
+		int numfiles = 100;
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < numfiles; i++) {
+			builder.append(config.getLocalDir());
+			builder.append("/");
+			builder.append(filenamepart);
+			builder.append(i);
+			builder.append(filenamepart);
+			new File(builder.toString()).createNewFile();
+			builder.setLength(0);
+		}
+
+		StatusOperationOptions options = new StatusOperationOptions();
+		options.setIncludeFilePattern(new FileNameMatcher(filenamepart + "*" + filenamepart));
+
+		StatusOperation operation = new StatusOperation(config, options);
+		ChangeSet changeSet = (operation.execute()).getChangeSet();
+
+		assertEquals(numfiles, changeSet.getNewFiles().size());
+
 		// Cleanup 
 		TestConfigUtil.deleteTestLocalConfigAndData(config);
 	}

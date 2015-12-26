@@ -45,7 +45,7 @@ public class IgnoredFileScenarioTest {
 		//Create ignore file and reload it
 		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
 		TestFileUtil.createFileWithContent(syncanyIgnore, "ignoredfile.txt");
-		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		clientA.getConfig().getIgnoredFiles().loadPatterns(syncanyIgnore);
 		
 		// A new/up
 		clientA.createNewFile("ignoredfile.txt");	
@@ -62,7 +62,7 @@ public class IgnoredFileScenarioTest {
 		
 		//Delete ignore file and reload patterns
 		TestFileUtil.deleteFile(syncanyIgnore);
-		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		clientA.getConfig().getIgnoredFiles().loadPatterns(syncanyIgnore);
 		clientA.up();
 		
 		clientB.down();
@@ -92,7 +92,7 @@ public class IgnoredFileScenarioTest {
 		//Create ignore file and reload it
 		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
 		TestFileUtil.createFileWithContent(syncanyIgnore, "regex:.*.bak");
-		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		clientA.getConfig().getIgnoredFiles().loadPatterns(syncanyIgnore);
 		
 		// A new/up
 		clientA.createNewFile("ignoredfile.bak");	
@@ -125,7 +125,7 @@ public class IgnoredFileScenarioTest {
 		//Create ignore file and reload it
 		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
 		TestFileUtil.createFileWithContent(syncanyIgnore, "builds");
-		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		clientA.getConfig().getIgnoredFiles().loadPatterns(syncanyIgnore);
 		
 		// A new/up
 		clientA.createNewFolder("builds");
@@ -159,7 +159,7 @@ public class IgnoredFileScenarioTest {
 		//Create ignore file and reload it
 		File syncanyIgnore = clientA.getLocalFile(Config.FILE_IGNORE);
 		TestFileUtil.createFileWithContent(syncanyIgnore, "*.bak\nignoredarchive.r??");
-		clientA.getConfig().getIgnoredFiles().loadPatterns();
+		clientA.getConfig().getIgnoredFiles().loadPatterns(syncanyIgnore);
 		
 		// A new/up
 		clientA.createNewFile("ignoredfile.bak");	

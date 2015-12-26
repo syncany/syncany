@@ -94,7 +94,7 @@ public class Config {
 	private Chunker chunker;
 	private MultiChunker multiChunker;
 	private Transformer transformer;
-	private IgnoredFiles ignoredFiles;
+	private FileNameMatcher filenameMatcher;
 
 	static {
 		UserConfig.init();
@@ -143,7 +143,7 @@ public class Config {
 
 	private void initIgnoredFile() throws ConfigException {
 		File ignoreFile = new File(localDir, FILE_IGNORE);
-		ignoredFiles = new IgnoredFiles(ignoreFile);
+		filenameMatcher = new FileNameMatcher(ignoreFile);
 	}
 
 	private void initRepo(RepoTO repoTO) throws ConfigException {
@@ -296,8 +296,8 @@ public class Config {
 		return cache;
 	}
 
-	public IgnoredFiles getIgnoredFiles() {
-		return ignoredFiles;
+	public FileNameMatcher getIgnoredFiles() {
+		return filenameMatcher;
 	}
 
 	public MultiChunker getMultiChunker() {

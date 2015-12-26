@@ -29,7 +29,7 @@ import org.syncany.config.Config;
 import org.syncany.tests.unit.util.TestCliUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
-public class StatusCommandTest {		
+public class StatusCommandTest {
 	@Test
 	public void testStatusCommandWithLogLevelOff() throws Exception {
 		// Setup
@@ -37,62 +37,61 @@ public class StatusCommandTest {
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 
 		// Run!
-		new File(clientA.get("localdir")+"/somefolder1").mkdir();
-		new File(clientA.get("localdir")+"/somefolder2").mkdir();
-				
-		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
-			"--loglevel", "OFF", 
-			"--localdir", clientA.get("localdir"),
-			"status" 
+		new File(clientA.get("localdir") + "/somefolder1").mkdir();
+		new File(clientA.get("localdir") + "/somefolder2").mkdir();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--loglevel", "OFF",
+				"--localdir", clientA.get("localdir"),
+				"status"
 		}));
-		
+
 		// Test
 		assertEquals("Different number of output lines expected.", 5, cliOut.length);
 		assertEquals("? .syignore", cliOut[2]);
 		assertEquals("? somefolder1", cliOut[3]);
 		assertEquals("? somefolder2", cliOut[4]);
 		// TODO [medium] This test case does NOT test the loglevel option
-		
+
 		// Cleanup
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
-	}	
-	
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
 	@Test
 	public void testStatusCommandWithLogFile() throws Exception {
 		// Setup
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
 
-		File tempLogFile = new File(clientA.get("localdir")+"/"+Config.DIR_APPLICATION
-				+"/"+Config.DIR_LOG+"/templogfile");
-		
+		File tempLogFile = new File(clientA.get("localdir") + "/" + Config.DIR_APPLICATION
+				+ "/" + Config.DIR_LOG + "/templogfile");
+
 		// Run!
-		new File(clientA.get("localdir")+"/somefolder1").mkdir();
-		new File(clientA.get("localdir")+"/somefolder2").mkdir();
-				
-		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] { 
-			"--log", tempLogFile.getAbsolutePath(), 
-			"--localdir", clientA.get("localdir"),
-			"status"
+		new File(clientA.get("localdir") + "/somefolder1").mkdir();
+		new File(clientA.get("localdir") + "/somefolder2").mkdir();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--log", tempLogFile.getAbsolutePath(),
+				"--localdir", clientA.get("localdir"),
+				"status"
 		}));
-		
+
 		// Test		
 		assertTrue("Log file should exist.", new File(tempLogFile.getAbsolutePath() + ".0").exists());
 		assertEquals(5, cliOut.length);
 		assertEquals("? .syignore", cliOut[2]);
 		assertEquals("? somefolder1", cliOut[3]);
 		assertEquals("? somefolder2", cliOut[4]);
-		
+
 		// Cleanup
-		TestCliUtil.deleteTestLocalConfigAndData(clientA);		
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 	}
-	
 
 	@Test
 	public void testStatusCommandWithNoDelete() throws Exception {
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
-		
+
 		new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
 				"up"
@@ -118,7 +117,7 @@ public class StatusCommandTest {
 
 		assertEquals("Number of output lines", 3, cliOut.length);
 		assertTrue(cliOut[2].contains("D somefolder1"));
-		
+
 		// Test status with no-delete parameter
 		cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
 				"--localdir", clientA.get("localdir"),
@@ -127,6 +126,193 @@ public class StatusCommandTest {
 
 		assertEquals("Number of output lines", 3, cliOut.length);
 		assertTrue(cliOut[2].contains("No local changes."));
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchAll() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		new File(clientA.get("localdir") + "/somefolder1").mkdir();
+		new File(clientA.get("localdir") + "/somefolder2").mkdir();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--filter", ".*"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 5, cliOut.length);
+		assertEquals("? .syignore", cliOut[2]);
+		assertEquals("? somefolder1", cliOut[3]);
+		assertEquals("? somefolder2", cliOut[4]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchFolder1() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		new File(clientA.get("localdir") + "/somefolder1").mkdir();
+		new File(clientA.get("localdir") + "/somefolder2").mkdir();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--include", "somefolder1"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("? somefolder1", cliOut[2]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchIgnore() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		new File(clientA.get("localdir") + "/somefolder1").mkdir();
+		new File(clientA.get("localdir") + "/somefolder2").mkdir();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--include", ".syignore"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("? .syignore", cliOut[2]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchAllDeleted() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		File dir1 = new File(clientA.get("localdir") + "/somefolder1");
+		File dir2 = new File(clientA.get("localdir") + "/somefolder2");
+		dir1.mkdir();
+		dir2.mkdir();
+
+		new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"up"
+		}).start();
+
+		dir1.delete();
+		dir2.delete();
+		new File(clientA.get("localdir") + "/.syignore").delete();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--filter", ".*"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 5, cliOut.length);
+		assertEquals("D .syignore", cliOut[2]);
+		assertEquals("D somefolder1", cliOut[3]);
+		assertEquals("D somefolder2", cliOut[4]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchFolder1Deleted() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		File dir1 = new File(clientA.get("localdir") + "/somefolder1");
+		File dir2 = new File(clientA.get("localdir") + "/somefolder2");
+		dir1.mkdir();
+		dir2.mkdir();
+
+		new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"up"
+		}).start();
+
+		dir1.delete();
+		dir2.delete();
+		new File(clientA.get("localdir") + "/.syignore").delete();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--include", "somefolder1"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("D somefolder1", cliOut[2]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
+		TestCliUtil.deleteTestLocalConfigAndData(clientA);
+	}
+
+	@Test
+	public void testStatusCommandWithFilterMatchIgnoreDeleted() throws Exception {
+		// Setup
+		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
+		Map<String, String> clientA = TestCliUtil.createLocalTestEnvAndInit("A", connectionSettings);
+
+		// Run!
+		File dir1 = new File(clientA.get("localdir") + "/somefolder1");
+		File dir2 = new File(clientA.get("localdir") + "/somefolder2");
+		dir1.mkdir();
+		dir2.mkdir();
+
+		new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"up"
+		}).start();
+
+		dir1.delete();
+		dir2.delete();
+		new File(clientA.get("localdir") + "/.syignore").delete();
+
+		String[] cliOut = TestCliUtil.runAndCaptureOutput(new CommandLineClient(new String[] {
+				"--localdir", clientA.get("localdir"),
+				"status",
+				"--include", ".syignore"
+		}));
+
+		// Test
+		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("D .syignore", cliOut[2]);
+		// TODO [medium] This test case does NOT test the loglevel option
+
+		// Cleanup
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 	}
 }
