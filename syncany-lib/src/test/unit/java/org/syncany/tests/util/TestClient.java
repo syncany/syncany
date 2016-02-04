@@ -72,7 +72,7 @@ import org.syncany.tests.unit.util.TestFileUtil;
 
 public class TestClient extends Client {
 	private Config config;
-	
+
 	public TestClient(String machineName, TransferSettings connection) throws Exception {
 		Config testConfig = TestConfigUtil.createTestLocalConfig(machineName, connection);
 
@@ -127,8 +127,8 @@ public class TestClient extends Client {
 	}
 
 	public void watch(WatchOperationOptions options) throws Exception {
-		new WatchOperation(config, options).execute();		
-	}	
+		new WatchOperation(config, options).execute();
+	}
 
 	public GenlinkOperationResult genlink(GenlinkOperationOptions options) throws Exception {
 		return new GenlinkOperation(config, options).execute();
@@ -148,7 +148,7 @@ public class TestClient extends Client {
 
 	public ConnectOperationResult connect(ConnectOperationOptions options, UserInteractionListener listener) throws Exception,
 			CipherException {
-		
+
 		return new ConnectOperation(options, listener).execute();
 	}
 
@@ -163,10 +163,11 @@ public class TestClient extends Client {
 	public PluginOperationResult plugin(PluginOperationOptions options) throws Exception {
 		return new PluginOperation(config, options).execute();
 	}
-	
+
 	public UpdateOperationResult update(UpdateOperationOptions options) throws Exception {
 		return new UpdateOperation(config, options).execute();
 	}
+
 	public UpOperationResult upWithForceChecksum() throws Exception {
 		StatusOperationOptions statusOptions = new StatusOperationOptions();
 		statusOptions.setForceChecksum(true);
@@ -214,8 +215,19 @@ public class TestClient extends Client {
 		return createNewFile(name, 50 * 1024);
 	}
 
+	public File createNewFileInFolder(String name, String rootFolder) throws IOException {
+		return createNewFileInFolder(name, rootFolder, 50 * 1024);
+	}
+
 	public File createNewFile(String name, long size) throws IOException {
 		File localFile = getLocalFile(name);
+		TestFileUtil.createNonRandomFile(localFile, size);
+
+		return localFile;
+	}
+
+	public File createNewFileInFolder(String name, String rootFolder, long size) throws IOException {
+		File localFile = getLocalFileInFolder(name, rootFolder);
 		TestFileUtil.createNonRandomFile(localFile, size);
 
 		return localFile;
@@ -266,6 +278,10 @@ public class TestClient extends Client {
 
 	public File getLocalFile(String name) {
 		return new File(config.getLocalDir() + "/" + name);
+	}
+
+	public File getLocalFileInFolder(String name, String rootFolder) {
+		return new File(config.getLocalDir() + "/" + rootFolder + "/" + name);
 	}
 
 	public Map<String, File> getLocalFiles() throws FileNotFoundException {

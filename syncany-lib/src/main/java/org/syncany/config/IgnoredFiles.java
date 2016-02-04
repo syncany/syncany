@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class IgnoredFiles {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
-	
+
 	private Set<String> ignorePatterns;
 	private Set<String> ignorePaths;
 	private File ignoreFile;
@@ -50,10 +50,17 @@ public class IgnoredFiles {
 	 * Method to check whether a file should be ignored.
 	 * Should only be called at indexing time.
 	 */
-	public boolean isFileIgnored(String filePath) {
+	public boolean isFileIgnored(String filePath, String fileName) {
 		// Check all exact paths
 		for (String path : ignorePaths) {
 			if (path.equals(filePath)) {
+				return true;
+			}
+		}
+
+        // Check all recursive
+		for (String path : ignorePaths) {
+			if (path.equals(fileName)) {
 				return true;
 			}
 		}
@@ -77,10 +84,10 @@ public class IgnoredFiles {
 					String ignorePatternLine = scanner.nextLine().trim();
 
 					if (!ignorePatternLine.isEmpty()) {
-						parseIgnoreFileLine(ignorePatternLine);						
+						parseIgnoreFileLine(ignorePatternLine);
 					}
 				}
-				
+
 				scanner.close();
 			}
 			catch (FileNotFoundException e) {
