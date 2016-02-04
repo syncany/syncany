@@ -42,7 +42,7 @@ import org.syncany.util.FileUtil;
 
 /**
  * This class provides file I/O helper methods for writing tests
- * 
+ *
  * @author Philipp Heckel <philipp.heckel@gmail.com>
  * @author Nikolai Hellwig
  * @author Andreas Fenske
@@ -69,23 +69,23 @@ public class TestFileUtil {
 
 		toFile.setLastModified(fromFile.lastModified()); // Windows changes last modified when copying file
 
-		return toFile;		
+		return toFile;
 	}
-	
+
 	public static File createTempDirectoryInSystemTemp() throws Exception {
 		return createTempDirectoryInSystemTemp("syncanytest");
 	}
 
 	public static File getAppTempDir() {
 		String tempDirStr = System.getProperty("org.syncany.test.tmpdir");
-		
+
 		if (tempDirStr == null) {
 			tempDirStr = System.getProperty("java.io.tmpdir");
 		}
-		
+
 		return new File(tempDirStr, "syncanytest");
 	}
-	
+
 	public static File createTempDirectoryInSystemTemp(String prefix) throws Exception {
 		File tempDirectoryInSystemTemp = new File(getAppTempDir() + "/" + prefix);
 
@@ -241,8 +241,8 @@ public class TestFileUtil {
 	public static void createNonRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
 		createFile(fileToCreate, sizeInBytes, nonRandomGen);
 	}
-	
-	public static void createFileWithContent(File fileToCreate,String content) throws IOException {
+
+	public static void createFileWithContent(File fileToCreate, String content) throws IOException {
 		if (fileToCreate != null && fileToCreate.exists()) {
 			throw new IOException("File already exists");
 		}
@@ -335,7 +335,7 @@ public class TestFileUtil {
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
 	 * symlinks into account. Returns <tt>true</tt> if a symlink exists even if its target file
 	 * does not exist and can hence not be read.
-	 * 
+	 *
 	 * @param file A file
 	 * @return Returns <tt>true</tt> if the file can be read (or the symlink exists), <tt>false</tt> otherwise
 	 */
@@ -346,15 +346,15 @@ public class TestFileUtil {
 		else {
 			return file.canRead();
 		}
-	}	
-	
+	}
+
 	public static void writeToFile(byte[] bytes, File file) throws IOException {
 		FileOutputStream outputStream = new FileOutputStream(file);
-		
+
 		IOUtils.copy(new ByteArrayInputStream(bytes), outputStream);
 		outputStream.close();
 	}
-	
+
 	public static String getBasename(String filename) {
 		int dot = filename.lastIndexOf(".");
 
@@ -364,7 +364,6 @@ public class TestFileUtil {
 
 		return filename.substring(0, dot);
 	}
-	
 
 	public static List<File> getRecursiveFileList(File root) throws FileNotFoundException {
 		return getRecursiveFileList(root, false, false);
