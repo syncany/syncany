@@ -5,6 +5,7 @@ Change Log
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Bugfixes and other things:
   + Fixed bug with `sy restore` #534/#535
+  + Fix .syignore recursive behavior #555/#544
  
 ### Syncany 0.4.7-alpha (Date: 7 Nov 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
