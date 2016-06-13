@@ -33,7 +33,7 @@ OPTIONS
     Select and display the entire history of the matching files instead of only
     the last version. Useful with --group.
   
-  -t, --types=<t|d|s>            
+  -t, --types=<f|d|s>            
     Limits the result set to a certain file type ('f' for files, 'd' for
     directories, and 's' for symlinks). Types can be combined, e.g. 
     `sy ls -tfs` selects files and symlinks. Default setting is 'tds'. 
