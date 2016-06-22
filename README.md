@@ -4,6 +4,12 @@ Syncany
 
 <img src="gradle/resources/syncany-logo.png" align="right" />
 
+
+The core team of Syncany is on hiatus for an indefinite amount of time. Feel 
+free to do with the code what the license allows and encourages, but please 
+don't expect any maintenance. The team thanks everyone who has contributed 
+to Syncany in one way or another.
+
 Syncany is an open-source cloud storage and filesharing application. It allows
 users to backup and share certain folders of their workstations using any kind
 of storage, e.g. FTP, SFTP, WebDAV, Amazon S3 and Samba.
