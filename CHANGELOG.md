@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Syncany 0.4.8-alpha (Date: 16 Jan 2017)
+### Syncany 0.4.9-alpha (Date: 16 Jan 2017)
 - Developer/alpha/maintanance release 
 - Bugfixes and other things:
   + Fixed bug with `sy restore` #534/#535
