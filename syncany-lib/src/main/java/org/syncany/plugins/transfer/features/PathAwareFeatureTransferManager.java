@@ -272,7 +272,7 @@ public class PathAwareFeatureTransferManager implements FeatureTransferManager {
 	}
 
 	private String pathToString(Path path) {
-		return path.toString().replaceAll(File.separator, String.valueOf(folderSeparator));
+		return path.toString().replace(File.separator, String.valueOf(folderSeparator));
 	}
 
 	private boolean createFolder(RemoteFile remoteFile) throws StorageException {
