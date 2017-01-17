@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Syncany 0.4.10-alpha (Date: TBA)
+- Developer/alpha/maintanance release 
+- Bugfixes and other things:
+  + Fixed small bug with windows paths #598/#599
+
 ### Syncany 0.4.9-alpha (Date: 16 Jan 2017)
 - Developer/alpha/maintanance release 
 - Bugfixes and other things:
