@@ -33,7 +33,7 @@ subprojects {
 	task testAllLong(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "Test long running scenarios"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
 		include '**/LongRunning*'
 	}
@@ -41,7 +41,7 @@ subprojects {
 	task testScenario(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "Test all scenarios"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
 		include '**/*ScenarioTest*'
 	}
@@ -49,7 +49,7 @@ subprojects {
 	task testAll(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "All tests"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
 		exclude '**/*TestSuite*'
 	}
@@ -57,7 +57,7 @@ subprojects {
 	task intTest(type: Test, dependsOn: [testClasses, integrationClasses], group: 'Verification') {
 		description = "All integration tests"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
 		testClassesDir = sourceSets.integration.output.classesDir
     classpath += sourceSets.integration.runtimeClasspath
@@ -69,7 +69,7 @@ subprojects {
 		jvmArgs '-Dcrypto.enable=true'
 		description = "All tests except long running with crypto"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
 		exclude '**/LongRunning*', '**/*TestSuite*'
 	}
@@ -78,7 +78,7 @@ subprojects {
 		group = "verification"	
 		description = "All tests except long running"
 		ignoreFailures = true
-		maxParallelForks = 1
+		maxParallelForks = 2
 		dependsOn testClasses, integrationClasses
 		testLogging { events 'started', 'passed'}
 		exclude '**/LongRunning*', '**/*TestSuite*'
