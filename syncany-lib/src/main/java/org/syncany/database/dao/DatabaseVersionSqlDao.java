@@ -119,26 +119,6 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	/**
-	 * Writes the given {@link DatabaseVersionHeader} to the database, including the
-	 * contained {@link VectorClock}. Be aware that the method writes the header independent
-	 * of whether or not a corresponding database version actually exists.
-	 * 
-	 * <p>This method can be used to add empty database versions to the database. Current use
-	 * case is adding an empty purge database version to the database.
-	 * 
-	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
-	 * 
-	 * @param databaseVersionHeader The database version header to write to the database
-	 * @return Returns the SQL-internal primary key of the new database version
-	 */
-	public long writeDatabaseVersionHeader(DatabaseVersionHeader databaseVersionHeader) throws SQLException {
-		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersionHeader);
-		writeVectorClock(connection, databaseVersionId, databaseVersionHeader.getVectorClock());
-
-		return databaseVersionId;
-	}
-
 	private long writeDatabaseVersion(Connection connection, DatabaseVersion databaseVersion) throws SQLException {
 		long databaseVersionId = writeDatabaseVersionHeaderInternal(connection, databaseVersion.getHeader()); // TODO [low] Use writeDatabaseVersion()?
 		writeVectorClock(connection, databaseVersionId, databaseVersion.getHeader().getVectorClock());
