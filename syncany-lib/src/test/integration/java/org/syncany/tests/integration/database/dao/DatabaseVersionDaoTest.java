@@ -78,7 +78,7 @@ public class DatabaseVersionDaoTest {
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao,
 				fileHistoryDao, multiChunkDao);
 
-		Iterator<DatabaseVersion> databaseVersionsDirty = databaseVersionDao.getDirtyDatabaseVersions();
+		Iterator<DatabaseVersion> databaseVersionsDirty = databaseVersionDao.getDirtyDatabaseVersions().iterator();
 
 		// Test				
 		assertNotNull(databaseVersionsDirty);
@@ -115,9 +115,9 @@ public class DatabaseVersionDaoTest {
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnection, chunkDao, fileContentDao, fileVersionDao,
 				fileHistoryDao, multiChunkDao);
 
-		Iterator<DatabaseVersion> databaseVersionsToA2 = databaseVersionDao.getDatabaseVersionsTo("A", 2);
-		Iterator<DatabaseVersion> databaseVersionsToA5 = databaseVersionDao.getDatabaseVersionsTo("A", 5);
-		Iterator<DatabaseVersion> databaseVersionsToB1 = databaseVersionDao.getDatabaseVersionsTo("B", 1); // B1 is DIRTY !
+		Iterator<DatabaseVersion> databaseVersionsToA2 = databaseVersionDao.getDatabaseVersionsTo("A", 2).iterator();
+		Iterator<DatabaseVersion> databaseVersionsToA5 = databaseVersionDao.getDatabaseVersionsTo("A", 5).iterator();
+		Iterator<DatabaseVersion> databaseVersionsToB1 = databaseVersionDao.getDatabaseVersionsTo("B", 1).iterator(); // B1 is DIRTY !
 
 		List<DatabaseVersion> databaseVersionsToA2List = TestCollectionUtil.toList(databaseVersionsToA2);
 		List<DatabaseVersion> databaseVersionsToA5List = TestCollectionUtil.toList(databaseVersionsToA5);
@@ -483,7 +483,7 @@ public class DatabaseVersionDaoTest {
 		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A49"));
 		databaseVersionDao.markDatabaseVersionDirty(TestDatabaseUtil.createVectorClock("A50"));
 
-		List<DatabaseVersion> dirtyDatabaseVersions = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());
+		List<DatabaseVersion> dirtyDatabaseVersions = databaseVersionDao.getDirtyDatabaseVersions().collect(Collectors.toList());
 
 		// Test
 		assertNotNull(dirtyDatabaseVersions);
@@ -515,7 +515,7 @@ public class DatabaseVersionDaoTest {
 				fileHistoryDao, multiChunkDao);
 
 		// a. Test before
-		List<DatabaseVersion> dirtyDatabaseVersionsBefore = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());
+		List<DatabaseVersion> dirtyDatabaseVersionsBefore = databaseVersionDao.getDirtyDatabaseVersions().collect(Collectors.toList());
 		assertNotNull(dirtyDatabaseVersionsBefore);
 		assertNotNull(chunkDao.getChunk(ChunkChecksum.parseChunkChecksum("beefbeefbeefbeefbeefbeefbeefbeefbeefbeef")));
 		assertNotNull(multiChunkDao.getDirtyMultiChunkIds());
@@ -531,7 +531,7 @@ public class DatabaseVersionDaoTest {
 		// c. Test after		
 
 		// Database version
-		List<DatabaseVersion> dirtyDatabaseVersionsAfter = TestCollectionUtil.toList(databaseVersionDao.getDirtyDatabaseVersions());
+		List<DatabaseVersion> dirtyDatabaseVersionsAfter = databaseVersionDao.getDirtyDatabaseVersions().collect(Collectors.toList());
 		assertNotNull(dirtyDatabaseVersionsAfter);
 		assertEquals(0, dirtyDatabaseVersionsAfter.size());
 

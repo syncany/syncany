@@ -83,7 +83,7 @@ public class DirtyDatabaseScenarioTest {
 		DatabaseVersionSqlDao databaseVersionDao = new DatabaseVersionSqlDao(databaseConnectionB, chunkDao, fileContentDao, fileVersionDao,
 				fileHistoryDao, multiChunkDao);
 
-		Iterator<DatabaseVersion> databaseVersionsDirtyB = databaseVersionDao.getDirtyDatabaseVersions();
+		Iterator<DatabaseVersion> databaseVersionsDirtyB = databaseVersionDao.getDirtyDatabaseVersions().iterator();
 		List<DatabaseVersion> databaseVersionsDirtyListB = TestCollectionUtil.toList(databaseVersionsDirtyB);
 
 		assertEquals(1, databaseVersionsDirtyListB.size());
@@ -103,7 +103,7 @@ public class DirtyDatabaseScenarioTest {
 		// Run (part 2)
 		clientB.up(); // This deletes the dirty database file
 
-		Iterator<DatabaseVersion> databaseVersionsDirtyB2 = databaseVersionDao.getDirtyDatabaseVersions();
+		Iterator<DatabaseVersion> databaseVersionsDirtyB2 = databaseVersionDao.getDirtyDatabaseVersions().iterator();
 		List<DatabaseVersion> databaseVersionsDirtyListB2 = TestCollectionUtil.toList(databaseVersionsDirtyB2);
 
 		assertEquals(0, databaseVersionsDirtyListB2.size());
