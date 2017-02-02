@@ -271,7 +271,7 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	public List<DatabaseVersionHeader> getNonEmptyDatabaseVersionHeaders() {
 		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<>();
 
-		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getNonEmptyDatabaseVersionHeaders.sql")) {
+		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.all.getNonEmptyDatabaseVersionHeaders.sql")) {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					DatabaseVersionHeader databaseVersionHeader = createDatabaseVersionHeaderFromRow(resultSet);
