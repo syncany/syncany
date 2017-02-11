@@ -170,15 +170,15 @@ public class SqlDatabase {
 	// Database version
 
 	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
-		return databaseVersionDao.getDirtyDatabaseVersions().iterator();
+		return databaseVersionDao.getDirtyDatabaseVersions();
 	}
 
 	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
-		return databaseVersionDao.getDatabaseVersionsTo(machineName, maxLocalClientVersion).iterator();
+		return databaseVersionDao.getDatabaseVersionsTo(machineName, maxLocalClientVersion);
 	}
 
 	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
-		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, startDatabaseVersionIndex, maxFileHistoryCount).iterator();
+		return databaseVersionDao.getLastDatabaseVersions(maxDatabaseVersionCount, startDatabaseVersionIndex, maxFileHistoryCount);
 	}
 
 	public DatabaseVersionHeader getLastDatabaseVersionHeader() {

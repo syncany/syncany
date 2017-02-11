@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
-import java.util.stream.Stream.Builder;
 
 import org.syncany.database.ChunkEntry;
 import org.syncany.database.ChunkEntry.ChunkChecksum;
@@ -268,45 +266,30 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Stream<DatabaseVersion> getDirtyDatabaseVersions() {
-		Builder<DatabaseVersion> builder = Stream.builder();
+	public Iterator<DatabaseVersion> getDirtyDatabaseVersions() {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.dirty.getDirtyDatabaseVersions.sql")) {
 			preparedStatement.setString(1, DatabaseVersionStatus.DIRTY.toString());
 
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, false, -1);
-					builder.accept(databaseVersion);
-				}
-			}
+			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return builder.build();
 	}
 
-	public Stream<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
-		Builder<DatabaseVersion> builder = Stream.builder();
+	public Iterator<DatabaseVersion> getDatabaseVersionsTo(String machineName, long maxLocalClientVersion) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getDatabaseVersionsTo.sql")) {
 			preparedStatement.setString(1, machineName);
 			preparedStatement.setLong(2, maxLocalClientVersion);
 
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, false, -1);
-					builder.accept(databaseVersion);
-				}
-			}
+			return new DatabaseVersionIterator(preparedStatement.executeQuery());
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return builder.build();
 	}
 	
-	public Stream<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
-		Builder<DatabaseVersion> builder = Stream.builder();
+	public Iterator<DatabaseVersion> getLastDatabaseVersions(int maxDatabaseVersionCount, int startDatabaseVersionIndex, int maxFileHistoryCount) {
 		try (PreparedStatement preparedStatement = getStatement("databaseversion.select.master.getLastDatabaseVersions.sql")) {
 			maxDatabaseVersionCount = (maxDatabaseVersionCount > 0) ? maxDatabaseVersionCount : Integer.MAX_VALUE;
 			startDatabaseVersionIndex = (startDatabaseVersionIndex > 0) ? startDatabaseVersionIndex : 0;
@@ -315,16 +298,62 @@ public class DatabaseVersionSqlDao extends AbstractSqlDao {
 			preparedStatement.setInt(2, startDatabaseVersionIndex);
 			
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				while (resultSet.next()) {
-					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, false, maxFileHistoryCount);
-					builder.accept(databaseVersion);
-				}
+				return new DatabaseVersionIterator(preparedStatement.executeQuery(), true, maxFileHistoryCount);
 			}
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return builder.build();
+	}
+
+
+	private class DatabaseVersionIterator implements Iterator<DatabaseVersion> {
+		private ResultSet resultSet;
+		private boolean excludeChunkData;
+		private int fileHistoryMaxCount;
+
+		private boolean hasNext;
+
+		public DatabaseVersionIterator(ResultSet resultSet) throws SQLException {
+			this(resultSet, false, -1);
+		}
+
+		public DatabaseVersionIterator(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
+			this.resultSet = resultSet;
+			this.excludeChunkData = excludeChunkData;
+			this.fileHistoryMaxCount = fileHistoryMaxCount;
+					
+			this.hasNext = resultSet.next();					
+		}
+
+		@Override
+		public boolean hasNext() {
+			return hasNext;
+		}
+
+		@Override
+		public DatabaseVersion next() {
+			if (hasNext) {
+				try {
+					DatabaseVersion databaseVersion = createDatabaseVersionFromRow(resultSet, excludeChunkData, fileHistoryMaxCount);
+					hasNext = resultSet.next();
+
+					return databaseVersion;
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Cannot load next SQL row.", e);
+				}
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public void remove() {
+			throw new RuntimeException("Not implemented.");
+		}
+
 	}
 
 	protected DatabaseVersion createDatabaseVersionFromRow(ResultSet resultSet, boolean excludeChunkData, int fileHistoryMaxCount) throws SQLException {
