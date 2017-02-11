@@ -90,10 +90,6 @@ public class SqlDatabase {
 
 	// General
 
-	public Connection getConnection() {
-		return connection; // TODO [low] Exposes internal state!
-	}
-
 	public void commit() throws SQLException {
 		connection.commit();
 	}
@@ -273,20 +269,12 @@ public class SqlDatabase {
 		return fileVersionDao.getFileHistory(fileHistoryId);
 	}
 
-	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMaxPurgeVersion(int keepVersionsCount) {
-		return fileVersionDao.getFileHistoriesWithMaxPurgeVersion(keepVersionsCount);
-	}
-
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
 		return fileVersionDao.getFileHistoriesToPurgeInInterval(beginTimestamp, endTimestamp, timeUnit);
 	}
 
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeBefore(long timestamp) {
 		return fileVersionDao.getFileHistoriesToPurgeBefore(timestamp);
-	}
-
-	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
-		return fileVersionDao.getDeletedFileVersions();
 	}
 
 	public Map<FileHistoryId, FileVersion> getDeletedFileVersionsBefore(long timestamp) {
@@ -323,16 +311,8 @@ public class SqlDatabase {
 		multiChunkDao.removeUnreferencedMultiChunks();
 	}
 
-	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
-		return multiChunkDao.getMultiChunks();
-	}
-
 	public void writeMuddyMultiChunks(Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunks) throws SQLException {
 		multiChunkDao.writeMuddyMultiChunks(muddyMultiChunks);
-	}
-
-	public Map<MultiChunkId, MultiChunkEntry> getMuddyMultiChunks() {
-		return multiChunkDao.getMuddyMultiChunks();
 	}
 
 	public void removeNonMuddyMultiChunks() throws SQLException {

@@ -264,28 +264,6 @@ public class MultiChunkSqlDao extends AbstractSqlDao {
 		}
 	}
 
-	public Map<MultiChunkId, MultiChunkEntry> getMultiChunks() {
-		try (PreparedStatement preparedStatement = getStatement("multichunk.select.all.getMultiChunks.sql")) {
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				return createMultiChunkEntriesWithoutChunks(resultSet);
-			}
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public Map<MultiChunkId, MultiChunkEntry> getMuddyMultiChunks() {
-		try (PreparedStatement preparedStatement = getStatement("multichunk.select.muddy.getMuddyMultiChunks.sql")) {
-			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				return createMultiChunkEntriesWithoutChunks(resultSet);
-			}
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	private Map<MultiChunkId, MultiChunkEntry> createMultiChunkEntriesWithoutChunks(ResultSet resultSet) throws SQLException {		
 		Map<MultiChunkId, MultiChunkEntry> unusedMultiChunkIds = new HashMap<MultiChunkId, MultiChunkEntry>();		
 		
