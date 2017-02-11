@@ -279,18 +279,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		return fileTypesStr;
 	}
 
-	public Map<FileHistoryId, FileVersion> getFileHistoriesWithMaxPurgeVersion(int keepVersionsCount) {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getMaxPurgeVersions.sql")) {
-			preparedStatement.setInt(1, keepVersionsCount);
-			preparedStatement.setInt(2, keepVersionsCount);
-
-			return getSingleVersionInHistory(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public Map<FileHistoryId, List<FileVersion>> getFileHistoriesToPurgeInInterval(long beginTimestamp, long endTimestamp, TimeUnit timeUnit) {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsByInterval.sql")) {
 			String timeUnitIdentifier = timeUnitSqlTimeUnitMap.get(timeUnit);
@@ -310,15 +298,6 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getPurgeVersionsBeforeTime.sql")) {
 			preparedStatement.setTimestamp(1, new Timestamp(timestamp));
 			return getAllVersionsInQuery(preparedStatement);
-		}
-		catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public Map<FileHistoryId, FileVersion> getDeletedFileVersions() {
-		try (PreparedStatement preparedStatement = getStatement("fileversion.select.all.getDeletedFileVersions.sql")) {
-			return getSingleVersionInHistory(preparedStatement);
 		}
 		catch (SQLException e) {
 			throw new RuntimeException(e);
