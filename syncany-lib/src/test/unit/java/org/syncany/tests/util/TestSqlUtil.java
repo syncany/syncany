@@ -72,4 +72,10 @@ public class TestSqlUtil {
 
 		return queryResult.toString();
 	}
+	
+	public static boolean runSql(String sqlQuery, Connection databaseConnection) throws SQLException {
+		try (PreparedStatement preparedStatement = databaseConnection.prepareStatement(sqlQuery)) {
+			return preparedStatement.execute();	
+		}
+	}
 }
