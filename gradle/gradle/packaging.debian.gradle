@@ -10,7 +10,7 @@ task debianClean(type: Delete) {
 	delete 'build/debian'	
 }
 
-task debianManpages(dependsOn: installApp) {
+task debianManpages(dependsOn: installDist) {
 	doLast {
 		rootProject.file("build/debian/syncany/debian").mkdirs()
 	
@@ -21,7 +21,7 @@ task debianManpages(dependsOn: installApp) {
 	}
 }
 
-task debianPrepare(dependsOn: [debianClean, installApp, debianManpages]) { 
+task debianPrepare(dependsOn: [debianClean, installDist, debianManpages]) { 
 	doLast {
 		copy {
 			from rootProject.files("build/install/syncany") 
