@@ -29,7 +29,6 @@ apply from: 'gradle/gradle/packaging.debian.gradle'
 apply from: 'gradle/gradle/reports.coverage.gradle'
 apply from: 'gradle/gradle/reports.tests.gradle'
 apply from: 'gradle/gradle/reports.javadoc.gradle'
-apply from: 'gradle/gradle/reports.sonarqube.gradle'
 
 apply from: 'gradle/gradle/development.eclipse.gradle'
 apply from: 'gradle/gradle/development.fakeinstall.gradle'

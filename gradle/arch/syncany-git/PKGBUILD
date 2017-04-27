@@ -20,7 +20,7 @@ pkgver(){
 
 build(){
     cd "$srcdir/$pkgname"
-    ./gradlew installApp
+    ./gradlew installDist
 }
 
 package(){

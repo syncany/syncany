@@ -1,6 +1,6 @@
 // Windows Installer ///////////////////////////////////////////////////////////
 
-task exe(dependsOn: [installApp]) << {
+task exe(dependsOn: [installDist]) << {
 	def innoSetupDir = new File("${buildDir}/innosetup")
 
 	delete innoSetupDir	

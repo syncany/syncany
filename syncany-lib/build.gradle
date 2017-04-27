@@ -32,8 +32,4 @@ dependencies {
 	testCompile		"net.sourceforge.htmlunit:htmlunit:2.15"
 }
 
-sonarRunner {
-	sonarProperties {
-			properties["sonar.tests"] += "src/test/integration/java"
-	}
-}
+

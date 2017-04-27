@@ -11,7 +11,7 @@ class Syncany < Formula
   depends_on "gradle" => "2.2"
 
   def install
-    system "./gradlew", "installApp"
+    system "./gradlew", "installDist"
 
     inreplace "build/install/syncany/bin/syncany" do |s|
       s.gsub! /APP_HOME="`pwd -P`"/, %{APP_HOME="#{libexec}"}

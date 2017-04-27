@@ -3,7 +3,7 @@
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '1.11'
+	gradleVersion = '3.5'
 	jarFile = 'gradle/wrapper/wrapper.jar'
 }
 
