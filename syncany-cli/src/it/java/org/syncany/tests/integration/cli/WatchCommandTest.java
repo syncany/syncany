@@ -26,8 +26,8 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.tests.unit.util.TestCliUtil;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestCliUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class WatchCommandTest {

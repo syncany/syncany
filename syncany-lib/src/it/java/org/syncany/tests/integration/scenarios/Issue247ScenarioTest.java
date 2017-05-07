@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.syncany.operations.cleanup.CleanupOperationOptions;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

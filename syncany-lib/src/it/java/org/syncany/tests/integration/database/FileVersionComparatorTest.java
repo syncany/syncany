@@ -41,7 +41,7 @@ import org.syncany.database.FileVersionComparator;
 import org.syncany.database.FileVersionComparator.FileChange;
 import org.syncany.database.FileVersionComparator.FileProperties;
 import org.syncany.database.FileVersionComparator.FileVersionComparison;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.EnvironmentUtil;

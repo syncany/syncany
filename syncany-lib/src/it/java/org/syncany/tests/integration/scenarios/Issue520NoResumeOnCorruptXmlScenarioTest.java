@@ -21,7 +21,7 @@ import java.io.File;
 
 import org.junit.Test;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;

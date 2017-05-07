@@ -36,7 +36,7 @@ import org.syncany.tests.integration.operations.SplitSyncUpOperationTest;
 import org.syncany.tests.integration.operations.StatusOperationTest;
 import org.syncany.tests.integration.operations.UpOperationTest;
 import org.syncany.tests.integration.operations.UpdateOperationTest;
-import org.syncany.tests.unit.operations.daemon.DaemonOperationTest;
+import org.syncany.operations.daemon.DaemonOperationTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

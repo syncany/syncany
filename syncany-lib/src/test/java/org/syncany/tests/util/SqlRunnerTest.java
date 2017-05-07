@@ -26,7 +26,6 @@ import java.sql.DriverManager;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.util.SqlRunner;
 
 public class SqlRunnerTest {

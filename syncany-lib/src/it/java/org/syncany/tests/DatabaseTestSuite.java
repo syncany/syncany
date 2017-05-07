@@ -31,8 +31,8 @@ import org.syncany.tests.integration.database.dao.FileContentDaoTest;
 import org.syncany.tests.integration.database.dao.FileVersionDaoTest;
 import org.syncany.tests.integration.database.dao.MultiChunkDaoTest;
 import org.syncany.tests.integration.database.dao.XmlDatabaseDaoTest;
-import org.syncany.tests.unit.database.ObjectIdTest;
-import org.syncany.tests.unit.database.VectorClockTest;
+import org.syncany.database.ObjectIdTest;
+import org.syncany.database.VectorClockTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

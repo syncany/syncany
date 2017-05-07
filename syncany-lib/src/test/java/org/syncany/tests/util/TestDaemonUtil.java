@@ -28,7 +28,6 @@ import org.syncany.config.to.DaemonConfigTO;
 import org.syncany.config.to.PortTO;
 import org.syncany.config.to.UserTO;
 import org.syncany.crypto.CipherUtil;
-import org.syncany.tests.unit.util.TestFileUtil;
 
 /**
  * This class contains various helper methods for daemon related tests.

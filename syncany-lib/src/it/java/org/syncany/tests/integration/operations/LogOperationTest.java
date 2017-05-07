@@ -30,7 +30,7 @@ import org.syncany.operations.log.LogOperationOptions;
 import org.syncany.operations.status.StatusOperationOptions;
 import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationOptions;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class LogOperationTest {

@@ -25,7 +25,7 @@ import java.util.Properties;
 import org.junit.Test;
 import org.syncany.Client;
 import org.syncany.cli.CommandLineClient;
-import org.syncany.tests.unit.util.TestCliUtil;
+import org.syncany.tests.util.TestCliUtil;
 
 public class UpdateCommandTest {		
 	@Test
