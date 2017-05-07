@@ -59,7 +59,6 @@ import org.syncany.database.MemoryDatabase;
 import org.syncany.database.MultiChunkEntry;
 import org.syncany.database.PartialFileHistory;
 import org.syncany.database.VectorClock;
-import org.syncany.tests.unit.util.TestFileUtil;
 import org.syncany.util.CollectionUtil;
 import org.syncany.util.FileUtil;
 import org.syncany.util.StringUtil;

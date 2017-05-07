@@ -44,7 +44,7 @@ public class OAuthTokenWebListenerTest {
 		WEB_CLIENT.closeAllWindows();
 	}
 
-	@Test
+	@Test(timeout = 30000)
 	public void testTokenAsQuery() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forMode(OAuthMode.SERVER)
@@ -77,7 +77,7 @@ public class OAuthTokenWebListenerTest {
 		assertEquals(REFERENCE_TOKEN, submittedToken.get().getToken());
 	}
 
-	@Test
+	@Test(timeout = 30000)
 	public void testTokenAsHash() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forMode(OAuthMode.BROWSER)
@@ -110,7 +110,7 @@ public class OAuthTokenWebListenerTest {
 		assertEquals(REFERENCE_TOKEN, submittedToken.get().getToken());
 	}
 
-	@Test
+	@Test(timeout = 30000)
 	public void testMissingField() throws Exception {
 		OAuthTokenWebListener twl = OAuthTokenWebListener
 						.forMode(OAuthMode.SERVER)
@@ -143,7 +143,7 @@ public class OAuthTokenWebListenerTest {
 		assertNull(submittedToken.get());
 	}
 
-	@Test
+	@Test(timeout = 30000)
 	public void testOAuthGenerator() {
 		OAuthGenerator testOAuthGenerator = new TestOAuthGenerator();
 

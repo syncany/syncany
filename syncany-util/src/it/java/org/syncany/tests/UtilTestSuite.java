@@ -20,15 +20,15 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.syncany.tests.unit.util.Base58Test;
-import org.syncany.tests.unit.util.CollectionUtilTest;
-import org.syncany.tests.unit.util.FileUtilTest;
-import org.syncany.tests.unit.util.LimitedDosFileAttributesTest;
-import org.syncany.tests.unit.util.LimitedSortedSetTest;
-import org.syncany.tests.unit.util.NormalizedPathTest;
-import org.syncany.tests.unit.util.PidFileUtilTest;
-import org.syncany.tests.unit.util.ReflectionUtilTest;
-import org.syncany.tests.unit.util.StringUtilTest;
+import org.syncany.tests.util.Base58Test;
+import org.syncany.tests.util.CollectionUtilTest;
+import org.syncany.tests.util.FileUtilTest;
+import org.syncany.tests.util.LimitedDosFileAttributesTest;
+import org.syncany.tests.util.LimitedSortedSetTest;
+import org.syncany.tests.util.NormalizedPathTest;
+import org.syncany.tests.util.PidFileUtilTest;
+import org.syncany.tests.util.ReflectionUtilTest;
+import org.syncany.tests.util.StringUtilTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({

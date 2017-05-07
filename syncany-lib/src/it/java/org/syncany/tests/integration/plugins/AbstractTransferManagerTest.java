@@ -35,7 +35,7 @@ import org.syncany.plugins.transfer.files.MasterRemoteFile;
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.StringUtil;
 
 import static org.junit.Assert.assertEquals;

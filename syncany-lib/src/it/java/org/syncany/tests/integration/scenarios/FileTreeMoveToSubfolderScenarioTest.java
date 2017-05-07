@@ -22,7 +22,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 import org.junit.Test;
 import org.syncany.plugins.transfer.TransferSettings;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestClient;
 import org.syncany.tests.util.TestConfigUtil;
 

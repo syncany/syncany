@@ -11,7 +11,7 @@ import org.syncany.operations.up.UpOperation;
 import org.syncany.operations.up.UpOperationOptions;
 import org.syncany.operations.up.UpOperationResult;
 import org.syncany.plugins.local.LocalTransferSettings;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 import org.syncany.util.CollectionUtil;
 

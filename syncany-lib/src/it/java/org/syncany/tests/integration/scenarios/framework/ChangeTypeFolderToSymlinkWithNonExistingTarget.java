@@ -19,7 +19,7 @@ package org.syncany.tests.integration.scenarios.framework;
 
 import java.io.File;
 
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.util.EnvironmentUtil;
 import org.syncany.util.FileUtil;
 

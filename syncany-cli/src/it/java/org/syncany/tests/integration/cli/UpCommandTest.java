@@ -29,8 +29,8 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
-import org.syncany.tests.unit.util.TestCliUtil;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestCliUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
 
 public class UpCommandTest {

@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.syncany.config.Logging;
 import org.syncany.operations.watch.DefaultRecursiveWatcher;
 import org.syncany.operations.watch.RecursiveWatcher.WatchListener;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 public class RecursiveWatcherTest {	
 	static {

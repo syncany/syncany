@@ -49,7 +49,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
 import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
-import org.syncany.tests.unit.util.TestFileUtil;
+import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestAssertUtil;
 import org.syncany.tests.util.TestDatabaseUtil;
 

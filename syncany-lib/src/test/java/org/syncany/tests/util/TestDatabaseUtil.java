@@ -36,7 +36,6 @@ import org.syncany.database.VectorClock;
 import org.syncany.database.dao.DatabaseXmlSerializer;
 import org.syncany.database.dao.DatabaseXmlSerializer.DatabaseReadType;
 import org.syncany.operations.down.DatabaseBranch;
-import org.syncany.tests.unit.util.TestFileUtil;
 
 public class TestDatabaseUtil {
 	private static Pattern databaseVersionHeaderPattern = Pattern.compile("([^/]+)/\\(([^)]+)\\)/T=?(\\d+)");
