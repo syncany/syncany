@@ -17,11 +17,7 @@
  */
 package org.syncany.operations.down;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,12 +59,10 @@ public class DatabaseReconciliator {
 	/**
 	 * Implements the core synchronization algorithm as described {@link DatabaseReconciliator in the class description}.
 	 * 
-	 * @param localMachineName Client name of the local machine (required for branch stitching)
-	 * @param localBranch Local branch, created from the local database
-	 * @param unknownRemoteBranches Newly downloaded unknown remote branches (incomplete branches; will be stitched)
+	 * @param allBranches TreeMap of all DatabaseBranches
 	 * @return Returns the branch of the winning client
 	 */
-	public Map.Entry<String, DatabaseBranch> findWinnerBranch(DatabaseBranches allBranches)
+	public Map.Entry<String, DatabaseBranch> findWinnerBranch(Map<String, DatabaseBranch> allBranches)
 			throws Exception {
 
 		Entry<String, DatabaseBranch> winnersNameAndBranch = findWinnersNameAndBranch(allBranches);
@@ -186,10 +180,10 @@ public class DatabaseReconciliator {
 	 * 
 	 * Last version matches last version of B. Hence B wins.
 	 * 
-	 * @param allStitchedBranches All branches of all machines (including local)
+	 * @param allBranches All branches of all machines (including local)
 	 * @return Returns the name and the branch of the winning machine 
 	 */
-	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allBranches) {
+	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(Map<String, DatabaseBranch> allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = sortBranches(allBranches);
 		
 		if (databaseVersionHeaders.size() == 0) {
@@ -216,8 +210,8 @@ public class DatabaseReconciliator {
 		// Determine client name for winning branch
 		DatabaseVersionHeader winningLastDatabaseVersionHeader = winnersBranch.getLast();
 
-		for (String currentClient : allBranches.getClients()) {
-			DatabaseBranch currentBranch = allBranches.getBranch(currentClient);
+		for (String currentClient : allBranches.keySet()) {
+			DatabaseBranch currentBranch = allBranches.get(currentClient);
 			DatabaseVersionHeader currentBranchLastDatabaseVersionHeader = currentBranch.getLast();
 			
 			if (winningLastDatabaseVersionHeader.equals(currentBranchLastDatabaseVersionHeader)) {
@@ -228,11 +222,11 @@ public class DatabaseReconciliator {
 		return null;
 	}
 
-	private List<DatabaseVersionHeader> sortBranches(DatabaseBranches allBranches) {
+	private List<DatabaseVersionHeader> sortBranches(Map<String, DatabaseBranch> allBranches) {
 		List<DatabaseVersionHeader> databaseVersionHeaders = new ArrayList<DatabaseVersionHeader>();
 		
-		for (String client : allBranches.getClients()) {
-			databaseVersionHeaders.addAll(allBranches.getBranch(client).getAll());
+		for (String client : allBranches.keySet()) {
+			databaseVersionHeaders.addAll(allBranches.get(client).getAll());
 		}
 		
 		Collections.sort(databaseVersionHeaders, new DatabaseVersionHeaderComparator(true));
