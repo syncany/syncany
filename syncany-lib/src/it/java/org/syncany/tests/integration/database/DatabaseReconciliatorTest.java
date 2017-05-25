@@ -22,12 +22,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.junit.Test;
 import org.syncany.config.Logging;
+import org.syncany.database.DatabaseVersion;
 import org.syncany.database.DatabaseVersionHeader;
 import org.syncany.operations.down.DatabaseBranch;
-import org.syncany.operations.down.DatabaseBranches;
 import org.syncany.operations.down.DatabaseReconciliator;
 import org.syncany.tests.util.TestDatabaseUtil;
 
@@ -40,7 +41,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "B";
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -82,7 +83,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "A";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -120,7 +121,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "C";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -162,7 +163,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "B";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -214,7 +215,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "A";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -266,7 +267,7 @@ public class DatabaseReconciliatorTest {
 		String localMachineName = "C";
 
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -319,7 +320,7 @@ public class DatabaseReconciliatorTest {
 
 		DatabaseVersionHeader currentLocalVersion = null;
 
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// B
 		allBranches.put("B", TestDatabaseUtil.createBranch(new String[] {
@@ -379,7 +380,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "B";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -425,7 +426,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "D";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1,C4)/T=8");
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// A
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
@@ -480,7 +481,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "C";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A1)/T=1376074225169");
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1376074225169",
@@ -512,7 +513,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "C";
 		DatabaseVersionHeader currentLocalVersion = TestDatabaseUtil.createFromString("A/(A2)/T=1376074225230");
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		allBranches.put("A", TestDatabaseUtil.createBranch(new String[] {
 				"A/(A1)/T=1376074225169",
@@ -551,7 +552,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "T";
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// T
 		allBranches.put("T", TestDatabaseUtil.createBranch(new String[] {
@@ -648,7 +649,7 @@ public class DatabaseReconciliatorTest {
 		/// Input data ///
 		String localMachineName = "ZA";
 		DatabaseVersionHeader currentLocalVersion = null;
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		// ZA
 		allBranches.put("ZA", TestDatabaseUtil.createBranch(new String[] {
@@ -691,7 +692,7 @@ public class DatabaseReconciliatorTest {
 		testFromMachinePerspective(localMachineName, currentLocalVersion, allBranches, expectedTestResult);
 	}
 
-	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, DatabaseBranches allBranches,
+	private void testFromMachinePerspective(String localMachineName, DatabaseVersionHeader currentLocalVersion, Map<String, DatabaseBranch> allBranches,
 			TestResult expectedTestResult) throws Exception {
 		// Print them all
 		System.out.println("testFromMachinePerspective('" + localMachineName + "') with database version headers:");
@@ -704,10 +705,14 @@ public class DatabaseReconciliatorTest {
 		TestResult actualTestResult = new TestResult();
 
 		// Get 'local' branch
-		DatabaseBranch localBranch = allBranches.getBranch(localMachineName);
+		DatabaseBranch localBranch = allBranches.get(localMachineName);
 
 		// Get all the other ones (clone 'all', and remove local)
-		DatabaseBranches unstitchedRemoteBranches = allBranches.clone();
+		Map<String, DatabaseBranch> unstitchedRemoteBranches = new TreeMap<String, DatabaseBranch>(){{
+			putAll(allBranches);
+		}};
+
+
 		unstitchedRemoteBranches.remove(localMachineName);
 
 		System.out.println("Unstitched Branches (from remote):");
@@ -736,10 +741,10 @@ public class DatabaseReconciliatorTest {
 				actualTestResult.winnersLastDatabaseVersionHeader);
 	}
 
-	private void printBranches(DatabaseBranches branches) {
-		for (String machineName : branches.getClients()) {
+	private void printBranches(Map<String, DatabaseBranch> branches) {
+		for (String machineName : branches.keySet()) {
 			System.out.println(machineName + ":");
-			printBranch(branches.getBranch(machineName));
+			printBranch(branches.get(machineName));
 		}
 	}
 

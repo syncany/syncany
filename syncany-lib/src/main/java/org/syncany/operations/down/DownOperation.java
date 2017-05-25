@@ -70,9 +70,9 @@ import com.google.common.collect.Sets.SetView;
  * <p>The general operation flow is as follows:
  * <ol>
  *  <li>List all database versions on the remote storage using the {@link LsRemoteOperation}
- *      (implemented in {@link #listUnknownRemoteDatabases(MemoryDatabase, TransferManager) listUnknownRemoteDatabases()}</li>
+ *      (implemented in {@link #listUnknownRemoteDatabases() listUnknownRemoteDatabases()}</li>
  *  <li>Download unknown databases using a {@link TransferManager} (if any), skip the rest down otherwise
- *      (implemented in {@link #downloadUnknownRemoteDatabases(TransferManager, List) downloadUnknownRemoteDatabases()}</li>
+ *      (implemented in {@link #downloadUnknownRemoteDatabases(List) downloadUnknownRemoteDatabases()}</li>
  *  <li>Load remote database headers (branches) and compare them to the local database to determine a winner
  *      using several methods of the {@link DatabaseReconciliator}</li>
  *  <li>Determine whether the local branch conflicts with the winner branch; if so, prune conflicting
@@ -183,7 +183,7 @@ public class DownOperation extends AbstractTransferOperation {
 		}
 
 		try {
-			DatabaseBranches allBranches = populateDatabaseBranches(localBranch, remoteDatabaseHeaders);
+			Map<String, DatabaseBranch> allBranches = populateDatabaseBranches(localBranch, remoteDatabaseHeaders);
 			Map.Entry<String, DatabaseBranch> winnersBranch = determineWinnerBranch(allBranches);
 
 			purgeConflictingLocalBranch(localBranch, winnersBranch);
@@ -332,7 +332,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * This methods takes a Map containing DatabaseVersions (headers only) and loads these headers into {@link DatabaseBranches}.
+	 * This methods takes a Map containing DatabaseVersions (headers only) and loads these headers into {@link Map<String, DatabaseBranch>}.
 	 * In addition, the local branch is added to this. The resulting DatabaseBranches will contain all headers exactly once,
 	 * for the client that created that version.
 	 *
@@ -342,16 +342,16 @@ public class DownOperation extends AbstractTransferOperation {
 	 *
 	 * @return DatabaseBranches filled with all the headers that originated from either of the parameters.
 	 */
-	private DatabaseBranches populateDatabaseBranches(DatabaseBranch localBranch,
+	private Map<String, DatabaseBranch> populateDatabaseBranches(DatabaseBranch localBranch,
 			SortedMap<DatabaseRemoteFile, List<DatabaseVersion>> remoteDatabaseHeaders) {
-		DatabaseBranches allBranches = new DatabaseBranches();
+		Map<String, DatabaseBranch> allBranches = new TreeMap<>();
 
 		allBranches.put(config.getMachineName(), localBranch.clone());
 
 		for (DatabaseRemoteFile remoteDatabaseFile : remoteDatabaseHeaders.keySet()) {
 
 			// Populate branches
-			DatabaseBranch remoteClientBranch = allBranches.getBranch(remoteDatabaseFile.getClientName(), true);
+			DatabaseBranch remoteClientBranch = allBranches.computeIfAbsent(remoteDatabaseFile.getClientName(), client -> new DatabaseBranch());
 
 			for (DatabaseVersion remoteDatabaseVersion : remoteDatabaseHeaders.get(remoteDatabaseFile)) {
 				DatabaseVersionHeader header = remoteDatabaseVersion.getHeader();
@@ -375,12 +375,11 @@ public class DownOperation extends AbstractTransferOperation {
 	 *
 	 * <p>The detailed algorithm is described in the {@link DatabaseReconciliator}.
 	 *
-	 * @param localBranch Local database branch (extracted from the local database)
 	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
 	 * @return Returns the branch of the winner
 	 * @throws Exception If any kind of error occurs (...)
 	 */
-	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(DatabaseBranches allStitchedBranches)
+	private Map.Entry<String, DatabaseBranch> determineWinnerBranch(Map<String, DatabaseBranch> allStitchedBranches)
 			throws Exception {
 
 		logger.log(Level.INFO, "Determine winner using database reconciliator ...");
@@ -532,17 +531,17 @@ public class DownOperation extends AbstractTransferOperation {
 	 * that have been referenced by DIRTY database versions and might be reused in future database versions when
 	 * the other client cleans up its mess (performs another 'up').
 	 */
-	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, DatabaseBranches allStitchedBranches,
+	private void persistMuddyMultiChunks(Entry<String, DatabaseBranch> winnersBranch, Map<String, DatabaseBranch> allStitchedBranches,
 			Map<DatabaseVersionHeader, File> databaseVersionLocations) throws StorageException, IOException, SQLException {
 		// Find dirty database versions (from other clients!) and load them from files
 		Map<DatabaseVersionHeader, Collection<MultiChunkEntry>> muddyMultiChunksPerDatabaseVersion = new HashMap<>();
 		Set<DatabaseVersionHeader> winnersDatabaseVersionHeaders = Sets.newHashSet(winnersBranch.getValue().getAll());
 
-		for (String otherClientName : allStitchedBranches.getClients()) {
+		for (String otherClientName : allStitchedBranches.keySet()) {
 			boolean isLocalMachine = config.getMachineName().equals(otherClientName);
 
 			if (!isLocalMachine) {
-				DatabaseBranch otherClientBranch = allStitchedBranches.getBranch(otherClientName);
+				DatabaseBranch otherClientBranch = allStitchedBranches.get(otherClientName);
 				Set<DatabaseVersionHeader> otherClientDatabaseVersionHeaders = Sets.newHashSet(otherClientBranch.getAll());
 
 				SetView<DatabaseVersionHeader> otherMuddyDatabaseVersionHeaders = Sets.difference(otherClientDatabaseVersionHeaders,
