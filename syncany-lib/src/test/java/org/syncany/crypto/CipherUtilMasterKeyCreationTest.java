@@ -57,7 +57,7 @@ public class CipherUtilMasterKeyCreationTest {
 		assertEquals("PBKDF2WithHmacSHA1", masterKeyForPasswordTestAndSalt123.getAlgorithm());
 		assertEquals("RAW", masterKeyForPasswordTestAndSalt123.getFormat());
 		 
-		assertTrue(timeDuration > 5000);
+		assertTrue(timeDuration > 3000);
 	}
 	
 	@Test
