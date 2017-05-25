@@ -41,6 +41,7 @@ public class RecursiveWatcherTest {
 		});
 		
 		watcher.start();
+		Thread.sleep(100);
 		
 		TestFileUtil.createRandomFileInDirectory(tempDir.toFile(), 111);		
 		Thread.sleep(350);
