@@ -20,6 +20,7 @@ package org.syncany.tests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.syncany.operations.down.DatabaseVersionHeaderComparatorTest;
 import org.syncany.tests.integration.operations.AssemblerTest;
 import org.syncany.tests.integration.operations.CleanupOperationTest;
 import org.syncany.tests.integration.operations.ConnectOperationTest;
@@ -44,6 +45,7 @@ import org.syncany.operations.daemon.DaemonOperationTest;
 		CleanupOperationTest.class,
 		ConnectOperationTest.class,
 		DaemonOperationTest.class,
+		DatabaseVersionHeaderComparatorTest.class,
 		FileSystemActionComparatorTest.class,
 		FileSystemActionReconciliatorTest.class,
 		IndexerTest.class,
