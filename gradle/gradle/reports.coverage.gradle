@@ -18,7 +18,7 @@ subprojects {
 	test {
 		jacoco {
 			append = true
-			classDumpFile = file("${rootProject.buildDir}/jacoco/classpathdumps")
+			classDumpDir = file("${rootProject.buildDir}/jacoco/classpathdumps")
 			destinationFile = file("${rootProject.buildDir}/jacoco/tests.exec")
 		}
 	}
