@@ -11,7 +11,12 @@ repositories {
 dependencies {
 	compile			"commons-io:commons-io:2.4"
 	compile			"org.hsqldb:hsqldb:2.3.1"
-	            	
+
+	// because of Java 9+
+	// https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j#43574427
+	// https://blog.sourced-bvba.be/article/2017/12/17/java9-spring/
+	compile			"javax.xml.bind:jaxb-api:1.0.6"
+
 	testCompile		"junit:junit:4.9"   	      
 }
 
