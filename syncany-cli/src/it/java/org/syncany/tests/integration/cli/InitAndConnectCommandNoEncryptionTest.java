@@ -23,7 +23,6 @@ import static org.junit.contrib.java.lang.system.TextFromStandardInputStream.emp
 import java.io.File;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 	public void testCliInitCommandUninitializedLocalDir() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		assertTrue(TestCliUtil.createCurrentDirectory(tempDir));
+		assertTrue(TestCliUtil.createDirectory(tempDir));
 
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
@@ -81,7 +80,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 	public void testCliInitCommandInteractive() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		assertTrue(TestCliUtil.createCurrentDirectory(tempDir));
+		assertTrue(TestCliUtil.createDirectory(tempDir));
 
 		// Ensuring no console is set
 		InitConsole.setInstance(null);

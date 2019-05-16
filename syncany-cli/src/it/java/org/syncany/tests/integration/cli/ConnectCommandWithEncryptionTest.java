@@ -88,7 +88,7 @@ public class ConnectCommandWithEncryptionTest {
 
 		// Run
 		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp();
-		assertTrue(TestCliUtil.createCurrentDirectory(localDirB));
+		assertTrue(TestCliUtil.createDirectory(localDirB));
 
 		String[] connectArgs = new String[] {
 				"--localdir=" + localDirB.getAbsolutePath(),
@@ -128,7 +128,7 @@ public class ConnectCommandWithEncryptionTest {
 
 		// 2. Connect
 		File localDirB = TestFileUtil.createTempDirectoryInSystemTemp();
-		assertTrue(TestCliUtil.createCurrentDirectory(localDirB));
+		assertTrue(TestCliUtil.createDirectory(localDirB));
 
 		String[] connectArgs = new String[] {
 				"--localdir=" + localDirB.getAbsolutePath(),
@@ -185,7 +185,7 @@ public class ConnectCommandWithEncryptionTest {
 
 		initializedRepoFolder = new File(clientA.get("repopath"));
 
-		assertTrue(TestCliUtil.createCurrentDirectory(tempLocalDirA));
+		assertTrue(TestCliUtil.createDirectory(tempLocalDirA));
 
 		String[] initArgs = new String[] {
 				"--localdir=" + tempLocalDirA.getAbsolutePath(),

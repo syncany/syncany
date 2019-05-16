@@ -135,7 +135,7 @@ public class TestCliUtil {
 		return toString(bos).split("[\\r\\n]|[\\n\\r]|[\\n]");
 	}
 
-	public static boolean createCurrentDirectory(File newDirectory) {
+	public static boolean createDirectory(File newDirectory) {
 		File directory = newDirectory.getAbsoluteFile();
 		return directory.exists() || directory.mkdirs();
 	}
