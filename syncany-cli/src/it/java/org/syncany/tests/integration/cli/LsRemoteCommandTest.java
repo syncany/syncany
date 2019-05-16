@@ -20,7 +20,9 @@ package org.syncany.tests.integration.cli;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
@@ -41,7 +43,7 @@ public class LsRemoteCommandTest {
 				"ls-remote"
 		}));
 
-		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("Different number of output lines expected.\n" + String.join("\n", cliOut), 3, cliOut.length);
 
 		// Round 2: One new database expected
 		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);

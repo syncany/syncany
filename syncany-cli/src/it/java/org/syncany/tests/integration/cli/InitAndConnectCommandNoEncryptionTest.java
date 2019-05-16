@@ -46,22 +46,18 @@ public class InitAndConnectCommandNoEncryptionTest {
 		originalWorkingDirectory = new File(System.getProperty("user.dir"));
 	}
 
-	@After
-	public void after() {
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-	}
-
 	@Test
 	public void testCliInitCommandUninitializedLocalDir() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TestCliUtil.setCurrentDirectory(tempDir);
+		assertTrue(TestCliUtil.createCurrentDirectory(tempDir));
 
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
 
 		// Run
 		String[] initArgs = new String[] {
+				"--localdir=" + tempDir.getAbsolutePath(),
 				"init",
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
@@ -77,8 +73,6 @@ public class InitAndConnectCommandNoEncryptionTest {
 		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 	}
@@ -87,7 +81,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 	public void testCliInitCommandInteractive() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TestCliUtil.setCurrentDirectory(tempDir);
+		assertTrue(TestCliUtil.createCurrentDirectory(tempDir));
 
 		// Ensuring no console is set
 		InitConsole.setInstance(null);
@@ -97,6 +91,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 
 		// Run
 		String[] initArgs = new String[] {
+				"--localdir=" + tempDir.getAbsolutePath(),
 				"init",
 				"--no-encryption",
 				"--no-compression"
@@ -115,8 +110,6 @@ public class InitAndConnectCommandNoEncryptionTest {
 		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 	}

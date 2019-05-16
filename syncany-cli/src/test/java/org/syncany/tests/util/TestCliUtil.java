@@ -135,14 +135,8 @@ public class TestCliUtil {
 		return toString(bos).split("[\\r\\n]|[\\n\\r]|[\\n]");
 	}
 
-	public static boolean setCurrentDirectory(File newDirectory) {
-		boolean result = false;
+	public static boolean createCurrentDirectory(File newDirectory) {
 		File directory = newDirectory.getAbsoluteFile();
-
-		if (directory.exists() || directory.mkdirs()) {
-			result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
-		}
-
-		return result;
+		return directory.exists() || directory.mkdirs();
 	}
 }

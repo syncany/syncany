@@ -8,16 +8,26 @@ repositories {
 	mavenCentral()
 }
 
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
+}
+
 dependencies {
 	compile			"commons-io:commons-io:2.4"
 	compile			"org.hsqldb:hsqldb:2.3.1"
 
-	// because of Java 9+
+	// Because Java 9+ does not automatically include a JAXB provider
 	// https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j#43574427
 	// https://blog.sourced-bvba.be/article/2017/12/17/java9-spring/
-	compile			"javax.xml.bind:jaxb-api:1.0.6"
+	compile			"javax.xml.bind:jaxb-api:2.3.1"
+	compile			"org.glassfish.jaxb:jaxb-runtime:2.3.1"
 
-	testCompile		"junit:junit:4.9"   	      
+	testCompile		"junit:junit:4.9"
+	testCompile		"org.junit.jupiter:junit-jupiter:5.4.2"
+	testRuntime		"org.junit.vintage:junit-vintage-engine:5.4.2"
 }
 
 
