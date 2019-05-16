@@ -17,18 +17,16 @@
  */
 package org.syncany.tests.integration.cli;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.junit.Test;
 import org.syncany.cli.CommandLineClient;
 import org.syncany.tests.util.TestCliUtil;
-import org.syncany.tests.util.TestFileUtil;
 import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestFileUtil;
+
+import java.io.File;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public class LsRemoteCommandTest {
 	@Test
