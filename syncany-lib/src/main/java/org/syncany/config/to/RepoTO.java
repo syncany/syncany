@@ -48,7 +48,7 @@ import org.syncany.util.StringUtil;
  * annotation-based configuration.
  *
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name = "repo", strict = false)
 public class RepoTO {

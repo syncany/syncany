@@ -34,7 +34,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  * InternalWebInterfaceHandler is responsible for handling requests 
  * to the web interface.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class InternalWebInterfaceHandler implements HttpHandler {
 	private static final Logger logger = Logger.getLogger(InternalWebInterfaceHandler.class.getSimpleName());
@@ -83,7 +83,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 		exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/html");
 		
 		if (webInterfacePlugins.size() == 0) {
-			String responseMessage = "No web interface installed.<br />Use <tt>sy plugin install simpleweb --snapshot</tt> "
+			String responseMessage = "No web interface installed.<br>Use <code>sy plugin install simpleweb --snapshot</code> "
 					+ "to install a web interface, then restart the daemon.";
 			
 			exchange.getResponseSender().send(responseMessage);
@@ -96,7 +96,7 @@ public class InternalWebInterfaceHandler implements HttpHandler {
 			});
 			
 			String responseMessage = "Only one web interface can be installed, but " + webInterfacePlugins.size() + " plugins found: "
-					+ webInterfacePluginsList + "<br />Use <tt>sy plugin remove &lt;pluginId&gt;</tt> to remove plugins, then restart the daemon.";
+					+ webInterfacePluginsList + "<br>Use <code>sy plugin remove &lt;pluginId&gt;</code> to remove plugins, then restart the daemon.";
 
 			exchange.getResponseSender().send(responseMessage);
 		}

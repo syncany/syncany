@@ -32,7 +32,7 @@ import org.syncany.plugins.transfer.TransferManager;
  * 
  * @see PathAware
  * @see PathAwareFeatureTransferManager
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public interface PathAwareFeatureExtension extends FeatureExtension {
 	/**

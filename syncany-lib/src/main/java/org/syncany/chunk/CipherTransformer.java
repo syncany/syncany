@@ -43,7 +43,7 @@ import org.syncany.util.StringUtil;
  * key. It can be instantiated using a property list (from a config file) or
  * by passing the dependencies to the constructor.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CipherTransformer extends Transformer {
 	public static final String TYPE = "cipher";

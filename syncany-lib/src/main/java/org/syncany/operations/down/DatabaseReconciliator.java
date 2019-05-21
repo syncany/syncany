@@ -53,9 +53,9 @@ import org.syncany.database.VectorClock;
  * 
  * @see DownOperation
  * @see VectorClock
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Pim Otte <otte.pim@gmail.com>
- * @author Steffen Dangmann <steffen.dangmann@googlemail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Pim Otte (otte.pim@gmail.com)
+ * @author Steffen Dangmann (steffen.dangmann@googlemail.com)
  */
 public class DatabaseReconciliator {
 	private static final Logger logger = Logger.getLogger(DatabaseReconciliator.class.getSimpleName());
@@ -63,9 +63,6 @@ public class DatabaseReconciliator {
 	/**
 	 * Implements the core synchronization algorithm as described {@link DatabaseReconciliator in the class description}.
 	 * 
-	 * @param localMachineName Client name of the local machine (required for branch stitching)
-	 * @param localBranch Local branch, created from the local database
-	 * @param unknownRemoteBranches Newly downloaded unknown remote branches (incomplete branches; will be stitched)
 	 * @return Returns the branch of the winning client
 	 */
 	public Map.Entry<String, DatabaseBranch> findWinnerBranch(DatabaseBranches allBranches)
@@ -141,7 +138,7 @@ public class DatabaseReconciliator {
 	 * Iterate over this list, adding databaseversions to the winning branch if they are not simultaneous with the
 	 * winning branch up until this point. 
 	 *
-	 * <p><b>Illustration:</b><br />
+	 * <p><b>Illustration:</b><br>
 	 * Suppose the following branches exist. 
 	 * Naming: <em>created-by / vector clock / local time</em>.
 	 * 
@@ -186,7 +183,7 @@ public class DatabaseReconciliator {
 	 * 
 	 * Last version matches last version of B. Hence B wins.
 	 * 
-	 * @param allStitchedBranches All branches of all machines (including local)
+	 * @param allBranches All branches of all machines (including local)
 	 * @return Returns the name and the branch of the winning machine 
 	 */
 	private Entry<String, DatabaseBranch> findWinnersNameAndBranch(DatabaseBranches allBranches) {

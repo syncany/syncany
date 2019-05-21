@@ -28,7 +28,7 @@ import org.syncany.plugins.transfer.StorageException;
  * Initializing an instance with a different name will throw an
  * exception.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class SyncanyRemoteFile extends RemoteFile {
 	private static final String NAME_FORMAT = "syncany";
@@ -43,8 +43,8 @@ public class SyncanyRemoteFile extends RemoteFile {
 
 	/**
 	 * Initializes a new repo file, given a name. This constructor might 
-	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}. 
+	 * be called by the {@link RemoteFile#createRemoteFile(String, Class) createRemoteFile()}
+	 * method of the {@link RemoteFile}.
 	 *  
 	 * @param name Repo file name; <b>must</b> always be <b>syncany</b> 
 	 * @throws StorageException If the name is not <b>syncany</b>

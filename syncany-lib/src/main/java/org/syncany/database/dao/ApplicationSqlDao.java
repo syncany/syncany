@@ -33,7 +33,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * The application data access object (DAO) writes and queries the SQL database for
  * general information about the application.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ApplicationSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(ApplicationSqlDao.class.getSimpleName());
@@ -137,7 +137,7 @@ public class ApplicationSqlDao extends AbstractSqlDao {
 	 * Shuts down the HSQL database, i.e. persists all data, closes all connections
 	 * and unlocks the database for other processes.
 	 *
-	 * <p>The command sends the <b><tt>SHUTDOWN</tt></b> SQL command.
+	 * <p>The command sends the <b><code>SHUTDOWN</code></b> SQL command.
 	 */
 	public void shutdown() {
 		try {

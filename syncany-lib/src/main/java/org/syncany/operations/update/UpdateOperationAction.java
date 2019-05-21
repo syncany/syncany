@@ -20,7 +20,7 @@ package org.syncany.operations.update;
 /**
  * Actions contained in the {@link UpdateOperation}.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public enum UpdateOperationAction {
 	/**

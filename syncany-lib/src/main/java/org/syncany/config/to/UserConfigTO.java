@@ -39,7 +39,7 @@ import org.syncany.crypto.SaltedSecretKeyConverter;
  * annotation-based configuration.
  *
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name = "userConfig", strict = false)
 public class UserConfigTO {

@@ -42,9 +42,9 @@ import org.syncany.operations.OperationResult;
  * 
  * <p>Commands are automatically mapped from their camel case name on the command line
  * to a class name using the {@link CommandFactory}. The command 'ls-remote', for instance,
- * is mapped to the <tt>LsRemoteCommand</tt>.
+ * is mapped to the <code>LsRemoteCommand</code>.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Command {
 	protected Config config;

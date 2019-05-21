@@ -46,7 +46,7 @@ import org.syncany.util.FileUtil;
  * other, or compare {@link FileVersion}s to local {@link File}s.
  *
  * <p>It captures the {@link FileProperties} of two files or file versions and compares them
- * using the various <tt>compare*</tt>-methods. A comparison returns a set of {@link FileChange}s,
+ * using the various <code>compare*</code>-methods. A comparison returns a set of {@link FileChange}s,
  * each of which identifies a certain attribute change (e.g. checksum changed, name changed).
  * A file can be considered equal if the returned set of {@link FileChange}s is empty.
  *
@@ -56,7 +56,7 @@ import org.syncany.util.FileUtil;
  * sense (e.g. new vs. deleted files or files vs. folders). If a cancelling test is not successful,
  * other tests are not performed.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileVersionComparator {
 	private static final Logger logger = Logger.getLogger(FileVersionComparator.class.getSimpleName());
@@ -66,8 +66,8 @@ public class FileVersionComparator {
 	/**
 	 * Creates a new file version comparator helper class.
 	 *
-	 * <p>The <tt>rootFolder</tt> is needed to allow a comparison of the relative file path.
-	 * The <tt>checksumAlgorithm</tt> is used for calculate and compare file checksums. Both
+	 * <p>The <code>rootFolder</code> is needed to allow a comparison of the relative file path.
+	 * The <code>checksumAlgorithm</code> is used for calculate and compare file checksums. Both
 	 * are used if a local {@link File} is compared to a {@link FileVersion}.
 	 *
 	 * @param rootFolder Base folder to determine a relative path to
@@ -97,7 +97,7 @@ public class FileVersionComparator {
 	 *
 	 * <p>If the actual file does not differ in size, it is necessary to calculate and compare the checksum of the
 	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last
-	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.
+	 * modified date is enough, the <code>actualFileForceChecksum</code> parameter must be switched to <code>true</code>.
 	 *
 	 * @param expectedFileVersion The expected file version (that is compared to the actual file)
 	 * @param actualFile The actual file (that is compared to the expected file version)
@@ -113,14 +113,14 @@ public class FileVersionComparator {
 	 *
 	 * <p>If the actual file does not differ in size, it is necessary to calculate and compare the checksum of the
 	 * local file to the file version to reliably determine if it has changed. Unless comparing the size and last
-	 * modified date is enough, the <tt>actualFileForceChecksum</tt> parameter must be switched to <tt>true</tt>.
+	 * modified date is enough, the <code>actualFileForceChecksum</code> parameter must be switched to <code>true</code>.
 	 *
-	 * <p>If the <tt>actualFileKnownChecksum</tt> parameter is set and a checksum comparison is necessary, this
+	 * <p>If the <code>actualFileKnownChecksum</code> parameter is set and a checksum comparison is necessary, this
 	 * parameter is used to compare checksums. If not and force checksum is enabled, the checksum is calculated
 	 * and compared.
 	 *
-	 * @param expectedFileVersion The expected file version (that is compared to the actual file)
-	 * @param actualFile The actual file (that is compared to the expected file version)
+	 * @param expectedLocalFileVersion The expected file version (that is compared to the actual file)
+	 * @param actualLocalFile The actual file (that is compared to the expected file version)
 	 * @param actualFileKnownChecksum If the checksum of the local file is known, it can be set
 	 * @param actualFileForceChecksum Force a checksum comparison if necessary (if size does not differ)
 	 * @return Returns a file version comparison object, indicating if there are differences between the file versions
@@ -352,12 +352,12 @@ public class FileVersionComparator {
 
 		// Check existence
 		if (fileComparison.expectedFileProperties.exists() != fileComparison.actualFileProperties.exists()) {
-			// File is expected to exist, but it does NOT --> file has been deleted
+			// File is expected to exist, but it does NOT --&gt; file has been deleted
 			if (fileComparison.expectedFileProperties.exists() && !fileComparison.actualFileProperties.exists()) {
 				fileComparison.fileChanges.add(FileChange.DELETED);
 			}
 
-			// File is expected to NOT exist, but it does --> file is new
+			// File is expected to NOT exist, but it does --&gt; file is new
 			else {
 				fileComparison.fileChanges.add(FileChange.NEW);
 			}

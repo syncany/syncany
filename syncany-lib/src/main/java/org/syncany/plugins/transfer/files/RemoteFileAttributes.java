@@ -18,7 +18,7 @@
 package org.syncany.plugins.transfer.files;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public abstract class RemoteFileAttributes {

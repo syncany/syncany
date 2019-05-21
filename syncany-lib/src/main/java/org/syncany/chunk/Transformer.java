@@ -38,7 +38,7 @@ import org.syncany.util.StringUtil;
  * its default constructor and initializing it using the {@link #init(Map) init()} method. Depending
  * on the implementation, varying settings must be passed.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Transformer {
 	private static final Logger logger = Logger.getLogger(Transformer.class.getSimpleName());
@@ -103,7 +103,7 @@ public abstract class Transformer {
 	 * a new transformer, it must be initialized using the {@link #init(Map) init()} method.  
 	 * 
 	 * <p>The given type attribute is mapped to fully qualified class name (FQCN) of the form
-	 * <tt>org.syncany.chunk.XTransformer</tt>, where <tt>X</tt> is the camel-cased type
+	 * <code>org.syncany.chunk.XTransformer</code>, where <code>X</code> is the camel-cased type
 	 * attribute.  
 	 * 
 	 * @param type Type/name of the transformer (corresponds to its camel case class name)

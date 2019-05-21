@@ -44,7 +44,7 @@ import java.util.logging.LogRecord;
  * Instead, it can be referenced (and instantiated) using a logging.properties
  * file.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class LogFormatter extends Formatter {
 	private DateFormat dateFormat;

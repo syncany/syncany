@@ -27,7 +27,7 @@ import java.util.Date;
  * reconciliation process, in particular when trying to find a winning
  * branch.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseVersionHeader {
 	private Date date;

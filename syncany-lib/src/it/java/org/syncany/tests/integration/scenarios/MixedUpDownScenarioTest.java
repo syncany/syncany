@@ -144,9 +144,9 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A3,  ,C4)/T=10 
- *     --> Conflicts with local version
- *     --> Local must merge local version (  ,B1,C3) in (A3,  ,C4)
- *     --> Local result is then (A3,B2,C4)		  
+ *     --&gt; Conflicts with local version
+ *     --&gt; Local must merge local version (  ,B1,C3) in (A3,  ,C4)
+ *     --&gt; Local result is then (A3,B2,C4)
  *     
  * CONFLICT 2 at A: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -174,7 +174,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A3,  ,C4)/T=10 
- *     --> That's me. Do nothing.     
+ *     --&gt; That's me. Do nothing.
  *     
  * CONFLICT 3 at C: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -211,7 +211,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A3,  ,C4)/T=10 
- *     --> That's not me. Must apply changes locally.     
+ *     --&gt; That's not me. Must apply changes locally.
  *     
  * CONFLICT 4 at B: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -248,9 +248,9 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A6,  ,C4)/T=19 
- *     --> Conflicts with local version
- *     --> Local must merge local version (A3,B5,C4) in (A6,  ,C4)
- *     --> Local result is then (A6,B6,C4)	         
+ *     --&gt; Conflicts with local version
+ *     --&gt; Local must merge local version (A3,B5,C4) in (A6,  ,C4)
+ *     --&gt; Local result is then (A6,B6,C4)
  *     
  * CONFLICT 5 at A: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -287,7 +287,7 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A6,  ,C4)/T=19 
- *     --> That's me. Do nothing.           
+ *     --&gt; That's me. Do nothing.
  *     
  * CONFLICT 6 at C: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -324,9 +324,9 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A6,  ,C4)/T=19 
- *     --> Conflicts with local version
- *     --> Local must merge local version (A3,  ,C8) in (A6,  ,C4)
- *     --> Local result is then (A6,  ,C9)	        
+ *     --&gt; Conflicts with local version
+ *     --&gt; Local must merge local version (A3,  ,C8) in (A6,  ,C4)
+ *     --&gt; Local result is then (A6,  ,C9)
  *     
  * CONFLICT 7 at C: 
  *  - Local:     (  ,  ,C1)/T=01
@@ -368,9 +368,9 @@ import org.syncany.tests.util.TestConfigUtil;
  *                                            
  *  - Result:
  *     Winner: (A6,  ,C4)/T=19 
- *     --> Conflicts with local version
- *     --> Local must merge local version (A3,  ,C8) in (A6,  ,C4)
- *     --> Local result is then (A6,  ,C9)	        
+ *     --&gt; Conflicts with local version
+ *     --&gt; Local must merge local version (A3,  ,C8) in (A6,  ,C4)
+ *     --&gt; Local result is then (A6,  ,C9)
  */		
 public class MixedUpDownScenarioTest {
 	@Test

@@ -69,7 +69,7 @@ import org.syncany.util.StringUtil;
  * As of now, this operation never returns, because it runs in a loop. The user
  * has to manually abort the operation on the command line.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class WatchOperation extends Operation implements NotificationListenerListener, WatchListener {
 	private static final Logger logger = Logger.getLogger(WatchOperation.class.getSimpleName());

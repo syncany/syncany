@@ -84,7 +84,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
  * It furthermore offers a method to programmatically enable the unlimited strength
  * crypto policies.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CipherUtil {
 	private static final Logger logger = Logger.getLogger(CipherUtil.class.getSimpleName());
@@ -110,7 +110,7 @@ public class CipherUtil {
 	 * strength policy has been enabled. Unlimited crypto allows for stronger crypto algorithms
 	 * such as AES-256 or Twofish-256.
 	 *
-	 * <p>The method is called in the <tt>static</tt> block of this class and hence initialized
+	 * <p>The method is called in the <code>static</code> block of this class and hence initialized
 	 * whenever then class is used.
 	 *
 	 * @see <a href="www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">Java Cryptography Extension (JCE) Unlimited Strength</a>
@@ -139,8 +139,8 @@ public class CipherUtil {
 	 * Attempts to programmatically enable the unlimited strength Java crypto extension
 	 * using the reflection API.
 	 *
-	 * <p>This class tries to set the property <tt>isRestricted</tt> of the class
-	 * <tt>javax.crypto.JceSecurity</tt> to <tt>false</tt> -- effectively disabling
+	 * <p>This class tries to set the property <code>isRestricted</code> of the class
+	 * <code>javax.crypto.JceSecurity</code> to <code>false</code> -- effectively disabling
 	 * the artificial limitations (and the disallowed algorithms).
 	 *
 	 * <p><b>Note</b>: Be aware that enabling the unlimited strength extension needs to

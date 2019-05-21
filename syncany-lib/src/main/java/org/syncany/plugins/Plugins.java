@@ -41,7 +41,7 @@ import com.google.common.reflect.ClassPath.ClassInfo;
  * </ul>
  *
  * @see Plugin
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Plugins {
 	private static final Logger logger = Logger.getLogger(Plugins.class.getSimpleName());
@@ -83,8 +83,8 @@ public class Plugins {
 	 * <p>Note: Unlike the {@link #list()} method, this method is not expected
 	 * to take long, because there is no need to read all JARs in the classpath.
 	 *
-	 * @param pluginId Identifier of the plugin, as defined by {@link Plugin#getId() the plugin ID)
-	 * @return Returns an instance of a plugin, or <tt>null</tt> if no plugin with the given identifier can be found
+	 * @param pluginId Identifier of the plugin, as defined by {@link Plugin#getId() the plugin ID}
+	 * @return Returns an instance of a plugin, or <code>null</code> if no plugin with the given identifier can be found
 	 */
 	public static Plugin get(String pluginId) {
 		if (pluginId == null) {

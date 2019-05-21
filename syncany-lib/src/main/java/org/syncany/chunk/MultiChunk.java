@@ -40,7 +40,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
  *      <b>it is essential that random read access on a multichunk is possible</b>.
  * </ul>
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class MultiChunk {
 	protected MultiChunkId id;
@@ -92,12 +92,12 @@ public abstract class MultiChunk {
 	/**
 	 * In read mode, this method can be used to <b>sequentially</b> read {@link Chunk}s from a multichunk.
 	 * The method returns a chunk until no more chunks are available, at which point it will return
-	 * <tt>null</tt>.
+	 * <code>null</code>.
 	 *
 	 * <p>If random read access on a multichunk is desired, the
 	 * {@link #getChunkInputStream(byte[]) getChunkInputStream()} method should be used instead.
 	 *
-	 * @return Returns the next chunk in the opened multichunk, or <tt>null</tt> if no chunk is available (anymore)
+	 * @return Returns the next chunk in the opened multichunk, or <code>null</code> if no chunk is available (anymore)
 	 * @throws IOException If an exception occurs when reading from the multichunk
 	 */
 	// TODO [low] Method is only used by tests, not necessary anymore? Required for 'cleanup'?
@@ -106,12 +106,12 @@ public abstract class MultiChunk {
 	/**
 	 * In read mode, this method can be used to read {@link Chunk}s in <b>random access mode</b>, using a chunk
 	 * checksum as identifier. The method returns a chunk input stream (the chunk's data) if the chunk is
-	 * found, and <tt>null</tt> otherwise.
+	 * found, and <code>null</code> otherwise.
 	 *
 	 * <p>If all chunks are read from a multichunk sequentially, the {@link #read()} method should be used instead.
 	 *
 	 * @param checksum The checksum identifying a chunk instance
-	 * @return Returns a chunk input stream (chunk data) if the chunk can be found in the multichunk, or <tt>null</tt> otherwise
+	 * @return Returns a chunk input stream (chunk data) if the chunk can be found in the multichunk, or <code>null</code> otherwise
 	 * @throws IOException If an exception occurs when reading from the multichunk
 	 */
 	// TODO [low] Method should be named 'read(checksum)' and return a Chunk object, not an input stream, right?!
@@ -132,7 +132,7 @@ public abstract class MultiChunk {
 	 * returns whether or not a new chunk can still be added. It is used by the
 	 * {@link Deduper}.
 	 *
-	 * @return Returns <tt>true</tt> if no more chunks should be added and the chunk should be closed, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if no more chunks should be added and the chunk should be closed, <code>false</code> otherwise
 	 */
 	public boolean isFull() {
 		return size >= minSize;

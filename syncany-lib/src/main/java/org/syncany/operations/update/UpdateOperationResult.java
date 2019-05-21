@@ -26,7 +26,7 @@ import org.syncany.operations.OperationResult;
  * this class will contain information about whether the operation
  * was successful, and if it was, the available application information. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UpdateOperationResult implements OperationResult {
 	/**

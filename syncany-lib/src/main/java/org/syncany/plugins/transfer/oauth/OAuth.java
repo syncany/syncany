@@ -30,8 +30,8 @@ import org.syncany.plugins.transfer.TransferSettings;
  * during the initialization process and the {@link OAuthGenerator} (provided via the
  * help of the {@link #value()} field) will be able to check that token.
  *
- * @author Philipp Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -54,14 +54,14 @@ public @interface OAuth {
 	/**
 	 * If no specific port is provided (or {@value #RANDOM_PORT} is used), the {@link OAuthTokenWebListener} will choose a
 	 * random port from the range of {@value OAuthTokenWebListener#PORT_LOWER} and
-	 * {@value OAuthTokenWebListener#PORT_UPPER}.<br/>
+	 * {@value OAuthTokenWebListener#PORT_UPPER}.<br>
 	 * Needed if an OAuth provider uses preset and strict redirect URLs.
 	 */
 	int callbackPort() default RANDOM_PORT; // -1 is random
 
 	/**
 	 * If no specific name is provided (or {@value #PLUGIN_ID} is used), the {@link OAuthTokenWebListener} will choose a
-	 * random identifier for the OAuth process.<br/>
+	 * random identifier for the OAuth process.<br>
 	 * Needed if an OAuth provider uses preset and strict redirect URLs.
 	 */
 	String callbackId() default PLUGIN_ID; // equals plugin id

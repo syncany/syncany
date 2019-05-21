@@ -38,7 +38,7 @@ import org.syncany.database.VectorClock.VectorClockComparison;
  * Equal and simultaneous {@link VectorClock}s result in equal {@link DatabaseVersionHeader}s. Note that in
  * this case the name of the client is not used either.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseVersionHeaderComparator implements Comparator<DatabaseVersionHeader> {
 	private boolean considerTime;

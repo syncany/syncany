@@ -25,32 +25,32 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
  * Listener interface used by the {@link Deduper} to notify the caller of file
  * events, and to retrieve information about chunks and output files. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public interface DeduperListener {
 	/**
 	 * Called by {@link Deduper} before a file is processed. This method can be 
-	 * used to ignore certain files. The method must return <tt>true</tt> if the deduper
-	 * shall continue processing, or <tt>false</tt> if a file should be skipped.
+	 * used to ignore certain files. The method must return <code>true</code> if the deduper
+	 * shall continue processing, or <code>false</code> if a file should be skipped.
 	 * 
-	 * <p>For files excluded by this method, neither {@link #onFileStart(File, int) onFileStart()} nor
+	 * <p>For files excluded by this method, neither {@link #onFileStart(File) onFileStart()} nor
 	 * {@link #onFileEnd(File, byte[]) onFileEnd()} are called.
 	 * 
 	 * @param file File that is evaluated by the filter
-	 * @return Returns <tt>true</tt> if the given file shall be processed, <tt>false</tt> otherwise 
+	 * @return Returns <code>true</code> if the given file shall be processed, <code>false</code> otherwise
 	 */
 	public boolean onFileFilter(File file);
 	
 	/**
 	 * Called by {@link Deduper} before the deduplication process is started, and before the
-	 * file is opened. The method must return <tt>true</tt> if the deduplication process should 
-	 * continue (e.g. for regular files), and <tt>false</tt> otherwise (e.g. for directories or
+	 * file is opened. The method must return <code>true</code> if the deduplication process should
+	 * continue (e.g. for regular files), and <code>false</code> otherwise (e.g. for directories or
 	 * symlink).
 	 * 
 	 * <p>The method is called for every file that was not excluded by {@link #onFileFilter(File) onFileFilter()}.
 	 * 
 	 * @param file File for which the deduplication process is about to be started
-	 * @return Returns <tt>true</tt> if the given file shall be deduplicated, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the given file shall be deduplicated, <code>false</code> otherwise
 	 */
 	public boolean onFileStart(File file);
 	
@@ -80,19 +80,19 @@ public interface DeduperListener {
 	/**
 	 * Called by {@link Deduper} during the deduplication process whenever then break condition 
 	 * of the {@link Chunker} was reached and a new {@link Chunk} was emitted. This method returns
-	 * <tt>true</tt> if the chunk is a new (and should be further processed), and <tt>false</tt>
+	 * <code>true</code> if the chunk is a new (and should be further processed), and <code>false</code>
 	 * otherwise.
 	 * 
 	 * <p>This method represents a query to the chunk index, i.e. it determines whether a chunk already exists
 	 * in the persistence layer. If it does, the chunk should not be added to a multichunk and processing should 
-	 * be stopped. Returning <tt>false</tt> has this effect. Returning <tt>true</tt> lets the deduper add the
+	 * be stopped. Returning <code>false</code> has this effect. Returning <code>true</code> lets the deduper add the
 	 * chunk to a multichunk.  
 	 * 
 	 * <p>The method is called zero to many times for every file, assuming that the file was not excluded
-	 * by {@link #onFileFilter(File) onFileFilter()}, or by {@link #onFileStart(File, int) onFileStart()}. 
+	 * by {@link #onFileFilter(File) onFileFilter()}, or by {@link #onFileStart(File) onFileStart()}.
 	 * 
 	 * @param chunk The new chunk that the chunker emitted
-	 * @return Returns <tt>true</tt> if the chunk is new, and <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the chunk is new, and <code>false</code> otherwise
 	 */
 	public boolean onChunk(Chunk chunk); 
 	
@@ -144,7 +144,7 @@ public interface DeduperListener {
 	/**
 	 * Called by {@link Deduper} before starting the deduplication process.
 	 *  
-	 * @param size the number of files to be processed 
+	 * @param fileCount the number of files to be processed
 	 */
 	public void onStart(int fileCount);
 	

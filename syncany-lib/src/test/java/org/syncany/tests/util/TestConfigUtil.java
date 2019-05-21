@@ -295,7 +295,7 @@ public class TestConfigUtil {
 			TestFileUtil.deleteDirectory(config.getAppDir());
 		}
 
-		// TODO [low] workaround: delete empty parent folder of getAppDir() --> ROOT/app/.. --> ROOT/
+		// TODO [low] workaround: delete empty parent folder of getAppDir() --&gt; ROOT/app/.. --&gt; ROOT/
 		config.getLocalDir().getParentFile().delete(); // if empty!
 
 		deleteTestLocalConnection(config);

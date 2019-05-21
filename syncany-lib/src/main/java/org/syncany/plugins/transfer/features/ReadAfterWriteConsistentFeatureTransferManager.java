@@ -37,11 +37,11 @@ import org.syncany.util.ReflectionUtil;
  * because some storage backends do no guarantee that a file immediately exists after
  * creation.
  *
- * <p>It throttles existence check using a simple exponential method:<br/>
+ * <p>It throttles existence check using a simple exponential method:<br>
  *
- * <code>throttle(n) = 3 ^ n * 100 ms, with n being the current iteration
+ * <code>throttle(n) = 3 ^ n * 100 ms</code>, with n being the current iteration
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class ReadAfterWriteConsistentFeatureTransferManager implements FeatureTransferManager {
 	private static final Logger logger = Logger.getLogger(ReadAfterWriteConsistentFeatureTransferManager.class.getSimpleName());

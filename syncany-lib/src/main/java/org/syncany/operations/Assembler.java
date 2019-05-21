@@ -48,7 +48,7 @@ import org.syncany.util.StringUtil;
  * <p>It uses the local {@link SqlDatabase} and an optional {@link MemoryDatabase}
  * to perform file checksum and chunk checksum lookups.   
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Assembler {
 	private static final Logger logger = Logger.getLogger(Assembler.class.getSimpleName());

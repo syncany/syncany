@@ -35,7 +35,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
  * The config helper provides convenience functions to load the configuration from
  * the local application repo.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ConfigHelper {
 	private static final Logger logger = Logger.getLogger(ConfigHelper.class.getSimpleName());
@@ -43,7 +43,7 @@ public class ConfigHelper {
 	/**
 	 * Loads a {@link Config} object from the given local directory.
 	 *
-	 * <p>If the config file (.syncany/config.xml) does not exist, <tt>null</tt>
+	 * <p>If the config file (.syncany/config.xml) does not exist, <code>null</code>
 	 * is returned. If it does, the method tries to do the following:
 	 * <ul>
 	 *  <li>Load the .syncany/config.xml file and load the plugin given by the config file</li>
@@ -51,9 +51,9 @@ public class ConfigHelper {
 	 *  <li>Instantiate a {@link Config} object with the transfer objects</li>
 	 * </ul>
 	 *
-	 * @return Returns an instantiated {@link Config} object, or <tt>null</tt> if
+	 * @return Returns an instantiated {@link Config} object, or <code>null</code> if
 	 *         the config file does not exist
-	 * @throws Throws an exception if the config is invalid
+	 * @throws ConfigException an exception if the config is invalid
 	 */
 	public static Config loadConfig(File localDir) throws ConfigException {
 		if (localDir == null) {
@@ -137,7 +137,7 @@ public class ConfigHelper {
     /**
      * Helper method to find the local sync directory, starting from a path equal
      * or inside the local sync directory. If the starting path is not inside or equal
-     * to the local directory, <tt>null</tt> is returned.
+     * to the local directory, <code>null</code> is returned.
      *
      * <p>To find the local directory, the method looks for a file named
      * "{@link Config#DIR_APPLICATION}/{@link Config#FILE_CONFIG}". If it is found, it stops.
@@ -153,7 +153,7 @@ public class ConfigHelper {
      * </ul>
      *
      * @param startingPath Path to start the search from
-     * @return Returns the local directory (if found), or <tt>null</tt> otherwise
+     * @return Returns the local directory (if found), or <code>null</code> otherwise
      */
     public static File findLocalDirInPath(File startingPath) {
     	try {

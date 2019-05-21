@@ -48,8 +48,8 @@ import org.syncany.util.StringUtil;
  * <p>Options for a plugin specific {@link TransferSettings} can be defined using the
  * {@link Element} annotation. Furthermore some Syncany-specific annotations are available.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class TransferSettings {
 	private static final Logger logger = Logger.getLogger(TransferSettings.class.getName());

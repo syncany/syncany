@@ -52,7 +52,7 @@ import org.syncany.util.StringUtil;
  *       files are processed.
  * </ul>
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CipherSession {
 	private static final Logger logger = Logger.getLogger(CipherSession.class.getSimpleName());

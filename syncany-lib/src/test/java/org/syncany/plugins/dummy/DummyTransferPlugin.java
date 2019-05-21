@@ -20,7 +20,7 @@ package org.syncany.plugins.dummy;
 import org.syncany.plugins.transfer.TransferPlugin;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class DummyTransferPlugin extends TransferPlugin {
 	public DummyTransferPlugin() {

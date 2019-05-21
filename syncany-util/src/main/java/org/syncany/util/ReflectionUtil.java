@@ -29,7 +29,7 @@ import java.util.List;
  * Utility class to find classes, methods and fields with certain properties -
  * typically having an annotation or a certain erasure.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class ReflectionUtil {
 	public static Field[] getAllFieldsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {

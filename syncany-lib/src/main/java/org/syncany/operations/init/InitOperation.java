@@ -53,7 +53,7 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  *       saving them locally and uploading them to the remote repository.</li>
  * </ul>
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class InitOperation extends AbstractInitOperation {
 	public static final String DEFAULT_IGNORE_FILE = "/" + InitOperation.class.getPackage().getName().replace('.', '/') + "/default.syignore";

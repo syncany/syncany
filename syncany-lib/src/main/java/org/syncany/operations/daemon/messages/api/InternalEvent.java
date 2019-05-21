@@ -25,7 +25,7 @@ import org.simpleframework.xml.Root;
  * <p>In particular, they are not to be broadcasted to external subscribers,
  * such as GUIs connected via WS, but only to the local event bus.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root
 public abstract class InternalEvent extends Event {

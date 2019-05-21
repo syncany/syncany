@@ -55,15 +55,15 @@ import com.google.common.collect.Maps;
  * in special sub-folders:
  *
  * <ul>
- * <li>The <tt>databases</tt> folder keeps all the {@link DatabaseRemoteFile}s</li>
- * <li>The <tt>multichunks</tt> folder keeps the actual data within the {@link MultichunkRemoteFile}s</li>
+ * <li>The <code>databases</code> folder keeps all the {@link DatabaseRemoteFile}s</li>
+ * <li>The <code>multichunks</code> folder keeps the actual data within the {@link MultichunkRemoteFile}s</li>
  * </ul>
  *
  * <p>This plugin can be used for testing or to point to a repository
  * on a mounted remote device or network storage such as an NFS or a
  * Samba/NetBIOS share.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class LocalTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(LocalTransferManager.class.getSimpleName());

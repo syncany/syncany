@@ -25,7 +25,7 @@ import org.syncany.tests.integration.plugins.AbstractTransferManagerTest;
 import org.syncany.tests.util.TestFileUtil;
 
 /**
- * @author Vincent Wiencek <vwiencek@gmail.com>
+ * @author Vincent Wiencek (vwiencek@gmail.com)
  */
 public class LocalTransferManagerPluginTest extends AbstractTransferManagerTest {
 	private File tempRepoPath;

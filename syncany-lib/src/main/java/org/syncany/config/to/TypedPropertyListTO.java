@@ -33,7 +33,7 @@ import org.simpleframework.xml.ElementMap;
  * annotation-based configuration.  
  *  
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class TypedPropertyListTO {
 	@Attribute(required=true)

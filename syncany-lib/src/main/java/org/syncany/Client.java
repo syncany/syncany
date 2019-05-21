@@ -36,7 +36,7 @@ import org.syncany.operations.OperationResult;
  * <p>The methods typically take an {@link OperationOptions} instance as an argument, 
  * and return an instance of the {@link OperationResult} class.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Client {
 	protected static final String APPLICATION_PROPERTIES_RESOURCE = "/application.properties"; // TODO [low] Move this!

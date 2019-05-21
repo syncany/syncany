@@ -21,7 +21,7 @@ import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.FileTime;
 
 /**
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class LimitedDosFileAttributes implements DosFileAttributes {
 	private String dosAttributes;

@@ -22,7 +22,7 @@ package org.syncany.config.to;
  * repoTO's have a couple of moving and standing parts. (Chunkers, MultiChunkers and Transformers),
  * which all may or may not be configurable.
  * 
- * @author Pim Otte <otte.pim@gmail.com>
+ * @author Pim Otte (otte.pim@gmail.com)
  */
 public interface RepoTOFactory {
 	public RepoTO createRepoTO();

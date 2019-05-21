@@ -95,7 +95,7 @@ import org.syncany.plugins.transfer.to.TransactionTO;
  * If a sequence of transactions is interrupted, all queued transactions are written to disk to be resumed later.
  * The next up operation then reads these transactions and resumes them in the same order as they were queued before the interruption.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UpOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(UpOperation.class.getSimpleName());

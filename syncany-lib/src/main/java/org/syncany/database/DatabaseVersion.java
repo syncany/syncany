@@ -31,7 +31,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * The database version represents an incremental addition to the local database of
  * a client. A user's {@link MemoryDatabase} consists of many incremental database versions.
  *
- * <p>A <tt>DatabaseVersion</tt> is identified by a {@link DatabaseVersionHeader}, a
+ * <p>A <code>DatabaseVersion</code> is identified by a {@link DatabaseVersionHeader}, a
  * combination of a {@link VectorClock}, a local timestamp and the original client name.
  *
  * <p>The database version holds references to the newly added/removed/changed
@@ -40,7 +40,7 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  *
  * <p>The current implementation of the database version keeps all references in memory.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseVersion {
 	public enum DatabaseVersionStatus {

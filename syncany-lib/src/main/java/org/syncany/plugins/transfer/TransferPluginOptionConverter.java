@@ -22,7 +22,7 @@ package org.syncany.plugins.transfer;
  * convert a user input before setting it.
  *
  * @see org.syncany.plugins.transfer.TransferPluginOptions
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public interface TransferPluginOptionConverter {
 	/**

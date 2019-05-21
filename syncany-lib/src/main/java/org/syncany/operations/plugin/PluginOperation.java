@@ -71,22 +71,22 @@ import com.google.common.collect.Lists;
  * {@link PluginOperationAction}:
  *
  * <ul>
- * <li><tt>INSTALL</tt>: Installation means copying a file to the user plugin directory
- * as specified by {@link Client#getUserPluginLibDir()}. A plugin can be installed
+ * <li><code>INSTALL</code>: Installation means copying a file to the user plugin directory
+ * as specified by {@link UserConfig#getUserPluginLibDir()}. A plugin can be installed
  * from a local JAR file, a URL (the operation downloads a JAR file), or the
  * API host (the operation find the plugin using the 'list' action and downloads
  * the JAR file).</li>
- * <li><tt>REMOVE</tt>: Removal means deleting a JAR file from the user plugin
+ * <li><code>REMOVE</code>: Removal means deleting a JAR file from the user plugin
  * directoryThis action. This action simply finds the responsible plugin JAR
  * file and deletes it. Only JAR files inside the user plugin direcory can be
  * deleted.</li>
- * <li><tt>LIST</tt>: Listing refers to a local and a remote list. The locally installed
+ * <li><code>LIST</code>: Listing refers to a local and a remote list. The locally installed
  * plugins can be queried by {@link Plugins#list()}. These plugins' JAR files must be
  * in the application's class path. Remotely available plugins are queried through the
  * API.</li>
  * </ul>
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class PluginOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(PluginOperation.class.getSimpleName());

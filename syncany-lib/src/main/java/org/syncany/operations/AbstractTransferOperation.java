@@ -45,7 +45,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * <p>This abstract class offers convenience methods to handle {@link ActionRemoteFile} as well
  * as to handle the connection and local cache.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class AbstractTransferOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(AbstractTransferOperation.class.getSimpleName());
@@ -128,7 +128,7 @@ public abstract class AbstractTransferOperation extends Operation {
 						logger.log(Level.INFO, "- Action file from other client, but allowed operation; not marking running; " + actionRemoteFile);
 					}
 					else {
-						logger.log(Level.INFO, "- Action file from other client; --> marking operations running (!); " + actionRemoteFile);
+						logger.log(Level.INFO, "- Action file from other client; --&gt; marking operations running (!); " + actionRemoteFile);
 						otherRemoteOperationsRunning = true;
 					}
 				}

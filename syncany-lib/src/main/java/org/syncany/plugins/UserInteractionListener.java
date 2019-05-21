@@ -22,7 +22,7 @@ package org.syncany.plugins;
  * to request feedback from the user -- either in form of a confirmation
  * or a password. The methods implemented by this interface must block. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public interface UserInteractionListener {
 	public boolean onUserConfirm(String header, String message, String question);

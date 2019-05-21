@@ -39,8 +39,8 @@ import com.google.common.primitives.Ints;
  * The daemon helper provides helper functions to read and/or write the
  * daemon configuration file as defined by {@link DaemonConfigTO}.
  *
- * @author Vincent Wiencek <vwiencek@gmail.com>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Vincent Wiencek (vwiencek@gmail.com)
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DaemonConfigHelper {
 	private static final Logger logger = Logger.getLogger(DaemonConfigHelper.class.getSimpleName());
@@ -57,18 +57,18 @@ public class DaemonConfigHelper {
 	}
 
 	/**
-	 * Adds the given folder to the user-specific daemon configuration (<tt>daemon.xml</tt>).
+	 * Adds the given folder to the user-specific daemon configuration (<code>daemon.xml</code>).
 	 *
 	 * <p>The method first reads the daemon configuration, checks if the folder is already present
 	 * and adds it if it is not. If no daemon config file exists, a new default config file is created
 	 * via {@link #createAndWriteDefaultDaemonConfig(File)}. If the folder is already present in
-	 * the current daemon config, <tt>false</tt> is returned. If an error occurs (e.g. an I/O error
+	 * the current daemon config, <code>false</code> is returned. If an error occurs (e.g. an I/O error
 	 * or an invalid XML file), a {@link ConfigException} is thrown. If the folder was successfully added,
-	 * <tt>true</tt> is returned.
+	 * <code>true</code> is returned.
 	 *
 	 * @param localDir Absolute path of the local folder to add to the daemon config
-	 * @return Returns <tt>true</tt> if the folder was successfully added to the daemon config,
-	 *         <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the folder was successfully added to the daemon config,
+	 *         <code>false</code> otherwise
 	 * @throws ConfigException If an error occurs, e.g. an I/O error or an invalid XML file
 	 */
 	public static boolean addFolder(File localDir) throws ConfigException {

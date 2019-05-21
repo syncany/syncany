@@ -28,7 +28,7 @@ import java.util.List;
  * <p>Nested plugin options are typically used to represent/use sub-plugins
  * within a certain plugin, e.g. to allow building a RAID0/1 plugin.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class NestedTransferPluginOption extends TransferPluginOption {
 	private final List<TransferPluginOption> options;

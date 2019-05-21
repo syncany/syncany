@@ -55,7 +55,7 @@ import org.syncany.util.NormalizedPath;
  * <p>Implementations of this class treat file1 and file2 differently, depending on what
  * action they implement.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class FileSystemAction {
 	protected static final Logger logger = Logger.getLogger(FileSystemAction.class.getSimpleName());

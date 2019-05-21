@@ -12,7 +12,7 @@ import com.google.common.base.Charsets;
 /**
  * Factory class to generate some common {@link OAuthTokenExtractor}s.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class OAuthTokenExtractors {
 	private static final Logger logger = Logger.getLogger(OAuthTokenExtractors.class.getName());

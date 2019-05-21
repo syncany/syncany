@@ -80,20 +80,20 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  *
  * <p>High level strategy:
  * <ul>
- *    <ol>Lock repo and start thread that renews the lock every X seconds</ol>
- *    <ol>Find old versions / contents / ... from database</ol>
- *    <ol>Delete these versions and contents locally</ol>
- *    <ol>Delete all remote metadata</ol>
- *    <ol>Obtain consistent database files from local database</ol>
- *    <ol>Upload new database files to repo</ol>
- *    <ol>Remotely delete unused multichunks</ol>
- *    <ol>Stop lock renewal thread and unlock repo</ol>
+ *    <li>Lock repo and start thread that renews the lock every X seconds</li>
+ *    <li>Find old versions / contents / ... from database</li>
+ *    <li>Delete these versions and contents locally</li>
+ *    <li>Delete all remote metadata</li>
+ *    <li>Obtain consistent database files from local database</li>
+ *    <li>Upload new database files to repo</li>
+ *    <li>Remotely delete unused multichunks</li>
+ *    <li>Stop lock renewal thread and unlock repo</li>
  * </ul>
  *
  * <p><b>Important issues:</b>
  * All remote operations MUST check if the lock has been recently renewed. If it hasn't, the connection has been lost.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CleanupOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(CleanupOperation.class.getSimpleName());

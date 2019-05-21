@@ -52,7 +52,7 @@ import org.syncany.operations.down.actions.RenameFileSystemAction;
  * - Change folder
  * 
  * 
- * TODO [medium] NewSymlinkFileSystemAction --> NewFile (has no content)
+ * TODO [medium] NewSymlinkFileSystemAction → NewFile (has no content)
  */
 public class FileSystemActionComparator  {
 	private static final Logger logger = Logger.getLogger(FileSystemActionComparator.class.getSimpleName());
@@ -91,13 +91,13 @@ public class FileSystemActionComparator  {
 	 * 
 	 * DEL  FILE     file1.jpg      
 	 * NEW  FOLDER   folder1
-	 * NEW  FILE     folder1/fileinfolder1.jpg                       < No Issue, but needs to be checked
-	 * NEW  FILE     folder2                                         <<< Issue, because folder2 is deleted below!
-	 * NEW  SYMLINK  folder1/symlinkinfolder1.jpg                    < No Issue, but needs to be checked
-	 * REN  FILE     folder2/fileinfolder2.jpg -> folder1/x2.jpg
-	 * REN  SYMLINK  folder2/symlinkinfolder2.jpg -> folder1/sym2
+	 * NEW  FILE     folder1/fileinfolder1.jpg                       ← No Issue, but needs to be checked
+	 * NEW  FILE     folder2                                         ←←← Issue, because folder2 is deleted below!
+	 * NEW  SYMLINK  folder1/symlinkinfolder1.jpg                    ← No Issue, but needs to be checked
+	 * REN  FILE     folder2/fileinfolder2.jpg → folder1/x2.jpg
+	 * REN  SYMLINK  folder2/symlinkinfolder2.jpg → folder1/sym2
 	 * DEL  FOLDER   folder2
-	 *                                                               <<< New position of "NEW FILE folder2"!
+	 *                                                               ←←← New position of "NEW FILE folder2"!
 	 */
 	public void postCompareSort(List<FileSystemAction> actions) {
 		List<FileSystemAction> fixedActions = new ArrayList<FileSystemAction>(actions);
@@ -118,7 +118,7 @@ public class FileSystemActionComparator  {
 				int conflictingDeleteActionIndex = getPathConflictingWithDeleteActionIndex(currentAction, fixedActions);
 				
 				if (conflictingDeleteActionIndex >= 0) {
-					logger.log(Level.INFO, "     --> match, conflict ["+i+"]: "+currentAction);
+					logger.log(Level.INFO, "     --&gt; match, conflict ["+i+"]: "+currentAction);
 					logger.log(Level.INFO, "                    with ["+conflictingDeleteActionIndex+"]: "+fixedActions.get(conflictingDeleteActionIndex));
 					
 					fixedActions.remove(i);

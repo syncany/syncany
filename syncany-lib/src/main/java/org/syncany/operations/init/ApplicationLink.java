@@ -63,7 +63,7 @@ import org.syncany.util.Base58;
 import com.google.common.primitives.Ints;
 
 /**
- * The application link class represents a <tt>syncany://</tt> link. It allowed creating
+ * The application link class represents a <code>syncany://</code> link. It allowed creating
  * and parsing a link. The class has two modes of operation:
  *
  * <p>To create a new application link from an existing repository, call the
@@ -75,8 +75,8 @@ import com.google.common.primitives.Ints;
  * {@link #ApplicationLink(String)} constructor and subsequently call {@link #createTransferSettings()}
  * or {@link #createTransferSettings(SaltedSecretKey)}. This method will typically be called during the 'connect' process.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class ApplicationLink {
 	private static final Logger logger = Logger.getLogger(ApplicationLink.class.getSimpleName());

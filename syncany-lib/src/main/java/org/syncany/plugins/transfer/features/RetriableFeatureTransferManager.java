@@ -38,7 +38,7 @@ import org.syncany.plugins.transfer.files.RemoteFile;
  * method is retried N times before the exception is actually thrown to the caller.
  * Between retries, the method waits M seconds.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class RetriableFeatureTransferManager implements FeatureTransferManager {
 	private static final Logger logger = Logger.getLogger(RetriableFeatureTransferManager.class.getSimpleName());

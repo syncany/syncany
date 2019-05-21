@@ -31,7 +31,7 @@ import com.google.common.collect.Maps;
  * A remote file represents a file object on a remote storage. Its purpose is to
  * identify a file and allow {@link TransferManager}s to upload/download local files.
  *
- * <p>Transfer manager operations take either <tt>RemoteFile</tt> instances, or classes
+ * <p>Transfer manager operations take either <code>RemoteFile</code> instances, or classes
  * that extend this class. Depending on the type of the sub-class, they might store the
  * files at a different location or in a different format to optimize performance.
  * 
@@ -41,9 +41,9 @@ import com.google.common.collect.Maps;
  *
  * <p><b>Important:</b> Sub-classes must offer a
  * {@link RemoteFile#RemoteFile(String) one-parameter constructor} that takes a
- * <tt>String</tt> argument. This constructor is required by the {@link RemoteFileFactory}.
+ * <code>String</code> argument. This constructor is required by the {@link RemoteFile}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class RemoteFile {
 	private static final Logger logger = Logger.getLogger(RemoteFile.class.getSimpleName());
@@ -59,15 +59,15 @@ public abstract class RemoteFile {
 	 * to identify a file on the remote storage.
 	 *
 	 * <p>The constructor parses and validates the given name using the
-	 * {@link #validateName(String) validateName()} method. While <tt>RemoteFile</tt> has no name
+	 * {@link #validateName(String) validateName()} method. While <code>RemoteFile</code> has no name
 	 * pattern (and never throws an exception), sub-classes might.
 	 *
 	 * <p><b>Important:</b> Sub-classes must also implement a one-parameter constructor that takes a
-	 * <tt>String</tt> argument. This constructor is required by the {@link RemoteFileFactory}.
+	 * <code>String</code> argument. This constructor is required by the {@link RemoteFile}.
 	 *
 	 * @param name The name of the file (as it is identified by Syncany)
-	 * @throws StorageException If the name does not match the name pattern defined by the class.<br />
-	 *         <b>Note:</b> <tt>RemoteFile</tt> does never throw this exceptions, however, subclasses might.
+	 * @throws StorageException If the name does not match the name pattern defined by the class.<br>
+	 *         <b>Note:</b> <code>RemoteFile</code> does never throw this exceptions, however, subclasses might.
 	 */
 	public RemoteFile(String name) throws StorageException {
 		this.name = validateName(name);
@@ -100,13 +100,13 @@ public abstract class RemoteFile {
 
 	/**
 	 * Parses the name of the file and validates it against the classes name pattern. While
-	 * <tt>RemoteFile</tt> has no name pattern (and never throws an exception), sub-classes might by
+	 * <code>RemoteFile</code> has no name pattern (and never throws an exception), sub-classes might by
 	 * overriding this method.
 	 *
 	 * @param name The name of the file (as it is identified by Syncany)
 	 * @return Returns a (potentially changed) name, after validating the name
-	 * @throws StorageException If the name does not match the name pattern defined by the class.<br />
-	 *         <b>Note:</b> <tt>RemoteFile</tt> does never throw this exceptions, however, subclasses might.
+	 * @throws StorageException If the name does not match the name pattern defined by the class.<br>
+	 *         <b>Note:</b> <code>RemoteFile</code> does never throw this exceptions, however, subclasses might.
 	 */
 	protected String validateName(String name) throws StorageException {
 		return name;
@@ -116,10 +116,10 @@ public abstract class RemoteFile {
 	 * Creates a remote file based on a name and a class name.
 	 *
 	 * <p>The name must match the corresponding name pattern, and the class name
-	 * can either be <tt>RemoteFile</tt>, or a sub-class thereof.
+	 * can either be <code>RemoteFile</code>, or a sub-class thereof.
 	 *
 	 * @param name The name of the remote file
-	 * @param remoteFileClass Class name of the object to instantiate, <tt>RemoteFile</tt> or a sub-class thereof
+	 * @param remoteFileClass Class name of the object to instantiate, <code>RemoteFile</code> or a sub-class thereof
 	 * @return Returns a new object of the given class
 	 */
 	public static <T extends RemoteFile> T createRemoteFile(String name, Class<T> remoteFileClass) throws StorageException {
@@ -136,7 +136,7 @@ public abstract class RemoteFile {
 	 * file name.
 	 *
 	 * <p>The name must match the corresponding name pattern (nameprefix-...), and
-	 * the derived class can either be <tt>RemoteFile</tt>, or a sub-class thereof.
+	 * the derived class can either be <code>RemoteFile</code>, or a sub-class thereof.
 	 *
 	 * @param name The name of the remote file
 	 * @return Returns a new object of the given class

@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * <p>Instantiating a cipher spec that does pass the sanity checks will result in a
  * RuntimeException.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class CipherSpec {
 	public static final Pattern ALLOWED_CIPHER_ALGORITHMS = Pattern.compile("^HmacSHA256$|(^(AES|Twofish)/(GCM|EAX)/.+)");

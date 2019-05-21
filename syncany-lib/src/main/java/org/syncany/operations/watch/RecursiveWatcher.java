@@ -40,7 +40,7 @@ import org.syncany.util.EnvironmentUtil;
  * in different lifecycle states: {@link #beforeStart()}, {@link #beforePollEventLoop()},
  * {@link #pollEvents()}, and {@link #afterStop()}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class RecursiveWatcher {
 	protected static final Logger logger = Logger.getLogger(RecursiveWatcher.class.getSimpleName());

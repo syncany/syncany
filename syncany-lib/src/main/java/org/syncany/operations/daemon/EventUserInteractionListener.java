@@ -36,7 +36,7 @@ import com.google.common.eventbus.Subscribe;
  * thread to sleep via {@link #wait()}, and waking it up via {@link #notify()}.  
  * 
  * @see UserInteractionListener
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class EventUserInteractionListener implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(EventUserInteractionListener.class.getSimpleName());

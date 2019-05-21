@@ -43,15 +43,15 @@ import org.syncany.database.VectorClock;
  * XML-based file format, using a {@link Transformer} to compress/encrypt the file 
  * before writing, and to decompress/decrypt it before reading.
  * 
- * <p>The class offers a variety of <tt>save()</tt> to serialize and store a memory
- * database to a file, and several <tt>load()</tt> methods to load them from disk.
+ * <p>The class offers a variety of <code>save()</code> to serialize and store a memory
+ * database to a file, and several <code>load()</code> methods to load them from disk.
  * 
  * <p>It uses a {@link DatabaseXmlWriter} to write XML files to disk and 
  * {@link DatabaseXmlParseHandler} to parse them while reading. 
  * 
  * @see DatabaseXmlParseHandler
  * @see DatabaseXmlWriter
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseXmlSerializer {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlSerializer.class.getSimpleName());
