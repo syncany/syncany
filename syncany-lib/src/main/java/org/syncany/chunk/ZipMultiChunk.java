@@ -33,7 +33,7 @@ import org.syncany.util.StringUtil;
 
 /**
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ZipMultiChunk extends MultiChunk {
     private ZipOutputStream zipOut;

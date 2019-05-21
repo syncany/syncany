@@ -47,7 +47,7 @@ import io.undertow.websockets.spi.WebSocketHttpExchange;
  * InternalWebSocketHandler handles the web socket requests
  * sent to the daemon.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class InternalWebSocketHandler implements WebSocketConnectionCallback {
 	private static final Logger logger = Logger.getLogger(InternalWebSocketHandler.class.getSimpleName());

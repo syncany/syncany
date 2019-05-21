@@ -67,13 +67,13 @@ import org.syncany.util.StringUtil;
  * break these files into individual chunks. By implementing the {@link DeduperListener},
  * it reacts on chunking events and creates a new database version (with the newly
  * added/changed/removed files. This functionality is entirely implemented by the
- * {@link #index(List) index()} method.
+ * index() method.
  * 
  * <p>The class uses the currently loaded {@link MemoryDatabase} as well as a potential  
  * dirty database into account. Lookups for chunks and file histories are performed 
  * on both databases.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Indexer {
 	private static final Logger logger = Logger.getLogger(Indexer.class.getSimpleName());
@@ -558,7 +558,7 @@ public class Indexer {
 				Collection<PartialFileHistory> fileHistoriesWithSameChecksum) {
 			PartialFileHistory lastFileHistory = null;
 
-			// Check if they do not exist anymore --> assume it has moved!
+			// Check if they do not exist anymore --&gt; assume it has moved!
 			// We choose the best fileHistory to base on as follows:
 
 			// 1. Ensure that it was modified at the same time and is the same size

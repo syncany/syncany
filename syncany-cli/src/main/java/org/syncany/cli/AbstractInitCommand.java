@@ -72,8 +72,8 @@ import com.google.common.eventbus.Subscribe;
  * and 'connect' command. Both commands must provide the ability to
  * query a user for transfer settings or parse settings from the command line
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class AbstractInitCommand extends Command implements UserInteractionListener {
 	private static final Logger logger = Logger.getLogger(AbstractInitCommand.class.getName());
@@ -333,7 +333,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	 * asks for all of the plugin's settings.
 	 *
 	 * <p>This case is triggered by a field looking like this:
-	 * <tt>private TransferSettings childPluginSettings;</tt>
+	 * <code>private TransferSettings childPluginSettings;</code>
 	 */
 	private void askGenericChildPluginSettings(TransferSettings settings, TransferPluginOption option, Map<String, String> knownPluginSettings,
 			String nestPrefix)
@@ -391,7 +391,7 @@ public abstract class AbstractInitCommand extends Command implements UserInterac
 	 * Asks the user for all of the child plugin's settings.
 	 *
 	 * <p>This case is triggered by a field looking like this:
-	 * <tt>private LocalTransferSettings localChildPluginSettings;</tt>
+	 * <code>private LocalTransferSettings localChildPluginSettings;</code>
 	 */
 	private void askConreteChildPluginSettings(TransferSettings settings, NestedTransferPluginOption option, Map<String, String> knownPluginSettings,
 			String nestPrefix) throws StorageException, IllegalAccessException, InstantiationException, IllegalArgumentException,

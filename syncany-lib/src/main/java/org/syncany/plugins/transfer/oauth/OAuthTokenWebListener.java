@@ -32,7 +32,7 @@ import io.undertow.util.Headers;
  * {@link OAuthTokenInterceptor} depending on a path defined by the interceptor itself. Furthermore it does the token
  * parsing in the URL using a {@link OAuthTokenExtractor}.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public class OAuthTokenWebListener implements Callable<OAuthTokenFinish> {

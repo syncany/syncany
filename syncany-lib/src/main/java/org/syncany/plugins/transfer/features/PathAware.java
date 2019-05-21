@@ -26,6 +26,7 @@ import org.syncany.plugins.transfer.features.PathAwareFeatureTransferManager.Pat
 import org.syncany.plugins.transfer.files.MultichunkRemoteFile;
 import org.syncany.plugins.transfer.files.RemoteFile;
 import org.syncany.plugins.transfer.files.TempRemoteFile;
+import org.syncany.plugins.transfer.TransferManager;
 
 /**
  * Feature annotation to mark a transfer manager of transfer plugins
@@ -37,7 +38,7 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
  * on how many files can be stored in a single folder, e.g. the Dropbox plugin can only
  * store 25,000 files in one folder.  
  * 
- * <p>This annotation is only recognized if used on a {@link TransferManager}. If 
+ * <p>This annotation is only recognized if used on a {@link TransferManager}. If
  * applied, it wraps the original transfer manager in a {@link PathAwareFeatureTransferManager},
  * which defines details for the subfoldering, such as the depths of the subfolders, the path
  * separator or other relevant settings. 
@@ -54,7 +55,7 @@ import org.syncany.plugins.transfer.files.TempRemoteFile;
  * @see PathAwareFeatureTransferManager
  * @see PathAwareFeatureExtension
  * @see PathAwareRemoteFileAttributes 
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @Feature(required = false)
 @Target(ElementType.TYPE)

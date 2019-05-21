@@ -26,7 +26,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.files.RemoteFile;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public class DummyTransferManager extends AbstractTransferManager {

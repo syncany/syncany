@@ -43,7 +43,7 @@ import org.syncany.util.SqlRunner;
  * SQL statements from the resources, and create the initial tables when the
  * application is first started.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseConnectionFactory {
 	private static final Logger logger = Logger.getLogger(DatabaseConnectionFactory.class.getSimpleName());

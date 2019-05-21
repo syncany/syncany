@@ -27,7 +27,7 @@ import static org.syncany.tests.util.TestAssertUtil.assertFileListEquals;
 import static org.syncany.tests.util.TestAssertUtil.assertSqlDatabaseEquals;
 
 public class FilenameCapitalizationWindowsScenarioTest {
-	// TODO [medium] Windows: LARGE/small capitalization --> Dropbox makes a file "name (Case Conflict 1)"; define expected/desired behavior
+	// TODO [medium] Windows: LARGE/small capitalization --&gt; Dropbox makes a file "name (Case Conflict 1)"; define expected/desired behavior
 
 	@Test
 	public void testFilenameCapitalizationWindows() throws Exception {

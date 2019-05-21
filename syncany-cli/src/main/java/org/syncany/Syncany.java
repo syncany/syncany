@@ -45,7 +45,7 @@ import org.syncany.cli.CommandLineClient;
  * 
  * @see <a href="https://www.syncany.org/">Syncany website</a>
  * @see <a href="https://github.com/syncany/syncany">GitHub code repository</a> 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Syncany {
 	public static void main(String[] args) throws Exception {

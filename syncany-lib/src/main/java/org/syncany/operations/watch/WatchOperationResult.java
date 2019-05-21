@@ -25,7 +25,7 @@ import org.syncany.operations.OperationResult;
  * process and does not immediately return, the return value of this
  * operation has no value.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class WatchOperationResult implements OperationResult {
 	// Nothing.

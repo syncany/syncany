@@ -28,7 +28,7 @@ import org.syncany.util.StringUtil;
  * its corresponding salt. It is mainly used to represent the master key and the
  * master key salt.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class SaltedSecretKey implements SecretKey {
 	private static final long serialVersionUID = 1216126055360327470L;

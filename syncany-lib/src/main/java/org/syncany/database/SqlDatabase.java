@@ -58,7 +58,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * @see FileHistorySqlDao
  * @see MultiChunkSqlDao
  * @see DatabaseVersionSqlDao
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class SqlDatabase {
 	protected static final Logger logger = Logger.getLogger(SqlDatabase.class.getSimpleName());

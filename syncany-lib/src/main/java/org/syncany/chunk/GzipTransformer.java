@@ -29,7 +29,7 @@ import java.util.zip.GZIPOutputStream;
  * Implements a {@link Transformer} that transforms the input/output stream
  * using the Gzip compression algorithm.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class GzipTransformer extends Transformer {
     public static final String TYPE = "gzip";

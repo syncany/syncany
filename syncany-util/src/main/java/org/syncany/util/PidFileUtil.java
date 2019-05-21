@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * Java process, and to check whether the process indicated by a PID file is 
  * still running.   
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
 */
 public class PidFileUtil {
 	private static final Logger logger = Logger.getLogger(PidFileUtil.class.getSimpleName());
@@ -90,7 +90,7 @@ public class PidFileUtil {
 	/**
 	 * Determines whether a process is running, based on the given PID file. The method
 	 * reads the PID file and then calls {@link #isProcessRunning(int)}. If the PID file
-	 * does not exist, it returns <tt>false</tt>. 
+	 * does not exist, it returns <code>false</code>.
 	 */
 	public static boolean isProcessRunning(File pidFile) {
 		if (pidFile.exists()) {
@@ -126,7 +126,7 @@ public class PidFileUtil {
 	
 	/**
 	 * Uses the {@link RuntimeMXBean}'s name to determine the PID. On Linux, this name 
-	 * typically has a value like <tt>12345@localhost</tt> where 12345 is the PID.
+	 * typically has a value like <code>12345@localhost</code> where 12345 is the PID.
 	 * However, this is not guaranteed for every VM, so this is only one of two implementations.
 	 *  
 	 * @see http://stackoverflow.com/a/35885/1440785
@@ -146,7 +146,7 @@ public class PidFileUtil {
 	}
 
 	/**
-	 * Uses the private method <tt>VMManagement.getProcessId()</tt> of Sun's <tt>sun.management.VMManagement</tt>
+	 * Uses the private method <code>VMManagement.getProcessId()</code> of Sun's <code>sun.management.VMManagement</code>
 	 * class to determine the PID (using reflection to make the relevant fields visible).
 	 * 
 	 * @see http://stackoverflow.com/a/12066696/1440785
@@ -172,7 +172,7 @@ public class PidFileUtil {
 	
 	/**
 	 * Determines whether a process with the given PID is running using the POSIX 
-	 * <tt>ps -p $pid</tt> command.
+	 * <code>ps -p $pid</code> command.
 	 * 
 	 * @param pid Process ID (PID) to check
 	 * @return True if process is running, false otherwise
@@ -196,7 +196,7 @@ public class PidFileUtil {
 
 	/**
 	 * Determines whether a process with the given PID is running using the Windows 
-	 * <tt>tasklist</tt> command.
+	 * <code>tasklist</code> command.
 	 * 
 	 * @see http://stackoverflow.com/questions/2533984/java-checking-if-any-process-id-is-currently-running-on-windows
 	 */

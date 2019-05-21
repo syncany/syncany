@@ -102,7 +102,7 @@ public class FileVanishedScenarioTest {
 		clientB.status();
 
 		// Delete files and run up simultaneously
-		// --> This will hopefully lead to a couple of 'vanished' files
+		// --&gt; This will hopefully lead to a couple of 'vanished' files
 		logger.log(Level.INFO, "Starting 'up' thread ...");
 		runUpThread.start();
 

@@ -29,12 +29,12 @@ import org.simpleframework.xml.Element;
  *  <li>{@link TransferManager#testTargetExists()}: Tests whether the target exists.</li>
  *  <li>{@link TransferManager#testTargetCanWrite()}: Tests whether the target is writable.</li>
  *  <li>{@link TransferManager#testTargetCanCreate()}: Tests whether the target can be created if it does not 
- *      exist already. This is only called if <tt>testCreateTarget</tt> is set.</li>
+ *      exist already. This is only called if <code>testCreateTarget</code> is set.</li>
  *  <li>{@link TransferManager#testRepoFileExists()}: Tests whether the repo file exists.</li>
  * </ul>
  * 
  * @see TransferManager#test(boolean) 
- * @author Philipp Heckel <philipp.heckel@gmail.com>
+ * @author Philipp Heckel (philipp.heckel@gmail.com)
  */
 public class StorageTestResult {
 	@Element(name = "targetExists", required = true)

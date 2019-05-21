@@ -47,7 +47,7 @@ import org.syncany.crypto.specs.TwofishGcm256CipherSpec;
  *       not require an IV (e.g. ECB) will be rejected by the {@link CipherSpec} sanity checks.
  * </ul>
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CipherSpecs {
 	private static final Map<Integer, CipherSpec> cipherSpecs = new TreeMap<Integer, CipherSpec>();
@@ -105,7 +105,7 @@ public class CipherSpecs {
 	 * defined in this class.
 	 * 
 	 * @param id Identifier of the cipher spec
-	 * @return A cipher spec, or <tt>null</tt> if no cipher spec with this identifier is registered
+	 * @return A cipher spec, or <code>null</code> if no cipher spec with this identifier is registered
 	 */
 	public static CipherSpec getCipherSpec(int id) {
 		return cipherSpecs.get(id);

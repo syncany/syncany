@@ -34,7 +34,7 @@ import org.syncany.database.VectorClock;
  * on {@link ChunkEntry}s. It translates the relational data in the "chunk" table to
  * Java objects.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ChunkSqlDao extends AbstractSqlDao {
 	private Map<ChunkChecksum, ChunkEntry> chunkCache;
@@ -45,7 +45,7 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes a list of {@link ChunkEntry}s to the database using <tt>INSERT</tt>s and the given connection.
+	 * Writes a list of {@link ChunkEntry}s to the database using <code>INSERT</code>s and the given connection.
 	 * 
 	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the query.
 	 * 
@@ -96,11 +96,11 @@ public class ChunkSqlDao extends AbstractSqlDao {
 	 * <p>Note: When first called, this method loads the <b>chunk cache</b> and keeps
 	 * this cache until it is cleared explicitly with {@link #clearCache()}. 
 	 * 
-	 * <p>Also note that this method will return <tt>null</tt> if the chunk has been
+	 * <p>Also note that this method will return <code>null</code> if the chunk has been
 	 * added after the cache has been filled. 
 	 * 
 	 * @param chunkChecksum Chunk checksum of the chunk to be selected
-	 * @return Returns the chunk entry, or <tt>null</tt> if the chunk does not exist.
+	 * @return Returns the chunk entry, or <code>null</code> if the chunk does not exist.
 	 */	
 	public synchronized ChunkEntry getChunk(ChunkChecksum chunkChecksum) {
 		if (chunkCache == null) {

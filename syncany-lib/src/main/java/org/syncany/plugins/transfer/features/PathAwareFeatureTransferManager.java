@@ -60,7 +60,7 @@ import com.google.common.hash.Hashing;
  * @see PathAware
  * @see PathAwareFeatureExtension
  * @see PathAwareRemoteFileAttributes
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class PathAwareFeatureTransferManager implements FeatureTransferManager {
 	private static final Logger logger = Logger.getLogger(PathAwareFeatureTransferManager.class.getSimpleName());

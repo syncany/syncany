@@ -48,7 +48,7 @@ import com.github.zafarkhaja.semver.Version;
  * and a download URL.
  * 
  * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UpdateOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(UpdateOperation.class.getSimpleName());

@@ -21,7 +21,7 @@ package org.syncany.plugins.transfer;
  * Exception thrown when any of the methods of the {@link TransferManager}
  * fail. Usually caused by broken sockets or a not available Internet connection.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class StorageException extends Exception {
 	private static final long serialVersionUID = -311986990752074527L;

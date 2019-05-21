@@ -44,14 +44,14 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  * useful to place {@link MultichunkRemoteFile}s and {@link DatabaseRemoteFile}s
  * in a separate sub-folder on the remote storage.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public interface TransferManager {
 	/**
 	 * Establish a connection with the remote storage.
 	 *
 	 * <p>This method does not validate the correctness of the repository and
-	 * it does not create any folders. The former is done by {@link #test()}, the
+	 * it does not create any folders. The former is done by {@link #test(boolean)}, the
 	 * latter is done by {@link #init(boolean)}.
 	 *
 	 * @throws StorageException If the connection fails due to no Internet connection,
@@ -121,8 +121,8 @@ public interface TransferManager {
 	 *
 	 * <p> If the sourceFile does not exists, a {@link StorageMoveException} is thrown.
 	 *
-	 * @param source Existing remote file that is to be moved.
-	 * @param target Destination for the remote file.
+	 * @param sourceFile Existing remote file that is to be moved.
+	 * @param targetFile Destination for the remote file.
 	 * @throws StorageException If the connection fails due to no Internet connection,
 	 *         authentication errors, etc.
 	 */
@@ -146,7 +146,7 @@ public interface TransferManager {
 	 * Retrieves a list of all files in the remote repository, filtered by
 	 * the type of the desired file, i.e. by a sub-class of {@link RemoteFile}.
 	 *
-	 * @param remoteFileClass Filter class: <tt>RemoteFile</tt> or a sub-type thereof
+	 * @param remoteFileClass Filter class: <code>RemoteFile</code> or a sub-type thereof
 	 * @return Returns a list of remote files. In the map, the key is the file name,
 	 *         the value the entire {@link RemoteFile} object.
 	 * @throws StorageException If the connection fails due to no Internet connection,
@@ -166,26 +166,26 @@ public interface TransferManager {
 	 *  <li>{@link #testTargetExists()}: Tests whether the target exists.</li>
 	 *  <li>{@link #testTargetCanWrite()}: Tests whether the target is writable.</li>
 	 *  <li>{@link #testTargetCanCreate()}: Tests whether the target can be created if it does not
-	 *      exist already. This is only called if <tt>testCreateTarget</tt> is set.</li>
+	 *      exist already. This is only called if <code>testCreateTarget</code> is set.</li>
 	 *  <li>{@link #testRepoFileExists()}: Tests whether the repo file exists.</li>
 	 * </ul>
 	 *
 	 * @return Returns the result of testing the repository.
-	 * @param testCreateTarget If <tt>true</tt>, the test will test if the target can be created in case
-	 *        it does not exist. If <tt>false</tt>, this test will be skipped.
+	 * @param testCreateTarget If <code>true</code>, the test will test if the target can be created in case
+	 *        it does not exist. If <code>false</code>, this test will be skipped.
 	 * @see StorageTestResult
 	 */
 	public StorageTestResult test(boolean testCreateTarget);
 
 	/**
 	 * Tests whether the target path/folder <b>exists</b>. This might be done by listing the parent path/folder
-	 * or by retrieving metadata about the target. The method returns <tt>true</tt> if the target exists,
-	 * <tt>false</tt> otherwise.
+	 * or by retrieving metadata about the target. The method returns <code>true</code> if the target exists,
+	 * <code>false</code> otherwise.
 	 *
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization
 	 * or initial connection).
 	 *
-	 * @return Returns <tt>true</tt> if the target exists, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the target exists, <code>false</code> otherwise
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure
 	 */
 	public boolean testTargetExists() throws StorageException;
@@ -193,13 +193,13 @@ public interface TransferManager {
 	/**
 	 * Tests whether the target path/folder is <b>writable</b> by the application. This method may either
 	 * check the write permissions of the target or actually write a test file to check write access. If the
-	 * target does not exist, <tt>false</tt> is returned. If the target exists and is writable, <tt>true</tt>
+	 * target does not exist, <code>false</code> is returned. If the target exists and is writable, <code>true</code>
 	 * is returned.
 	 *
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization
 	 * or initial connection).
 	 *
-	 * @return Returns <tt>true</tt> if the target can be written to, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the target can be written to, <code>false</code> otherwise
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure
 	 */
 	public boolean testTargetCanWrite() throws StorageException;
@@ -209,25 +209,25 @@ public interface TransferManager {
 	 * may either check the permissions of the parent path/folder or actually create and delete the target to
 	 * determine create permissions.
 	 *
-	 * <p>If the target already exists, the method returns <tt>true</tt>. If it does not, but it can be created
-	 * (according to tests of this method), it also returns <tt>true</tt>. In all other cases, <tt>false</tt> is returned.
+	 * <p>If the target already exists, the method returns <code>true</code>. If it does not, but it can be created
+	 * (according to tests of this method), it also returns <code>true</code>. In all other cases, <code>false</code> is returned.
 	 *
-	 * <p>This method is called by the {@link #test(boolean)} method, <b>but only if</b> the <tt>testCreateTarget</tt> flag
-	 * is set to <tt>true</tt>!
+	 * <p>This method is called by the {@link #test(boolean)} method, <b>but only if</b> the <code>testCreateTarget</code> flag
+	 * is set to <code>true</code>!
 	 *
-	 * @return Returns <tt>true</tt> if the target can be created or already exists, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the target can be created or already exists, <code>false</code> otherwise
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure
 	 */
 	public boolean testTargetCanCreate() throws StorageException;
 
 	/**
-	 * Tests whether the <b>repository file exists</b> (see {@link SyncanyRemoteFile}). This method is called by the {@link #test()} method
+	 * Tests whether the <b>repository file exists</b> (see {@link SyncanyRemoteFile}). This method is called by the {@link #test(boolean)} method
 	 * (only during repository initialization (or initial connection).
 	 *
 	 * <p>This method is called by the {@link #test(boolean)} method (only during repository initialization
 	 * or initial connection).
 	 *
-	 * @return Returns <tt>true</tt> if the repository is valid, <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the repository is valid, <code>false</code> otherwise
 	 * @throws StorageException If the test cannot be performed, e.g. due to a connection failure
 	 */
 	public boolean testRepoFileExists() throws StorageException;

@@ -27,7 +27,7 @@ import org.simpleframework.xml.Root;
  * 
  * @see Operation
  * @see OperationOptions
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(strict = false)
 public interface OperationResult {

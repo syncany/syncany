@@ -30,7 +30,7 @@ import org.simpleframework.xml.Root;
  * annotation-based configuration.
  *
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(strict = false)
 public class WebServerTO {

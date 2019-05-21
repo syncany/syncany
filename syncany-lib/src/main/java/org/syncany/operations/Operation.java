@@ -31,7 +31,7 @@ import org.syncany.config.Config;
  *  
  * @see OperationOptions
  * @see OperationResult
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Operation {
 	protected Config config;

@@ -45,10 +45,10 @@ import org.syncany.util.StringUtil;
  * used in the operations, but parts of it are also used in other parts of the
  * application -- especially file locations and names.
  *
- * <p>An instance of the <tt>Config</tt> class must be created through the transfer
+ * <p>An instance of the <code>Config</code> class must be created through the transfer
  * objects {@link ConfigTO} and {@link RepoTO}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Config {
 	public static final String DIR_APPLICATION = ".syncany";

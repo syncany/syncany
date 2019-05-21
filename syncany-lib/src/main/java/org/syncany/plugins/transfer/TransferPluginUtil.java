@@ -29,7 +29,7 @@ import com.google.common.base.CaseFormat;
  * the required transfer plugin classes -- namely {@link TransferSettings},
  * {@link TransferManager} and {@link TransferPlugin}.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class TransferPluginUtil {
 	private static final String PLUGIN_PACKAGE_NAME_REGEX = "^" + Plugin.class.getPackage().getName().replace(".", "\\.") + "\\.([a-z0-9_]+)$";

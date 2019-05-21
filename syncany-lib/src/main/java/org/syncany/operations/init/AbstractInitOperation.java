@@ -45,7 +45,7 @@ import org.syncany.util.EnvironmentUtil;
  * and the {@link ConnectOperation}. Its sole purpose is to avoid duplicate code in these
  * similar operations.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class AbstractInitOperation extends Operation {
 	protected static final Logger logger = Logger.getLogger(AbstractInitOperation.class.getSimpleName());

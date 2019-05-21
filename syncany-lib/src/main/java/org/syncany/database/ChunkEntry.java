@@ -26,7 +26,7 @@ package org.syncany.database;
  *
  * @see MultiChunkEntry
  * @see FileContent
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ChunkEntry {
 	private ChunkChecksum checksum;

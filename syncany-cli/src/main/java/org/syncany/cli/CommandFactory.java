@@ -28,7 +28,7 @@ import org.syncany.util.StringUtil;
  * and run commands by mapping a command argument to a corresponding
  * {@link Command} class.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CommandFactory {
 	private static final Logger logger = Logger.getLogger(CommandFactory.class.getSimpleName());
@@ -38,10 +38,10 @@ public class CommandFactory {
 	 * instantiates it. The command name is camel-cased and mapped to a FQCN.
 	 * 
 	 * <p>Example: The command 'ls-remote' is mapped to the FQCN
-	 * <tt>org.syncany.cli.LsRemoteCommand</tt>.
+	 * <code>org.syncany.cli.LsRemoteCommand</code>.
 	 * 
 	 * @param commandName Command name, e.g. ls-remote or init
-	 * @return Returns a <tt>Command</tt> instance, or <tt>null</tt> if the command name cannot be mapped to a class
+	 * @return Returns a <code>Command</code> instance, or <code>null</code> if the command name cannot be mapped to a class
 	 */
 	public static Command getInstance(String commandName) {
 		String thisPackage = CommandFactory.class.getPackage().getName();

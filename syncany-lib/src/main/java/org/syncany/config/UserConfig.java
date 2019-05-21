@@ -35,7 +35,7 @@ import org.syncany.util.EnvironmentUtil;
  * of the currently logged in user, including system properties that will be
  * set with every application start.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UserConfig {
 	/*

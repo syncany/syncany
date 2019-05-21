@@ -26,7 +26,7 @@ import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferSettings;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class DummyTransferSettings extends TransferSettings {
 	public enum DummyEnum {

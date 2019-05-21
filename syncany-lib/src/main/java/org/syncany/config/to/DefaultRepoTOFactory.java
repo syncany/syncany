@@ -41,7 +41,7 @@ import org.syncany.util.StringUtil.StringJoinListener;
  * MultiChunkers. The transformers are configurable, namely whether or not compression is used
  * and how it is encrypted.
  * 
- * @author Pim Otte <otte.pim@gmail.com>
+ * @author Pim Otte (otte.pim@gmail.com)
  */
 public class DefaultRepoTOFactory implements RepoTOFactory {
 	private ChunkerTO chunkerTO;

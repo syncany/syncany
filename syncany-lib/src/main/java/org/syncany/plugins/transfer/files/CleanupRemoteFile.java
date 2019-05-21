@@ -49,7 +49,6 @@ public class CleanupRemoteFile extends RemoteFile {
 	/**
 	 * Initializes a new transaction file, given which cleanup has occurred 
 	 * 
-	 * @param remoteTransaction the remoteTransaction for which a file is needed
 	 * @throws StorageException If the name is not match the name pattern
 	 */
 	public CleanupRemoteFile(long cleanupNumber) throws StorageException {
