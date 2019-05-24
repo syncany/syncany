@@ -558,7 +558,7 @@ public class Indexer {
 				Collection<PartialFileHistory> fileHistoriesWithSameChecksum) {
 			PartialFileHistory lastFileHistory = null;
 
-			// Check if they do not exist anymore --&gt; assume it has moved!
+			// Check if they do not exist anymore --> assume it has moved!
 			// We choose the best fileHistory to base on as follows:
 
 			// 1. Ensure that it was modified at the same time and is the same size

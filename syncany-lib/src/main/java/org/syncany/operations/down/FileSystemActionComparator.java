@@ -118,7 +118,7 @@ public class FileSystemActionComparator  {
 				int conflictingDeleteActionIndex = getPathConflictingWithDeleteActionIndex(currentAction, fixedActions);
 				
 				if (conflictingDeleteActionIndex >= 0) {
-					logger.log(Level.INFO, "     --&gt; match, conflict ["+i+"]: "+currentAction);
+					logger.log(Level.INFO, "     --> match, conflict ["+i+"]: "+currentAction);
 					logger.log(Level.INFO, "                    with ["+conflictingDeleteActionIndex+"]: "+fixedActions.get(conflictingDeleteActionIndex));
 					
 					fixedActions.remove(i);

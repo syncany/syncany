@@ -352,12 +352,12 @@ public class FileVersionComparator {
 
 		// Check existence
 		if (fileComparison.expectedFileProperties.exists() != fileComparison.actualFileProperties.exists()) {
-			// File is expected to exist, but it does NOT --&gt; file has been deleted
+			// File is expected to exist, but it does NOT --> file has been deleted
 			if (fileComparison.expectedFileProperties.exists() && !fileComparison.actualFileProperties.exists()) {
 				fileComparison.fileChanges.add(FileChange.DELETED);
 			}
 
-			// File is expected to NOT exist, but it does --&gt; file is new
+			// File is expected to NOT exist, but it does --> file is new
 			else {
 				fileComparison.fileChanges.add(FileChange.NEW);
 			}

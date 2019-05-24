@@ -255,7 +255,7 @@ public class TestClient extends Client {
 			}
 		}
 		catch (Exception e) {
-			throw new Exception("Move failed: " + fileFrom + " --&gt; " + fileTo, e);
+			throw new Exception("Move failed: " + fileFrom + " --> " + fileTo, e);
 		}
 	}
 

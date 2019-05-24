@@ -505,7 +505,7 @@ public class DatabaseReconciliatorTest {
 	@Test
 	public void testTwoWinningVersionsWithSameTimestamp() throws Exception {
 		/* Scenario: Three clients, to conflicting DBVs with the same timestamp
-		 *           --&gt; A should win over B (alphabetical order)
+		 *           --> A should win over B (alphabetical order)
 		 */
 		Logging.init();
 
