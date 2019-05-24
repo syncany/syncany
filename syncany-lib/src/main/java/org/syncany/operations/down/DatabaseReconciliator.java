@@ -62,7 +62,8 @@ public class DatabaseReconciliator {
 
 	/**
 	 * Implements the core synchronization algorithm as described {@link DatabaseReconciliator in the class description}.
-	 * 
+	 *
+	 * @param allBranches All branches of all machines (including local)
 	 * @return Returns the branch of the winning client
 	 */
 	public Map.Entry<String, DatabaseBranch> findWinnerBranch(DatabaseBranches allBranches)
