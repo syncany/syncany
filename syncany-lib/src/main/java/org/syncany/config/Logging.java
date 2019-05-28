@@ -30,11 +30,11 @@ import java.util.logging.Logger;
  * application's log options. 
  * 
  * <p>In particular, it can load the log properties either from a resource or a
- * local file on the file system (<tt>logging.properties</tt>. If a local file is
+ * local file on the file system (<code>logging.properties</code>. If a local file is
  * present, it is preferred over the JAR resource.
  * 
  * <p>To initialize logging, the {@link #init()} method can be called in the 
- * <tt>static</tt> block of a class, e.g.
+ * <code>static</code> block of a class, e.g.
  * 
  * <pre>
  *   static {
@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  *   }
  * </pre>
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Logging {
 	private static final String LOG_PROPERTIES_JAR_RESOURCE = "/" + Logging.class.getPackage().getName().replace(".", "/") + "/logging.properties";	

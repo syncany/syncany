@@ -34,8 +34,8 @@ import org.syncany.util.StringUtil;
  * <p>This transfer manager is enhanced with the {@link TransactionAware}
  * and {@link Retriable} annotations, thereby making it reliable.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @TransactionAware
 @Retriable(numberRetries = 3, sleepInterval = 3000)

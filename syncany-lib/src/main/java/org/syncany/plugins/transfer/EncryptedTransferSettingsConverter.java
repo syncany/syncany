@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
  * annotation. Every marked field is encrypted with the user-specific
  * config key from {@link UserConfig}.
  * 
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class EncryptedTransferSettingsConverter implements Converter<String> {
 	private List<String> encryptedFields;

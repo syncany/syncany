@@ -3,7 +3,7 @@ package org.syncany.plugins.transfer.oauth;
 /**
  * A website which is shown to a user during the oauth process.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 class OAuthWebResponse {

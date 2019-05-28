@@ -30,7 +30,7 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
  * <p>A multichunk is identified by a unique identifier (random, not a checksum),
  * and contains references to {@link ChunkEntry}s.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class MultiChunkEntry {
 	private static final byte MULTICHUNK_ID_LENGTH = 20;

@@ -24,7 +24,7 @@ package org.syncany.config;
  * <p>It is heavily used by the daemon to distribute requests and responses
  * into the application; and to pass responses back to the daemon. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 // TODO [medium] This class belongs in the 'util' package
 public class LocalEventBus extends InternalEventBus {	

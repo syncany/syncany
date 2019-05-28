@@ -29,7 +29,7 @@ import org.syncany.util.ReflectionUtil;
  * The transfer plugin is a special plugin responsible for transferring files
  * to the remote storage. Implementations must provide implementations for
  * {@link TransferPlugin} (this class), {@link TransferSettings} (connection
- * details) and {@link TransferManager} (transfer methods).<br/><br/>
+ * details) and {@link TransferManager} (transfer methods).<br><br>
  *
  * <p>Plugins have to follow a naming convention:
  * <ul>
@@ -39,13 +39,13 @@ import org.syncany.util.ReflectionUtil;
  *      subsequent character.</li>
  * </ul>
  *
- * <p>Example:</b> 
+ * <p>Example:</p>
  * A plugin is called DummyPlugin, hence <i>org.syncany.plugins.dummy_plugin.DummyPluginTransferPlugin</i> is the
  * plugin's {@link TransferPlugin} class and <i>org.syncany.plugins.dummy_plugin.DummyPluginTransferSettings</i> is the
  * corresponding {@link TransferSettings} implementation.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class TransferPlugin extends Plugin {
 	public TransferPlugin(String pluginId) {
@@ -57,7 +57,7 @@ public abstract class TransferPlugin extends Plugin {
 	 *
 	 * @return Empty plugin-specific {@link org.syncany.plugins.transfer.TransferSettings} instance.
 	 * @throws StorageException Thrown if no {@link org.syncany.plugins.transfer.TransferSettings} are attached to a
-	 *         plugin using {@link org.syncany.plugins.transfer.PluginSettings}
+	 *         plugin
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferSettings> T createEmptySettings() throws StorageException {
@@ -86,7 +86,7 @@ public abstract class TransferPlugin extends Plugin {
 	 * @param config A valid {@link org.syncany.config.Config} instance.
 	 * @return A initialized, plugin-specific {@link org.syncany.plugins.transfer.TransferManager} instance.
 	 * @throws StorageException Thrown if no (valid) {@link org.syncany.plugins.transfer.TransferManager} are attached to
-	*  a plugin using {@link org.syncany.plugins.transfer.PluginManager}
+	*  a plugin
 	 */
 	@SuppressWarnings("unchecked")
 	public final <T extends TransferManager> T createTransferManager(TransferSettings transferSettings, Config config) throws StorageException {

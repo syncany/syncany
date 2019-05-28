@@ -48,7 +48,7 @@ import org.syncany.util.FileUtil;
  * database. It uses the {@link FileVersionComparator} to determine differences and returns
  * new/changed/deleted files in form of a {@link ChangeSet}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class StatusOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(StatusOperation.class.getSimpleName());

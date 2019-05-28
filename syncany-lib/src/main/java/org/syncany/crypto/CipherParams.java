@@ -31,7 +31,7 @@ import org.syncany.util.StringUtil;
  * invalidated ciphertext data. Do <b>not change</b> any of these parameters unless 
  * you know what you are doing!
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class CipherParams {
 	/**

@@ -34,9 +34,9 @@ import java.util.logging.Logger;
  * performs very badly when bytes are added or removed from the beginning of a file.
  *
  * <p>Details can be found in chapter 3.4 of the thesis at <a href="http://blog.philippheckel.com/2013/05/20/minimizing-remote-storage-usage-and-synchronization-time-using-deduplication-and-multichunking-syncany-as-an-example/3/#Fixed-Size%20Chunking">blog.philippheckel.com</a>.
- * The <tt>FixedChunker</tt> implements the chunker described in chapter 3.4.2.
+ * The <code>FixedChunker</code> implements the chunker described in chapter 3.4.2.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FixedChunker extends Chunker {
 	private static final Logger logger = Logger.getLogger(FixedChunker.class.getSimpleName());

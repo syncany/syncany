@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  *
  * @author Frits de Nijs
  * @author Peter Dijkshoorn
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class VectorClock extends TreeMap<String, Long> {
 	private static final long serialVersionUID = 109876543L;	
@@ -80,7 +80,7 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * Set the component of a unit.
 	 *
 	 * @param unit The identifier of the vector element being set
-	 * @value value The new value of the unit being set
+	 * @param value The new value of the unit being set
 	 */
 	public void setClock(String unit, long value) {
 		validateUnitName(unit);
@@ -91,7 +91,7 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * Retrieve the unit's value
 	 *
 	 * @param unit The identifier of the vector element being retrieved
-	 * @return Returns the value of the unit (if existent), or <tt>null</tt> if it does not exist
+	 * @return Returns the value of the unit (if existent), or <code>null</code> if it does not exist
 	 */
 	public Long getClock(String unit) {
 		return get(unit);
@@ -177,8 +177,8 @@ public class VectorClock extends TreeMap<String, Long> {
 	 * VectorClock compare operation. Returns one of four possible values
 	 * indicating how clock one relates to clock two:
 	 *
-	 * VectorComparison.GREATER If One > Two. VectorComparison.EQUAL If One =
-	 * Two. VectorComparison.SMALLER If One < Two. VectorComparison.SIMULTANEOUS
+	 * VectorComparison.GREATER If One &gt; Two. VectorComparison.EQUAL If One =
+	 * Two. VectorComparison.SMALLER If One &lt; Two. VectorComparison.SIMULTANEOUS
 	 * If One != Two.
 	 *
 	 * @param clock1 First Clock being compared.

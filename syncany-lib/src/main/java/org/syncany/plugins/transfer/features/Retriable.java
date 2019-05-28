@@ -17,6 +17,8 @@
  */
 package org.syncany.plugins.transfer.features;
 
+import org.syncany.plugins.transfer.TransferManager;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,13 +28,13 @@ import java.lang.annotation.Target;
  * Feature annotation to make a transfer manager more reliable by making 
  * its core methods retriable. 
  * 
- * <p>This annotation is only recognized if used on a {@link FTransferManager}. If 
+ * <p>This annotation is only recognized if used on a {@link TransferManager}. If
  * applied, it wraps the original transfer manager in a {@link RetriableFeatureTransferManager}.
  * 
  * <p>The options that can be defined in this feature annotation are how often a method
  * will be retried, and how long the sleep interval between these retries is.
  * 
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @Feature(required = true)
 @Target(ElementType.TYPE)

@@ -25,7 +25,7 @@ import org.syncany.plugins.Plugin;
  * Web interface plugins implement a web frontend by implementing this
  * class. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class WebInterfacePlugin extends Plugin {
 	public WebInterfacePlugin(String pluginId) {

@@ -24,7 +24,7 @@ import org.syncany.operations.OperationOptions;
  * The options alter/influence the behavior of the operation.
  * 
  * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UpdateOperationOptions implements OperationOptions {
 	private UpdateOperationAction action = null;

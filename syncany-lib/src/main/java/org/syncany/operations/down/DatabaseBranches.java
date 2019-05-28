@@ -28,7 +28,7 @@ import java.util.TreeMap;
  * <p>The class is mainly used by the {@link DatabaseReconciliator} when comparing
  * and reconciling changes between the clients' database branches. 
  *    
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseBranches {
 	private TreeMap<String, DatabaseBranch> branches;

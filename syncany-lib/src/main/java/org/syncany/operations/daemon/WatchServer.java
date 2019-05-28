@@ -53,11 +53,11 @@ import com.google.common.eventbus.Subscribe;
 
 /**
  * The watch server can manage many different {@link WatchOperation}s. When started
- * with {@link #start()} or {@link #reload()}, it first reads the daemon configuration file
+ * with {@link #start(DaemonConfigTO)} or {@link #reload(DaemonConfigTO)}, it first reads the daemon configuration file
  * and then runs new threads for each configured Syncany folder. Invalid or non-existing folders
  * are ignored.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class WatchServer {
 	private static final Logger logger = Logger.getLogger(WatchServer.class.getSimpleName());

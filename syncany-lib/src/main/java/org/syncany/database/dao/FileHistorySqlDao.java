@@ -42,7 +42,7 @@ import com.google.common.collect.Lists;
  * The file history DAO queries and modifies the <i>filehistory</i> in
  * the SQL database. This table corresponds to the Java object {@link PartialFileHistory}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileHistorySqlDao extends AbstractSqlDao {
 	private FileVersionSqlDao fileVersionDao;
@@ -53,7 +53,7 @@ public class FileHistorySqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes a list of {@link PartialFileHistory}s to the database table <i>filehistory</i> using <tt>INSERT</tt>s
+	 * Writes a list of {@link PartialFileHistory}s to the database table <i>filehistory</i> using <code>INSERT</code>s
 	 * and the given connection. In addition, this method also writes the corresponding {@link FileVersion}s of
 	 * each file history to the database using
 	 * {@link FileVersionSqlDao#writeFileVersions(Connection, FileHistoryId, long, Collection) FileVersionSqlDao#writeFileVersions}.

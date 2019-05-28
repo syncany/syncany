@@ -38,7 +38,7 @@ import org.syncany.plugins.transfer.TransferManagerFactory;
  * 
  * @see Feature
  * @see FeatureExtension
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public interface FeatureTransferManager extends TransferManager {
 	// Marker interface

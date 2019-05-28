@@ -34,7 +34,7 @@ import org.simpleframework.xml.Root;
  *  
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
  * @see <a href="https://github.com/syncany/syncany-website">Syncany Website/API</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name = "appInfoResponse")
 public class AppInfoResponse {

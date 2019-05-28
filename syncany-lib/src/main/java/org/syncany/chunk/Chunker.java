@@ -29,7 +29,7 @@ import java.util.Enumeration;
  * <p>Note: Implementations should never read the entire file into memory at once,
  *          but instead use an input stream for processing.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Chunker {	
 	/**

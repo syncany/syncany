@@ -29,7 +29,7 @@ import org.syncany.config.to.ConfigTO;
  * a repository. The operation is used by other initializing operations, e.g. connect
  * and init.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class GenlinkOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(GenlinkOperation.class.getSimpleName());

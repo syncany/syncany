@@ -37,17 +37,17 @@ import org.syncany.util.StringUtil;
  * The notification listener implements a client to the fanout, as very
  * lightweight pub/sub server originally written for SparkleShare.
  *
- * <p>Fanout implements a simple TCP-based plaintext protocol.<br />
+ * <p>Fanout implements a simple TCP-based plaintext protocol.<br>
  * It implements the following <b>commands</b>:
  * <ul>
- *  <li><tt>subcribe &lt;channel&gt;</tt></li>
- *  <li><tt>unsubscribe &lt;channel&gt;</tt></li>
- *  <li><tt>announce &lt;channel&gt; &lt;message&gt;</tt></li>
+ *  <li><code>subcribe &lt;channel&gt;</code></li>
+ *  <li><code>unsubscribe &lt;channel&gt;</code></li>
+ *  <li><code>announce &lt;channel&gt; &lt;message&gt;</code></li>
  * </ul>
  *
  * <p><b>Notifications</b> have the following format:
  * <ul>
- *  <li><tt>&lt;channel&gt;!&lt;message&gt;</tt></li>
+ *  <li><code>&lt;channel&gt;!&lt;message&gt;</code></li>
  * </ul>
  *
  * <p>The notification listener starts a thread and listens for incoming messages.
@@ -56,7 +56,7 @@ import org.syncany.util.StringUtil;
  * {@link NotificationListenerListener}.
  *
  * @see <a href="https://github.com/travisghansen/fanout/">https://github.com/travisghansen/fanout/</a> - Fanout source code by Travis G. Hansen
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class NotificationListener {
 	private static final Logger logger = Logger.getLogger(NotificationListener.class.getSimpleName());

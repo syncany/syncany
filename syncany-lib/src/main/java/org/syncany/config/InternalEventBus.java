@@ -29,7 +29,7 @@ import com.google.common.eventbus.EventBus;
  * daemon. It provides a publish/subscribe mechanism within a
  * single JVM.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 //TODO [medium] This class belongs in the 'util' package
 public abstract class InternalEventBus {

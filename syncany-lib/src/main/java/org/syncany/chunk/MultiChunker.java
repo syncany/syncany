@@ -37,7 +37,7 @@ import org.syncany.util.StringUtil;
  * <p>The class supports two modes: 
  * 
  * <ul>
- * <li>When writing a {@link MultiChunker}, the {@link #createMultiChunk(byte[], OutputStream)}
+ * <li>When writing a {@link MultiChunker}, the {@link #createMultiChunk(MultiChunkId, OutputStream)}
  *     must be used. The method emits a new implementation-specific {@link MultiChunk} 
  *     to which new chunks can be added/written to.
  *      
@@ -49,7 +49,7 @@ import org.syncany.util.StringUtil;
  * the individual chunk objects must be randomly accessible. A sequential read (like with TAR, for
  * instance), is not sufficient for the quick processing required in the application.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 // TODO [low] The multichunk API is really odd; Think of something more sensible
 public abstract class MultiChunker {
@@ -138,7 +138,7 @@ public abstract class MultiChunker {
 	 * <p>Using this method only allows reading from the returned multichunk. The underlying
 	 * input stream is opened and can be used to retrieve chunk data.
 	 * 
-	 * @param is InputStream to initialize an existing multichunk for read-operations only
+	 * @param file File to read into a multichunk for read-operations only
 	 * @return Returns an existing multichunk object that allows read operations only
 	 */
 	public abstract MultiChunk createMultiChunk(File file) throws IOException;
@@ -153,12 +153,11 @@ public abstract class MultiChunker {
 	 * <br>
 	 * After creating a new multichunker, it must be initialized using the 
 	 * {@link #init(Map) init()} method. The given type attribute is mapped to fully 
-	 * qualified class name (FQCN) of the form <tt>org.syncany.chunk.XMultiChunker</tt>, 
-	 * where <tt>X</tt> is the camel-cased type attribute.  
+	 * qualified class name (FQCN) of the form <code>org.syncany.chunk.XMultiChunker</code>,
+	 * where <code>X</code> is the camel-cased type attribute.
 	 * 
 	 * @param type Type/name of the multichunker (corresponds to its camel case class name)
 	 * @return a new multichunker
-	 * @throws Exception If the FQCN cannot be found or the class cannot be instantiated
 	 */
 	public static MultiChunker getInstance(String type) {
 		String thisPackage = MultiChunker.class.getPackage().getName();

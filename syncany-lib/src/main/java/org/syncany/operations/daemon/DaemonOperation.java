@@ -56,18 +56,18 @@ import com.google.common.eventbus.Subscribe;
  * 
  * <ul>
  *  <li>The {@link WatchServer} starts a {@link WatchOperation} for every 
- *      folder registered in the <tt>daemon.xml</tt> file. It can be reloaded via
- *      the <tt>syd reload</tt> command.</li>
+ *      folder registered in the <code>daemon.xml</code> file. It can be reloaded via
+ *      the <code>syd reload</code> command.</li>
  *  <li>The {@link WebServer} starts a websocket and allows clients 
  *      (e.g. GUI, Web) to control the daemon (if authenticated). 
  *      TODO [medium] This is not yet implemented!</li>
  *  <li>The {@link ControlServer} creates and watches the daemon control file
- *      which allows the <tt>syd</tt> shell/batch script to write reload/shutdown
+ *      which allows the <code>syd</code> shell/batch script to write reload/shutdown
  *      commands.</li>  
  * </ul>
  * 
- * @author Vincent Wiencek <vwiencek@gmail.com>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Vincent Wiencek (vwiencek@gmail.com)
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  * @author Pim Otte 
  */
 public class DaemonOperation extends Operation {	

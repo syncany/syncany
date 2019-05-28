@@ -43,7 +43,7 @@ import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
  * uses the local list of known databases to filter already processed files. The local
  * list of known databases is loaded.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class LsRemoteOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(LsRemoteOperation.class.getSimpleName());

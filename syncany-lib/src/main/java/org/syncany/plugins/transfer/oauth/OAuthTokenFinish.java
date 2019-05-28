@@ -3,7 +3,7 @@ package org.syncany.plugins.transfer.oauth;
 /**
  * A {@link OAuthTokenFinish} is a container to hold a pair of a token and a CSRF field.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public class OAuthTokenFinish {

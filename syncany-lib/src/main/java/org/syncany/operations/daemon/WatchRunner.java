@@ -42,7 +42,7 @@ import com.google.common.eventbus.Subscribe;
  * underlying thred can be started using the {@link #start()} method, and stopped
  * gracefully using {@link #stop()}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class WatchRunner {
 	private static final Logger logger = Logger.getLogger(WatchRunner.class.getSimpleName());

@@ -40,10 +40,10 @@ import org.syncany.database.VectorClock;
 
 /**
  * The multi-chunk data access object (DAO) queries and modifies the <i>multichunk</i> and
- * <i>multichunk_chunk</t> table in the SQL database. These tables correspond to the Java
+ * <i>multichunk_chunk</i> table in the SQL database. These tables correspond to the Java
  * object {@link MultiChunk}.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class MultiChunkSqlDao extends AbstractSqlDao {
 	public MultiChunkSqlDao(Connection connection) {

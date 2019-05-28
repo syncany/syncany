@@ -28,7 +28,7 @@ import javax.xml.bind.DatatypeConverter;
 /**
  * Utility class for common application string functions.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class StringUtil {   
 	/**
@@ -37,11 +37,11 @@ public class StringUtil {
 	 * 
 	 * <p>Examples:
 	 * <ul>
-	 *  <li><tt>toCamelCase("hello world") -&gt; "HelloWorld"</tt></li>
-	 *  <li><tt>toCamelCase("hello_world") -&gt; "HelloWorld"</tt></li>
-	 *  <li><tt>toCamelCase("hello_World") -&gt; "HelloWorld"</tt></li>
-	 *  <li><tt>toCamelCase("helloWorld") -&gt; "HelloWorld"</tt></li>
-	 *  <li><tt>toCamelCase("HelloWorld") -&gt; "HelloWorld"</tt></li>
+	 *  <li><code>toCamelCase("hello world") -&gt; "HelloWorld"</code></li>
+	 *  <li><code>toCamelCase("hello_world") -&gt; "HelloWorld"</code></li>
+	 *  <li><code>toCamelCase("hello_World") -&gt; "HelloWorld"</code></li>
+	 *  <li><code>toCamelCase("helloWorld") -&gt; "HelloWorld"</code></li>
+	 *  <li><code>toCamelCase("HelloWorld") -&gt; "HelloWorld"</code></li>
 	 * </ul>
 	 */
     public static String toCamelCase(String str) {
@@ -65,8 +65,8 @@ public class StringUtil {
      * 
 	 * <p>Examples:
 	 * <ul>
-	 *  <li><tt>toUnderScoreDelimited("HelloWorld") -&gt; "hello_world"</tt></li>
-	 *  <li><tt>toUnderScoreDelimited("helloWorld") -&gt; "hello_world"</tt></li>
+	 *  <li><code>toUnderScoreDelimited("HelloWorld") -&gt; "hello_world"</code></li>
+	 *  <li><code>toUnderScoreDelimited("helloWorld") -&gt; "hello_world"</code></li>
 	 * </ul>
      */
     public static String toSnakeCase(String str) {
@@ -95,7 +95,7 @@ public class StringUtil {
     
     /**
      * Converts a byte array to a lower case hex representation.
-     * If the given byte array is <tt>null</tt>, an empty string is returned.
+     * If the given byte array is <code>null</code>, an empty string is returned.
      */
     public static String toHex(byte[] bytes) {
     	if (bytes == null) {

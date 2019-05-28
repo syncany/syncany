@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  * breakpoints, TTTD simply cuts the chunk at the maximum chunk size. TTTD hence guarantees
  * to emit chunks with a minimum and maximum size.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  * @see <a href="http://www.hpl.hp.com/techreports/2005/HPL-2005-30R1.html">Original TTTD paper: A framework for analyzing and improving content-based chunking algorithms (2005, Kave Eshghi and Hsiu Khuern Tang)</a>
  */
 public class TttdChunker extends Chunker {
@@ -83,7 +83,7 @@ public class TttdChunker extends Chunker {
 
 	/**
 	 * Infer the optimal values for avgChunkSize from the orginal paper's optimal (measured) values.
-	 * LBFS: avg. chunk size = 1015 bytes --> Tmin = 460, Tmax = 2800, D = 540, Ddash = 270
+	 * LBFS: avg. chunk size = 1015 bytes --&gt; Tmin = 460, Tmax = 2800, D = 540, Ddash = 270
 	 */
 	public TttdChunker(int avgChunkSize, int windowSize, String digestAlg, String fingerprintAlg) {
 		this(

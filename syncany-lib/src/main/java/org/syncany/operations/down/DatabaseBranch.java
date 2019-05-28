@@ -32,7 +32,7 @@ import org.syncany.database.DatabaseVersionHeader;
  * <p>Branches are used mainly in the {@link DatabaseReconciliator} to compare database
  * versions and reconcile conflicts.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseBranch {
 	private ArrayList<DatabaseVersionHeader> branch;

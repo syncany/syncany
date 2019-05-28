@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A <tt>PartialFileHistory</tt> represents a single file in a repository over a
+ * A <code>PartialFileHistory</code> represents a single file in a repository over a
  * certain period of time/versions. Whenever a file is updated or deleted, a new
  * {@link FileVersion} is added to the file history.
  *
@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * history.
  *
  * @see FileVersion
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  * @author Fabrice Rossi
  */
 public class PartialFileHistory {
@@ -89,12 +89,12 @@ public class PartialFileHistory {
 
 	/**
 	 * Returns the last file version in this instance of the partial file history,
-	 * or <tt>null</tt> if there are no file versions.
+	 * or <code>null</code> if there are no file versions.
 	 *
 	 * <p>Note that this method does not necessarily return the actual overall
 	 * last file version, only the last of this object instance.
 	 *
-	 * @return Returns the last file version, or <tt>null</tt>
+	 * @return Returns the last file version, or <code>null</code>
 	 */
 	public FileVersion getLastVersion() {
 		if (versions.isEmpty()) {
@@ -112,7 +112,7 @@ public class PartialFileHistory {
 	 * the given file version.
 	 *
 	 * @param fileVersion File version to be added to the file history
-	 * @throws IllegalArgumentException If fileVersion or its version number is <tt>null</tt>
+	 * @throws IllegalArgumentException If fileVersion or its version number is <code>null</code>
 	 */
 	public void addFileVersion(FileVersion fileVersion) {
 		if (fileVersion == null || fileVersion.getVersion() == null) {

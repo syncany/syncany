@@ -49,7 +49,7 @@ import com.google.common.collect.ImmutableMap;
  * The file version DAO queries and modifies the <i>fileversion</i> in
  * the SQL database. This table corresponds to the Java object {@link FileVersion}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileVersionSqlDao extends AbstractSqlDao {
 	private static final Logger logger = Logger.getLogger(FileVersionSqlDao.class.getSimpleName());	
@@ -68,7 +68,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes a list of {@link FileVersion} to the database table <i>fileversion</i> using <tt>INSERT</tt>s
+	 * Writes a list of {@link FileVersion} to the database table <i>fileversion</i> using <code>INSERT</code>s
 	 * and the given connection.
 	 *
 	 * <p><b>Note:</b> This method executes, but <b>does not commit</b> the queries.
@@ -109,7 +109,7 @@ public class FileVersionSqlDao extends AbstractSqlDao {
 
 	/**
 	 * Removes {@link FileVersion}s from the database table <i>fileversion</i> for which the
-	 * the corresponding database is marked <tt>DIRTY</tt>.
+	 * the corresponding database is marked <code>DIRTY</code>.
 	 *
 	 * <p><b>Note:</b> This method executes, but does not commit the query.
 	 *

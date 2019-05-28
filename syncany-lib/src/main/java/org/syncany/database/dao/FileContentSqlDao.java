@@ -35,7 +35,7 @@ import org.syncany.database.VectorClock;
  * on {@link FileContent}s. It translates the relational data in the <i>filecontent</i> table to
  * Java objects.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileContentSqlDao extends AbstractSqlDao {
 	public FileContentSqlDao(Connection connection) {
@@ -43,7 +43,7 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	}
 
 	/**
-	 * Writes a list of {@link FileContent}s to the database using <tt>INSERT</tt>s and the given connection.
+	 * Writes a list of {@link FileContent}s to the database using <code>INSERT</code>s and the given connection.
 	 * It fills two tables, the <i>filecontent</i> table ({@link FileContent}) and the <i>filecontent_chunk</i> 
 	 * table ({@link ChunkChecksum}).
 	 * 
@@ -126,8 +126,8 @@ public class FileContentSqlDao extends AbstractSqlDao {
 	 * corresponding chunk references (list of {@link ChunkChecksum}). 
 	 * 
 	 * @param fileChecksum {@link FileContent}-identifying file checksum
-	 * @param includeChunkChecksums If <tt>true</tt>, the resulting {@link FileContent} will contain its chunk references  
-	 * @return Returns a {@link FileContent} either with or without chunk references, or <tt>null</tt> if it does not exist. 
+	 * @param includeChunkChecksums If <code>true</code>, the resulting {@link FileContent} will contain its chunk references
+	 * @return Returns a {@link FileContent} either with or without chunk references, or <code>null</code> if it does not exist.
 	 */
 	public FileContent getFileContent(FileChecksum fileChecksum, boolean includeChunkChecksums) {
 		if (fileChecksum == null) {

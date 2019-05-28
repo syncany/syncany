@@ -70,9 +70,9 @@ import com.google.common.collect.Sets.SetView;
  * <p>The general operation flow is as follows:
  * <ol>
  *  <li>List all database versions on the remote storage using the {@link LsRemoteOperation}
- *      (implemented in {@link #listUnknownRemoteDatabases(MemoryDatabase, TransferManager) listUnknownRemoteDatabases()}</li>
+ *      (implemented in {@link #listUnknownRemoteDatabases() listUnknownRemoteDatabases()}</li>
  *  <li>Download unknown databases using a {@link TransferManager} (if any), skip the rest down otherwise
- *      (implemented in {@link #downloadUnknownRemoteDatabases(TransferManager, List) downloadUnknownRemoteDatabases()}</li>
+ *      (implemented in {@link #downloadUnknownRemoteDatabases(List) downloadUnknownRemoteDatabases()}</li>
  *  <li>Load remote database headers (branches) and compare them to the local database to determine a winner
  *      using several methods of the {@link DatabaseReconciliator}</li>
  *  <li>Determine whether the local branch conflicts with the winner branch; if so, prune conflicting
@@ -85,7 +85,7 @@ import com.google.common.collect.Sets.SetView;
  * </ol>
  *
  * @see DatabaseReconciliator
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DownOperation extends AbstractTransferOperation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());
@@ -224,9 +224,9 @@ public class DownOperation extends AbstractTransferOperation {
 	 * Checks whether any new databases are only and whether any other conflicting
 	 * actions are running.
 	 *
-	 * <p>This method sets the result code in <tt>result</tt> according to the
-	 * checking result and returns <tt>true</tt> if the rest of the operation can
-	 * continue, <tt>false</tt> otherwise.
+	 * <p>This method sets the result code in <code>result</code> according to the
+	 * checking result and returns <code>true</code> if the rest of the operation can
+	 * continue, <code>false</code> otherwise.
 	 */
 	private boolean checkPreconditions() throws Exception {
 		// Check strategies
@@ -375,7 +375,6 @@ public class DownOperation extends AbstractTransferOperation {
 	 *
 	 * <p>The detailed algorithm is described in the {@link DatabaseReconciliator}.
 	 *
-	 * @param localBranch Local database branch (extracted from the local database)
 	 * @param allStitchedBranches The newly downloaded remote database version headers (= branches)
 	 * @return Returns the branch of the winner
 	 * @throws Exception If any kind of error occurs (...)
@@ -395,7 +394,7 @@ public class DownOperation extends AbstractTransferOperation {
 	}
 
 	/**
-	 * Marks locally conflicting database versions as <tt>DIRTY</tt> and removes remote databases that
+	 * Marks locally conflicting database versions as <code>DIRTY</code> and removes remote databases that
 	 * correspond to those database versions. This method uses the {@link DatabaseReconciliator}
 	 * to determine whether there is a local purge branch.
 	 */
