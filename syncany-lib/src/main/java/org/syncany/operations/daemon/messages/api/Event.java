@@ -25,7 +25,7 @@ package org.syncany.operations.daemon.messages.api;
  * <p>Certain events may be broadcasted to external subscribers via
  * web socket or other technologies.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Event extends Message {
 	// Marker

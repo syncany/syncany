@@ -28,13 +28,13 @@ import org.syncany.plugins.transfer.TransferSettings;
  * a generator class can be used to create the authentication URL and
  * check the user-provided token. The concrete implementation of this
  * interface should be provided to the {@link TransferSettings} class
- * via the {@link OAuth} annotation.<br/>
+ * via the {@link OAuth} annotation.<br>
  * A generator can be extended with {@link OAuthGenerator.WithInterceptor},
  * {@link OAuthGenerator.WithExtractor} and
  * {@link OAuthGenerator.WithNoRedirectMode}.
  *
- * @author Philipp Heckel <philipp.heckel@gmail.com>
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Philipp Heckel (philipp.heckel@gmail.com)
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public interface OAuthGenerator {
 	/**
@@ -61,7 +61,7 @@ public interface OAuthGenerator {
 	/**
 	 * Use a custom {@link OAuthTokenInterceptor} instead of the default one which depends on the {@link OAuthMode} in use.
 	 *
-	 * @see {@link OAuthTokenInterceptor}
+	 * See: {@link OAuthTokenInterceptor}
 	 */
 	interface WithInterceptor {
 		OAuthTokenInterceptor getInterceptor();
@@ -70,18 +70,18 @@ public interface OAuthGenerator {
 	/**
 	 * Use a custom {@link OAuthTokenExtractor} instead of the default one which depends on the {@link OAuthMode} in use.
 	 *
-	 * @see {@link OAuthTokenExtractor}
+	 * See: {@link OAuthTokenExtractor}
 	 */
 	interface WithExtractor {
 		OAuthTokenExtractor getExtractor();
 	}
 
 	/**
-	 * If an OAuth based plugin also supports copy&pasting a token from a website it should extend this interface.
+	 * If an OAuth based plugin also supports copy&amp;pasting a token from a website it should extend this interface.
 	 */
 	interface WithNoRedirectMode {
 		/**
-		 * Called if Syncany is started in headless mode which does not support redirect_to URLs.<br/>
+		 * Called if Syncany is started in headless mode which does not support redirect_to URLs.<br>
 		 * The website should output a token which can be copied over to Syncany's repo wizard.
 		 *
 		 * @return A URL with no redirect URL

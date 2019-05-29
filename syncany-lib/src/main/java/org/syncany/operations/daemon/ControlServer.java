@@ -40,7 +40,7 @@ import org.syncany.config.UserConfig;
  * fork a new thread. It <b>blocks</b> and waits for commands until 
  * <b>shutdown</b> is received.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ControlServer implements TailerListener {	
 	private static final Logger logger = Logger.getLogger(ControlServer.class.getSimpleName());

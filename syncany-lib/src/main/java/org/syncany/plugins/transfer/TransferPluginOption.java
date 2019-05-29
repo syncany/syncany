@@ -29,7 +29,7 @@ import org.syncany.util.ReflectionUtil;
  * is created during the initialization from the {@link Setup} annotation
  * to aid the guided repository setup (init and connect).
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class TransferPluginOption {
 	public enum ValidationResult {

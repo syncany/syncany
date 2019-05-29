@@ -25,7 +25,7 @@ import org.syncany.plugins.transfer.TransferPlugin;
  * plugin (e.g upload, download, ...) can be failed on purpose through
  * regular expressions on the operation signature.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class UnreliableLocalTransferPlugin extends TransferPlugin {
 	public UnreliableLocalTransferPlugin() {

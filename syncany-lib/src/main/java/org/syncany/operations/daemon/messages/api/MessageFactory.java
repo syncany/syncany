@@ -26,7 +26,7 @@ import org.syncany.util.StringUtil;
  * The message factory serializes and deserializes messages sent to
  * or from the daemon via the REST/WS API.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class MessageFactory {
 	protected static final Logger logger = Logger.getLogger(MessageFactory.class.getSimpleName());

@@ -35,7 +35,7 @@ import org.syncany.database.ChunkEntry.ChunkChecksum;
  * is very important, because a file can only be reconstructed if the order of
  * its chunks are followed.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileContent {
 	private FileChecksum checksum;

@@ -56,7 +56,7 @@ import org.syncany.util.StringUtil;
  * {@link FileContent}, {@link Chunk} and {@link MultiChunk}.
  * 
  * @see DatabaseXmlSerializer
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseXmlWriter {
 	private static final Logger logger = Logger.getLogger(DatabaseXmlWriter.class.getSimpleName());

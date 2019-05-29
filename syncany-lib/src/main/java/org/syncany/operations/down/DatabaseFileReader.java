@@ -64,7 +64,7 @@ public class DatabaseFileReader implements Iterator<MemoryDatabase> {
 	 * <p>Because database files can contain multiple {@link DatabaseVersion}s per client, a range for which
 	 * to load the database versions must be determined.
 	 *
-	 * <p><b>Example 1:</b><br />
+	 * <p><b>Example 1:</b><br>
 	 * <pre>
 	 *  db-A-0001   (A1)     Already known             Not loaded
 	 *  db-A-0005   (A2)     Already known             Not loaded
@@ -77,7 +77,7 @@ public class DatabaseFileReader implements Iterator<MemoryDatabase> {
 	 *
 	 * <p>In example 1, only (A4)-(A5) must be loaded from db-A-0005, and not all four database versions.
 	 *
-	 * <p><b>Other example:</b><br />
+	 * <p><b>Other example:</b><br>
 	 * <pre>
 	 *  db-A-0005   (A1)     Part of winner's branch   Loaded
 	 *  db-A-0005   (A2)     Part of winner's branch   Loaded
@@ -91,8 +91,6 @@ public class DatabaseFileReader implements Iterator<MemoryDatabase> {
 	 * db-A-0005 must be processed twice; each time loading separate parts of the file. In this case:
 	 * First load (A1)-(A2) from db-A-0005, then load (A2,B1) from db-B-0001, then load (A3,B1)-(A4,B1)
 	 * from db-A-0005, and ignore (A5,B1).
-	 * @param databaseFileList
-	 * @param ignoredMostRecentPurgeVersions
 	 *
 	 * @return Returns a loaded memory database containing all metadata from the winner's branch
 	 */

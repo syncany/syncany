@@ -83,7 +83,7 @@ import io.undertow.websockets.core.WebSockets;
  * as well as a mechanism to run a web interface by implementing a
  * {@link WebInterfacePlugin}.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class WebServer {
 	public static final String API_ENDPOINT_WS_XML = "/api/ws/xml";

@@ -37,7 +37,7 @@ import org.syncany.config.ConfigException;
  * @see FolderTO
  * @see PortTO
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name = "daemon", strict = false)
 public class DaemonConfigTO {

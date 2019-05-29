@@ -59,7 +59,7 @@ import org.syncany.plugins.transfer.files.SyncanyRemoteFile;
  *       folder and the sub-structure) and copying the repo/master file to it.</li>
  * </ul>
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ConnectOperation extends AbstractInitOperation {
 	private static final Logger logger = Logger.getLogger(ConnectOperation.class.getSimpleName());

@@ -31,7 +31,7 @@ import org.syncany.operations.up.UpOperationOptions;
  * 
  * <p>The options can also be stored as XML within the daemon configuration.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name="watch")
 public class WatchOperationOptions implements OperationOptions {

@@ -21,7 +21,7 @@ package org.syncany.crypto;
  * Exception thrown when content cannot encrypted or decrypted,
  * or other cryptographic operations fail.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class CipherException extends Exception {
 	private static final long serialVersionUID = -4974450231162263359L;

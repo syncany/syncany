@@ -31,7 +31,7 @@ import org.syncany.util.StringUtil;
  * <b>multichunk-&lt;multichunkid&gt;</b>. Initializing an 
  * instance with a non-matching name will throw an exception.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class MultichunkRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("multichunk-([a-f0-9]+)");
@@ -41,8 +41,8 @@ public class MultichunkRemoteFile extends RemoteFile {
 
 	/**
 	 * Initializes a new multichunk file, given a name. This constructor might 
-	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}. 
+	 * be called by the {@link RemoteFile#createRemoteFile(String, Class) createRemoteFile()}
+	 * method of the {@link RemoteFile}.
 	 * 
 	 * <p>If the pattern matches, the multichunk identifier is set and can be  
 	 * queried by {@link #getMultiChunkId()}.

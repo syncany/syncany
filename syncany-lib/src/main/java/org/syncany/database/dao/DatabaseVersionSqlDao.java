@@ -57,7 +57,7 @@ import org.syncany.operations.down.DatabaseBranch;
  * @see FileVersionSqlDao
  * @see FileHistorySqlDao
  * @see MultiChunkSqlDao
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseVersionSqlDao extends AbstractSqlDao {
 	protected static final Logger logger = Logger.getLogger(DatabaseVersionSqlDao.class.getSimpleName());

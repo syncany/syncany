@@ -9,7 +9,7 @@ import io.undertow.util.StatusCodes;
  * Factory class to generate some common {@link OAuthWebResponse}s. It uses html sites residing in the ressource folder,
  * but provides plain text fallbacks if a specific site cannot be read.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public abstract class OAuthWebResponses {
@@ -17,7 +17,7 @@ public abstract class OAuthWebResponses {
 	public static final String RESOURCE_DIR = "/org/syncany/plugins/oauth/";
 
 	/**
-	 * This {@link OAuthWebResponse} is used when a token was succesfully extracted. It uses <tt>ValidWebResponse.html</tt> which should be placed in
+	 * This {@link OAuthWebResponse} is used when a token was succesfully extracted. It uses <code>ValidWebResponse.html</code> which should be placed in
 	 * {@value #RESOURCE_DIR}.
 	 *
 	 * @return Either the parsed html file or a fallback string.
@@ -27,7 +27,7 @@ public abstract class OAuthWebResponses {
 	}
 
 	/**
-	 * This {@link OAuthWebResponse} is used when there was an error during the OAuth process. It uses <tt>BadRequestWebResponse.html</tt> which
+	 * This {@link OAuthWebResponse} is used when there was an error during the OAuth process. It uses <code>BadRequestWebResponse.html</code> which
 	 * should be placed in {@value #RESOURCE_DIR}.
 	 *
 	 * @return Either the parsed html file or a fallback string.

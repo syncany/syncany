@@ -39,14 +39,14 @@ import org.syncany.database.PartialFileHistory.FileHistoryId;
  * collection of changes to the local file system.
  *
  * <p>For convenience, the class also offers a set of functionality to select objects
- * from the current accumulated database. Examples include {@link #getChunk(byte[]) getChunk()},
- * {@link #getContent(byte[]) getContent()} and {@link #getMultiChunk(byte[]) getMultiChunk()}.
+ * from the current accumulated database. Examples include {@link #getChunk(ChunkChecksum) getChunk()},
+ * {@link #getContent(FileChecksum) getContent()} and {@link #getMultiChunk(MultiChunkId) getMultiChunk()}.
  *
  * <p>To allow this convenience, a few caches are kept in memory, and updated whenever a
  * database version is added or removed.
  *
  * @see DatabaseVersion
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class MemoryDatabase {
 	private List<DatabaseVersion> databaseVersions;

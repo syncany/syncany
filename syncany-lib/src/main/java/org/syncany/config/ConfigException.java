@@ -21,7 +21,7 @@ package org.syncany.config;
  * Exception thrown when configuration files are read or written 
  * and something is going not as expected.
  *  
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ConfigException extends Exception {
 	private static final long serialVersionUID = 4414807565457521855L;

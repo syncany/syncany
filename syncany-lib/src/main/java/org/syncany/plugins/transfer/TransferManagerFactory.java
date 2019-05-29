@@ -58,8 +58,8 @@ import com.google.common.collect.Sets;
  * @see Feature
  * @see FeatureTransferManager
  * @see TransferManager
- * @author Christian Roth <christian.roth@port17.de>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Christian Roth (christian.roth@port17.de)
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class TransferManagerFactory {
 	private static final Logger logger = Logger.getLogger(TransferManagerFactory.class.getSimpleName());

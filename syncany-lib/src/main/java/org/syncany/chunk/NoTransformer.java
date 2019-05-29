@@ -26,7 +26,7 @@ import java.util.Map;
  * Implements an empty {@link Transformer}. Used if no compression/encryption
  * is necessary.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class NoTransformer extends Transformer {
 	/**

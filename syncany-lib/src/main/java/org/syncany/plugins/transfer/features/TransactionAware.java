@@ -23,7 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @Feature(required = true)
 @Target(ElementType.TYPE)

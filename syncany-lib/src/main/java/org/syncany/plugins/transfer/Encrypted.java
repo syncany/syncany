@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * Annotating a field with {@link org.syncany.plugins.transfer.Encrypted} implies that the field's value shell be stored
  * encrypted in the XML representation. Recommended when storing login credentials.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -43,7 +43,7 @@ import org.syncany.util.FileUtil;
 /**
  * This class provides file I/O helper methods for writing tests
  *
- * @author Philipp Heckel <philipp.heckel@gmail.com>
+ * @author Philipp Heckel (philipp.heckel@gmail.com)
  * @author Nikolai Hellwig
  * @author Andreas Fenske
  */
@@ -333,11 +333,11 @@ public class TestFileUtil {
 
 	/**
 	 * Replaces the {@link File#canRead() canRead()} method in the {@link File} class by taking
-	 * symlinks into account. Returns <tt>true</tt> if a symlink exists even if its target file
+	 * symlinks into account. Returns <code>true</code> if a symlink exists even if its target file
 	 * does not exist and can hence not be read.
 	 *
 	 * @param file A file
-	 * @return Returns <tt>true</tt> if the file can be read (or the symlink exists), <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if the file can be read (or the symlink exists), <code>false</code> otherwise
 	 */
 	public static boolean canRead(File file) {
 		if (FileUtil.isSymlink(file)) {

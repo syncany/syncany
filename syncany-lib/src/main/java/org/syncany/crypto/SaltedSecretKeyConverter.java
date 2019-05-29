@@ -28,7 +28,7 @@ import org.syncany.util.StringUtil;
  * Converter to properly encode a {@link SaltedSecretKey} when writing 
  * an XML. Salt and key are serialized as attributes.
  * 
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class SaltedSecretKeyConverter implements Converter<SaltedSecretKey> {
 	public SaltedSecretKey read(InputNode node) throws Exception {

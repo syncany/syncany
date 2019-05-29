@@ -29,7 +29,7 @@ import java.security.NoSuchAlgorithmException;
  * performance.
  * 
  * @see <a href="http://en.wikipedia.org/wiki/Rolling_hash">http://en.wikipedia.org/wiki/Rolling_hash</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public abstract class Fingerprinter {    
     public static Fingerprinter getInstance(String name) throws NoSuchAlgorithmException {

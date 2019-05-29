@@ -39,7 +39,7 @@ import org.syncany.plugins.transfer.TransferManagerFactory;
  * @see TransferManager
  * @see TransferManagerFactory
  * @see FeatureTransferManager
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

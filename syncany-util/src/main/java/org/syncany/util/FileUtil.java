@@ -35,7 +35,7 @@ import java.text.DecimalFormat;
 /**
  * A file utility class
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class FileUtil {
 	public static String getRelativePath(File base, File file) {
@@ -186,15 +186,15 @@ public class FileUtil {
 	}
 
 	/**
-	 * Replaces the <tt>exists()</tt> method in the <tt>File</tt> class by taking symlinks into account.
-	 * The method returns <tt>true</tt> if the file exists, <tt>false</tt> otherwise.
+	 * Replaces the <code>exists()</code> method in the <code>File</code> class by taking symlinks into account.
+	 * The method returns <code>true</code> if the file exists, <code>false</code> otherwise.
 	 *
-	 * <p>Note: The method returns <tt>true</tt>, if a symlink exists, but points to a
+	 * <p>Note: The method returns <code>true</code>, if a symlink exists, but points to a
 	 * non-existing target. This behavior is different from the classic
-	 * {@link #exists(File) exists()}-method in the <tt>File</tt> class.
+	 * {@link #exists(File) exists()}-method in the <code>File</code> class.
 	 *
 	 * @param file A file
-	 * @return Returns <tt>true</tt> if a file exists (even if its symlink target does not), <tt>false</tt> otherwise
+	 * @return Returns <code>true</code> if a file exists (even if its symlink target does not), <code>false</code> otherwise
 	 */
 	public static boolean exists(File file) {
 		try {

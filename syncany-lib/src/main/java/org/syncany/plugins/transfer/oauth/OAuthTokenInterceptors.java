@@ -14,7 +14,7 @@ import io.undertow.util.StatusCodes;
 /**
  * Factory class to generate some common {@link OAuthTokenInterceptor}s.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public abstract class OAuthTokenInterceptors {
 

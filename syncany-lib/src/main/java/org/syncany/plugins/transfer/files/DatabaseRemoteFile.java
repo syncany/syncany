@@ -32,7 +32,7 @@ import org.syncany.plugins.transfer.StorageException;
  * <p><b>Note:</b> The class implements a {@link Comparable} interface and
  * can be sorted by name and client version.
  *
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class DatabaseRemoteFile extends RemoteFile implements Comparable<DatabaseRemoteFile> {
 	private static final Pattern NAME_PATTERN = Pattern.compile("database-([^-]+)-(\\d+)");
@@ -43,8 +43,8 @@ public class DatabaseRemoteFile extends RemoteFile implements Comparable<Databas
 
 	/**
 	 * Initializes a new database file, given a name. This constructor might
-	 * be called by the {@link RemoteFileFactory#createRemoteFile(String, Class) createRemoteFile()}
-	 * method of the {@link RemoteFileFactory}.
+	 * be called by the {@link RemoteFile#createRemoteFile(String, Class) createRemoteFile()}
+	 * method of the {@link RemoteFile}.
 	 *
 	 * <p>If the pattern matches, the client name and the client version are set, and can be
 	 * queried by {@link #getClientName()} and {@link #getClientVersion()}.

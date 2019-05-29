@@ -48,13 +48,13 @@ import org.syncany.plugins.transfer.TransferManager;
  *  <li>Determine whether the local branch needs to be updated (new database versions); if so, determine
  *      local {@link FileSystemAction}s</li>
  *  <li>Determine, download and decrypt required multi chunks from remote storage from file actions
- *      (implemented in {@link #determineMultiChunksToDownload(FileVersion, MemoryDatabase, MemoryDatabase) determineMultiChunksToDownload()},
- *      and {@link #downloadAndDecryptMultiChunks(Set) downloadAndDecryptMultiChunks()})</li>
+ *      (implemented in {@link #determineMultiChunksToDownload(FileVersion, MemoryDatabase) determineMultiChunksToDownload()},
+ *      and {@link Downloader#downloadAndDecryptMultiChunks(Set) downloadAndDecryptMultiChunks()})</li>
  *  <li>Apply file system actions locally, creating conflict files where necessary if local file does
  *      not match the expected file (implemented in {@link #applyFileSystemActions(List) applyFileSystemActions()} </li>
  * </ul>
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ApplyChangesOperation extends Operation {
 	private static final Logger logger = Logger.getLogger(DownOperation.class.getSimpleName());

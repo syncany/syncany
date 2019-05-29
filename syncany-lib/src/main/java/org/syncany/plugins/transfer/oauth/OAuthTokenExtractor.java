@@ -5,9 +5,9 @@ package org.syncany.plugins.transfer.oauth;
  * Such URLs a are typically callback URLs called by an oauth provider who adds token and status fields to such an URL.
  * {@link OAuthTokenExtractors} provides some predefined OAuthTokenExtractors.
  *
- * @see {@link OAuthTokenExtractors}
+ * <p>See: {@link OAuthTokenExtractors}</p>
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 
 public interface OAuthTokenExtractor {

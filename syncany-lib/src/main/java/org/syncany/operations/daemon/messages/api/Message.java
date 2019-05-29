@@ -25,7 +25,7 @@ import org.simpleframework.xml.Root;
  * class. Messages can be serialized/deserialized using the
  * {@link MessageFactory}. 
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(strict = false)
 public abstract class Message {

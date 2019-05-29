@@ -22,7 +22,7 @@ package org.syncany.cli;
  * scope. Repository-initializing commands such as 'init' or 'connect' must be
  * run outside a repo dir.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public enum CommandScope {
 	/**

@@ -32,7 +32,7 @@ import org.syncany.plugins.transfer.StorageException;
  * <b>action-&lt;operationname&gt;-&lt;machinename&gt;-&lt;timestamp&gt;</b>. Initializing an 
  * instance with a non-matching name will throw an exception.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class ActionRemoteFile extends RemoteFile {
 	private static final Pattern NAME_PATTERN = Pattern.compile("action-(up|down|cleanup|restore)-([^-]+)-(\\d+)");

@@ -42,7 +42,7 @@ import org.syncany.plugins.transfer.TransferSettings;
  * annotation-based configuration.
  *
  * @see <a href="http://simple.sourceforge.net/">Simple framework</a>
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 @Root(name = "config", strict = false)
 public class ConfigTO {

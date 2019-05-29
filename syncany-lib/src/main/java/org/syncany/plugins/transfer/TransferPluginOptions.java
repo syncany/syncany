@@ -32,7 +32,7 @@ import com.google.common.primitives.Ints;
  * Helper class to read the options of a {@link TransferSettings} using the
  * {@link Setup} and {@link Element} annotations.
  *
- * @author Christian Roth <christian.roth@port17.de>
+ * @author Christian Roth (christian.roth@port17.de)
  */
 public class TransferPluginOptions {
 	private static final int MAX_NESTED_LEVELS = 3;

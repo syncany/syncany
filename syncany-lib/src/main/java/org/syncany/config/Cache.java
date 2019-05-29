@@ -40,7 +40,7 @@ import org.syncany.database.MultiChunkEntry.MultiChunkId;
  * date is updated. Using the {@link #clear()}/{@link #clear(long)} method, the cache
  * can be cleaned.
  * 
- * @author Philipp C. Heckel <philipp.heckel@gmail.com>
+ * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
 public class Cache {
 	private static final Logger logger = Logger.getLogger(Cache.class.getSimpleName());
@@ -90,8 +90,8 @@ public class Cache {
 	}
 
 	/**
-	 * Deletes files in the the cache directory using a LRU-strategy until <tt>keepBytes</tt>
-	 * bytes are left. This method calls {@link #clear(long)} using the <tt>keepBytes</tt> 
+	 * Deletes files in the the cache directory using a LRU-strategy until <code>keepBytes</code>
+	 * bytes are left. This method calls {@link #clear(long)} using the <code>keepBytes</code>
 	 * property.
 	 * 
 	 * <p>This method should not be run while an operation is executed.
@@ -101,7 +101,7 @@ public class Cache {
 	}
 	
 	/**
-	 * Deletes files in the the cache directory using a LRU-strategy until <tt>keepBytes</tt>
+	 * Deletes files in the the cache directory using a LRU-strategy until <code>keepBytes</code>
 	 * bytes are left.
 	 * 
 	 * <p>This method should not be run while an operation is executed.
