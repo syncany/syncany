@@ -23,7 +23,6 @@ import static org.junit.contrib.java.lang.system.TextFromStandardInputStream.emp
 import java.io.File;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,22 +45,18 @@ public class InitAndConnectCommandNoEncryptionTest {
 		originalWorkingDirectory = new File(System.getProperty("user.dir"));
 	}
 
-	@After
-	public void after() {
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-	}
-
 	@Test
 	public void testCliInitCommandUninitializedLocalDir() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TestCliUtil.setCurrentDirectory(tempDir);
+		assertTrue(TestCliUtil.createDirectory(tempDir));
 
 		Map<String, String> connectionSettings = TestConfigUtil.createTestLocalConnectionSettings();
 		Map<String, String> clientA = TestCliUtil.createLocalTestEnv("A", connectionSettings);
 
 		// Run
 		String[] initArgs = new String[] {
+				"--localdir=" + tempDir.getAbsolutePath(),
 				"init",
 				"--plugin", "local",
 				"--plugin-option", "path=" + clientA.get("repopath"),
@@ -77,8 +72,6 @@ public class InitAndConnectCommandNoEncryptionTest {
 		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 	}
@@ -87,7 +80,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 	public void testCliInitCommandInteractive() throws Exception {
 		// Setup
 		File tempDir = TestFileUtil.createTempDirectoryInSystemTemp();
-		TestCliUtil.setCurrentDirectory(tempDir);
+		assertTrue(TestCliUtil.createDirectory(tempDir));
 
 		// Ensuring no console is set
 		InitConsole.setInstance(null);
@@ -97,6 +90,7 @@ public class InitAndConnectCommandNoEncryptionTest {
 
 		// Run
 		String[] initArgs = new String[] {
+				"--localdir=" + tempDir.getAbsolutePath(),
 				"init",
 				"--no-encryption",
 				"--no-compression"
@@ -115,8 +109,6 @@ public class InitAndConnectCommandNoEncryptionTest {
 		assertTrue(new File(tempDir + "/.syncany/config.xml").exists());
 
 		// Tear down
-		TestCliUtil.setCurrentDirectory(originalWorkingDirectory);
-
 		TestCliUtil.deleteTestLocalConfigAndData(clientA);
 		TestFileUtil.deleteDirectory(tempDir);
 	}

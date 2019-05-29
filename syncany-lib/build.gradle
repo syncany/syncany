@@ -9,6 +9,13 @@ repositories {
 	mavenCentral()
 }
 
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
+}
+
 dependencies {
 	compile			project(':syncany-util')
 
@@ -16,7 +23,7 @@ dependencies {
 	compile			"org.bouncycastle:bcprov-jdk15on:1.51"
 	compile			"org.bouncycastle:bcpkix-jdk15on:1.51"
 	compile			"org.simpleframework:simple-xml:2.7.1"
-	compile			"com.google.guava:guava:15.0"
+	compile			"com.google.guava:guava:27.1-jre"
 	compile			"commons-codec:commons-codec:1.8"
 	compile			"org.hsqldb:hsqldb:2.3.1"
 	compile			"com.github.zafarkhaja:java-semver:0.7.2"
@@ -29,6 +36,8 @@ dependencies {
 	testCompile		project(path: ':syncany-util', configuration: 'tests')
 	testCompile		"org.mockito:mockito-all:1.10.19"
 	testCompile		"junit:junit:4.9"
+	testCompile		"org.junit.jupiter:junit-jupiter:5.4.2"
+	testRuntime		"org.junit.vintage:junit-vintage-engine:5.4.2"
 	testCompile		"net.sourceforge.htmlunit:htmlunit:2.15"
 }
 

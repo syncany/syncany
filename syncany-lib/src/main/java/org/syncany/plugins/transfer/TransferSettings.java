@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.MoreObjects;
 import org.apache.commons.io.IOUtils;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -39,8 +40,6 @@ import org.syncany.plugins.Plugin;
 import org.syncany.plugins.UserInteractionListener;
 import org.syncany.util.ReflectionUtil;
 import org.syncany.util.StringUtil;
-
-import com.google.common.base.Objects;
 
 /**
  * A connection represents the configuration settings of a storage/connection
@@ -238,7 +237,7 @@ public abstract class TransferSettings {
 
 	@Override
 	public String toString() {
-		Objects.ToStringHelper toStringHelper = Objects.toStringHelper(this);
+		MoreObjects.ToStringHelper toStringHelper = MoreObjects.toStringHelper(this);
 
 		for (Field field : ReflectionUtil.getAllFieldsWithAnnotation(this.getClass(), Element.class)) {
 			field.setAccessible(true);

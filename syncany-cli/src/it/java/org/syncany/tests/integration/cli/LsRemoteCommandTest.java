@@ -17,16 +17,16 @@
  */
 package org.syncany.tests.integration.cli;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.syncany.cli.CommandLineClient;
+import org.syncany.tests.util.TestCliUtil;
+import org.syncany.tests.util.TestConfigUtil;
+import org.syncany.tests.util.TestFileUtil;
 
 import java.io.File;
 import java.util.Map;
 
-import org.junit.Test;
-import org.syncany.cli.CommandLineClient;
-import org.syncany.tests.util.TestCliUtil;
-import org.syncany.tests.util.TestFileUtil;
-import org.syncany.tests.util.TestConfigUtil;
+import static org.junit.Assert.assertEquals;
 
 public class LsRemoteCommandTest {
 	@Test
@@ -41,7 +41,7 @@ public class LsRemoteCommandTest {
 				"ls-remote"
 		}));
 
-		assertEquals("Different number of output lines expected.", 3, cliOut.length);
+		assertEquals("Different number of output lines expected.\n" + String.join("\n", cliOut), 3, cliOut.length);
 
 		// Round 2: One new database expected
 		TestFileUtil.createRandomFile(new File(clientB.get("localdir") + "/file1"), 20 * 1024);
