@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -51,6 +53,7 @@ public class TestFileUtil {
 	private static String IGNORE_DIR_APPLICATION = ".syncany"; // same as Config.DIR_APPLICATION	
 	private static Random randomGen = new Random();
 	private static Random nonRandomGen = new Random(123456789L); // fixed seed!
+	private static String DEFAULT_RANDOM_FILENAME_PATTERN = "rndFile-%t-%r.dat";
 
 	public static File copyFile(File fromFile, File toFile) throws IOException {
 		InputStream in = new FileInputStream(fromFile);
@@ -158,11 +161,53 @@ public class TestFileUtil {
 		randomAccessFile.close();
 	}
 
-	public static File getRandomFilenameInDirectory(File rootFolder) {
-		String fileName = "rndFile-" + System.currentTimeMillis() + "-" + Math.abs(randomGen.nextInt()) + ".dat";
-		File newRandomFile = new File(rootFolder, fileName);
+	/**
+	 * Generates a string of hexadecimal digits of a given length
+	 *
+	 * @param digits length of the string
+	 * @return the constructed string
+	 */
+	private static String getRandomHex(int digits) {
+		StringBuilder h = new StringBuilder(digits);
+		for (int i = 0; i < (digits / 2) / Integer.BYTES + 1; ++i) {
+			h.append(String.format("%0" + (Integer.BYTES * 2) + "x",
+						randomGen.nextInt()));
+		}
+		return h.toString().substring(0, digits);
+	}
 
-		return newRandomFile;
+	/**
+	 * Generates a file path with a filename constructed from a pattern with placeholders.
+	 * Placeholders are replaced by the following:
+	 *
+	 *   <code>%%</code> : <code>%</code> (one percent character)
+	 *   <code>%t</code> : the current timestamp
+	 *   <code>%r</code> : a random integer
+	 *   <code>%[width]h</code> : a random hexadecimal string of <code>width</code> digits
+	 *
+	 * @param rootFolder the directory part of the path
+	 * @param namePattern pattern from which to construct the name with placeholders
+	 * @return The constructed file path
+	 */
+	public static File getRandomFilenameInDirectory(File rootFolder, String namePattern) {
+		StringBuffer fileName = new StringBuffer();
+		Pattern hexFieldRE = Pattern.compile("(?<!%)%([0-9]*)h");
+		Matcher m = hexFieldRE.matcher(namePattern);
+		while (m.find()) {
+			String widthStr = m.group(1);
+		    int width = !widthStr.isEmpty() ? Integer.parseInt(widthStr) : 1;
+			m.appendReplacement(fileName, getRandomHex(width));
+		}
+		m.appendTail(fileName);
+		String finalFileName = fileName.toString()
+			.replaceAll("(?<!%)%t", Long.toString(System.currentTimeMillis()))
+			.replaceAll("(?<!%)%r", Integer.toString(Math.abs(randomGen.nextInt())))
+			.replaceAll("%%", "%");
+		return new File(rootFolder, finalFileName);
+	}
+
+	public static File getRandomFilenameInDirectory(File rootFolder) {
+		return getRandomFilenameInDirectory(rootFolder, DEFAULT_RANDOM_FILENAME_PATTERN);
 	}
 
 	public static List<File> createRandomFileTreeInDirectory(File rootFolder, int maxFiles) throws IOException {
@@ -221,21 +266,36 @@ public class TestFileUtil {
 		return randomFiles;
 	}
 
-	public static List<File> createRandomFilesInDirectory(File rootFolder, long sizeInBytes, int numOfFiles) throws IOException {
+	public static List<File> createRandomFilesInDirectory(File rootFolder,
+			String namePattern, long sizeInBytes, int numOfFiles) throws IOException {
 		List<File> newRandomFiles = new ArrayList<File>();
 
 		for (int i = 0; i < numOfFiles; i++) {
-			newRandomFiles.add(createRandomFileInDirectory(rootFolder, sizeInBytes));
+			File rndFile = createRandomFileInDirectory(rootFolder, namePattern, sizeInBytes);
+			newRandomFiles.add(rndFile);
 		}
 
 		return newRandomFiles;
 	}
 
-	public static File createRandomFileInDirectory(File rootFolder, long sizeInBytes) throws IOException {
-		File newRandomFile = getRandomFilenameInDirectory(rootFolder);
-		createRandomFile(newRandomFile, sizeInBytes);
+	public static List<File> createRandomFilesInDirectory(File rootFolder,
+			long sizeInBytes, int numOfFiles) throws IOException {
+		return createRandomFilesInDirectory(rootFolder, DEFAULT_RANDOM_FILENAME_PATTERN,
+				sizeInBytes, numOfFiles);
+	}
 
+	public static File createRandomFileInDirectory(File rootFolder, String namePattern,
+			long sizeInBytes)
+			throws IOException {
+		File newRandomFile = getRandomFilenameInDirectory(rootFolder, namePattern);
+		createRandomFile(newRandomFile, sizeInBytes);
 		return newRandomFile;
+	}
+
+	public static File createRandomFileInDirectory(File rootFolder, long sizeInBytes)
+			throws IOException {
+		return createRandomFileInDirectory(rootFolder, DEFAULT_RANDOM_FILENAME_PATTERN,
+				sizeInBytes);
 	}
 
 	public static void createNonRandomFile(File fileToCreate, long sizeInBytes) throws IOException {
