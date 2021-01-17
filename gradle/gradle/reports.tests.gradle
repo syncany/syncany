@@ -14,7 +14,7 @@ subprojects {
 	// Test JARs ///////////////////////////////////////////////////////////
 	
 	task testJar(type: Jar, dependsOn: testClasses) {
-		baseName = "test-${project.archivesBaseName}"
+		archiveBaseName = "test-${project.archivesBaseName}"
 		from sourceSets.test.output
 	}
 

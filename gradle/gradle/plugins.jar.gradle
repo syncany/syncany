@@ -6,6 +6,7 @@
 
 repositories {
 	mavenCentral()
+	google()
 }
 
 configurations {

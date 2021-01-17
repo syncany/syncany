@@ -7,15 +7,15 @@ apply from: 'gradle/gradle/helpers.gradle'
 // Global Settings /////////////////////////////////////////////////////////////
 
 project.ext {
-	applicationVersion = "0.4.9-alpha"
-	applicationVersionDebian = "1";
+    applicationVersion = "0.4.9-alpha"
+    applicationVersionDebian = "1";
 
-	applicationRelease = isApplicationRelease()
-	applicationDate = new Date()
-	applicationRevision = getRevision()
+    applicationRelease = isApplicationRelease()
+    applicationDate = new Date()
+    applicationRevision = getRevision()
 
-	applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${asUTC(applicationDate, 'yyMMddHHmm')}.git${applicationRevision}" : ""
-	applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
+    applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${asUTC(applicationDate, 'yyMMddHHmm')}.git${applicationRevision}" : ""
+    applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
 }
 
 // Gradle scripts and tasks ////////////////////////////////////////////////////
@@ -37,18 +37,19 @@ apply from: 'gradle/gradle/development.misc.gradle'
 // Projects settings  //////////////////////////////////////////////////////////
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+    google()
 }
 
 dependencies {
-	compile			project(":syncany-lib")
-	compile			project(":syncany-cli")
-	compile			project(":syncany-util")
+    implementation      project(":syncany-lib")
+    implementation      project(":syncany-cli")
+    implementation      project(":syncany-util")
 
-	testCompile		project(path: ":syncany-lib", configuration: "tests")
-	testCompile		project(path: ":syncany-cli", configuration: "tests")
-	testCompile		project(path: ":syncany-util", configuration: "tests")
-	
-	testRuntime "org.slf4j:slf4j-log4j12:1.7.5"
-	testRuntime "log4j:log4j:1.2.7"
+    testImplementation  project(path: ":syncany-lib", configuration: "tests")
+    testImplementation  project(path: ":syncany-cli", configuration: "tests")
+    testImplementation  project(path: ":syncany-util", configuration: "tests")
+
+    testRuntimeOnly     "org.slf4j:slf4j-log4j12:1.7.5"
+    testRuntimeOnly     "log4j:log4j:1.2.7"
 }

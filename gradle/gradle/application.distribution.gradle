@@ -227,10 +227,10 @@ task manpages(dependsOn: compileJava) {
 
 
 distTar {
-	baseName = "syncany"
-	version = "$applicationVersionFull"
+	archiveBaseName = "syncany"
+	archiveVersion = "$applicationVersionFull"
 	compression = Compression.GZIP
-	extension = "tar.gz"
+	archiveExtension = "tar.gz"
 
 	doLast {
 		copy {
@@ -241,8 +241,8 @@ distTar {
 }
 
 distZip {
-	baseName = "syncany"
-	version = "$applicationVersionFull"
+	archiveBaseName = "syncany"
+	archiveVersion = "$applicationVersionFull"
 
 	doLast {
 		copy {

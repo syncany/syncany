@@ -14,6 +14,7 @@ subprojects {
 	
 	repositories {
 		mavenCentral()
+		google()
 	}
 	
 	sourceSets {
@@ -37,10 +38,12 @@ subprojects {
 	}
 
 	dependencies {
-		integrationCompile sourceSets.test.output
+		integrationImplementation sourceSets.test.output
 	}
-	
-	processResources {	
+
+	processResources {
+		duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
 		from(source) {
 			include "**/*.properties", "**/*.xml", "**/*.skel"
 			filter{ String line -> line.replaceAll('%applicationRelease%', "${applicationRelease}") }        	            
@@ -54,8 +57,8 @@ subprojects {
 	// JAR /////////////////////////////////////////////////////////////////////
 	
 	jar {
-		baseName = "${project.name}"
-		version  = "$applicationVersionFull"				
+		archiveBaseName = "${project.name}"
+		archiveVersion  = "$applicationVersionFull"
 	}
 }
 
