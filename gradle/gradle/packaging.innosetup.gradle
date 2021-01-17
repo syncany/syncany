@@ -1,44 +1,45 @@
 // Windows Installer ///////////////////////////////////////////////////////////
 
-task exe(dependsOn: [installDist]) << {
-	def innoSetupDir = new File("${buildDir}/innosetup")
+task exe(dependsOn: [installDist]) {
+	doLast {
+		def innoSetupDir = new File("${buildDir}/innosetup")
 
-	delete innoSetupDir	
-	innoSetupDir.mkdir();	
-	
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")		
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")		
-		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")		
-		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
-		from("${rootProject.projectDir}/gradle/innosetup/code.iss")
-		into(innoSetupDir)
-	}
-
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup-cli.iss.skel")
-		rename("setup-cli.iss.skel", "setup-cli.iss")
-		expand([
-			applicationVersion: "${applicationVersion}",
-			applicationVersionFull: "${applicationVersionFull}",			
-		])
-		into(innoSetupDir)
-	}
-
-	exec {
-		workingDir rootProject.projectDir
-		commandLine "iscc ${innoSetupDir}/setup-cli.iss".split()
-	}
-	
-	if (!project.ext.has('exeDontCopyToUpload')) {
+		delete innoSetupDir
+		innoSetupDir.mkdir();
+		
 		copy {
-			from files("${buildDir}/innosetup") 
-			include "*.exe"
-			into file("build/upload")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")
+			from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
+			from("${rootProject.projectDir}/gradle/innosetup/code.iss")
+			into(innoSetupDir)
+		}
+
+		copy {
+			from("${rootProject.projectDir}/gradle/innosetup/setup-cli.iss.skel")
+			rename("setup-cli.iss.skel", "setup-cli.iss")
+			expand([
+				applicationVersion: "${applicationVersion}",
+				applicationVersionFull: "${applicationVersionFull}",
+			])
+			into(innoSetupDir)
+		}
+
+		exec {
+			workingDir rootProject.projectDir
+			commandLine "iscc ${innoSetupDir}/setup-cli.iss".split()
+		}
+
+		if (!project.ext.has('exeDontCopyToUpload')) {
+			copy {
+				from files("${buildDir}/innosetup")
+				include "*.exe"
+				into file("build/upload")
+			}
 		}
 	}
 }
-
 

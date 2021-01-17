@@ -28,7 +28,7 @@ subprojects {
 			resources { srcDirs = ['src/it/resources']}
 			compileClasspath += sourceSets.test.compileClasspath
 			runtimeClasspath += sourceSets.test.runtimeClasspath
-			output.classesDir = sourceSets.test.output.classesDir
+			output.classesDirs.setFrom(sourceSets.test.output.classesDirs)
 		} 
 	}
 

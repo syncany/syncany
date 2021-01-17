@@ -59,8 +59,8 @@ subprojects {
 		ignoreFailures = true
 		maxParallelForks = 2
 		testLogging { events 'started', 'passed'}
-		testClassesDir = sourceSets.integration.output.classesDir
-    classpath += sourceSets.integration.runtimeClasspath
+		testClassesDirs = sourceSets.integration.output.classesDirs
+    	classpath += sourceSets.integration.runtimeClasspath
 
 		exclude '**/*TestSuite*'
 	}
