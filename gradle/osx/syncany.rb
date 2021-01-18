@@ -7,8 +7,8 @@ class Syncany < Formula
   version "0.4.6-alpha"
   head "https://github.com/syncany/syncany.git", :branch => "develop"
 
-  depends_on :java => "1.7+"
-  depends_on "gradle" => "2.2"
+  depends_on :java => "1.8+"
+  depends_on "gradle" => "5.0+"
 
   def install
     system "./gradlew", "installDist"
