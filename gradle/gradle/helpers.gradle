@@ -22,7 +22,7 @@ rootProject.ext.execAndGetOutput = { String command ->
 rootProject.ext.asUTC = { Date date, String format ->
 	def snapshotDateFormat = new SimpleDateFormat(format)
 	snapshotDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
-	
+
 	return snapshotDateFormat.format(date)
 }
 

@@ -52,6 +52,6 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 		xml.destination file("${rootProject.buildDir}/reports/coverage/coverage.xml")
 
 		csv.enabled = false
-	}   
+	}
 }
 

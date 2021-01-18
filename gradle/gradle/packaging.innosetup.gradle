@@ -6,7 +6,7 @@ task exe(dependsOn: [installDist]) {
 
 		delete innoSetupDir
 		innoSetupDir.mkdir();
-		
+
 		copy {
 			from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
 			from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
@@ -22,8 +22,8 @@ task exe(dependsOn: [installDist]) {
 			from("${rootProject.projectDir}/gradle/innosetup/setup-cli.iss.skel")
 			rename("setup-cli.iss.skel", "setup-cli.iss")
 			expand([
-				applicationVersion: "${applicationVersion}",
-				applicationVersionFull: "${applicationVersionFull}",
+					applicationVersion    : "${applicationVersion}",
+					applicationVersionFull: "${applicationVersionFull}",
 			])
 			into(innoSetupDir)
 		}

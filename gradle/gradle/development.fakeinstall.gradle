@@ -2,7 +2,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 
-
 task fakeinstall(dependsOn: ["fakeuninstall"]) {
 	doLast {
 		description = "Must be run as root: Makes syncany/sy command available everywhere (symlink to syncany-cli/build/..)"
@@ -17,13 +16,12 @@ task fakeinstall(dependsOn: ["fakeuninstall"]) {
 				rename("syncany.bat", "sy.bat")
 				expand(appBinary: "${buildDir}/install/${applicationName}/bin/syncany.bat")
 			}
-		}
-		else{
+		} else {
 			ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/syncany")
 			ant.symlink(resource: "${buildDir}/install/${applicationName}/bin/${applicationName}", link: "/usr/local/bin/sy")
 		}
 
-		if(Os.isFamily(Os.FAMILY_MAC)) {
+		if (Os.isFamily(Os.FAMILY_MAC)) {
 			copy {
 				from "gradle/osx/org.syncany.daemon.plist"
 				into "/Library/LaunchAgents"
@@ -42,13 +40,12 @@ task fakeuninstall {
 		if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 			new File(System.getenv()["windir"] + "/syncany.bat").delete()
 			new File(System.getenv()["windir"] + "/sy.bat").delete()
-		}
-		else {
+		} else {
 			new File("/usr/local/bin/syncany").delete()
 			new File("/usr/local/bin/sy").delete()
 		}
 
-		if(Os.isFamily(Os.FAMILY_MAC)) {
+		if (Os.isFamily(Os.FAMILY_MAC)) {
 			File daemonFile = new File("/Library/LaunchAgents/org.syncany.daemon.plist")
 
 			if (daemonFile.exists()) {
