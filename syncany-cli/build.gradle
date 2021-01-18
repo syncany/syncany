@@ -9,23 +9,27 @@ test {
 }
 
 dependencies {
-	compile			project(":syncany-lib")
-	compile			project(":syncany-util")
-	compile			"net.sf.jopt-simple:jopt-simple:4.5"
+	implementation			project(":syncany-lib")
+	implementation			project(":syncany-util")
+	implementation			"net.sf.jopt-simple:jopt-simple:4.5"
+	implementation			"com.google.guava:guava:27.1-jre"
+	implementation			"commons-io:commons-io:2.4"
+	implementation			"org.apache.httpcomponents:httpclient:4.3.4"
+	implementation			"org.simpleframework:simple-xml:2.7.1"
 
 	// Because Java 9+ does not automatically include a JAXB provider
 	// https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j#43574427
 	// https://blog.sourced-bvba.be/article/2017/12/17/java9-spring/
-	compile			"javax.xml.bind:jaxb-api:2.3.1"
-	compile			"org.glassfish.jaxb:jaxb-runtime:2.3.1"
+	implementation			"javax.xml.bind:jaxb-api:2.3.1"
+	implementation			"org.glassfish.jaxb:jaxb-runtime:2.3.1"
 
-	testCompile		"com.github.stefanbirkner:system-rules:1.5.0"            
-      	
-	testCompile		project(path: ":syncany-lib", configuration: "tests")
-	testCompile		project(path: ":syncany-util", configuration: "tests")
-	testCompile		"junit:junit:4.9"
-	testCompile		"org.junit.jupiter:junit-jupiter:5.4.2"
-	testRuntime		"org.junit.vintage:junit-vintage-engine:5.4.2"
+	testImplementation		"com.github.stefanbirkner:system-rules:1.5.0"
+
+	testImplementation		project(path: ":syncany-lib", configuration: "tests")
+	testImplementation		project(path: ":syncany-util", configuration: "tests")
+	testImplementation		"junit:junit:4.9"
+	testImplementation		"org.junit.jupiter:junit-jupiter:5.4.2"
+	testRuntimeOnly			"org.junit.vintage:junit-vintage-engine:5.4.2"
 }
 
 

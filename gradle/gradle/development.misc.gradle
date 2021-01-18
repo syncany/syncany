@@ -2,8 +2,8 @@
 
 // Gradle Wrapper Tasks (for local gradlew scripts) ////////////////////////////
 
-task wrapper(type: Wrapper) {
-	gradleVersion = '3.5'
+wrapper {
+	gradleVersion = '6.8'
 	jarFile = 'gradle/wrapper/wrapper.jar'
 }
 
@@ -11,11 +11,11 @@ task wrapper(type: Wrapper) {
 // Task to clean build folder on project root //////////////////////////////////	
 
 task cleanBuildDir(type: Delete) {
-	delete 'build'	
+	delete 'build'
 }
 
 task cleanInstallDir(type: Delete) {
-	delete 'build/install'	
+	delete 'build/install'
 }
 
 tasks["clean"].dependsOn(cleanBuildDir)

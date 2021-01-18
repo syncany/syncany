@@ -4,6 +4,7 @@
 buildscript {
 	repositories {
 		mavenCentral()
+		google()
 	}
 }
 
@@ -17,7 +18,6 @@ subprojects {
 	}
 	test {
 		jacoco {
-			append = true
 			classDumpDir = file("${rootProject.buildDir}/jacoco/classpathdumps")
 			destinationFile = file("${rootProject.buildDir}/jacoco/tests.exec")
 		}
@@ -25,9 +25,9 @@ subprojects {
 
 
 	jacocoTestReport {
-		additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
-		sourceDirectories = files(sourceSets.main.allSource.srcDirs)
-		classDirectories =  files(sourceSets.main.output)
+		getAdditionalClassDirs().setFrom(files(sourceSets.main.allSource.srcDirs))
+		getSourceDirectories().setFrom(files(sourceSets.main.allSource.srcDirs))
+		getClassDirectories().setFrom(files(sourceSets.main.output))
 
 		reports {
 			html.enabled = true
@@ -39,19 +39,19 @@ subprojects {
 
 task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 	dependsOn = subprojects.test
-	additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
-	sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
-	classDirectories =  files(subprojects.sourceSets.main.output)
-	executionData = files(subprojects.jacocoTestReport.executionData)
+	getSourceDirectories().setFrom(files(subprojects.sourceSets.main.allSource.srcDirs))
+	getSourceDirectories().setFrom(files(subprojects.sourceSets.main.allSource.srcDirs))
+	getClassDirectories().setFrom(files(subprojects.sourceSets.main.output))
+	getExecutionData().setFrom(files(subprojects.jacocoTestReport.executionData))
 
 	reports {
 		html.enabled = true
-		html.destination "${rootProject.buildDir}/reports/coverage"
+		html.destination file("${rootProject.buildDir}/reports/coverage")
 
 		xml.enabled = true
-		xml.destination "${rootProject.buildDir}/reports/coverage/coverage.xml"
+		xml.destination file("${rootProject.buildDir}/reports/coverage/coverage.xml")
 
 		csv.enabled = false
-	}   
+	}
 }
 

@@ -11,12 +11,12 @@ subprojects {
 		jdt {
 			sourceCompatibility = 1.8
 			targetCompatibility = 1.8
-		}		
+		}
 	}
 	
 	task eclipseSettings(type: Copy) {
 		from rootProject.files(
-			"gradle/eclipse/org.eclipse.jdt.ui.prefs",			
+			"gradle/eclipse/org.eclipse.jdt.ui.prefs",
 			"gradle/eclipse/org.eclipse.jdt.core.prefs"
 		)
 		
@@ -30,7 +30,7 @@ subprojects {
 	task cleanEclipseJdtUi(type: Delete) {
 		delete project.file(".settings/")
 		delete project.file("bin/")
-	}	
+	}
 	
 	tasks["cleanEclipse"].dependsOn(cleanEclipseJdtUi)
 	tasks["eclipse"].dependsOn(eclipseSettings)

@@ -7,13 +7,13 @@ project.ext {
 }
 
 task debianClean(type: Delete) {
-	delete 'build/debian'	
+	delete 'build/debian'
 }
 
 task debianManpages(dependsOn: installDist) {
 	doLast {
 		rootProject.file("build/debian/syncany/debian").mkdirs()
-	
+
 		exec {
 			workingDir rootProject.file("gradle/debian")
 			commandLine "./makemanpages.sh"
@@ -21,21 +21,21 @@ task debianManpages(dependsOn: installDist) {
 	}
 }
 
-task debianPrepare(dependsOn: [debianClean, installDist, debianManpages]) { 
+task debianPrepare(dependsOn: [debianClean, installDist, debianManpages]) {
 	doLast {
 		copy {
-			from rootProject.files("build/install/syncany") 
+			from rootProject.files("build/install/syncany")
 			into rootProject.file("build/debian/syncany")
 			exclude("**/*.bat")
 		}
 
 		copy {
-			from rootProject.files("gradle/debian/debian-core") 
+			from rootProject.files("gradle/debian/debian-core")
 			into rootProject.file("build/debian/syncany/debian")
 		}
 
 		copy {
-			from rootProject.files("gradle/bash/syncany.bash-completion") 
+			from rootProject.files("gradle/bash/syncany.bash-completion")
 			into rootProject.file("build/debian/syncany/debian")
 		}
 
@@ -46,16 +46,16 @@ task debianPrepare(dependsOn: [debianClean, installDist, debianManpages]) {
 	}
 }
 
-task debian(dependsOn: debianPrepare) { 
+task debian(dependsOn: debianPrepare) {
 	doLast {
 		exec {
 			workingDir rootProject.file("${buildDir}/debian/syncany")
 			commandLine "debuild -i -us -uc -b".split()
 		}
-				
+
 		if (!project.ext.has('debDontCopyToUpload')) {
 			copy {
-				from rootProject.files("${buildDir}/debian") 
+				from rootProject.files("${buildDir}/debian")
 				include "*.deb"
 				into rootProject.file("${buildDir}/upload")
 			}
