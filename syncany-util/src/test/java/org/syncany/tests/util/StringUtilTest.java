@@ -31,6 +31,7 @@ public class StringUtilTest {
 	public void testFromHexToHex() {
 		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", StringUtil.toHex(StringUtil.fromHex("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
 		assertEquals("", StringUtil.toHex(StringUtil.fromHex("")));		
+		assertEquals("00abcdefaaaa", StringUtil.toHex(StringUtil.fromHex("00abcdefaaaa")));
 	}
 	
 	@Test(expected=Exception.class)
@@ -47,7 +48,7 @@ public class StringUtilTest {
 	public void testFromHexInvalid3() {
 		StringUtil.toHex(StringUtil.fromHex("INVALID"));
 	}
-	
+
 	@Test
 	public void testStringJoin() {
 		assertEquals("a;b;c", StringUtil.join(new String[] { "a",  "b", "c" }, ";"));
