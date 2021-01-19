@@ -115,6 +115,10 @@ public class StringUtil {
      * Creates byte array from a hex represented string.
      */
     public static byte[] fromHex(String hexString) {
+    	if (hexString.length() % 2 == 1) {
+    		throw new IllegalArgumentException("hex string must be of even length");
+		}
+
     	char[] hex = hexString.toCharArray();
 		byte[] raw = new byte[hex.length / 2];
 		for (int src = 0, dst = 0; dst < raw.length; ++dst) {

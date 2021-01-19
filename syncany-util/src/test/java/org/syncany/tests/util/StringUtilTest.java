@@ -17,14 +17,13 @@
  */
 package org.syncany.tests.util;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
+
+import static org.junit.Assert.*;
 
 public class StringUtilTest {
 	@Test 
@@ -35,9 +34,14 @@ public class StringUtilTest {
 		assertEquals("000000", StringUtil.toHex(StringUtil.fromHex("000000")));
 	}
 	
-	@Test(expected=Exception.class)
-	public void testFromHexInvalid1() {
+	@Test(expected=IllegalArgumentException.class)
+	public void testFromHexIllegal1() {
 		StringUtil.toHex(StringUtil.fromHex("a"));
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testFromHexIllegal2() {
+		StringUtil.toHex(StringUtil.fromHex("0000000"));
 	}
 	
 	@Test(expected=Exception.class)
