@@ -17,37 +17,45 @@
  */
 package org.syncany.tests.util;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.syncany.util.StringUtil;
 import org.syncany.util.StringUtil.StringJoinListener;
 
+import static org.junit.Assert.*;
+
 public class StringUtilTest {
 	@Test 
 	public void testFromHexToHex() {
 		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", StringUtil.toHex(StringUtil.fromHex("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
 		assertEquals("", StringUtil.toHex(StringUtil.fromHex("")));		
+		assertEquals("00abcdefaaaa", StringUtil.toHex(StringUtil.fromHex("00abcdefaaaa")));
+		assertEquals("000000", StringUtil.toHex(StringUtil.fromHex("000000")));
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testFromHexIllegal1() {
+		StringUtil.toHex(StringUtil.fromHex("a"));
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testFromHexIllegal2() {
+		StringUtil.toHex(StringUtil.fromHex("0000000"));
 	}
 	
 	@Test(expected=Exception.class)
 	public void testFromHexInvalid1() {
-		StringUtil.toHex(StringUtil.fromHex("a"));
-	}
-	
-	@Test(expected=Exception.class)
-	public void testFromHexInvalid2() {
 		StringUtil.toHex(StringUtil.fromHex("INVALID!"));
 	}
 	
 	@Test(expected=Exception.class)
-	public void testFromHexInvalid3() {
+	public void testFromHexInvalid2() {
 		StringUtil.toHex(StringUtil.fromHex("INVALID"));
 	}
-	
+
 	@Test
 	public void testStringJoin() {
 		assertEquals("a;b;c", StringUtil.join(new String[] { "a",  "b", "c" }, ";"));
@@ -55,7 +63,10 @@ public class StringUtilTest {
 		assertEquals("1.9 + 2.8 + 3.7", StringUtil.join(new Double[] { 1.911, 2.833, 3.744 }, " + ", new StringJoinListener<Double>() {
 			@Override
 			public String getString(Double number) {
-				return String.format("%.1f", number);
+				// separator has to be set explicitly otherwise it will fail on systems which are using others than '.' (e.g. German layout)
+				DecimalFormatSymbols decimalSymbols = DecimalFormatSymbols.getInstance();
+				decimalSymbols.setDecimalSeparator('.');
+				return new DecimalFormat("0.0", decimalSymbols).format(number);
 			}			
 		}));
 	}

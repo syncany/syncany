@@ -1,6 +1,6 @@
 /*
  * Syncany, www.syncany.org
- * Copyright (C) 2011-2016 Philipp C. Heckel <philipp.heckel@gmail.com> 
+ * Copyright (C) 2011-2016 Philipp C. Heckel <philipp.heckel@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,18 +23,16 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Utility class for common application string functions.
- * 
+ *
  * @author Philipp C. Heckel (philipp.heckel@gmail.com)
  */
-public class StringUtil {   
+public class StringUtil {
 	/**
 	 * Transforms a string to a camel case representation, including the
 	 * first character.
-	 * 
+	 *
 	 * <p>Examples:
 	 * <ul>
 	 *  <li><code>toCamelCase("hello world") -&gt; "HelloWorld"</code></li>
@@ -44,148 +42,163 @@ public class StringUtil {
 	 *  <li><code>toCamelCase("HelloWorld") -&gt; "HelloWorld"</code></li>
 	 * </ul>
 	 */
-    public static String toCamelCase(String str) {
-        StringBuilder sb = new StringBuilder();
+	public static String toCamelCase(String str) {
+		StringBuilder sb = new StringBuilder();
 
-        for (String s : str.split("[-_ ]")) {
-        	if (s.length() > 0) {
-	            sb.append(Character.toUpperCase(s.charAt(0)));
-	
-	            if (s.length() > 1) {
-	                sb.append(s.substring(1, s.length()));
-	            }
-        	}
-        }
+		for (String s : str.split("[-_ ]")) {
+			if (s.length() > 0) {
+				sb.append(Character.toUpperCase(s.charAt(0)));
 
-        return sb.toString();
-    }
-    
-    /**
-     * Transforms a string to underscore-delimited representation.
-     * 
+				if (s.length() > 1) {
+					sb.append(s.substring(1, s.length()));
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Transforms a string to underscore-delimited representation.
+	 *
 	 * <p>Examples:
 	 * <ul>
 	 *  <li><code>toUnderScoreDelimited("HelloWorld") -&gt; "hello_world"</code></li>
 	 *  <li><code>toUnderScoreDelimited("helloWorld") -&gt; "hello_world"</code></li>
 	 * </ul>
-     */
-    public static String toSnakeCase(String str) {
+	 */
+	public static String toSnakeCase(String str) {
 		StringBuilder sb = new StringBuilder();
 
-        for (char c : str.toCharArray()) {   
-        	if (Character.isLetter(c) || Character.isDigit(c)) {
-        		if (Character.isUpperCase(c)) {
-            		if (sb.length() > 0) {
-            			sb.append("_");
-            		}
-            		
-            		sb.append(Character.toLowerCase(c));
-            	}
-            	else {
-            		sb.append(c);
-            	}
-        	}
-        	else {
-        		sb.append("_");
-        	}
-        }
+		for (char c : str.toCharArray()) {
+			if (Character.isLetter(c) || Character.isDigit(c)) {
+				if (Character.isUpperCase(c)) {
+					if (sb.length() > 0) {
+						sb.append("_");
+					}
 
-        return sb.toString();
+					sb.append(Character.toLowerCase(c));
+				} else {
+					sb.append(c);
+				}
+			} else {
+				sb.append("_");
+			}
+		}
+
+		return sb.toString();
 	}
-    
-    /**
-     * Converts a byte array to a lower case hex representation.
-     * If the given byte array is <code>null</code>, an empty string is returned.
-     */
-    public static String toHex(byte[] bytes) {
-    	if (bytes == null) {
-    		return "";
-    	}
-    	else {
-    		return DatatypeConverter.printHexBinary(bytes).toLowerCase();
-    	}
-    }
-    
-    /**
-     * Creates byte array from a hex represented string.
-     */
-    public static byte[] fromHex(String s) {
-    	return DatatypeConverter.parseHexBinary(s); // fast!    	
-    }
-    
-    /**
-     * Creates a byte array from a given string, using the UTF-8
-     * encoding. This calls {@link String#getBytes(java.nio.charset.Charset)} 
-     * internally with "UTF-8" as charset.
-     */
-    public static byte[] toBytesUTF8(String s) {
-    	try {
+
+	/**
+	 * Converts a byte array to a lower case hex representation.
+	 * If the given byte array is <code>null</code>, an empty string is returned.
+	 */
+	public static String toHex(byte[] bytes) {
+		if (bytes == null) {
+			return "";
+		} else {
+			final char[] hexArray = "0123456789ABCDEF".toCharArray();
+			char[] hexChars = new char[bytes.length * 2];
+			for (int j = 0; j < bytes.length; j++) {
+				int v = bytes[j] & 0xFF;
+				hexChars[j * 2] = hexArray[v >>> 4];
+				hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+			}
+			return String.valueOf(hexChars).toLowerCase();
+		}
+	}
+
+	/**
+	 * Creates byte array from a hex represented string.
+	 */
+	public static byte[] fromHex(String hexString) {
+		if (hexString.length() % 2 == 1) {
+			throw new IllegalArgumentException("hex string must be of even length");
+		}
+
+		char[] hex = hexString.toCharArray();
+		byte[] raw = new byte[hex.length / 2];
+		for (int src = 0, dst = 0; dst < raw.length; ++dst) {
+			int hi = Character.digit(hex[src++], 16);
+			int lo = Character.digit(hex[src++], 16);
+			if ((hi < 0) || (lo < 0))
+				throw new IllegalArgumentException();
+			raw[dst] = (byte) (hi << 4 | lo);
+		}
+		return raw;
+	}
+
+	/**
+	 * Creates a byte array from a given string, using the UTF-8
+	 * encoding. This calls {@link String#getBytes(java.nio.charset.Charset)}
+	 * internally with "UTF-8" as charset.
+	 */
+	public static byte[] toBytesUTF8(String s) {
+		try {
 			return s.getBytes("UTF-8");
-		} 
-    	catch (UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException("JVM does not support UTF-8 encoding.", e);
 		}
-    }
-    
-    /**
-     * Returns the count of the substring 
-     */
-    public static int substrCount(String haystack, String needle) {
-    	int lastIndex = 0;
-    	int count = 0;
+	}
 
-    	if (needle != null && haystack != null) {
+	/**
+	 * Returns the count of the substring
+	 */
+	public static int substrCount(String haystack, String needle) {
+		int lastIndex = 0;
+		int count = 0;
+
+		if (needle != null && haystack != null) {
 			while (lastIndex != -1) {
 				lastIndex = haystack.indexOf(needle, lastIndex);
-	
+
 				if (lastIndex != -1) {
 					count++;
 					lastIndex += needle.length();
 				}
-	    	}
-    	}
-    	
+			}
+		}
+
 		return count;
-    }
-    
-    public static String getStackTrace(Exception exception) {
-    	StringWriter stackTraceStringWriter = new StringWriter();
-    	exception.printStackTrace(new PrintWriter(stackTraceStringWriter));
-    	
-    	return stackTraceStringWriter.toString();
-    }
-	
+	}
+
+	public static String getStackTrace(Exception exception) {
+		StringWriter stackTraceStringWriter = new StringWriter();
+		exception.printStackTrace(new PrintWriter(stackTraceStringWriter));
+
+		return stackTraceStringWriter.toString();
+	}
+
 	public static <T> String join(List<T> objects, String delimiter, StringJoinListener<T> listener) {
 		StringBuilder objectsStr = new StringBuilder();
-		
-		for (int i=0; i<objects.size(); i++) {
+
+		for (int i = 0; i < objects.size(); i++) {
 			if (listener != null) {
 				objectsStr.append(listener.getString(objects.get(i)));
-			}
-			else {
+			} else {
 				objectsStr.append(objects.get(i).toString());
 			}
-			
-			if (i < objects.size()-1) { 
+
+			if (i < objects.size() - 1) {
 				objectsStr.append(delimiter);
-			}			
+			}
 		}
-		
+
 		return objectsStr.toString();
-	}   
-	
+	}
+
 	public static <T> String join(List<T> objects, String delimiter) {
 		return join(objects, delimiter, null);
-	} 
-	
+	}
+
 	public static <T> String join(T[] objects, String delimiter, StringJoinListener<T> listener) {
 		return join(Arrays.asList(objects), delimiter, listener);
-	}   
-	
+	}
+
 	public static <T> String join(T[] objects, String delimiter) {
 		return join(Arrays.asList(objects), delimiter, null);
-	}   
-	
+	}
+
 	public static interface StringJoinListener<T> {
 		public String getString(T object);
 	}
