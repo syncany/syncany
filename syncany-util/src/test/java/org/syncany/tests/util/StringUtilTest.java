@@ -47,12 +47,12 @@ public class StringUtilTest {
 	}
 	
 	@Test(expected=Exception.class)
-	public void testFromHexInvalid2() {
+	public void testFromHexInvalid1() {
 		StringUtil.toHex(StringUtil.fromHex("INVALID!"));
 	}
 	
 	@Test(expected=Exception.class)
-	public void testFromHexInvalid3() {
+	public void testFromHexInvalid2() {
 		StringUtil.toHex(StringUtil.fromHex("INVALID"));
 	}
 
