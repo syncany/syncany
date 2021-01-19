@@ -32,6 +32,7 @@ public class StringUtilTest {
 		assertEquals("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", StringUtil.toHex(StringUtil.fromHex("abcdeffaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
 		assertEquals("", StringUtil.toHex(StringUtil.fromHex("")));		
 		assertEquals("00abcdefaaaa", StringUtil.toHex(StringUtil.fromHex("00abcdefaaaa")));
+		assertEquals("000000", StringUtil.toHex(StringUtil.fromHex("000000")));
 	}
 	
 	@Test(expected=Exception.class)
