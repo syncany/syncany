@@ -17,6 +17,8 @@
  */
 package org.syncany.tests.util;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -61,7 +63,10 @@ public class StringUtilTest {
 		assertEquals("1.9 + 2.8 + 3.7", StringUtil.join(new Double[] { 1.911, 2.833, 3.744 }, " + ", new StringJoinListener<Double>() {
 			@Override
 			public String getString(Double number) {
-				return String.format("%.1f", number);
+				// separator has to be set explicitly otherwise it will fail on systems which are using others than '.' (e.g. German layout)
+				DecimalFormatSymbols decimalSymbols = DecimalFormatSymbols.getInstance();
+				decimalSymbols.setDecimalSeparator('.');
+				return new DecimalFormat("0.0", decimalSymbols).format(number);
 			}			
 		}));
 	}
