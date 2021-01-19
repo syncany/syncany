@@ -23,8 +23,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Utility class for common application string functions.
  * 
@@ -102,15 +100,31 @@ public class StringUtil {
     		return "";
     	}
     	else {
-    		return DatatypeConverter.printHexBinary(bytes).toLowerCase();
+			final char[] hexArray = "0123456789ABCDEF".toCharArray();
+			char[] hexChars = new char[bytes.length * 2];
+			for (int j = 0; j < bytes.length; j++) {
+				int v = bytes[j] & 0xFF;
+				hexChars[j * 2] = hexArray[v >>> 4];
+				hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+			}
+			return String.valueOf(hexChars).toLowerCase();
     	}
     }
     
     /**
      * Creates byte array from a hex represented string.
      */
-    public static byte[] fromHex(String s) {
-    	return DatatypeConverter.parseHexBinary(s); // fast!    	
+    public static byte[] fromHex(String hexString) {
+    	char[] hex = hexString.toCharArray();
+		byte[] raw = new byte[hex.length / 2];
+		for (int src = 0, dst = 0; dst < raw.length; ++dst) {
+			int hi = Character.digit(hex[src++], 16);
+			int lo = Character.digit(hex[src++], 16);
+			if ((hi < 0) || (lo < 0))
+				throw new IllegalArgumentException();
+			raw[dst] = (byte) (hi << 4 | lo);
+		}
+		return raw;
     }
     
     /**

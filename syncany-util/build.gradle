@@ -19,12 +19,6 @@ dependencies {
 	implementation			"commons-io:commons-io:2.4"
 	implementation			"org.hsqldb:hsqldb:2.3.1"
 
-	// Because Java 9+ does not automatically include a JAXB provider
-	// https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j#43574427
-	// https://blog.sourced-bvba.be/article/2017/12/17/java9-spring/
-	implementation			"javax.xml.bind:jaxb-api:2.3.1"
-	implementation			"org.glassfish.jaxb:jaxb-runtime:2.3.1"
-
 	testImplementation		"junit:junit:4.9"
 	testImplementation		"org.junit.jupiter:junit-jupiter:5.4.2"
 	testImplementation		"org.junit.vintage:junit-vintage-engine:5.4.2"
