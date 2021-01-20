@@ -5,6 +5,8 @@ Change Log
 - Developer/alpha/maintanance release 
 - Bugfixes and other things:
   + Fixed small bug with windows paths #598/#599
+  + Removed jaxb dependency #635
+  + Upgraded gradle to 6.x (ready for 7) #632/#636
 
 ### Syncany 0.4.9-alpha (Date: 16 Jan 2017)
 - Developer/alpha/maintanance release 
