@@ -1,6 +1,6 @@
 Syncany
 =======
-[![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/v3/badges/coverage)](https://reports.syncany.org/coverage/) [![Test Status](https://api.syncany.org/v3/badges/tests)](https://reports.syncany.org/tests/) [![Lines of Code](https://api.syncany.org/v3/badges/lines)](https://syncany.org/reports/cloc.xml) [![Contribute and get some Bitcoins for every commit](https://api.syncany.org/v3/badges/tips)](http://tip4commit.com/github/syncany/syncany) [![User guide](https://readthedocs.org/projects/syncany/badge/?version=latest)](https://readthedocs.org/projects/syncany/?badge=latest) [![JavaDoc](https://api.syncany.org/v3/badges/javadoc)](https://docs.syncany.org/javadoc/) [![Issues needing your help](https://api.syncany.org/v3/badges/waffle)](http://waffle.io/syncany/syncany) [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/290043/Syncany)
+[![Build Status](https://travis-ci.org/syncany/syncany.svg?branch=master)](https://travis-ci.org/syncany/syncany) [![Coverage Status](https://api.syncany.org/v3/badges/coverage)](https://reports.syncany.org/coverage/) [![Test Status](https://api.syncany.org/v3/badges/tests)](https://reports.syncany.org/tests/) [![Lines of Code](https://api.syncany.org/v3/badges/lines)](https://syncany.org/reports/cloc.xml) [![Contribute and get some Bitcoins for every commit](https://api.syncany.org/v3/badges/tips)](https://tip4commit.com/github/syncany/syncany) [![User guide](https://readthedocs.org/projects/syncany/badge/?version=latest)](https://readthedocs.org/projects/syncany/?badge=latest) [![JavaDoc](https://api.syncany.org/v3/badges/javadoc)](https://docs.syncany.org/javadoc/) [![Issues needing your help](https://api.syncany.org/v3/badges/waffle)](http://waffle.io/syncany/syncany) [![Flattr](https://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/290043/Syncany)
 
 <img src="gradle/resources/syncany-logo.png" align="right" />
 
@@ -27,15 +27,15 @@ terms of storage type and provider:
 
 Installation
 ------------
-You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](https://www.syncany.org/dist/releases/?C=M;O=D). For details on how to install Syncany, check out the **[download/install instructions](http://syncany.readthedocs.org/en/latest/installation.html)**.
+You can download the current binary packages and installers from the [releases page](https://github.com/syncany/syncany/releases), or from the Syncany [download site](https://www.syncany.org/dist/releases/?C=M;O=D). For details on how to install Syncany, check out the **[download/install instructions](https://syncany.readthedocs.org/en/latest/installation.html)**.
 
 **Please be aware that this is still ALPHA code! Do not use it for important files.**
 
 Getting Started
 ---------------
-To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](http://syncany.readthedocs.org/)**. It'll tell you everything you want to know. For a step-by-step guide, navigate to the [Getting Started](http://syncany.readthedocs.org/en/latest/getting_started.html) page!
+To learn how to use Syncany, check out the brand new and awesome **[Syncany User Guide](https://syncany.readthedocs.org/)**. It'll tell you everything you want to know. For a step-by-step guide, navigate to the [Getting Started](https://syncany.readthedocs.org/en/latest/getting_started.html) page!
 
-[![User Guide](gradle/resources/user-guide-excerpt.png)](http://syncany.readthedocs.org/)
+[![User Guide](gradle/resources/user-guide-excerpt.png)](https://syncany.readthedocs.org/)
 
 Building
 --------
@@ -45,14 +45,14 @@ Buy us a coffee
 ---------------
 If you like what you see and you want to support us, you can buy us a coffee or a beer. There are maaanny ways to do so.
 
-Break some hashes for us by [donating some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8) (also via [tip4commit](http://tip4commit.com/github/syncany/syncany)); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](http://www.syncany.org/donate.html)? Any contributions are much appreciated!
+Break some hashes for us by [donating some Bitcoins](https://blockchain.info/address/1626wjrw3uWk9adyjCfYwafw4sQWujyjn8) (also via [tip4commit](https://tip4commit.com/github/syncany/syncany)); or be a charmer and [flattr us](https://flattr.com/thing/290043/Syncany). If that's not for you, why not give us some change [with PayPal](https://www.syncany.org/donate.html)? Any contributions are much appreciated!
 
 Licensing, website and contact
 ------------------------------
-Syncany is licensed under the [GPLv3 open source license](LICENSE.md). It is actively developed by [Philipp C. Heckel](http://blog.philippheckel.com/), the [Syncany Team](https://github.com/orgs/syncany/teams/syncany-team) and [many](AUTHORS.md) [others](https://github.com/syncany/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
+Syncany is licensed under the [GPLv3 open source license](LICENSE.md). It is actively developed by [Philipp C. Heckel](https://blog.philippheckel.com/), the [Syncany Team](https://github.com/orgs/syncany/teams/syncany-team) and [many](AUTHORS.md) [others](https://github.com/syncany/syncany/graphs/contributors). We are always looking for people to join or help out. Feel free to contact us:
 
 - [Syncany Website](https://www.syncany.org/), the main website
-- [Syncany User Guide](http://syncany.readthedocs.org/), **most important resource for end users**
+- [Syncany User Guide](https://syncany.readthedocs.org/), **most important resource for end users**
 - [Syncany Wiki](https://github.com/syncany/syncany/wiki), most important resource for developers
 - [IRC channel #syncany on Freenode](https://webchat.freenode.net/?channels=syncany) (**active!**, my nick is *binwiederhier*)
 - [@syncany on Twitter](https://twitter.com/#!/syncany), somewhat quiet there, though ...
